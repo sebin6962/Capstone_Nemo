@@ -14,7 +14,7 @@ public class ShopManager : MonoBehaviour
     public Button resetButton;
     public Button closeButton;
     public List<ShopData> ShopItems;
-    public int playerStar = 100;
+    //public int playerStar = 100;
 
     public Transform itemListParent;
     public Transform basketListParent;
@@ -104,38 +104,80 @@ public class ShopManager : MonoBehaviour
         }
     }
 
+    //void UpdateTotalPrice()
+    //{
+    //    int total = 0;
+    //    foreach (var e in basketDict.Values)
+    //    {
+    //        total += e.TotalPrice;
+    //    }
+    //    totalPriceText.text = $"{total} º°ºû";
+    //    allTotalPriceText.text = $"ÃÑ {total} º°ºû";
+    //    buyButton.interactable = (total > 0 && playerStar >= total);
+    //}
+
     void UpdateTotalPrice()
     {
         int total = 0;
         foreach (var e in basketDict.Values)
-        {
             total += e.TotalPrice;
-        }
+
+        // º°ºû µ¥ÀÌÅÍ´Â StarDataManagerÀÇ °ª »ç¿ë
+        int playerStar = StarDataManager.Instance.playerData.starlight;
+
         totalPriceText.text = $"{total} º°ºû";
         allTotalPriceText.text = $"ÃÑ {total} º°ºû";
         buyButton.interactable = (total > 0 && playerStar >= total);
     }
 
 
+    //public void Buy()
+    //{
+    //    int total = 0;
+    //    foreach (var e in basketDict.Values)
+    //    {
+    //        total += e.TotalPrice;
+    //    }
+
+    //    if (playerStar < total)
+    //        return;
+
+    //    foreach (var entry in basketDict.Values)
+    //    {
+    //        if (entry.quantity > 0)
+    //            Debug.Log($"{entry.item.itemName} {entry.quantity}°³ ±¸¸Å");
+    //    }
+
+    //    playerStar -= total;
+    //    Debug.Log($"{playerStar}º°ºû ³²À½");
+
+    //    foreach (var entry in basketDict.Values)
+    //        entry.quantity = 0;
+
+    //    foreach (var kvp in slotDict)
+    //        kvp.Value.UpdateDisplay(0);
+
+    //    UpdateTotalPrice();
+    //}
+
     public void Buy()
     {
         int total = 0;
         foreach (var e in basketDict.Values)
-        {
             total += e.TotalPrice;
-        }
 
+        int playerStar = StarDataManager.Instance.playerData.starlight;
         if (playerStar < total)
             return;
 
         foreach (var entry in basketDict.Values)
-        {
             if (entry.quantity > 0)
                 Debug.Log($"{entry.item.itemName} {entry.quantity}°³ ±¸¸Å");
-        }
 
-        playerStar -= total;
-        Debug.Log($"{playerStar}º°ºû ³²À½");
+        // º°ºû Â÷°¨Àº StarDataManager¸¦ ÅëÇØ
+        StarDataManager.Instance.SpendStarlight(total);
+
+        Debug.Log($"{StarDataManager.Instance.playerData.starlight}º°ºû ³²À½");
 
         foreach (var entry in basketDict.Values)
             entry.quantity = 0;
