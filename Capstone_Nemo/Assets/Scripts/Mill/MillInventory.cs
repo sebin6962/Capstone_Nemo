@@ -20,6 +20,7 @@ public class MillInventory : MonoBehaviour
         millManager = manager;
 
         icon.sprite = data.icon;
+        icon.rectTransform.sizeDelta = new Vector2(40, 40);
         UpdateQuantityText();
 
     }
