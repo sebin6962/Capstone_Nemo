@@ -16,7 +16,7 @@ public class PlateCheck : MonoBehaviour
     {
         Debug.Log($"[PlateCheck] 트리거 충돌 발생: {other.name}");
 
-        if (other.CompareTag("HeldDagwa"))
+        /*if (other.CompareTag("HeldDagwa"))
         {
             Debug.Log($"[PlateCheck] HeldDagwa 감지됨");
 
@@ -35,7 +35,7 @@ public class PlateCheck : MonoBehaviour
 
             Debug.Log($"[PlateCheck] '{dagwa.dagwaName}' → {targetCustomer.name}에게 전달");
             targetCustomer.Serve(dagwa.dagwaName);
-        }
+        }*/
     }
     public void SendDagwaToCustomer(string dagwaName)
     {

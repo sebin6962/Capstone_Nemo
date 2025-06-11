@@ -20,6 +20,7 @@ public class Customer : MonoBehaviour
     private int currentIndex = 0;
     private SeatManager seatManager;
     private int seatIndex;
+    private PlateCheck assignedPlate;
 
     private Transform[] wayPoints;
     public float speed = 3f;
@@ -95,7 +96,7 @@ public class Customer : MonoBehaviour
         foreach (var plate in plates)
         {
             float dist = Vector3.Distance(transform.position, plate.transform.position);
-            Debug.Log($"→ Plate 후보: {plate.name}, 거리: {dist}");
+            /*Debug.Log($"→ Plate 후보: {plate.name}, 거리: {dist}");*/
 
             if (dist < minDist)
             {
@@ -113,6 +114,7 @@ public class Customer : MonoBehaviour
             }
             else
             {
+                assignedPlate = plateComp;
                 plateComp.SetTargetCustomer(this);
                 Debug.Log($"[AssignPlate] 접시에 손님 연동 완료: {name} → {closest.name}");
             }
@@ -171,6 +173,7 @@ public class Customer : MonoBehaviour
             orderUI.ShowResult(true);
             orderUI.ShowTimerUI(false);
             Debug.Log($"정답 처리됨: {givenDagwa}");
+            Invoke(nameof(RemoveDagwaOnPlate), 2f);
         }
         else
         {
@@ -200,6 +203,36 @@ public class Customer : MonoBehaviour
     {
         state = CustomerState.Leaving;
         StartCoroutine(MoveDownAndDestroy());
+    }
+
+    private void RemoveDagwaOnPlate()
+    {
+        if (assignedPlate == null)
+        {
+            Debug.LogWarning("[Customer] assignedPlate가 null입니다!");
+            return;
+        }
+
+        Transform plateTransform = assignedPlate.transform;
+
+        if (plateTransform.childCount > 0)
+        {
+            foreach (Transform child in plateTransform)
+            {
+                if (child.CompareTag("Dagwa"))
+                {
+                    Destroy(child.gameObject);
+                    Debug.Log($"[Customer] 접시 위 다과 제거됨: {child.name}");
+                    return;
+                }
+            }
+
+            Debug.LogWarning("[Customer] 접시에 'Dagwa' 태그를 가진 자식이 없습니다.");
+        }
+        else
+        {
+            Debug.LogWarning("[Customer] assignedPlate에 자식이 없습니다.");
+        }
     }
 
     IEnumerator MoveDownAndDestroy()

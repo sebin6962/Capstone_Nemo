@@ -28,10 +28,18 @@ public class OrderManager : MonoBehaviour
         TextAsset jsonText = Resources.Load<TextAsset>("data/craftingRecipe");
         RecipeList recipeList = JsonUtility.FromJson<RecipeList>(jsonText.text);
 
+        HashSet<string> manualSprites = new HashSet<string>
+    {
+        "Danhobakseolgi_finish",
+        "Baekseolgi_finish",
+        "Rainbowseolgi_finish"
+    };
+
         HashSet<string> order = new HashSet<string>();
         foreach (var recipe in recipeList.recipes)
         {
-            if (recipe.makerId.StartsWith("Siru") && !string.IsNullOrEmpty(recipe.resultSprite))
+            /* if (!string.IsNullOrEmpty(recipe.resultSprite) && recipe.resultSprite.Contains("finish"))*/ //스프라이트 다 추가되면..
+            if (!string.IsNullOrEmpty(recipe.resultSprite) && manualSprites.Contains(recipe.resultSprite))
                 order.Add(recipe.resultSprite);
         }
         dagwaList = new List<string>(order);

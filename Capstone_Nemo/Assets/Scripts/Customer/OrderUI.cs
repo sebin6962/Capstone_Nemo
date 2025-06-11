@@ -14,7 +14,7 @@ public class OrderUI : MonoBehaviour
     public void ShowOrder(string dagwaName)
     {
         Debug.Log("ShowOrder »£√‚µ : " + dagwaName);
-        Sprite icon = Resources.Load<Sprite>("Sprites/Dagwa/" + dagwaName);
+        Sprite icon = Resources.Load<Sprite>("Sprites/Ingredients/" + dagwaName);
         
         dagwaImage.sprite = icon;
         dagwaImage.gameObject.SetActive(true);

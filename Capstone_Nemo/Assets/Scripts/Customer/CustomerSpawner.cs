@@ -31,7 +31,7 @@ public class CustomerSpawner : MonoBehaviour
         if (seatIndex >= 0 && seatIndex < routesPerSeat.Count)
         {
             GameObject prefab = (Random.value < questCustomerChance) ? questCustomerPrefab : customerPrefab;
-            GameObject customer = Instantiate(customerPrefab, spawnPoint.position, Quaternion.identity);
+            GameObject customer = Instantiate(prefab, spawnPoint.position, Quaternion.identity);
             seatManager.OccupySeat(seatIndex);
 
             Transform[] path = routesPerSeat[seatIndex].waypoints;

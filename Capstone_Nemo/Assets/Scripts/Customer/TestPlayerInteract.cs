@@ -23,14 +23,18 @@ public class TestPlayerInteract : MonoBehaviour
 
     void TryPickup()
     {
-        Collider2D hit = Physics2D.OverlapCircle(transform.position, 1f);
-        if (hit != null && hit.CompareTag("Dagwa"))
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 1f);
+        foreach (var hit in hits)
         {
-            heldObject = hit.gameObject;
-            heldObject.tag = "HeldDagwa";
-            heldObject.transform.SetParent(transform);
-            heldObject.transform.localPosition = new Vector3(0, 1f, 0); // 머리 위
-            Debug.Log("다과 들기: " + heldObject.name);
+            if (hit.CompareTag("Dagwa"))
+            {
+                heldObject = hit.gameObject;
+                heldObject.tag = "HeldDagwa";
+                heldObject.transform.SetParent(transform);
+                heldObject.transform.localPosition = new Vector3(0, 1f, 0);
+                Debug.Log("다과 들기: " + heldObject.name);
+                return;
+            }
         }
     }
 
