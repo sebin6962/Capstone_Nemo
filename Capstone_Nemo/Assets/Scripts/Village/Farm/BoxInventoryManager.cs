@@ -44,6 +44,10 @@ public class BoxInventoryManager : MonoBehaviour
 
         bool isActive = inventoryPanel.activeSelf;
         inventoryPanel.SetActive(!isActive);
+
+        // ÀÎº¥Åä¸® ´ÝÈú ¶§ ÅøÆÁµµ ¹«Á¶°Ç ²ô±â
+        if (!inventoryPanel.activeSelf && InventoryTooltipManager.Instance != null)
+            InventoryTooltipManager.Instance.Hide();
     }
 
     public bool IsInventoryOpen()

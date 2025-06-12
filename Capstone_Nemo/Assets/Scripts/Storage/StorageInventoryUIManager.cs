@@ -67,6 +67,12 @@ public class StorageInventoryUIManager : MonoBehaviour
         }
     }
 
+    //private void OnDisable()
+    //{
+    //    if (InventoryTooltipManager.Instance != null)
+    //        InventoryTooltipManager.Instance.Hide();
+    //}
+
     public bool IsOpen()
     {
         return panel != null && panel.activeSelf;

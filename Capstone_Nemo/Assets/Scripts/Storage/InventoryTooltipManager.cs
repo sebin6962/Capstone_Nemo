@@ -36,6 +36,7 @@ public class InventoryTooltipManager : MonoBehaviour
 
     public void Hide()
     {
+        if (tooltipPanel == null) return;
         tooltipPanel.SetActive(false);
     }
 }

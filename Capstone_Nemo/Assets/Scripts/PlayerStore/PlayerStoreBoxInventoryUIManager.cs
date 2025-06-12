@@ -43,8 +43,12 @@ public class PlayerStoreBoxInventoryUIManager : MonoBehaviour
 
     public void CloseUI()
     {
+        //panel.SetActive(false);
+        //currentInventory = null;
         panel.SetActive(false);
         currentInventory = null;
+        if (InventoryTooltipManager.Instance != null)
+            InventoryTooltipManager.Instance.Hide();
         //selectedItemName = null;
     }
 
@@ -98,6 +102,12 @@ public class PlayerStoreBoxInventoryUIManager : MonoBehaviour
         {
             Debug.Log("이미 다른 아이템을 들고 있음. 먼저 내려놓으세요.");
         }
+    }
+
+    private void OnDisable()
+    {
+        if (InventoryTooltipManager.Instance != null)
+            InventoryTooltipManager.Instance.Hide();
     }
 
 
