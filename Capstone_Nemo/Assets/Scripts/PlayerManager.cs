@@ -7,12 +7,15 @@ public class PlayerManager : MonoBehaviour
 {
     public float moveSpeed = 10f;
     Rigidbody2D rb;
+    Animator animator;
 
     private Vector2 movement;
+    public Vector2 lastMoveDir = Vector2.down; // 기본은 앞모습
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
     }
 
     void Update()
@@ -24,11 +27,31 @@ public class PlayerManager : MonoBehaviour
     (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen())) // ← 추가
         {
             movement = Vector2.zero;
+            animator.SetBool("IsWalking", false);
+            // 마지막 이동 방향을 사용해서 Idle 방향 고정
+            animator.SetFloat("MoveX", lastMoveDir.x);
+            animator.SetFloat("MoveY", lastMoveDir.y);
             return;
         }
 
         movement.x = Input.GetAxisRaw("Horizontal");
         movement.y = Input.GetAxisRaw("Vertical");
+
+        // 움직이고 있다면 lastMoveDir 갱신
+        if (movement != Vector2.zero)
+        {
+            lastMoveDir = movement;
+            animator.SetBool("IsWalking", true);
+            animator.SetFloat("MoveX", movement.x);
+            animator.SetFloat("MoveY", movement.y);
+        }
+        else
+        {
+            // 멈췄을 때 마지막 방향을 Idle에 반영
+            animator.SetBool("IsWalking", false);
+            animator.SetFloat("MoveX", lastMoveDir.x);
+            animator.SetFloat("MoveY", lastMoveDir.y);
+        }
     }
 
     void FixedUpdate()
@@ -44,4 +67,6 @@ public class PlayerManager : MonoBehaviour
 
         rb.MovePosition(rb.position + movement * moveSpeed * Time.fixedDeltaTime);
     }
+
+    
 }

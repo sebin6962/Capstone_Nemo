@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class PlayerSpwaner : MonoBehaviour
 {
+    Animator animator;
+
     void Start()
     {
+        animator = GetComponent<Animator>();
+
         string entrance = SceneTransitionInfo.Instance.entranceID;
         GameObject spawnPoint = GameObject.Find(entrance);
 
@@ -19,10 +23,32 @@ public class PlayerSpwaner : MonoBehaviour
 
             Debug.Log($"[Spawner] entranceID: {entrance}");
 
-            // 방향 예시 (선택적)
-            //var animator = GetComponent<PlayerAnimator>();
-            //if (entrance == "FromVillage") animator?.LookDown();
-            //else if (entrance == "FromStore") animator?.LookUp();
+            // 방향 지정
+            var animator = GetComponent<Animator>();
+            if (entrance == "FromVillage(Store)") LookUp();
+            else if (entrance == "FromPlayerStore") LookDown();
         }
     }
+
+    public void LookDown()
+    {
+        animator.SetFloat("MoveX", 0);
+        animator.SetFloat("MoveY", -1);
+        animator.SetBool("IsWalking", false);
+
+        var pm = GetComponent<PlayerManager>();
+        if (pm != null)
+            pm.lastMoveDir = Vector2.down;
+    }
+    public void LookUp()
+    {
+        animator.SetFloat("MoveX", 0);
+        animator.SetFloat("MoveY", 1);
+        animator.SetBool("IsWalking", false);
+
+        var pm = GetComponent<PlayerManager>();
+        if (pm != null)
+            pm.lastMoveDir = Vector2.up;
+    }
+
 }

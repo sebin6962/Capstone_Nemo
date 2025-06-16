@@ -17,7 +17,9 @@ public class TimeManager : MonoBehaviour
     private float timer = 0f;
 
     public TMP_Text dayText;               // "1일차"
-    public Image clockProgressImage;       // 원형 이미지
+    //public Image clockProgressImage;       // 원형 이미지
+
+    public Image clockHandImage;
 
     public int currentDay = 1;             // 일차
     private int totalGameMinutes = (26 - 9) * 60; // 하루 총 분(9시 ~ 26시 → 1020분)
@@ -48,7 +50,8 @@ public class TimeManager : MonoBehaviour
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         dayText = GameObject.Find("DayText")?.GetComponent<TMP_Text>();
-        clockProgressImage = GameObject.Find("ClockProgress")?.GetComponent<Image>();
+        //clockProgressImage = GameObject.Find("ClockProgress")?.GetComponent<Image>();
+        clockHandImage = GameObject.Find("DayPanel_niddle")?.GetComponent<Image>();
         UpdateDayUI();
         UpdateClockProgressUI();
     }
@@ -58,8 +61,8 @@ public class TimeManager : MonoBehaviour
         if (dayText == null)
             dayText = GameObject.Find("DayText")?.GetComponent<TMP_Text>();
 
-        if (clockProgressImage == null)
-            clockProgressImage = GameObject.Find("ClockProgress")?.GetComponent<Image>();
+        if (clockHandImage == null)
+            clockHandImage = GameObject.Find("DayPanel_niddle")?.GetComponent<Image>();
 
         UpdateDayUI();
         UpdateClockProgressUI();
@@ -112,10 +115,19 @@ public class TimeManager : MonoBehaviour
 
     void UpdateClockProgressUI()
     {
-        if (clockProgressImage == null) return;
+        //if (clockProgressImage == null) return;
+        //int minutesPassed = (hour - 9) * 60 + minute;
+        //float progress = Mathf.Clamp01((float)minutesPassed / totalGameMinutes);
+        //clockProgressImage.fillAmount = progress;
+
+        if (clockHandImage == null) return;
+
         int minutesPassed = (hour - 9) * 60 + minute;
         float progress = Mathf.Clamp01((float)minutesPassed / totalGameMinutes);
-        clockProgressImage.fillAmount = progress;
+        float angle = Mathf.Lerp(0, 360, progress);
+
+        // 시계방향 회전(원하면 -angle)
+        clockHandImage.rectTransform.localEulerAngles = new Vector3(0, 0, -angle);
     }
 
     void UpdateDayUI()
