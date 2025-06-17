@@ -205,7 +205,7 @@ public class Customer : MonoBehaviour
         StartCoroutine(MoveDownAndDestroy());
     }
 
-    private void RemoveDagwaOnPlate()
+    protected void RemoveDagwaOnPlate()
     {
         if (assignedPlate == null)
         {

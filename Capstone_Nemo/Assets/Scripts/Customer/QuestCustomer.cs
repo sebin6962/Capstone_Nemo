@@ -54,6 +54,7 @@ public class QuestCustomer : Customer
             state = CustomerState.Served;
             questOrderUI.ShowResult(true);
             questOrderUI.ShowTimerUI(false);
+            Invoke(nameof(RemoveDagwaOnPlate), 2f);
         }
         else
         {
