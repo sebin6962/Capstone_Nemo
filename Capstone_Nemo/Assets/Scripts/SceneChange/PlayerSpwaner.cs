@@ -38,7 +38,12 @@ public class PlayerSpwaner : MonoBehaviour
 
         var pm = GetComponent<PlayerManager>();
         if (pm != null)
+        {
             pm.lastMoveDir = Vector2.down;
+            Debug.Log("Spawner LookDown: lastMoveDir=" + pm.lastMoveDir + ", Animator MoveY=" + animator.GetFloat("MoveY"));
+        }
+           
+
     }
     public void LookUp()
     {
@@ -48,7 +53,10 @@ public class PlayerSpwaner : MonoBehaviour
 
         var pm = GetComponent<PlayerManager>();
         if (pm != null)
+        {
             pm.lastMoveDir = Vector2.up;
+            Debug.Log("Spawner LookUp: lastMoveDir=" + pm.lastMoveDir + ", Animator MoveY=" + animator.GetFloat("MoveY"));
+        }
     }
 
 }
