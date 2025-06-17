@@ -29,6 +29,7 @@ public class BoxInventoryManager : MonoBehaviour
         if (BoxTrigger.isPlayerNearBox && Input.GetKeyDown(KeyCode.E))
         {
             ToggleInventory();
+            SFXManager.Instance.PlayBoxOpenSFX();
         }
     }
 

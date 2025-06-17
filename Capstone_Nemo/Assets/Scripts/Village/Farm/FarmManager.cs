@@ -94,6 +94,7 @@ public class FarmManager : MonoBehaviour
     //밭에 물 뿌렸을 때 변화
     public void WaterSoil(Vector3 worldPos)
     {
+        SFXManager.Instance.PlayFarmWaterSFX();
         Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
 
         if (IsFarmTile(worldPos))
@@ -200,6 +201,8 @@ public class FarmManager : MonoBehaviour
 
     private void HarvestCrop(Vector3Int pos, string cropName)
     {
+        SFXManager.Instance.PlayBbyongSFX();
+
         var cropData = growingTiles[pos].cropData;
         // 작물 스프라이트 제거
         if (growingTiles[pos].cropOverlayObject != null)

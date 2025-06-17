@@ -37,12 +37,14 @@ public class PlayerStoreBoxInventoryUIManager : MonoBehaviour
 
         currentInventory = storage;
         panel.SetActive(true);
+        SFXManager.Instance.PlayBoxOpenSFX();
         //selectedItemName = null;
         UpdateSlots();
     }
 
     public void CloseUI()
     {
+        SFXManager.Instance.PlayBoxOpenSFX();
         //panel.SetActive(false);
         //currentInventory = null;
         panel.SetActive(false);

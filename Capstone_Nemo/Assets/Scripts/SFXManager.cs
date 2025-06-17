@@ -14,6 +14,8 @@ public class SFXManager : MonoBehaviour
     public AudioClip bbyongClip;
     public AudioClip correctClip;
     public AudioClip wrongClip;
+    public AudioClip farmWaterClip;
+    public AudioClip boxOpenClip;
 
     // makerId별 효과음 관리용 (Inspector에서 할당)
     public AudioClip sieveMakerInputClip;
@@ -70,6 +72,18 @@ public class SFXManager : MonoBehaviour
     {
         if (audioSource && bbyongClip)
             audioSource.PlayOneShot(bbyongClip);
+    }
+
+    public void PlayFarmWaterSFX()
+    {
+        if (audioSource && farmWaterClip)
+            audioSource.PlayOneShot(farmWaterClip);
+    }
+
+    public void PlayBoxOpenSFX()
+    {
+        if (audioSource && boxOpenClip)
+            audioSource.PlayOneShot(boxOpenClip);
     }
 
     public void PlayMakerProgressSFX(string makerId)

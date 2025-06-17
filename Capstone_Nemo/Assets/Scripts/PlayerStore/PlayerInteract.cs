@@ -131,6 +131,7 @@ public class PlayerInteract : MonoBehaviour
 
                 HeldItemManager.Instance.HideHeldItem();
 
+                SFXManager.Instance.PlayBbyongSFX();
                 Debug.Log($"[E] {heldName}을(를) 탁자 위에 놓음");
                 return;
             }
@@ -151,6 +152,7 @@ public class PlayerInteract : MonoBehaviour
                         Destroy(nearbyTable.currentPlacedObject);
                         nearbyTable.currentPlacedObject = null;
 
+                        SFXManager.Instance.PlayBbyongSFX();
                         Debug.Log($"[E] 탁자에서 {tableName}을(를) 집음");
                     }
                     return;
@@ -173,7 +175,7 @@ public class PlayerInteract : MonoBehaviour
                 HeldItemManager.Instance.HideHeldItem();
 
                 PlayerStoreBoxInventoryUIManager.Instance.UpdateSlots();
-
+                SFXManager.Instance.PlayBbyongSFX();
                 Debug.Log($"[Space] {heldItemName} 1개를 상자에 보관함");
                 return;
             }
