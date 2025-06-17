@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class OrderUI : MonoBehaviour
 {
     [SerializeField] private Image dagwaImage;
+    [SerializeField] private Image dagwaBubble;
     [SerializeField] private Image heartImage;
     [SerializeField] private Image ximage;
     public Slider timerSlider;
@@ -18,6 +19,7 @@ public class OrderUI : MonoBehaviour
         
         dagwaImage.sprite = icon;
         dagwaImage.gameObject.SetActive(true);
+        dagwaBubble.gameObject.SetActive(true);
         heartImage.gameObject.SetActive(false);
         ximage.gameObject.SetActive(false);
         timerSlider.gameObject.SetActive(true);
@@ -39,5 +41,6 @@ public class OrderUI : MonoBehaviour
         heartImage.gameObject.SetActive(isCorrect);
         ximage.gameObject.SetActive(!isCorrect);
         timerSlider.gameObject.SetActive(false);
+        dagwaBubble.gameObject.SetActive(false);
     }
 }

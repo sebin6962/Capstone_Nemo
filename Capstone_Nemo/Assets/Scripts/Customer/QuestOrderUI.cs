@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class QuestOrderUI : MonoBehaviour
 {
     [SerializeField] private Image dagwaImage;
+    [SerializeField] private Image dagwaBubble;
     [SerializeField] private Image heartImage;
     [SerializeField] private Image ximage;
     [SerializeField] private Slider timerSlider;
@@ -14,9 +15,7 @@ public class QuestOrderUI : MonoBehaviour
     private bool isQuestAccepted = false;
     private string currentDagwaName;
 
-    /// <summary>
     /// 퀘스트 수락 전에 초기화 (UI 모두 숨김)
-    /// </summary>
     public void Initialize()
     {
         dagwaImage.gameObject.SetActive(false);
@@ -25,10 +24,7 @@ public class QuestOrderUI : MonoBehaviour
         timerSlider.gameObject.SetActive(false);
         isQuestAccepted = false;
     }
-
-    /// <summary>
     /// 퀘스트 수락 후 실제 주문 시작
-    /// </summary>
     /// <param name="dagwaName">원하는 다과 이름</param>
     public void AcceptQuest(string dagwaName, Sprite dagwaSprite)
     {
@@ -36,6 +32,7 @@ public class QuestOrderUI : MonoBehaviour
         {
             dagwaImage.sprite = dagwaSprite;
             dagwaImage.gameObject.SetActive(true);
+            dagwaBubble.gameObject.SetActive(true);
         }
 
         if (timerSlider != null)
@@ -71,6 +68,7 @@ public class QuestOrderUI : MonoBehaviour
         heartImage.gameObject.SetActive(isCorrect);
         ximage.gameObject.SetActive(!isCorrect);
         timerSlider.gameObject.SetActive(false);
+        dagwaBubble.gameObject.SetActive(false);
     }
 
  
