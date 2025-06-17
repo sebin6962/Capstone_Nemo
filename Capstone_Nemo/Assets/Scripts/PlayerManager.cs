@@ -7,12 +7,12 @@ public class PlayerManager : MonoBehaviour
 {
     public float moveSpeed = 10f;
     Rigidbody2D rb;
-    Animator animator;
+    public Animator animator;
 
     private Vector2 movement;
-    public Vector2 lastMoveDir = Vector2.down; // 기본은 앞모습
+    public Vector2 lastMoveDir; // 기본은 앞모습
 
-    void Start()
+    void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
@@ -51,6 +51,7 @@ public class PlayerManager : MonoBehaviour
             animator.SetBool("IsWalking", false);
             animator.SetFloat("MoveX", lastMoveDir.x);
             animator.SetFloat("MoveY", lastMoveDir.y);
+            Debug.Log("Manager Idle: lastMoveDir=" + lastMoveDir + ", Animator MoveY=" + animator.GetFloat("MoveY"));
         }
     }
 
