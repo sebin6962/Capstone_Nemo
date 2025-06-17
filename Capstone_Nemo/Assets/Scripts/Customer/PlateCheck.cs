@@ -37,6 +37,45 @@ public class PlateCheck : MonoBehaviour
             targetCustomer.Serve(dagwa.dagwaName);
         }*/
     }
+
+    public void TryServeDagwa()
+    {
+        if (targetCustomer == null)
+        {
+            Debug.LogWarning("[PlateCheck] 손님 없음");
+            return;
+        }
+
+        ResultItemUI nearestDagwa = FindNearbyDagwa();
+        if (nearestDagwa == null)
+        {
+            Debug.LogWarning("[PlateCheck] 근처에 다과 없음");
+            return;
+        }
+
+        targetCustomer.Serve(nearestDagwa.GetItemName());
+    }
+
+    private ResultItemUI FindNearbyDagwa()
+    {
+        ResultItemUI[] allDagwa = FindObjectsOfType<ResultItemUI>();
+
+        ResultItemUI closest = null;
+        float minDist = float.MaxValue;
+
+        foreach (var dagwa in allDagwa)
+        {
+            float dist = Vector3.Distance(transform.position, dagwa.transform.position);
+            if (dist < 1.0f && dist < minDist)
+            {
+                closest = dagwa;
+                minDist = dist;
+            }
+        }
+
+        return closest;
+    }
+
     public void SendDagwaToCustomer(string dagwaName)
     {
         if (targetCustomer != null)
@@ -46,7 +85,7 @@ public class PlateCheck : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("고객이 할당되지 않았습니다!");
+            Debug.LogWarning("손님이 할당되지 않음");
         }
     }
 }

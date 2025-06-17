@@ -52,9 +52,9 @@ public class QuestOrderUI : MonoBehaviour
             timerSlider.gameObject.SetActive(show);
         }
     }
-    /// <summary>
+
     /// 수락된 경우에만 타이머 갱신
-    /// </summary>
+
     public void UpdateTimer(float ratio)
     {
         if (isQuestAccepted && timerSlider != null)
@@ -63,9 +63,9 @@ public class QuestOrderUI : MonoBehaviour
         }
     }
 
-    /// <summary>
+
     /// 결과 UI 표시
-    /// </summary>
+
     public void ShowResult(bool isCorrect)
     {
         heartImage.gameObject.SetActive(isCorrect);
@@ -73,9 +73,9 @@ public class QuestOrderUI : MonoBehaviour
         timerSlider.gameObject.SetActive(false);
     }
 
-    /// <summary>
+ 
     /// 수락 여부 확인
-    /// </summary>
+
     public bool IsQuestAccepted()
     {
         return isQuestAccepted;

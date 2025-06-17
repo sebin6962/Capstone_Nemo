@@ -77,6 +77,13 @@ public class PlayerInteract : MonoBehaviour
                     string heldItemName = HeldItemManager.Instance.GetHeldItemName();
                     Sprite heldItemSprite = HeldItemManager.Instance.GetHeldItemSprite();
 
+                    //완성품 제작대에 올라가지 않음
+                    if (heldItemName.EndsWith("finish"))
+                    {
+                        Debug.Log($"[CraftingTable] 완성된 아이템({heldItemName})은 제작대와 상호작용하지 않음");
+                        return;
+                    }
+
                     currentMaker.inputItemNames.Add(heldItemName);
                     currentMaker.inputItemSprites.Add(heldItemSprite);
 

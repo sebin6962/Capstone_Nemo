@@ -209,29 +209,32 @@ public class Customer : MonoBehaviour
     {
         if (assignedPlate == null)
         {
-            Debug.LogWarning("[Customer] assignedPlate가 null입니다!");
+            Debug.LogWarning("[Customer] assignedPlate가 null임");
             return;
         }
 
-        Transform plateTransform = assignedPlate.transform;
+        ResultItemUI[] allDagwa = FindObjectsOfType<ResultItemUI>();
+        ResultItemUI closest = null;
+        float minDist = float.MaxValue;
 
-        if (plateTransform.childCount > 0)
+        foreach (var dagwa in allDagwa)
         {
-            foreach (Transform child in plateTransform)
+            float dist = Vector3.Distance(assignedPlate.transform.position, dagwa.transform.position);
+            if (dist < 0.5f && dist < minDist)
             {
-                if (child.CompareTag("Dagwa"))
-                {
-                    Destroy(child.gameObject);
-                    Debug.Log($"[Customer] 접시 위 다과 제거됨: {child.name}");
-                    return;
-                }
+                closest = dagwa;
+                minDist = dist;
             }
+        }
 
-            Debug.LogWarning("[Customer] 접시에 'Dagwa' 태그를 가진 자식이 없습니다.");
+        if (closest != null)
+        {
+            Destroy(closest.gameObject);
+            Debug.Log("접시 위 다과 제거됨");
         }
         else
         {
-            Debug.LogWarning("[Customer] assignedPlate에 자식이 없습니다.");
+            Debug.LogWarning("접시 근처에 다과가 없음");
         }
     }
 
