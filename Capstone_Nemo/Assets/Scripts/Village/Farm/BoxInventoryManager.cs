@@ -159,6 +159,8 @@ public class BoxInventoryManager : MonoBehaviour
         slot.ClearSlot();
         HeldItemManager.Instance.ShowHeldItem(heldSprite, heldItemName);
 
+        SFXManager.Instance.PlayBbyongSFX();
+
         Debug.Log("인벤토리에서 아이템 다시 듦: " + heldItemName);
         SaveInventory();
     }
@@ -223,6 +225,8 @@ public class BoxInventoryManager : MonoBehaviour
         // 이름도 전달하도록 수정
         HeldItemManager.Instance.ShowHeldItem(heldSprite, heldItemName);
         Debug.Log($"[분리] 슬롯에서 {itemName} 1개만 손에 듬");
+
+        SFXManager.Instance.PlayBbyongSFX();
     }
 
     public void TryAutoStoreHeldItem()

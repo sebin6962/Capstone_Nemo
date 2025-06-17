@@ -82,6 +82,8 @@ public class WateringCanAnchor : MonoBehaviour
                 Destroy(placedCan);
                 placedCan = null;
                 Debug.Log("물뿌리개를 들었습니다.");
+
+                SFXManager.Instance.PlayBbyongSFX();
                 return; // << 반드시 return해서 아래 상호작용 중복 방지!
             }
             // 2. 물뿌리개를 들고 있으면 -> 내려놓기
@@ -90,6 +92,8 @@ public class WateringCanAnchor : MonoBehaviour
                 RestoreWateringCan();
                 BoxInventoryManager.Instance.RemoveHeldItem();
                 Debug.Log("물뿌리개를 다시 놓았습니다.");
+
+                SFXManager.Instance.PlayBbyongSFX();
                 return; // << 반드시 return!
             }
             // 3. 그 외(다른 아이템 들고 있을 때)

@@ -62,6 +62,9 @@ public class MakerInfo : MonoBehaviour
     /// </summary>
     public IEnumerator ShowProgressAndSpawnItem(Sprite resultSprite, float duration = 3f)
     {
+        // SFX 시작
+        SFXManager.Instance.PlayMakerProgressSFX(makerId);
+
         // 1. 진행바 프리팹 인스턴스 생성 및 위치 지정
         RectTransform progressBar = Instantiate(progressBarPrefab, ProgressworldCanvasParent);
         Vector3 worldPos = transform.position + new Vector3(0f, 1.2f, 0f);
@@ -72,6 +75,7 @@ public class MakerInfo : MonoBehaviour
         if (fill == null)
         {
             Debug.LogError("진행바 프리팹에 'Fill' 오브젝트가 없습니다!");
+            SFXManager.Instance.StopMakerProgressSFX(); // 에러 시에도 멈추기
             yield break;
         }
         Image fillImage = fill.GetComponent<Image>();
@@ -85,6 +89,9 @@ public class MakerInfo : MonoBehaviour
             fillImage.fillAmount = Mathf.Clamp01(elapsed / duration);
             yield return null;
         }
+
+        // 진행바 끝났을 때 SFX 멈춤
+        SFXManager.Instance.StopMakerProgressSFX();
 
         // 4. 진행바 파괴
         Destroy(progressBar.gameObject);

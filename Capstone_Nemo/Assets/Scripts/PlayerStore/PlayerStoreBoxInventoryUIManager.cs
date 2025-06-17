@@ -92,6 +92,8 @@ public class PlayerStoreBoxInventoryUIManager : MonoBehaviour
                 HeldItemManager.Instance.ShowHeldItem(sprite, itemName);
                 Debug.Log($"[인벤토리] {itemName} 1개 소지 시작");
                 UpdateSlots();
+
+                SFXManager.Instance.PlayBbyongSFX();
             }
             else
             {

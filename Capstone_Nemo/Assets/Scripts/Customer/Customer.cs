@@ -157,6 +157,9 @@ public class Customer : MonoBehaviour
     }
     public virtual void Serve(string givenDagwa)
     {
+        // (1) 다과 제공 효과음 재생!
+        SFXManager.Instance.PlayPlateSoundSFX();
+
         if (state != CustomerState.Ordering || isServed) return;
 
         isTimerRunning = false;
@@ -174,6 +177,9 @@ public class Customer : MonoBehaviour
             orderUI.ShowTimerUI(false);
             Debug.Log($"정답 처리됨: {givenDagwa}");
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
+
+            // --- 정답 효과음 재생 추가 ---
+            SFXManager.Instance.PlayCorrectSFX();
         }
         else
         {
@@ -185,6 +191,9 @@ public class Customer : MonoBehaviour
             orderUI.ShowResult(false);
             orderUI.ShowTimerUI(false);
             Debug.Log($"오답 처리됨: {givenDagwa}");
+
+            // --- 오답 효과음 재생 추가 ---
+            SFXManager.Instance.PlayWrongSFX();
         }
 
         Invoke(nameof(Leave), 4f);
@@ -197,6 +206,10 @@ public class Customer : MonoBehaviour
 
         orderUI.ShowResult(false);
         orderUI.ShowTimerUI(false);
+
+        // --- 오답 효과음 재생 추가 ---
+        SFXManager.Instance.PlayWrongSFX();
+
         Invoke(nameof(Leave), 4f);
     }
     protected void Leave()

@@ -57,6 +57,8 @@ public class PlayerInteract : MonoBehaviour
                         Destroy(currentMaker.currentResultObject);
                         currentMaker.currentResultObject = null;
                         Debug.Log($"[E] 결과물 {resultName} 소지 시작");
+
+                        SFXManager.Instance.PlayBbyongSFX();
                     }
                 }
                 else
