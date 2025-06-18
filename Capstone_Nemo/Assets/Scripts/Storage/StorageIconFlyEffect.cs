@@ -27,7 +27,7 @@ public class StorageIconFlyEffect : MonoBehaviour
 
         RectTransform rt = icon.GetComponent<RectTransform>();
         rt.position = screenPos;
-        rt.localScale = Vector3.one;
+        rt.localScale = Vector3.one * 1.7f;
 
         StartCoroutine(FlyToTarget(rt));
     }
@@ -50,7 +50,7 @@ public class StorageIconFlyEffect : MonoBehaviour
             Vector3 mid = Vector3.Lerp(start, end, t) + new Vector3(0, curve * 50f, 0);
             icon.position = mid;
 
-            icon.localScale = Vector3.Lerp(Vector3.one, Vector3.one * 0.5f, t);
+            icon.localScale = Vector3.Lerp(Vector3.one * 1.7f, Vector3.one * 0.85f, t);
 
             yield return null;
         }

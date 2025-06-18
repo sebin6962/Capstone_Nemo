@@ -139,6 +139,7 @@ public class FarmManager : MonoBehaviour
 
     public void PlantSeed(Vector3 worldPos, CropData cropData)
     {
+        SFXManager.Instance.PlayFarmSeedSFX();
         Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
 
         if (!IsFarmTile(worldPos) || growingTiles.ContainsKey(cellPos))
@@ -225,7 +226,7 @@ public class FarmManager : MonoBehaviour
         // 스프라이트 가져오기
         //Sprite cropSprite = Resources.Load<Sprite>("Sprites" + cropName);
 
-        Sprite cropSprite = Resources.Load<Sprite>("Sprites/" + itemKey); // 수확물 스프라이트 로드
+        Sprite cropSprite = Resources.Load<Sprite>("Sprites/Ingredients/" + itemKey); // 수확물 스프라이트 로드
 
         // 이 타일의 월드 위치 기준
         Vector3 worldPos = fieldTilemap.CellToWorld(pos) + new Vector3(0.5f, 0.5f, 0);

@@ -15,6 +15,7 @@ public class SFXManager : MonoBehaviour
     public AudioClip correctClip;
     public AudioClip wrongClip;
     public AudioClip farmWaterClip;
+    public AudioClip farmSeedClip;
     public AudioClip boxOpenClip;
 
     // makerId별 효과음 관리용 (Inspector에서 할당)
@@ -78,6 +79,12 @@ public class SFXManager : MonoBehaviour
     {
         if (audioSource && farmWaterClip)
             audioSource.PlayOneShot(farmWaterClip);
+    }
+
+    public void PlayFarmSeedSFX()
+    {
+        if (audioSource && farmSeedClip)
+            audioSource.PlayOneShot(farmSeedClip);
     }
 
     public void PlayBoxOpenSFX()
