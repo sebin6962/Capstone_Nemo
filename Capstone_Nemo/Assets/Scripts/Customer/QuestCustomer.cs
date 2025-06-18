@@ -44,7 +44,7 @@ public class QuestCustomer : Customer
 
     public override void Serve(string givenDagwa)
     {
-        // (1) 다과 제공 효과음 재생!
+        // 다과 제공 효과음 재생
         SFXManager.Instance.PlayPlateSoundSFX();
 
         if (!isQuestAccepted || state != CustomerState.Ordering || isServed) return;
@@ -59,7 +59,7 @@ public class QuestCustomer : Customer
             questOrderUI.ShowTimerUI(false);
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
 
-            // 정답 효과음!
+            // 정답 효과음
             SFXManager.Instance.PlayCorrectSFX();
         }
         else
@@ -70,7 +70,7 @@ public class QuestCustomer : Customer
             questOrderUI.ShowTimerUI(false);
             isServed = false;
             isTimerRunning = true;
-            // 오답 효과음!
+            // 오답 효과음
             SFXManager.Instance.PlayWrongSFX();
 
             return;
@@ -104,6 +104,7 @@ public class QuestCustomer : Customer
     public void OnBubbleClicked()
     {
         questBubble.SetActive(false);
+        SFXManager.Instance.PlayBbyongSFX();
         questUI.StartQuestDialogue(questLines, portraitImage, this);
     }
 

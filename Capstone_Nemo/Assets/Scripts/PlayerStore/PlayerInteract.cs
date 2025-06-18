@@ -96,6 +96,7 @@ public class PlayerInteract : MonoBehaviour
 
                     HeldItemManager.Instance.HideHeldItem();
                     Debug.Log($"[E] {heldItemName} 제작기에 투입, 총 {currentMaker.inputItemNames.Count}/4");
+                    SFXManager.Instance.PlayBbyongSFX();
                     return;
                 }
         }
