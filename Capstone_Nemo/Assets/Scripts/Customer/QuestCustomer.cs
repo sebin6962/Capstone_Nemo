@@ -128,6 +128,8 @@ public class QuestCustomer : Customer
 
         questOrderUI.ShowResult(false);
         questOrderUI.ShowTimerUI(false);
+        // 오답 효과음 추가
+        SFXManager.Instance.PlayWrongSFX();
         Invoke(nameof(Leave), 4f);
     }
 }

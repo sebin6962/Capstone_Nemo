@@ -32,11 +32,13 @@ public class StorageInventoryUIManager : MonoBehaviour
         if (panel.activeSelf)
         {
             panel.SetActive(false);
+            SFXManager.Instance.PlayBoxOpenSFX();
         }
         else
         {
             UpdateSlots();
             panel.SetActive(true);
+            SFXManager.Instance.PlayBoxOpenSFX();
         }
 
         // 창고 열 때 확인 처리

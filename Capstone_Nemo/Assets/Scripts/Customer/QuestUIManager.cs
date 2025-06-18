@@ -51,6 +51,7 @@ public class QuestUIManager : MonoBehaviour
     public void OnAcceptButtonClicked()
     {
         questPanel.SetActive(false);
+        SFXManager.Instance.PlayBbyongSFX();
         currentCustomer.AcceptQuest(); 
     }
 }

@@ -124,6 +124,8 @@ public class DoGamUIManager : MonoBehaviour
         prevButton.transform.SetAsLastSibling();
         nextButton.transform.SetAsLastSibling();
 
+        SFXManager.Instance.PlayBbyongSFX();
+
         var entry = doGamDict[itemName];
         panel.SetActive(true);
         prevButton.gameObject.SetActive(true); 
@@ -168,6 +170,7 @@ public class DoGamUIManager : MonoBehaviour
 
     public void CloseDoGam()
     {
+        SFXManager.Instance.PlayBbyongSFX();
         panel.SetActive(false);
         prevButton.gameObject.SetActive(false); // ¹öÆ° ¼û±â±â
         nextButton.gameObject.SetActive(false); // ¹öÆ° ¼û±â±â
