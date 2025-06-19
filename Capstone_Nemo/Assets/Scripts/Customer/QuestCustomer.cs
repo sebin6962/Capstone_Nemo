@@ -40,7 +40,7 @@ public class QuestCustomer : Customer
     [SerializeField] private Sprite questDagwaSprite;
 
     private bool isQuestAccepted = false;
-    private float questTimeLimit = 30f;
+    private float questTimeLimit = 45f;
 
     public override void Serve(string givenDagwa)
     {

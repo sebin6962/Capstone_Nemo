@@ -26,7 +26,7 @@ public class Customer : MonoBehaviour
     public float speed = 3f;
 
     [SerializeField] protected OrderUI orderUI;
-    [SerializeField] private float orderTimeLimit = 30f;
+    [SerializeField] private float orderTimeLimit = 45f;
     protected float remainingTime;
     private string orderedDagwa;
     protected bool isTimerRunning = false;
