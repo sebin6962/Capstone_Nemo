@@ -33,8 +33,9 @@ public class CraftingRecipeManager : MonoBehaviour
 
     }
 
-    public Sprite GetResultSprite(string makerId, IEnumerable<string> selectedIngredients)
+    public Sprite GetResultSprite(string makerId, IEnumerable<string> selectedIngredients, out bool isMatched)
     {
+        isMatched = false;
         Debug.Log($"[레시피 매칭 시도] makerId = {makerId}, 재료 = {string.Join(", ", selectedIngredients)}");
 
         foreach (var recipe in allRecipes)
@@ -59,8 +60,16 @@ public class CraftingRecipeManager : MonoBehaviour
             }
         }
 
-        Debug.LogWarning("레시피 일치 실패 → 기본 결과 사용");
-        return null;
+        // 레시피 매칭 실패 시 확률적으로 꽃다발 or 망한떡 반환
+        float rand = UnityEngine.Random.value; // 0.0 ~ 1.0
+        string failResult = rand < 0.1f ? "FlowerBouquet" : "FailRiceCake";
+        string failPath = "Sprites/Ingredients/" + failResult;
+        Sprite failSprite = Resources.Load<Sprite>(failPath);
+        Debug.LogWarning($"레시피 없음! 랜덤 결과: {failResult} (확률={rand})");
+        return failSprite;
+
+        //Debug.LogWarning("레시피 일치 실패 → 기본 결과 사용");
+        //return null;
     }
 
 }

@@ -88,7 +88,10 @@ public static class ItemTooltipDB
         { "Mugwort", "쑥" },
         { "Rice", "쌀" },
         { "Mugwort_seedBag", "쑥 씨앗" },
-        { "Rice_seedBag", "쌀 모종" }
+        { "Rice_seedBag", "쌀 모종" },
+        { "Baekseolgi_finish", "백설기" },
+        { "Danhobakseolgi_finish", "단호박설기" },
+        { "Rainbowseolgi_finish", "무지개설기" }
         // 필요한 만큼 추가
     };
 }

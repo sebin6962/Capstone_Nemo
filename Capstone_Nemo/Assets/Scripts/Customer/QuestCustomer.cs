@@ -57,6 +57,10 @@ public class QuestCustomer : Customer
             state = CustomerState.Served;
             questOrderUI.ShowResult(true);
             questOrderUI.ShowTimerUI(false);
+
+            // 경험치 지급
+            PlayerLevelManager.Instance?.AddExp(50);
+
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
 
             // 정답 효과음

@@ -176,6 +176,10 @@ public class Customer : MonoBehaviour
             orderUI.ShowResult(true);
             orderUI.ShowTimerUI(false);
             Debug.Log($"정답 처리됨: {givenDagwa}");
+
+            // 경험치 지급
+            PlayerLevelManager.Instance?.AddExp(20);
+
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
 
             // --- 정답 효과음 재생 추가 ---

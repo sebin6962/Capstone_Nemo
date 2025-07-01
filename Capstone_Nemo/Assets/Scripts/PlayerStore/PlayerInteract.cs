@@ -184,11 +184,11 @@ public class PlayerInteract : MonoBehaviour
             // 2. 제작기 근처에서 재료가 1개 이상 쌓인 경우에만 제작 시도
             if (isNearMaker && currentMaker != null && currentMaker.inputItemNames.Count > 0)
             {
+                bool isRecipeMatched;
                 var recipeSet = new HashSet<string>(currentMaker.inputItemNames);
-                Sprite resultSprite = CraftingRecipeManager.Instance.GetResultSprite(currentMaker.makerId, recipeSet);
+                Sprite resultSprite = CraftingRecipeManager.Instance.GetResultSprite(currentMaker.makerId, recipeSet, out isRecipeMatched);
 
-                if (resultSprite != null)
-                {
+                
                     // 제작 시작 시 슬롯 UI 비활성화 (여러 제작기 독립)
                     currentMaker.DeactivateSlotUI();
 
@@ -202,11 +202,12 @@ public class PlayerInteract : MonoBehaviour
                     currentMaker.inputItemSprites.Clear();
                     if (currentMaker.slotUIManager != null)
                         currentMaker.slotUIManager.ClearSlots();
-                }
+
+                if (isRecipeMatched)
+                    Debug.Log("[Space] 제작 성공, 결과: " + resultSprite.name);
                 else
-                {
-                    Debug.LogWarning("[Space] 제작 실패: 레시피 매칭 실패");
-                }
+                    Debug.Log("[Space] 레시피 없음 → 랜덤으로 꽃다발 or 망한떡 생성됨, 결과: " + resultSprite.name);
+
                 return;
             }
         }
