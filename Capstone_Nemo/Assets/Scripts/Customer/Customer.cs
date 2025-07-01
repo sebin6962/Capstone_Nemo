@@ -180,6 +180,9 @@ public class Customer : MonoBehaviour
             // 경험치 지급
             PlayerLevelManager.Instance?.AddExp(20);
 
+            // 별빛 지급
+            StarDataManager.Instance?.AddStarlight(10);
+
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
 
             // --- 정답 효과음 재생 추가 ---

@@ -60,6 +60,8 @@ public class QuestCustomer : Customer
 
             // 경험치 지급
             PlayerLevelManager.Instance?.AddExp(50);
+            // 별빛 지급
+            StarDataManager.Instance?.AddStarlight(30);
 
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
 
