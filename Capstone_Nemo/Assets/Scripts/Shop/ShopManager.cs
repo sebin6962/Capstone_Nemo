@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.IO;
 
 public class ShopManager : MonoBehaviour
 {
@@ -25,17 +26,27 @@ public class ShopManager : MonoBehaviour
     private Dictionary<ShopData, ShopItemSlot> slotDict = new();
     private Dictionary<ShopData, BasketPanelPrefab> basketPanelDict = new();
 
+    private string shopDataPath;
 
-    void Start()
+    void Awake()
     {
-        ShopItems = new List<ShopData>
-        {
-            new ShopData{itemName = "참기름", price = 10},
-            new ShopData{itemName = "꿀", price = 15},
-            new ShopData{itemName = "계피", price = 5}
-        };
+        shopDataPath = Path.Combine(Application.persistentDataPath, "shopData.json");
+        LoadShopData();
+    }
 
-  
+    void LoadShopData()
+    {
+        if (!File.Exists(shopDataPath))
+        {
+            Debug.LogWarning("shopData.json 파일이 존재하지 않음");
+            return;
+        }
+
+        string json = File.ReadAllText(shopDataPath);
+        ShopDataList data = JsonUtility.FromJson<ShopDataList>(json);
+        ShopItems = data.items;
+
+        Debug.Log($"상점 아이템 {ShopItems.Count}개 로드됨");
     }
 
     public void OpenShop()
@@ -172,7 +183,10 @@ public class ShopManager : MonoBehaviour
 
         foreach (var entry in basketDict.Values)
             if (entry.quantity > 0)
+            {
+                StorageInventory.Instance.AddItem(entry.item.itemName, entry.quantity);
                 Debug.Log($"{entry.item.itemName} {entry.quantity}개 구매");
+            }
 
         // 별빛 차감은 StarDataManager를 통해
         StarDataManager.Instance.SpendStarlight(total);
@@ -186,6 +200,8 @@ public class ShopManager : MonoBehaviour
             kvp.Value.UpdateDisplay(0);
 
         UpdateTotalPrice();
+
+        StorageInventory.Instance.SaveStorage();
     }
 
     public void Reset()

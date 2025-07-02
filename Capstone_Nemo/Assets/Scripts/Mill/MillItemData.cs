@@ -6,13 +6,13 @@ using UnityEngine;
 
 public class MillItemData
 {
-    /*public string itemName;*/
+    public string itemName;
     public Sprite icon;
     public int itemQuantity;
 
-    public MillItemData(/*string name,*/ Sprite iconSprite, int quantity)
+    public MillItemData(string name, Sprite iconSprite, int quantity)
     {
-        /*itemName = name;*/
+        itemName = name;
         icon = iconSprite;
         this.itemQuantity = quantity;
     }

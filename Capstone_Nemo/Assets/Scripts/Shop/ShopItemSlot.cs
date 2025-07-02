@@ -11,6 +11,7 @@ public class ShopItemSlot : MonoBehaviour
     [SerializeField] private TMP_Text quantityText;
     [SerializeField] private Button plusButton;
     [SerializeField] private Button minusButton;
+    [SerializeField] private Image itemImage;
 
     private ShopData item;
     private ShopManager manager;
@@ -20,8 +21,24 @@ public class ShopItemSlot : MonoBehaviour
         item = newItem;
         manager = shopManager;
 
-        itemNameText.text = item.itemName;
+        string displayName;
+        if (!ItemTooltipDB.TooltipTexts.TryGetValue(item.itemName, out displayName))
+            displayName = item.itemName; 
+
+        itemNameText.text = displayName;
         priceText.text = item.price + " 별빛";
+
+        Sprite sprite = Resources.Load<Sprite>("Sprites/Ingredients/" + item.itemName);
+        if (sprite != null)
+        {
+            itemImage.sprite = sprite;
+            itemImage.enabled = true;
+        }
+        else
+        {
+            Debug.LogWarning($"[ShopItemSlot] 스프라이트 로드 실패: {item.itemName}");
+            itemImage.enabled = false;
+        }
 
         plusButton.onClick.AddListener(OnPlusButtonClicked);
         minusButton.onClick.AddListener(OnMinusButtonClicked);

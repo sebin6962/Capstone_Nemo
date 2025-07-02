@@ -15,14 +15,39 @@ public class MillManager : MonoBehaviour
     private MillItemData selectedItem = null;
     private List<MillItemData> Inventory;
 
+    [SerializeField] private Image ResultEffectImage;
+    [SerializeField] private float displayDuration = 0.7f;
+
     void Start()
     {
-        Inventory = new List<MillItemData>
+        /*Inventory = new List<MillItemData>
         {
-            new MillItemData(/*"쌀",*/ testIcons[0], 3),
-            new MillItemData(/*"찹쌀",*/ testIcons[1], 5),
-            new MillItemData(/*"단호박",*/ testIcons[2], 2)
-        };
+            new MillItemData(*//*"쌀",*//* testIcons[0], 3),
+            new MillItemData(*//*"찹쌀",*//* testIcons[1], 5),
+            new MillItemData(*//*"단호박",*//* testIcons[2], 2)
+        };*/
+
+        Inventory = new List<MillItemData>();
+
+        var storageItems = StorageInventory.Instance.GetAllItems();
+
+        foreach (var pair in storageItems)
+        {
+            string itemName = pair.Key;
+            int itemCount = pair.Value;
+
+            //가루 변환 가능한 아이템 필터링
+            if (!IsMillable(itemName)) continue;
+
+            Sprite icon = Resources.Load<Sprite>("Sprites/Ingredients/" + itemName);
+            if (icon == null)
+            {
+                Debug.LogWarning("[MillManager] 아이템 스프라이트 없음: " + itemName);
+                continue;
+            }
+
+            Inventory.Add(new MillItemData(itemName, icon, itemCount));
+        }
 
         confirmButton.onClick.AddListener(Confirm);
         confirmButton.interactable = false;
@@ -46,7 +71,13 @@ public class MillManager : MonoBehaviour
         
     }
 
-  
+    private bool IsMillable(string itemName)
+    {
+        //가루로 만들 수 있는 재료
+        return itemName == "Danhobak" || itemName == "Baeknyeoncho" || itemName == "Mugwort";
+    }
+
+
     public void SelectItem(MillItemData item)
     {
         if (ReferenceEquals(selectedItem, item))
@@ -85,23 +116,45 @@ public class MillManager : MonoBehaviour
 
     public void Confirm()
     {
-        /*Debug.Log($"[Confirm 호출] MillManager 인스턴스: {this.GetInstanceID()}");
-
-        Debug.Log("Confirm 눌림 - 선택된 아이템: " + (selectedItem != null ? selectedItem.icon.name : "null"));*/
-
-        /*if (selectedItem == null)
-        {
-            Debug.Log("선택된 아이템이 없어 Confirm 취소됨");
+        if (selectedItem == null)
             return;
-        }*/
 
-        Debug.Log($"{selectedItem.icon.name} 아이템을 가루로 만들음");
+        string sourceName = selectedItem.itemName;
+        if(!MillDB.GrindResult.TryGetValue(sourceName, out string resultName))
+        {
+            return;
+        }
+
+        StorageInventory.Instance.AddItem(sourceName, -1);
+        StorageInventory.Instance.AddItem(resultName, 1);
+        StorageInventory.Instance.SaveStorage();
+        Debug.Log($"{sourceName} → {resultName}로 변환");
+
+        Sprite resultSprite = Resources.Load<Sprite>("Sprites/Ingredients/" + resultName);
+        if (resultSprite != null)
+            ShowResutEffect(resultSprite);
+
+        else
+            Debug.LogWarning($"[MillManager] 스프라이트 로드 실패: {resultName}");
 
         selectedItem = null;
         selectedSlot.Clear();
         UpdateInventoryUI();
         confirmButton.interactable = false;
         
+    }
+
+    public void ShowResutEffect(Sprite sprite)
+    {
+        ResultEffectImage.sprite = sprite;
+        ResultEffectImage.gameObject.SetActive(true);
+        StartCoroutine(HideResultEffectAfterDelay());
+    }
+
+    IEnumerator HideResultEffectAfterDelay()
+    {
+        yield return new WaitForSeconds(displayDuration);
+        ResultEffectImage.gameObject.SetActive(false);
     }
 
     public void CloseMill()
