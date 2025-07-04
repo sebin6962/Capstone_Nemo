@@ -35,6 +35,7 @@ public class QuestCustomer : Customer
     [SerializeField] private QuestOrderUI questOrderUI;
 
     [SerializeField] private string[] questLines;
+    [SerializeField] private string[] questCompleteLines;
     [SerializeField] private Sprite portraitImage;
     [SerializeField] private string questDagwaName;
     [SerializeField] private Sprite questDagwaSprite;
@@ -57,6 +58,7 @@ public class QuestCustomer : Customer
             state = CustomerState.Served;
             questOrderUI.ShowResult(true);
             questOrderUI.ShowTimerUI(false);
+            questUI.StartQuestCompleteDialogue(questCompleteLines, portraitImage, this);
 
             // 경험치 지급
             PlayerLevelManager.Instance?.AddExp(50);
