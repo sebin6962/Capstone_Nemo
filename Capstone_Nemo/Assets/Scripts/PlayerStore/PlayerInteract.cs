@@ -14,6 +14,9 @@ public class PlayerInteract : MonoBehaviour
 
     private TableInfo nearbyTable;   // 탁자 감지용(Trigger/Collision에서 할당)
     //private bool requestCrafting = false;
+
+    private BoxObject nearbyBox;
+
     private void Awake()
     {
         Instance = this;
@@ -25,7 +28,7 @@ public class PlayerInteract : MonoBehaviour
     if (Input.GetKeyDown(interactKey))
     {
         // 1. 상자(창고) 인벤토리가 열려 있고, 플레이어가 상자와 닿아있을 때 E키 → UI 닫기
-        if (nearbyStorage != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
+        if (nearbyBox != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
         {
             PlayerStoreBoxInventoryUIManager.Instance.CloseUI();
             Debug.Log("[E] 상자 인벤토리 닫힘");
@@ -33,7 +36,7 @@ public class PlayerInteract : MonoBehaviour
         }
 
         // 2. 상자(창고)에 닿아 있고, UI가 닫혀 있을 때 → E키로 열기
-        if (nearbyStorage != null)
+        if (nearbyBox != null)
         {
             PlayerStoreBoxInventoryUIManager.Instance.OpenUI(nearbyStorage);
             Debug.Log("[E] 상자 인벤토리 열기");
@@ -271,7 +274,7 @@ public class PlayerInteract : MonoBehaviour
 
         if (other.CompareTag("StorageBox")) // 꼭 Tag 설정 필요
         {
-            nearbyStorage = other.GetComponent<StorageInventory>();
+            nearbyBox = other.GetComponent<BoxObject>();
         }
 
         if (other.CompareTag("Table"))
@@ -294,8 +297,8 @@ public class PlayerInteract : MonoBehaviour
 
         if (other.CompareTag("StorageBox"))
         {
-            if (nearbyStorage == other.GetComponent<StorageInventory>())
-                nearbyStorage = null;
+            if (nearbyBox == other.GetComponent<BoxObject>())
+                nearbyBox = null;
         }
 
         if (other.CompareTag("Table") && other.GetComponent<TableInfo>() == nearbyTable)

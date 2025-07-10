@@ -21,7 +21,7 @@ public class TimeManager : MonoBehaviour
 
     public Image clockHandImage;
 
-    public int currentDay = 1;             // 일차
+    public int currentDay = 0;             // 일차
     private int totalGameMinutes = (26 - 9) * 60; // 하루 총 분(9시 ~ 26시 → 1020분)
 
     private string savePath;
@@ -33,8 +33,8 @@ public class TimeManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            savePath = Path.Combine(Application.persistentDataPath, "dayData.json");
-            LoadDay();
+            DontDestroyOnLoad(gameObject);
+            // savePath는 반드시 서버명 세팅 후 지정!
         }
         else
         {
@@ -45,6 +45,11 @@ public class TimeManager : MonoBehaviour
     void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    public void SetServerName(string serverName)
+    {
+        savePath = Path.Combine(Application.persistentDataPath, $"dayData_{serverName}.json");
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -93,10 +98,13 @@ public class TimeManager : MonoBehaviour
         }
     }
 
-    void LoadDay()
+    public void LoadDay()
     {
+        Debug.Log("[DayData] 실제 로드 경로: " + savePath);
+
         if (File.Exists(savePath))
         {
+            Debug.Log("[DayData] 파일 있음");
             string json = File.ReadAllText(savePath);
             DayData data = JsonUtility.FromJson<DayData>(json);
             currentDay = data.day;
@@ -153,6 +161,11 @@ public class TimeManager : MonoBehaviour
 
     public void SaveDayData()
     {
+        if (string.IsNullOrEmpty(savePath))
+        {
+            Debug.LogWarning("[SaveDayData] 서버명 미지정 상태, 저장 skip!");
+            return;
+        }
         DayData data = new DayData
         {
             day = currentDay,

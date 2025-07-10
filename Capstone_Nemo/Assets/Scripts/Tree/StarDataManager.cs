@@ -22,14 +22,17 @@ public class StarDataManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            savePath = Application.persistentDataPath + "/playerStarData.json";
-            LoadStarData();
-            SaveStarData(); //테스트용 실행 시 바로 json파일 생성
+            // savePath는 서버명 할당될 때 지정!
         }
         else
         {
             Destroy(gameObject);
         }
+    }
+
+    public void SetServerName(string serverName)
+    {
+        savePath = Application.persistentDataPath + $"/playerStarData_{serverName}.json";
     }
 
     public void SaveStarData()
@@ -64,5 +67,14 @@ public class StarDataManager : MonoBehaviour
         playerData.starlight -= amount;
         SaveStarData();
         FindObjectOfType<StarlightUI>().UpdateStarlightUI();
+    }
+
+    public void SetStarlight(int starlight)
+    {
+        playerData.starlight = starlight;
+        SaveStarData();
+        // UI 즉시 갱신 필요 시
+        var ui = FindObjectOfType<StarlightUI>();
+        if (ui != null) ui.UpdateStarlightUI();
     }
 }

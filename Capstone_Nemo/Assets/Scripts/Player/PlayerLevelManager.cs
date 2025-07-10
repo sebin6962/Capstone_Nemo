@@ -11,7 +11,7 @@ public class PlayerLevelManager : MonoBehaviour
     public int Exp { get; private set; } = 0;
     public int ExpToNextLevel => 100 + (Level - 1) * 50;
 
-    private string SavePath => Path.Combine(Application.persistentDataPath, "player_level_data.json");
+    private string savePath;
 
     void Awake()
     {
@@ -19,12 +19,17 @@ public class PlayerLevelManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            Load();
+            // savePath는 서버명 할당될 때 지정!
         }
         else
         {
             Destroy(gameObject);
         }
+    }
+
+    public void SetServerName(string serverName)
+    {
+        savePath = Path.Combine(Application.persistentDataPath, $"player_level_data_{serverName}.json");
     }
 
     public void AddExp(int amount)
@@ -48,29 +53,33 @@ public class PlayerLevelManager : MonoBehaviour
             Exp = this.Exp
         };
         string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(SavePath, json);
-        Debug.Log($"[PlayerLevelManager] 저장됨: {SavePath}");
+        File.WriteAllText(savePath, json);
     }
 
     public void Load()
     {
-        if (File.Exists(SavePath))
+        if (File.Exists(savePath))
         {
-            string json = File.ReadAllText(SavePath);
+            string json = File.ReadAllText(savePath);
             PlayerLevelData data = JsonUtility.FromJson<PlayerLevelData>(json);
             if (data != null)
             {
                 this.Level = data.Level;
                 this.Exp = data.Exp;
             }
-            Debug.Log($"[PlayerLevelManager] 불러오기 완료: Lv.{Level} / Exp {Exp}");
         }
         else
         {
-            Debug.Log("[PlayerLevelManager] 저장된 레벨 데이터 없음. 새로 생성.");
             Level = 1;
             Exp = 0;
+            Save();
         }
+    }
+
+    public void SetLevelAndExp(int level, int exp)
+    {
+        this.Level = Mathf.Max(1, level);
+        this.Exp = Mathf.Max(0, exp);
     }
 }
 

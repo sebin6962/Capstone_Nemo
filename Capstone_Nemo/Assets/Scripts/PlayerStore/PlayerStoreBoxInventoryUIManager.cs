@@ -23,6 +23,8 @@ public class PlayerStoreBoxInventoryUIManager : MonoBehaviour
 
         if (closeButton != null)
             closeButton.onClick.AddListener(CloseUI);
+
+        StorageInventory.Instance.LoadStorage();
     }
 
     public void OpenUI(StorageInventory storage)
@@ -36,6 +38,7 @@ public class PlayerStoreBoxInventoryUIManager : MonoBehaviour
             return;
 
         currentInventory = storage;
+
         panel.SetActive(true);
         SFXManager.Instance.PlayBoxOpenSFX();
         //selectedItemName = null;
@@ -65,7 +68,7 @@ public class PlayerStoreBoxInventoryUIManager : MonoBehaviour
             slot.ClearSlot();
 
         int i = 0;
-        foreach (var pair in currentInventory.GetAllItems())
+        foreach (var pair in StorageInventory.Instance.GetAllItems())
         {
             if (i >= slots.Count) break;
 
@@ -87,10 +90,10 @@ public class PlayerStoreBoxInventoryUIManager : MonoBehaviour
         if (!HeldItemManager.Instance.IsHoldingItem())
         {
             // 재고 있는지 체크
-            if (currentInventory.GetItemCount(itemName) > 0)
+            if (StorageInventory.Instance.GetItemCount(itemName) > 0)
             {
-                currentInventory.AddItem(itemName, -1);
-                currentInventory.SaveStorage();
+                StorageInventory.Instance.AddItem(itemName, -1);
+                StorageInventory.Instance.SaveStorage();
                 HeldItemManager.Instance.ShowHeldItem(sprite, itemName);
                 Debug.Log($"[인벤토리] {itemName} 1개 소지 시작");
                 UpdateSlots();

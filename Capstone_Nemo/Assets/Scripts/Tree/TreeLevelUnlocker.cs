@@ -8,6 +8,8 @@ using System.IO;
 
 public class TreeLevelUnlocker : MonoBehaviour
 {
+    public static TreeLevelUnlocker Instance;
+
     public static int CurrentLevel = 0; // 어디서든 접근 가능하도록 선언
 
     public Button[] levelButtons;                // 0: 첫 레벨
@@ -41,8 +43,13 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     void Awake()
     {
-        savePath = Path.Combine(Application.persistentDataPath, "treeUnlock.json");
-        LoadUnlockData();
+        Instance = this;
+        // savePath는 SetServerName에서 할당
+    }
+
+    public void SetServerName(string serverName)
+    {
+        savePath = Path.Combine(Application.persistentDataPath, $"treeUnlock_{serverName}.json");
     }
 
     void Start()
@@ -137,13 +144,13 @@ public class TreeLevelUnlocker : MonoBehaviour
         ShowUnlockEffectPanel(currentUnlockedLevel);
     }
 
-    void SaveUnlockData()
+    public void SaveUnlockData()
     {
         string json = JsonUtility.ToJson(unlockData, true);
         File.WriteAllText(savePath, json);
     }
 
-    void LoadUnlockData()
+    public void LoadUnlockData()
     {
         if (File.Exists(savePath))
         {
@@ -153,6 +160,7 @@ public class TreeLevelUnlocker : MonoBehaviour
         else
         {
             unlockData = new TreeUnlockData();
+            SaveUnlockData();
         }
         currentUnlockedLevel = unlockData.currentUnlockedLevel;
     }
@@ -239,5 +247,14 @@ public class TreeLevelUnlocker : MonoBehaviour
     public void ClosePanel()
     {
         unlockEffectPanel.SetActive(false); // 패널만 숨김
+    }
+
+    public void SetCurrentUnlockedLevel(int level)
+    {
+        currentUnlockedLevel = level;
+        unlockData.currentUnlockedLevel = level;
+        CurrentLevel = level;
+        SaveUnlockData();
+        UpdateLevelButtons();
     }
 }

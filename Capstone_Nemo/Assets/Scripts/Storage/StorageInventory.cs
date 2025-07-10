@@ -28,13 +28,18 @@ public class StorageInventory : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            savePath = Path.Combine(Application.persistentDataPath, "storage.json");
-            LoadStorage();
+            DontDestroyOnLoad(gameObject);
+            // savePath는 SetServerName에서 할당
         }
         else
         {
             Destroy(gameObject);
         }
+    }
+
+    public void SetServerName(string serverName)
+    {
+        savePath = Path.Combine(Application.persistentDataPath, $"storage_{serverName}.json");
     }
 
     public void AddItem(string itemName, int amount)
@@ -87,32 +92,29 @@ public class StorageInventory : MonoBehaviour
     public void SaveStorage()
     {
         var data = new StorageData();
-
         foreach (var pair in storage)
             data.items.Add(new StorageEntry { name = pair.Key, amount = pair.Value });
-
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(savePath, json);
-
-        Debug.Log("창고 저장 완료");
     }
 
     public void LoadStorage()
     {
+        Debug.Log("[StorageInventory] 실제 로드 경로: " + savePath);
+
         if (File.Exists(savePath))
         {
             string json = File.ReadAllText(savePath);
             var data = JsonUtility.FromJson<StorageData>(json);
-
             storage.Clear();
             foreach (var entry in data.items)
                 storage[entry.name] = entry.amount;
-
-            Debug.Log("창고 불러오기 완료");
         }
         else
         {
-            Debug.Log("저장된 창고 없음. 새로 시작합니다.");
+            Debug.LogWarning("[StorageInventory] 파일 없음! 초기화!");
+            storage.Clear();
+            SaveStorage();
         }
     }
 
@@ -124,6 +126,14 @@ public class StorageInventory : MonoBehaviour
     public Dictionary<string, int> GetAllItems()
     {
         return new Dictionary<string, int>(storage);
+    }
+
+    public void LoadFromSaveData(List<StorageEntry> entries)
+    {
+        storage.Clear();
+        if (entries == null) return;
+        foreach (var entry in entries)
+            storage[entry.name] = entry.amount;
     }
 }
 
