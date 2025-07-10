@@ -2443,6 +2443,106 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7304624685101553419, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
   m_PrefabInstance: {fileID: 513893859}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &287504214
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 287504215}
+  - component: {fileID: 287504217}
+  - component: {fileID: 287504216}
+  m_Layer: 11
+  m_Name: Grinder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &287504215
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 287504214}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.83, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1492493996}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &287504216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 287504214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f36431383b70cc4ebb22832c01ee83e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerId: Grinder
+  currentResultObject: {fileID: 0}
+  inputItemNames: []
+  inputItemSprites: []
+  slotUIManagerPrefab: {fileID: 5509430333715856358, guid: a3fb2e1c675f2384281fabecfe1d11b0, type: 3}
+  slotUIManager: {fileID: 0}
+  worldCanvasParent: {fileID: 2098681224}
+  progressBarPrefab: {fileID: 1745278171229669937, guid: aa909b98d2421cb4a91539c1ba7ea254, type: 3}
+  resultItemPrefab: {fileID: 1096294367421740299, guid: 1d7fd1926562e4a49928c3395ecf69f2, type: 3}
+  ProgressworldCanvasParent: {fileID: 2098681224}
+--- !u!61 &287504217
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 287504214}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.018435717, y: 0.13004413}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1.7842741, y: 0.73991174}
+  m_EdgeRadius: 0
 --- !u!1 &293193304
 GameObject:
   m_ObjectHideFlags: 0
@@ -6077,6 +6177,8 @@ MonoBehaviour:
   nameText: {fileID: 231502880}
   descriptionText: {fileID: 1962885608}
   recipeText: {fileID: 1895496818}
+  recipeImageParent: {fileID: 0}
+  recipeImagePrefab: {fileID: 0}
 --- !u!4 &639285684 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8707421839701362121, guid: 22b598cfa698ad640b90a46f1177f4b3, type: 3}
@@ -8863,8 +8965,6 @@ GameObject:
   - component: {fileID: 1008708548}
   - component: {fileID: 1008708549}
   - component: {fileID: 1008708550}
-  - component: {fileID: 1008708551}
-  - component: {fileID: 1008708552}
   m_Layer: 10
   m_Name: makerTable02
   m_TagString: Untagged
@@ -8884,7 +8984,8 @@ Transform:
   m_LocalPosition: {x: 2.926, y: 6.705, z: 41.88461}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1808628574}
   m_Father: {fileID: 1850317855}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1008708548
@@ -8995,73 +9096,6 @@ BoxCollider2D:
   m_AutoTiling: 0
   serializedVersion: 2
   m_Size: {x: 2, y: 0.7559902}
-  m_EdgeRadius: 0
---- !u!114 &1008708551
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1008708546}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f36431383b70cc4ebb22832c01ee83e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  makerId: 
-  currentResultObject: {fileID: 0}
-  inputItemNames: []
-  inputItemSprites: []
-  slotUIManagerPrefab: {fileID: 0}
-  slotUIManager: {fileID: 0}
-  worldCanvasParent: {fileID: 0}
-  progressBarPrefab: {fileID: 0}
-  resultItemPrefab: {fileID: 0}
-  ProgressworldCanvasParent: {fileID: 0}
---- !u!61 &1008708552
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1008708546}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0.017685175, y: 0.9373503}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2, y: 2.3125}
-    newSize: {x: 2, y: 1.5}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  serializedVersion: 2
-  m_Size: {x: 2.2652888, y: 0.7030878}
   m_EdgeRadius: 0
 --- !u!4 &1010820160 stripped
 Transform:
@@ -13530,8 +13564,6 @@ GameObject:
   - component: {fileID: 1492493997}
   - component: {fileID: 1492493999}
   - component: {fileID: 1492493998}
-  - component: {fileID: 1492494000}
-  - component: {fileID: 1492494001}
   m_Layer: 11
   m_Name: makerTable01
   m_TagString: Mixing
@@ -13551,7 +13583,8 @@ Transform:
   m_LocalPosition: {x: -1.075, y: 6.828, z: 41.88461}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 287504215}
   m_Father: {fileID: 1850317855}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1492493997
@@ -13663,73 +13696,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28de2de6b03b13744aa44f75627a420e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!61 &1492494000
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1492493995}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0.020231724, y: -0.1199128}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2, y: 2.5625}
-    newSize: {x: 2, y: 1.75}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  serializedVersion: 2
-  m_Size: {x: 2.5452023, y: 3.0185165}
-  m_EdgeRadius: 0
---- !u!114 &1492494001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1492493995}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f36431383b70cc4ebb22832c01ee83e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  makerId: 
-  currentResultObject: {fileID: 0}
-  inputItemNames: []
-  inputItemSprites: []
-  slotUIManagerPrefab: {fileID: 0}
-  slotUIManager: {fileID: 0}
-  worldCanvasParent: {fileID: 0}
-  progressBarPrefab: {fileID: 0}
-  resultItemPrefab: {fileID: 0}
-  ProgressworldCanvasParent: {fileID: 0}
 --- !u!1 &1511104902
 GameObject:
   m_ObjectHideFlags: 0
@@ -17754,6 +17720,106 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1808628573
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1808628574}
+  - component: {fileID: 1808628576}
+  - component: {fileID: 1808628575}
+  m_Layer: 10
+  m_Name: Deco
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1808628574
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1808628573}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1008708547}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1808628575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1808628573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f36431383b70cc4ebb22832c01ee83e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerId: Deco
+  currentResultObject: {fileID: 0}
+  inputItemNames: []
+  inputItemSprites: []
+  slotUIManagerPrefab: {fileID: 5509430333715856358, guid: a3fb2e1c675f2384281fabecfe1d11b0, type: 3}
+  slotUIManager: {fileID: 0}
+  worldCanvasParent: {fileID: 2098681224}
+  progressBarPrefab: {fileID: 1745278171229669937, guid: aa909b98d2421cb4a91539c1ba7ea254, type: 3}
+  resultItemPrefab: {fileID: 1096294367421740299, guid: 1d7fd1926562e4a49928c3395ecf69f2, type: 3}
+  ProgressworldCanvasParent: {fileID: 2098681224}
+--- !u!61 &1808628576
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1808628573}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.024081945, y: -0.31788558}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1.722467, y: 0.6917473}
+  m_EdgeRadius: 0
 --- !u!114 &1828560693 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7759495458947039924, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
