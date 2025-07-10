@@ -8,6 +8,7 @@ public class DoGamEntry
     public string name;
     public string image;
     public string description;
+    public List<string> recipeImage;
     public List<string> recipe;
     public string category;
 }

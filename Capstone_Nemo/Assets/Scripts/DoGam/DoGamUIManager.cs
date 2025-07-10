@@ -29,6 +29,9 @@ public class DoGamUIManager : MonoBehaviour
     public TextMeshProUGUI descriptionText;
     public TextMeshProUGUI recipeText;
 
+    public Transform recipeImageParent; // 레시피 이미지들이 붙을 부모 오브젝트
+    public GameObject recipeImagePrefab; // Image만 있는 프리팹
+
     private Dictionary<string, DoGamEntry> doGamDict;
 
     private void Awake()
@@ -146,12 +149,31 @@ public class DoGamUIManager : MonoBehaviour
     public void ShowEntry(int index)
     {
         if (index < 0 || index >= entryList.Count) return;
-
         var entry = entryList[index];
 
         nameText.text = entry.name;
         descriptionText.text = entry.description;
+
+        // 1. 텍스트 출력 (기존대로)
         recipeText.text = string.Join("\n", entry.recipe);
+
+        // 2. 이미지 출력
+        // 기존 이미지 오브젝트 모두 제거
+        foreach (Transform child in recipeImageParent)
+            Destroy(child.gameObject);
+
+        // 각 레시피 줄마다 이미지 하나씩 인스턴스 (파일명 규칙에 따라)
+        for (int i = 0; i < entry.recipe.Count; i++)
+        {
+            var go = Instantiate(recipeImagePrefab, recipeImageParent);
+            string imgFile = entry.recipeImage != null && i < entry.recipeImage.Count
+                ? entry.recipeImage[i]
+                : null;
+            var sprite = string.IsNullOrEmpty(imgFile) ? null : Resources.Load<Sprite>($"Sprites/Dogam/{imgFile}");
+            go.GetComponent<Image>().sprite = sprite;
+            go.SetActive(sprite != null);
+        }
+
         itemImage.sprite = Resources.Load<Sprite>("Sprites/Dagwa/" + entry.image);
     }
 
