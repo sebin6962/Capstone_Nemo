@@ -7,7 +7,7 @@ using TMPro;
 public class NewGameManager : MonoBehaviour
 {
     public TMP_InputField inputServerName;
-    public TMP_InputField inputPlayerName;
+    //public TMP_InputField inputPlayerName;
     public Button btnCreate;
     public Button btnCancel;
 
@@ -24,11 +24,14 @@ public class NewGameManager : MonoBehaviour
     void OnCreateClicked()
     {
         string serverName = inputServerName.text.Trim();
-        string playerName = inputPlayerName.text.Trim();
+        //string playerName = inputPlayerName.text.Trim();
 
-        // 서버/플레이어 이름 모두 입력해야만 생성
-        if (string.IsNullOrEmpty(serverName) || string.IsNullOrEmpty(playerName))
+        // 서버 이름 입력해야만 생성
+        if (string.IsNullOrEmpty(serverName))
             return;
+
+        //if (string.IsNullOrEmpty(serverName) || string.IsNullOrEmpty(playerName))
+        //return;
 
         string profilePath = Application.persistentDataPath + "/profile_myuser.json";
         Profile profile;
@@ -52,7 +55,7 @@ public class NewGameManager : MonoBehaviour
         SaveData saveData = new SaveData
         {
             serverName = serverName,
-            playerName = playerName // ★ 플레이어 이름 저장
+            //playerName = playerName // 플레이어 이름 저장
         };
         File.WriteAllText(savePath, JsonUtility.ToJson(saveData, true));
 

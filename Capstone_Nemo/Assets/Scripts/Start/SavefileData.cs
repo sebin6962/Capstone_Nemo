@@ -40,6 +40,11 @@ public class SaveData
     // ⑤ 아이템 재고 (이름, 수량)
     public List<StorageEntry> storageItems;
 
+    public float playerPosX;
+    public float playerPosY;
+    public float moveDirX;
+    public float moveDirY;
+
     // 생성자: 새 게임 생성시 0으로 초기화
     public SaveData()
     {
@@ -49,6 +54,9 @@ public class SaveData
         level = 1;
         currentUnlockedTreeLevel = 0;
         storageItems = new List<StorageEntry>();
+        // 위치/방향 기본값(0)
+        playerPosX = 0f; playerPosY = 0f;
+        moveDirX = 0f; moveDirY = 1f;
     }
 }
 
