@@ -46,11 +46,13 @@ public class PlayerInteract : MonoBehaviour
         // 3. 제작기 근처에 있을 때
         if (isNearMaker && currentMaker != null)
         {
+            Debug.Log($"[E] 제작기와 접촉: {currentMaker}");
+
             // (1) 제작기에 완성된 결과물이 있는 경우
             if (currentMaker.currentResultObject != null)
             {
-                if (!HeldItemManager.Instance.IsHoldingItem())
-                {
+                    if (!HeldItemManager.Instance.IsHoldingItem())
+                    {
                     var sr = currentMaker.currentResultObject.GetComponent<SpriteRenderer>();
                     if (sr != null)
                     {

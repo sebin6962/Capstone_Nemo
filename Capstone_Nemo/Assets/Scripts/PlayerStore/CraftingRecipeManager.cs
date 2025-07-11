@@ -62,7 +62,7 @@ public class CraftingRecipeManager : MonoBehaviour
 
         // 레시피 매칭 실패 시 확률적으로 꽃다발 or 망한떡 반환
         float rand = UnityEngine.Random.value; // 0.0 ~ 1.0
-        string failResult = rand < 0.1f ? "FlowerBouquet" : "FailRiceCake";
+        string failResult = rand < 0.1f ? "FlowerBouquet_finish" : "FailRiceCake_finish";
         string failPath = "Sprites/Ingredients/" + failResult;
         Sprite failSprite = Resources.Load<Sprite>(failPath);
         Debug.LogWarning($"레시피 없음! 랜덤 결과: {failResult} (확률={rand})");
