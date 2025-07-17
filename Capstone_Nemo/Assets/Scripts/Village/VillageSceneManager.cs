@@ -21,16 +21,25 @@ public class VillageSceneManager : MonoBehaviour
     void Start()
     {
         // 1. 선택된 서버명 확보
-        string serverName = PlayerPrefs.GetString("SelectedSave");
-
+        //string serverName = PlayerPrefs.GetString("SelectedSave");
+        string serverName = PlayerPrefs.GetString("SelectedSave", "");
         // 2. 모든 매니저에 서버명 설정 (파일 분리)
         SetupServerNameAllManagers(serverName);
 
         // 3. 매니저별 파일에서 데이터 불러오기
+        StarDataManager.Instance?.SetServerName(serverName);
         StarDataManager.Instance?.LoadStarData();
+
+        PlayerLevelManager.Instance?.SetServerName(serverName);
         PlayerLevelManager.Instance?.Load();
+
+        TreeLevelUnlocker.Instance?.SetServerName(serverName);
         TreeLevelUnlocker.Instance?.LoadUnlockData();
+
+        StorageInventory.Instance?.SetServerName(serverName);
         StorageInventory.Instance?.LoadStorage();
+
+        TimeManager.Instance?.SetServerName(serverName);
         TimeManager.Instance?.LoadDay();
 
         // 4. (기존 시간 흐름 플래그)
