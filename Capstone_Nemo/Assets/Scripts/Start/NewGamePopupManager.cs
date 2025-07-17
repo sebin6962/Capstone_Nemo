@@ -6,10 +6,8 @@ using System.IO;
 
 public class NewGamePopupManager : MonoBehaviour
 {
-    public TMP_Text slotText;
     public TMP_InputField inputServerName;
     public Button btnCreate, btnCancel;
-    private string currentSlot;
 
     void Start()
     {
@@ -28,30 +26,23 @@ public class NewGamePopupManager : MonoBehaviour
                 JsonUtility.FromJson<Profile>(File.ReadAllText(profilePath)) :
                 new Profile { username = "myuser" };
 
-            if (profile.saves.Exists(x => x.serverName == currentSlot)) return;
+            if (profile.saves.Exists(x => x.serverName == serverName)) return;
 
-            var newInfo = new SaveInfo
+            profile.saves.Add(new SaveInfo
             {
-                serverName = currentSlot,
+                serverName = serverName,
                 created = DateTime.Now.ToString("s"),
                 lastPlayed = DateTime.Now.ToString("s")
-            };
-            profile.saves.Add(newInfo);
+            });
             File.WriteAllText(profilePath, JsonUtility.ToJson(profile, true));
 
-            string savePath = Application.persistentDataPath + $"/save_myuser_{currentSlot}.json";
-            SaveData saveData = new SaveData { serverName = currentSlot };
-            File.WriteAllText(savePath, JsonUtility.ToJson(saveData, true));
+            File.WriteAllText(Application.persistentDataPath + $"/save_myuser_{serverName}.json", JsonUtility.ToJson(new SaveData { serverName = serverName }, true));
+            File.WriteAllText(Application.persistentDataPath + $"/playerStarData_{serverName}.json", "{\"starlight\":0}");
+            File.WriteAllText(Application.persistentDataPath + $"/player_level_data_{serverName}.json", "{\"Level\":1,\"Exp\":0}");
+            File.WriteAllText(Application.persistentDataPath + $"/dayData_{serverName}.json", "{\"day\":1}");
 
-            PlayerPrefs.SetString("SelectedSave", currentSlot);
+            PlayerPrefs.SetString("SelectedSave", serverName);
             FadeManager.Instance.FadeToScene("CutScene");
         });
-    }
-
-    public void SetSlot(string slotName)
-    {
-        currentSlot = slotName;
-        slotText.text = $"½½·Ô: {slotName}";
-        inputServerName.text = "";
     }
 }

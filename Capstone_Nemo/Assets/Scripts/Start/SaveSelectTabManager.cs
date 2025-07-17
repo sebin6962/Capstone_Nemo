@@ -14,6 +14,7 @@ public class SaveSelectTabManager : MonoBehaviour
     public Button btnExit;
 
     public SaveSelectManager saveSelectManager; // 추가 연결
+    public Button btnGameExit;
 
     public Color selectedColor = Color.gray;
     public Color normalColor = Color.white;
@@ -25,6 +26,17 @@ public class SaveSelectTabManager : MonoBehaviour
         btnExit.onClick.AddListener(() => SwitchTab("Exit"));
 
         SwitchTab("File");  // 기본값: 파일 선택 탭
+
+        btnGameExit.onClick.AddListener(() =>
+        {
+            QuitGame();
+        });
+    }
+
+    public void QuitGame()
+    {
+        Debug.Log("게임 종료");
+        Application.Quit();
     }
 
     public void SwitchTab(string tab)

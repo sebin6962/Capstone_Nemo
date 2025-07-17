@@ -14,6 +14,7 @@ public class SlotUI
     public TMP_Text txtPlaytime;
     public TMP_Text txtLastPlayed;
     public Image backgroundImage;
+    public Button deleteButton;
 }
 
 public class SaveSelectManager : MonoBehaviour
@@ -78,7 +79,32 @@ public class SaveSelectManager : MonoBehaviour
         }
         return 1;
     }
+    public void DeleteSave(string serverName)
+    {
+        Debug.Log($"세이브 삭제: {serverName}");
 
+        // profile 업데이트
+        string profilePath = Application.persistentDataPath + "/profile_myuser.json";
+        Profile profile = JsonUtility.FromJson<Profile>(File.ReadAllText(profilePath));
+        profile.saves.RemoveAll(x => x.serverName == serverName);
+        File.WriteAllText(profilePath, JsonUtility.ToJson(profile, true));
+
+        // 관련 파일 삭제
+        string[] files = {
+        $"save_myuser_{serverName}.json",
+        $"playerStarData_{serverName}.json",
+        $"player_level_data_{serverName}.json",
+        $"dayData_{serverName}.json"
+    };
+        foreach (var file in files)
+        {
+            string path = Application.persistentDataPath + "/" + file;
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+
+        RefreshSaveSlots();
+    }
     public void RefreshSaveSlots()
     {
         string profilePath = Application.persistentDataPath + "/profile_myuser.json";
@@ -99,7 +125,9 @@ public class SaveSelectManager : MonoBehaviour
         {
             var slot = saveSlots[i];
             var btn = slot.button;
+            var delBtn = slot.deleteButton;
             btn.onClick.RemoveAllListeners();
+            delBtn.onClick.RemoveAllListeners();
 
             if (i < validSaves.Count)
             {
@@ -124,9 +152,18 @@ public class SaveSelectManager : MonoBehaviour
                     PlayerPrefs.SetString("SelectedSave", serverName);
                     FadeManager.Instance.FadeToScene("VillageScene");
                 });
+
+                delBtn.onClick.AddListener(() =>
+                {
+                    ConfirmPopup.Instance.Open($"[{serverName}] 세이브 파일을 삭제할까요?", () =>
+                    {
+                        DeleteSave(serverName);
+                    });
+                });
             }
             else
             {
+                delBtn.gameObject.SetActive(false);
                 slot.txtServerName.text = "새 가게 만들기";
                 slot.txtStarlight.text = "";
                 slot.txtLevel.text = "";
@@ -137,10 +174,11 @@ public class SaveSelectManager : MonoBehaviour
                 btn.onClick.AddListener(() =>
                 {
                     newGamePopup.SetActive(true);
-                    newGamePopup.GetComponent<NewGamePopupManager>().SetSlot($"Slot{i + 1}");
                 });
             }
         }
+
+
     }
 }
 
