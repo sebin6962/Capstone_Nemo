@@ -150,6 +150,10 @@ public class SaveSelectManager : MonoBehaviour
                 btn.onClick.AddListener(() =>
                 {
                     PlayerPrefs.SetString("SelectedSave", serverName);
+                    if (VillageSceneManager.Instance != null)
+                    {
+                        VillageSceneManager.Instance.ResetData();
+                    }
                     FadeManager.Instance.FadeToScene("VillageScene");
                 });
 

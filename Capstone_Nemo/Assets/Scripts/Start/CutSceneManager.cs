@@ -15,6 +15,17 @@ public class CutSceneManager : MonoBehaviour
     {
         yield return new WaitForSeconds(cutSceneDuration);
 
+        if (VillageSceneManager.Instance != null)
+        {
+            Destroy(VillageSceneManager.Instance.gameObject);
+            VillageSceneManager.Instance = null;
+        }
+
+        if (VillageSceneManager.Instance != null)
+        {
+            VillageSceneManager.Instance.ResetData();
+        }
+
         // VillageScene으로 페이드 전환
         SceneTransitionInfo.Instance.entranceID = "FromPlayerStore";
         FadeManager.Instance.FadeToScene("VillageScene");
