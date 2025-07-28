@@ -1,9 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    public void ReturnToStartScene()
+    {
+        // 필요한 경우: 저장/데이터 초기화/타이틀 음악 등 처리
+        FadeManager.Instance.FadeToScene("IntroScene"); // 또는 타이틀 씬 이름
+    }
 
     //public static GameManager Instance;
 

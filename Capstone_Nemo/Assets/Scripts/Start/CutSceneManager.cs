@@ -15,9 +15,20 @@ public class CutSceneManager : MonoBehaviour
     {
         yield return new WaitForSeconds(cutSceneDuration);
 
+        if (VillageSceneManager.Instance != null)
+        {
+            Destroy(VillageSceneManager.Instance.gameObject);
+            VillageSceneManager.Instance = null;
+        }
+
+        if (VillageSceneManager.Instance != null)
+        {
+            VillageSceneManager.Instance.ResetData();
+        }
+
         // VillageScene으로 페이드 전환
-        //SceneTransitionInfo.Instance.entranceID = "FromPlayerStore";
+        SceneTransitionInfo.Instance.entranceID = "FromPlayerStore";
         FadeManager.Instance.FadeToScene("VillageScene");
-        PlayerPrefs.SetInt("StartTimeOnEnter", 1); // 시간 흐름 플래그도 이곳에서!
+        PlayerPrefs.SetInt("StartTimeOnEnter", 1); // 시간 흐름 플래그도 이곳에서
     }
 }

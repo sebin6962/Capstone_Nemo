@@ -11,29 +11,40 @@ public class VillageSceneManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            //DontDestroyOnLoad(gameObject);
         }
         else
         {
             Destroy(gameObject);
         }
     }
+
     void Start()
     {
-        // 1. 선택된 서버명 확보
-        string serverName = PlayerPrefs.GetString("SelectedSave");
+        ResetData();
+    }
 
-        // 2. 모든 매니저에 서버명 설정 (파일 분리)
+    public void ResetData()
+    {
+        string serverName = PlayerPrefs.GetString("SelectedSave", "");
+
         SetupServerNameAllManagers(serverName);
 
-        // 3. 매니저별 파일에서 데이터 불러오기
+        StarDataManager.Instance?.SetServerName(serverName);
         StarDataManager.Instance?.LoadStarData();
+
+        PlayerLevelManager.Instance?.SetServerName(serverName);
         PlayerLevelManager.Instance?.Load();
+
+        TreeLevelUnlocker.Instance?.SetServerName(serverName);
         TreeLevelUnlocker.Instance?.LoadUnlockData();
+
+        StorageInventory.Instance?.SetServerName(serverName);
         StorageInventory.Instance?.LoadStorage();
+
+        TimeManager.Instance?.SetServerName(serverName);
         TimeManager.Instance?.LoadDay();
 
-        // 4. (기존 시간 흐름 플래그)
         if (PlayerPrefs.GetInt("StartTimeOnEnter", 0) == 1)
         {
             PlayerPrefs.SetInt("StartTimeOnEnter", 0);
@@ -48,6 +59,5 @@ public class VillageSceneManager : MonoBehaviour
         TreeLevelUnlocker.Instance?.SetServerName(serverName);
         StorageInventory.Instance?.SetServerName(serverName);
         TimeManager.Instance?.SetServerName(serverName);
-        // 필요한 매니저 있으면 여기에 추가
     }
 }

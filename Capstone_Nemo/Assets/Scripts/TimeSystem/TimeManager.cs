@@ -119,6 +119,8 @@ public class TimeManager : MonoBehaviour
             minute = 0;
             Debug.Log("[LoadDay] 파일 없음. 1일차로 리셋");
         }
+
+        UpdateDayUI();
     }
 
     void UpdateClockProgressUI()
