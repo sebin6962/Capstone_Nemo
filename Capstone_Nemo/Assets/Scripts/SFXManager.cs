@@ -91,6 +91,7 @@ public class SFXManager : MonoBehaviour
     {
         if (audioSource && boxOpenClip)
             audioSource.PlayOneShot(boxOpenClip);
+       
     }
 
     public void PlayMakerProgressSFX(string makerId)
