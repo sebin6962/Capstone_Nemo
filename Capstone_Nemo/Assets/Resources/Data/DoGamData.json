@@ -3,74 +3,131 @@
     {
       "name": "백설기",
       "image": "Baekseolgi",
-      "description": "백설기는 하얗고 깨끗한 색을 지녀\n예로부터 순수와 복을\n상징하는 떡으로 여겨졌습니다.\n특히 아이의 첫 생일(돌)이나\n집안의 경사스러운 날에\n빠지지 않고 올리는\n귀한 떡이라고 알려져 있습니다.",
+      "description": "백설기는 하얗고 깨끗한 색을 지녀 예로부터 \n순수와 복을 상징하는 떡으로 여겨졌습니다.\n특히 아이의 첫 생일(돌)이나\n집안의 경사스러운 날에 빠지지 않고 올리는\n귀한 떡이라고 알려져 있습니다.",
       "recipe": [
         "1. 맵쌀가루를 체에 칩니다.",
         "2. 체 친 멥쌀가루, 물을 넣고 반죽합니다.",
         "3. 멥쌀가루 반죽을 찜기에 넣고 찝니다."
       ],
-      "recipeImage": [
-        "Baekseolgi_step1",
-        "Baekseolgi_step2",
-        "Baekseolgi_step3"
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Mepssalgaru.png" ],
+          "result": "Sieve_Mepssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Water.png", "Sieve_Mepssalgaru.png" ],
+          "result": "Mixing_Mepssal.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Mixing_Mepssal.png" ],
+          "result": "Baekseolgi_finish.png"
+        }
       ],
       "category": "떡"
     },
     {
       "name": "단호박설기",
       "image": "Danhobakseolgi",
-      "description": "단호박설기는\n전통 설기에 가을철 영양식재료인\n단호박을 더해n풍미를 높인 떡입니다.\n단호박의 노란빛은\n복과 태양을 상징하여,\n예부터 풍요와 건강을\n기원하는 의미로 즐겨 먹었다고 합니다.",
+      "description": "단호박설기는 전통 설기에 가을철 영양식재료인\n단호박을 더해 풍미를 높인 떡입니다.\n단호박의 노란빛은 복과 태양을 상징하여,\n예부터 풍요와 건강을 기원하는 의미로 즐겨 먹었다고 합니다.",
       "recipe": [
-        "1. 단호박 가루를 만듭니다.\n(방앗간에서 제조 가능)",
-        "2. 체 친 단호박 가루, 물을 넣고 반죽합니다.",
+        "1. 단호박 가루를 만듭니다.(방앗간 제조)",
+        "2. 단호박 가루, 물을 넣고 반죽합니다.",
         "3. 단호박 반죽을 찜기에 넣고 찝니다."
       ],
-      "recipeImage": [
-        "Danhobakseolgi_step1",
-        "Danhobakseolgi_step2",
-        "Danhobakseolgi_step3"
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Danhobak.png" ],
+          "result": "Danhobakgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Water.png", "Danhobakgaru.png" ],
+          "result": "Mixing_Danhobak.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Mixing_Danhobak.png" ],
+          "result": "Danhobakseolgi_finish.png"
+        }
       ],
       "category": "떡"
     },
     {
       "name": "무지개떡",
       "image": "Rainbowseolgi",
-      "description": "무지개떡은 색색의 쌀가루 층을\n겹겹이 쌓아 찐 떡으로,\n조화, 화합, 희망의 상징으로 여겨집니다.\n돌잔치, 결혼식, 개업식, 생일 등\n축하 자리에 자주 올리며,\n복이 쌓이기를\n기원하는 마음이 담겨 있습니다.",
+      "description": "무지개떡은 색색의 반죽을 겹겹이 쌓아 찐 떡으로,\n조화, 화합, 희망의 상징으로 여겨집니다.\n돌잔치, 결혼식, 개업식, 생일 등 축하 자리에 자주 올리며,\n복이 쌓이기를 기원하는 마음이 담겨 있습니다.",
       "recipe": [
-        "1. 백년초로 백년초 가루를,\n쑥으로 쑥 가루를,\n단호박으로 단호박 가루를 만들고,\n백년초 가루를 체에 칩니다.",
-        "2. 가루들과 물을 섞어\n무지개 반죽을 만듭니다.",
+        "1. 무지개 색 재료들을 가루로 만듭니다.(방앗간 제조)",
+        "2. 멥쌀가루를 체에 칩니다.",
+        "2. 가루들과 물을 섞어 무지개 반죽을 만듭니다.",
         "3. 무지개 반죽을 찜기에 넣고 찝니다."
       ],
-      "recipeImage": [
-        "Rainbowseolgi_step1",
-        "Rainbowseolgi_step2",
-        "Rainbowseolgi_step3",
-        "Rainbowseolgi_step4"
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Danhobak.png", "Mugwort.png", "Baeknyeoncho.png" ],
+          "result": "Danhobakgaru.png"
+        },
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Mepssalgaru.png" ],
+          "result": "Sieve_Mepssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Water.png", "Danhobakgaru.png", "Mugwort.png", "Baeknyeoncho.png" ],
+          "result": "Mixing_Danhobak.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Mixing_Danhobak.png", "Mixing_Baeknyeoncho.png", "Mixing_Mugwort.png", "Mixing_Mepssal.png" ],
+          "result": "Rainbowseolgi_finish.png"
+        }
       ],
       "category": "떡"
     },
     {
       "name": "팥시루떡",
       "image": "Sirutteok",
-      "description": "팥시루떡은 ‘시루’라는 전통 찜틀에\n쌀가루와 고물을 켜켜이 담아 쪄낸 떡입니다.\n고사, 제사, 돌잔치, 입학식 등 중요한 날에\n행운과 건강, 번영을 기원하며\n만드는 대표적인 의례용 떡이기도 합니다.",
+      "description": "팥시루떡은 ‘시루’라는 전통 찜틀에\n쌀가루와 고물을 켜켜이 담아 쪄낸 떡입니다.\n고사, 제사, 돌잔치, 입학식 등 중요한 날에\n행운과 건강, 번영을 기원하며 만드는\n대표적인 의례용 떡이기도 합니다.",
       "recipe": [
         "1. 멥쌀가루를 체에 칩니다.",
         "2. 체 친 멥쌀가루, 물을 넣고 반죽합니다.",
         "3. 팥을 으깨줍니다.",
-        "4. 멥쌀가루 반죽, 팥을 두개씩\n찜기에 넣고 찝니다."
+        "4. 멥쌀가루 반죽, 팥을 두개씩 찜기에 넣고 찝니다."
       ],
-      "recipeImage": [
-        "Sirutteok_step1",
-        "Sirutteok_step2",
-        "Sirutteok_step3",
-        "Sirutteok_step4"
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Mepssalgaru.png" ],
+          "result": "Sieve_Mepssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Water.png", "Sieve_Mepssalgaru.png" ],
+          "result": "Mixing_Mepssal.png"
+        },
+        {
+          "tool": "Grinder.png",
+          "ingredients": [ "Redbean.png" ],
+          "result": "Grind_Redbean.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Mixing_Mepssal.png", "Grind_Redbean.png", "Mixing_Mepssal.png", "Grind_Redbean.png" ],
+          "result": "Redbeansiru_finish.png"
+        }
       ],
       "category": "떡"
     },
     {
       "name": "인절미",
       "image": "Injeolmi",
-      "description": "인절미는 찹쌀떡을 찐 후 절구로 쳐서 만든 뒤,\n먹기 좋게 썰어 콩고물을 묻힌\n쫀득하고 고소한 국민 떡입니다.\n임진왜란 시기, 왕에게 올렸던 찹쌀떡이\n인절미의 기원이 되었다는\n설화도 전해져 내려옵니다.",
+      "description": "인절미는 찹쌀떡을 찐 후 절구로 쳐서 만든 뒤,\n먹기 좋게 썰어 콩고물을 묻힌\n쫀득하고 고소한 국민 떡입니다.\n임진왜란 시기, 왕에게 올렸던 찹쌀떡이 인절미의\n기원이 되었다는 설화도 전해져 내려옵니다.",
       "recipe": [
         "1. 찹쌀가루를 체에 칩니다.",
         "2. 체 친 찹쌀가루, 물을 넣고 반죽합니다.",
@@ -78,45 +135,109 @@
         "4. 찐 찹쌀가루 반죽을 치댑니다.",
         "5. 인절미 반죽에 콩가루를 묻힙니다."
       ],
-      "recipeImage": [
-        "Injeolmi_step1",
-        "Injeolmi_step2",
-        "Injeolmi_step3",
-        "Injeolmi_step4",
-        "Injeolmi_step5"
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Chapssalgaru.png" ],
+          "result": "Sieve_Chapssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Water.png", "Sieve_Chapssalgaru.png" ],
+          "result": "Mixing_Chapssal.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Mixing_Chapssal.png" ],
+          "result": "Siru_Chapssal.png"
+        },
+        {
+          "tool": "Deco.png",
+          "ingredients": [ "Siru_Chapssal.png", "Konggaru.png" ],
+          "result": "Injeolmi_finish.png"
+        }
       ],
       "category": "떡"
     },
     {
       "name": "쑥인절미",
       "image": "SsookInjeolmi",
-      "description": "쑥 인절미는 전통 인절미에\n봄철 약초인 쑥을 더해 만든\n건강 떡입니다.\n예로부터 쑥은 액운을 쫓고\n몸을 따뜻하게 한다 하여,\n봄철 기력 회복과 부정 방지의 의미로\n자주 먹었다고 합니다.",
+      "description": "쑥 인절미는 봄철 약초인 쑥으로 만든 건강 떡입니다.\n예로부터 쑥은 액운을 쫓고 몸을 따뜻하게 한다 하여,\n봄철 기력 회복과 부정 방지의 의미로\n자주 먹었다고 합니다.",
       "recipe": [
         "1. 쑥을 가루로 만듭니다.",
-        "2. 체 친 쑥 가루, 물을 넣고 반죽합니다.",
-        "3. 쑥 가루 반죽을 찜기에 넣고 찝니다.",
-        "4. 찐 쑥 가루 반죽을 치댑니다.",
+        "2. 쑥 가루, 물을 넣고 반죽합니다.",
+        "3. 쑥 반죽을 찜기에 넣고 찝니다.",
+        "4. 찐 쑥 반죽을 치댑니다.",
         "5. 쑥인절미 반죽에 콩가루를 묻힙니다."
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Jeolgu.png",
+          "ingredients": [ "Mugwort.png" ],
+          "result": "Mugwortgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Water.png", "Mugwortgaru.png" ],
+          "result": "Mixing_Mugwort.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Mixing_Mugwort.png" ],
+          "result": "MugwortInjeolmibanjuk.png"
+        },
+        {
+          "tool": "Grinder.png",
+          "ingredients": [ "MugwortInjeolmibanjuk.png", "Konggaru.png" ],
+          "result": "MugwortInjeolmi_finish.png"
+        }
       ],
       "category": "떡"
     },
     {
       "name": "꿀떡",
       "image": "Kkultteok",
-      "description": "꿀떡은 속에 달콤한 꿀을 넣고 찐 찹쌀떡으로,\n입에서 사르르 터지는 소가\n포인트인 전통 간식 떡입니다.\n예부터 아이의 무병장수와\n달콤한 인생을 기원하며\n돌상에 올리기도 했다고 합니다.",
+      "description": "꿀떡은 속에 달콤한 꿀을 넣고 찐 찹쌀떡으로,\n입에서 사르르 터지는 소가 포인트인 전통 간식입니다.\n예부터 아이의 무병장수와 달콤한 인생을 기원하며\n돌상에 올리기도 했다고 합니다.",
       "recipe": [
-        "1. 찹쌀가루를 체에 칩니다.",
-        "2. 체 친 찹쌀 가루, 뜨거운 물을 넣고 익반죽합니다.",
+        "1. 찹쌀가루 체 치기",
+        "2. 체 친 찹쌀 가루, 뜨거운 물을 넣고 익반죽하기",
         "3. 꿀과 깨를 섞어 꿀깨소를 만듭니다.",
         "4. 반죽 안에 속 재료(꿀깨소)를 넣어 빚습니다.",
         "5. 꿀떡 반죽을 찜기에 넣고 찝니다."
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Chapssalgaru.png" ],
+          "result": "Sieve_Chapssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Sieve_Chapssalgaru.png", "HotWater.png" ],
+          "result": "Hot_Mixing_Chapssal.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Honey.png", "Kkae.png" ],
+          "result": "Kkulkkaeso.png"
+        },
+        {
+          "tool": "ShapeMaker.png",
+          "ingredients": [ "Hot_Mixing_Chapssal.png", "Kkulkkaeso.png" ],
+          "result": "Kkultteokbanjuk.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Kkultteokbanjuk.png" ],
+          "result": "Kkultteok_finish.png"
+        }
       ],
       "category": "떡"
     },
     {
       "name": "바람떡",
       "image": "Baramtteok",
-      "description": "바람떡은 달콤한 팥소를 넣어\n반달 모양으로 빚은 전통 손떡입니다.\n떡 사이에 ‘바람(공기)’이 들어갈 만큼\n얇게 빚는다는 데서 유래했고,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
+      "description": "바람떡은 달콤한 팥소를 넣어 반달 모양으로 빚은 전통 떡입니다.\n떡 사이에 ‘바람’이 들어갈 만큼 얇게 빚는다는 데서 유래했고,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
       "recipe": [
         "1. 멥쌀가루를 체에 칩니다.",
         "2. 체 친 멥쌀가루, 뜨거운 물을 넣고 익반죽합니다.",
@@ -129,6 +250,19 @@
     {
       "name": "송편",
       "image": "Songpyeon",
+      "description": "송편은 솔잎 위에 찌는 반달 모양의 전통 떡으로,\n추석에 조상에게 감사와 소원을 비는 뜻에서 빚어 먹습니다.\n모양이 반달인 이유는 “이제 막 차오르는 반달처럼\n앞으로 더 나아지길 기원하는 의미”를 담고 있습니다.\n‘송편을 예쁘게 빚으면 예쁜 딸을 낳는다’는 속설도 있죠.",
+      "recipe": [
+        "1. 멥쌀가루를 체에 칩니다.",
+        "2. 체 친 멥쌀가루, 뜨거운 물을 넣고 익반죽합니다.",
+        "3. 팥을 으깨 팥 앙금을 만듭니다.",
+        "4. 반죽 안에 팥앙금을 넣어 빚습니다.",
+        "5. 바람떡 반죽을 찜기에 넣고 찝니다."
+      ],
+      "category": "떡"
+    },
+    {
+      "name": "찹쌀떡",
+      "image": "Chapssaltteok",
       "description": "바람떡은 달콤한 팥소를 넣어\n반달 모양으로 빚은 전통 손떡입니다.\n떡 사이에 ‘바람(공기)’이 들어갈 만큼\n얇게 빚는다는 데서 유래했고,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
       "recipe": [
         "1. 멥쌀가루를 체에 칩니다.",
