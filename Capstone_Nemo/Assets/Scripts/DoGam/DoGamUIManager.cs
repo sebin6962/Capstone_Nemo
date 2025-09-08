@@ -158,6 +158,8 @@ public class DoGamUIManager : MonoBehaviour
         if (index < 0 || index >= entryList.Count) return;
         var entry = entryList[index];
 
+        itemImage.sprite = Resources.Load<Sprite>("Sprites/Dagwa/" + entry.image);
+
         nameText.text = entry.name;
         descriptionText.text = entry.description;
 
@@ -249,7 +251,7 @@ public class DoGamUIManager : MonoBehaviour
         }
 
 
-        itemImage.sprite = Resources.Load<Sprite>("Sprites/Dagwa/" + entry.image);
+        
         scrollRect.verticalNormalizedPosition = 1f;
     }
 
