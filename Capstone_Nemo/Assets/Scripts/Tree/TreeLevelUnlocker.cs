@@ -10,31 +10,29 @@ public class TreeLevelUnlocker : MonoBehaviour
 {
     public static TreeLevelUnlocker Instance;
 
-    public static int CurrentLevel = 0; // 어디서든 접근 가능하도록 선언
+    public static int CurrentLevel = 0;
 
-    public Button[] levelButtons;                // 0: 첫 레벨
-    public TMP_Text[] levelDescTexts;            // 0: 첫 레벨 설명 텍스트
-    public int[] starlightNeededForLevel;        // 0: 첫 레벨에 필요한 별빛
-    public string[] levelDescriptions;           // 0: 첫 레벨 해금시 보여줄 텍스트
+    public Button[] levelButtons;
+    public TMP_Text[] levelDescTexts;
+    public int[] starlightNeededForLevel;
+    public string[] levelDescriptions;
     public Color unlockedColor;
     public Color lockedColor;
 
-    // 툴팁 관련 필드 추가
     public GameObject tooltipPanel;
     public TMP_Text tooltipText;
 
-    private int currentUnlockedLevel = 0; // 0=첫번째 레벨만 해금
+    private int currentUnlockedLevel = 0;
 
-    public GameObject notEnoughStarlightPanel; // 별빛 부족 알림 패널
-    public CanvasGroup notEnoughStarlightGroup; // 알림 패널의 CanvasGroup
+    public GameObject notEnoughStarlightPanel;
+    public CanvasGroup notEnoughStarlightGroup;
 
-    public TMP_Text currentStateText; // 인스펙터에 현재 상태 텍스트 연결
+    public TMP_Text currentStateText;
 
-    public GameObject unlockEffectPanel;  // 씬의 패널 오브젝트
-    public TMP_Text levelText;            // 레벨 텍스트
-    public TMP_Text effectText;           // 효과 텍스트
+    public GameObject unlockEffectPanel;
+    public TMP_Text levelText;
+    public TMP_Text effectText;
     public string[] unlockEffectDescriptions;
-
 
     private Coroutine notEnoughCoroutine = null;
 
@@ -44,7 +42,17 @@ public class TreeLevelUnlocker : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        // savePath는 SetServerName에서 할당
+
+        // 서버 선택값으로 경로 보장
+        var serverName = PlayerPrefs.GetString("SelectedSave", string.Empty);
+        if (!string.IsNullOrEmpty(serverName))
+        {
+            SetServerName(serverName);
+        }
+        else
+        {
+            Debug.LogWarning("[TreeLevelUnlocker] SelectedSave is empty. SetServerName() later before saving.");
+        }
     }
 
     public void SetServerName(string serverName)
@@ -54,37 +62,38 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     void Start()
     {
+        // 1) 데이터 로드(경로가 없으면 메모리만)
+        LoadUnlockData();
+
+        // 2) 동기화
+        currentUnlockedLevel = unlockData != null ? unlockData.currentUnlockedLevel : 0;
+        CurrentLevel = currentUnlockedLevel;
+
+        // 3) 버튼/텍스트 갱신
         UpdateLevelButtons();
 
-        // (Start에서 currentUnlockedLevel을 unlockData.currentUnlockedLevel로 대입)
-        currentUnlockedLevel = unlockData.currentUnlockedLevel;
-
-        // 모든 버튼에 이벤트 리스너 추가
-        for (int i = 0; i < levelButtons.Length; i++)
+        // 4) 버튼들에 툴팁 트리거 연결
+        if (levelButtons != null)
         {
-            int idx = i; // 지역 변수로 캡처
-            EventTrigger trigger = levelButtons[i].gameObject.GetComponent<EventTrigger>();
-            if (trigger == null) trigger = levelButtons[i].gameObject.AddComponent<EventTrigger>();
+            for (int i = 0; i < levelButtons.Length; i++)
+            {
+                int idx = i;
+                EventTrigger trigger = levelButtons[i].gameObject.GetComponent<EventTrigger>();
+                if (trigger == null) trigger = levelButtons[i].gameObject.AddComponent<EventTrigger>();
 
-            // 마우스 오버
-            EventTrigger.Entry entryEnter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-            entryEnter.callback.AddListener((_) => ShowTooltip(idx));
-            trigger.triggers.Add(entryEnter);
+                var entryEnter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+                entryEnter.callback.AddListener((_) => ShowTooltip(idx));
+                trigger.triggers.Add(entryEnter);
 
-            // 마우스 아웃
-            EventTrigger.Entry entryExit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-            entryExit.callback.AddListener((_) => HideTooltip());
-            trigger.triggers.Add(entryExit);
+                var entryExit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+                entryExit.callback.AddListener((_) => HideTooltip());
+                trigger.triggers.Add(entryExit);
+            }
         }
-
-        // 저장된 값을 불러와서 CurrentLevel에도 반영
-        CurrentLevel = currentUnlockedLevel;
     }
 
-    // 툴팁 표시/숨김 메서드
     public void ShowTooltip(int levelIdx)
     {
-        // 이미 해금된 버튼이면 툴팁 패널을 끈다
         bool unlocked = levelIdx < currentUnlockedLevel;
         if (unlocked)
         {
@@ -95,7 +104,6 @@ public class TreeLevelUnlocker : MonoBehaviour
         tooltipPanel.SetActive(true);
         tooltipText.text = $"{starlightNeededForLevel[levelIdx]} 개의 별빛";
 
-        // 위치 이동
         RectTransform buttonRect = levelButtons[levelIdx].GetComponent<RectTransform>();
         Vector3 screenPos = RectTransformUtility.WorldToScreenPoint(null, buttonRect.position);
 
@@ -107,7 +115,7 @@ public class TreeLevelUnlocker : MonoBehaviour
             null,
             out localPoint
         );
-        tooltipRect.anchoredPosition = localPoint + new Vector2(0, 80f); // 버튼 위로 40 픽셀 이동
+        tooltipRect.anchoredPosition = localPoint + new Vector2(0, 80f);
     }
 
     public void HideTooltip()
@@ -115,10 +123,16 @@ public class TreeLevelUnlocker : MonoBehaviour
         tooltipPanel.SetActive(false);
     }
 
-    // 레벨 해금 시 저장!
     public void TryUnlockLevel(int levelIdx)
     {
         if (levelIdx > currentUnlockedLevel) return;
+
+        // StarDataManager가 서버 기반으로 로드되어 있어야 함
+        if (StarDataManager.Instance == null)
+        {
+            Debug.LogError("[TreeLevelUnlocker] StarDataManager.Instance is null.");
+            return;
+        }
 
         int needStarlight = starlightNeededForLevel[levelIdx];
         int currentStarlight = StarDataManager.Instance.playerData.starlight;
@@ -129,67 +143,82 @@ public class TreeLevelUnlocker : MonoBehaviour
             return;
         }
 
-        // 별빛 차감
         StarDataManager.Instance.SpendStarlight(needStarlight);
 
-        // 해금 현황 갱신
         currentUnlockedLevel = Mathf.Max(currentUnlockedLevel, levelIdx + 1);
+        if (unlockData == null) unlockData = new TreeUnlockData();
         unlockData.currentUnlockedLevel = currentUnlockedLevel;
-        CurrentLevel = currentUnlockedLevel;  // static 값도 동기화
-        SaveUnlockData(); // 해금할 때마다 저장
+        CurrentLevel = currentUnlockedLevel;
+        SaveUnlockData();
 
         UpdateLevelButtons();
 
-        // 해금 현황 갱신 이후에 효과 패널만 활성화 & 텍스트 교체
         ShowUnlockEffectPanel(currentUnlockedLevel);
     }
 
     public void SaveUnlockData()
     {
+        if (unlockData == null) unlockData = new TreeUnlockData();
+
+        if (string.IsNullOrEmpty(savePath))
+        {
+            Debug.LogError("[TreeLevelUnlocker] savePath is null/empty. Call SetServerName() first.");
+            return;
+        }
+
         string json = JsonUtility.ToJson(unlockData, true);
         File.WriteAllText(savePath, json);
     }
 
     public void LoadUnlockData()
     {
+        // unlockData 객체는 최소한 생성
+        if (unlockData == null) unlockData = new TreeUnlockData();
+
+        if (string.IsNullOrEmpty(savePath))
+        {
+            Debug.LogWarning("[TreeLevelUnlocker] savePath is null/empty. Load will use memory-only defaults.");
+            return;
+        }
+
         if (File.Exists(savePath))
         {
             string json = File.ReadAllText(savePath);
-            unlockData = JsonUtility.FromJson<TreeUnlockData>(json);
+            var loaded = JsonUtility.FromJson<TreeUnlockData>(json);
+            if (loaded != null) unlockData = loaded;
         }
         else
         {
-            unlockData = new TreeUnlockData();
+            // 파일이 없으면 현재 메모리 상태(기본 0)로 저장해서 생성
             SaveUnlockData();
         }
-        currentUnlockedLevel = unlockData.currentUnlockedLevel;
     }
 
     void UpdateLevelButtons()
     {
+        if (levelButtons == null || levelDescTexts == null || levelDescriptions == null) return;
+
         for (int i = 0; i < levelButtons.Length; i++)
         {
             bool unlocked = i < currentUnlockedLevel;
             bool canUnlock = i == currentUnlockedLevel;
             var colors = levelButtons[i].colors;
             levelButtons[i].interactable = canUnlock;
-            levelButtons[i].GetComponent<Image>().color = unlocked ? unlockedColor : lockedColor;
+            var img = levelButtons[i].GetComponent<Image>();
+            if (img != null) img.color = unlocked ? unlockedColor : lockedColor;
 
-            // 레벨 별 텍스트 해금 시 나타나도록 설정
             if (unlocked)
                 levelDescTexts[i].text = levelDescriptions[i];
             else
                 levelDescTexts[i].text = "???";
         }
 
-        // 현재 상태 텍스트 표시
-        if (currentUnlockedLevel > 0)
+        if (currentStateText != null)
         {
-            currentStateText.text = $"현재 상태: {levelDescriptions[currentUnlockedLevel - 1]}";
-        }
-        else
-        {
-            currentStateText.text = "현재 상태: 시들어 있는 계수나무";
+            if (currentUnlockedLevel > 0)
+                currentStateText.text = $"현재 상태: {levelDescriptions[currentUnlockedLevel - 1]}";
+            else
+                currentStateText.text = "현재 상태: 시들어 있는 계수나무";
         }
     }
 
@@ -205,7 +234,6 @@ public class TreeLevelUnlocker : MonoBehaviour
     {
         notEnoughStarlightPanel.SetActive(true);
 
-        // 페이드 인
         float duration = 0.5f;
         float elapsed = 0f;
         while (elapsed < duration)
@@ -216,10 +244,8 @@ public class TreeLevelUnlocker : MonoBehaviour
         }
         notEnoughStarlightGroup.alpha = 1f;
 
-        // 1초간 유지
         yield return new WaitForSeconds(1f);
 
-        // 페이드 아웃
         elapsed = 0f;
         while (elapsed < duration)
         {
@@ -236,25 +262,26 @@ public class TreeLevelUnlocker : MonoBehaviour
     void ShowUnlockEffectPanel(int level)
     {
         int idx = level - 1;
-        if (idx < 0 || idx >= unlockEffectDescriptions.Length) return;
+        if (idx < 0 || unlockEffectDescriptions == null || idx >= unlockEffectDescriptions.Length) return;
 
-        unlockEffectPanel.SetActive(true); // 패널만 켜고
+        unlockEffectPanel.SetActive(true);
         levelText.text = $"{level}단계 해금";
         effectText.text = unlockEffectDescriptions[idx];
-        // 이후 원하는 연출(애니메이션 등) 추가
     }
-    // 이 메서드를 OnClick에 연결하세요!
+
     public void ClosePanel()
     {
-        unlockEffectPanel.SetActive(false); // 패널만 숨김
+        unlockEffectPanel.SetActive(false);
     }
 
     public void SetCurrentUnlockedLevel(int level)
     {
-        currentUnlockedLevel = level;
-        unlockData.currentUnlockedLevel = level;
-        CurrentLevel = level;
+        currentUnlockedLevel = Mathf.Max(0, level);
+        if (unlockData == null) unlockData = new TreeUnlockData();
+        unlockData.currentUnlockedLevel = currentUnlockedLevel;
+        CurrentLevel = currentUnlockedLevel;
         SaveUnlockData();
         UpdateLevelButtons();
     }
 }
+

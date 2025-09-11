@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class StatementManager : MonoBehaviour
 {
+    [SerializeField] private NextDayCutscene cutscene;
     public void OnNextDayButtonClicked()
     {
         PlayerPrefs.SetFloat("SpawnX", -16f);
@@ -14,7 +15,19 @@ public class StatementManager : MonoBehaviour
         // 다음날 플래그 저장
         PlayerPrefs.SetInt("NextDayFlag", 1);
 
-        FadeManager.Instance.FadeToScene("VillageScene", 0.5f);
+        // 씬 전환은 컷신 종료 후에
+        cutscene.onFinished.RemoveAllListeners();
+        cutscene.onFinished.AddListener(() =>
+        {
+            if (FadeManager.Instance != null)
+                FadeManager.Instance.FadeToScene("VillageScene", 0.5f);
+            else
+                SceneManager.LoadScene("VillageScene");
+        });
+
+        cutscene.Play();
+
+        //FadeManager.Instance.FadeToScene("VillageScene", 0.5f);
 
         //// 하루 증가 및 저장!
         //if (TimeManager.Instance != null)
