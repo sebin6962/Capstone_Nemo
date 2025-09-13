@@ -164,11 +164,11 @@
       "image": "SsookInjeolmi",
       "description": "쑥 인절미는 봄철 약초인 쑥으로 만든 건강 떡입니다.\n예로부터 쑥은 액운을 쫓고 몸을 따뜻하게 한다 하여,\n봄철 기력 회복과 부정 방지의 의미로\n자주 먹었다고 합니다.",
       "recipe": [
-        "1. 쑥을 가루로 만듭니다.",
-        "2. 쑥 가루, 물을 넣고 반죽합니다.",
-        "3. 쑥 반죽을 찜기에 넣고 찝니다.",
-        "4. 찐 쑥 반죽을 치댑니다.",
-        "5. 쑥인절미 반죽에 콩가루를 묻힙니다."
+        "1. 가루 만들기",
+        "2. 반죽하기",
+        "3. 찌기",
+        "4. 치대기",
+        "5. 데코하기"
       ],
       "recipeImageBundle": [
         {
@@ -200,10 +200,10 @@
       "description": "꿀떡은 속에 달콤한 꿀을 넣고 찐 찹쌀떡으로,\n입에서 사르르 터지는 소가 특징인 전통 간식입니다.\n예부터 아이의 무병장수와 달콤한 인생을 기원하며\n돌상에 올리기도 했다고 합니다.",
       "recipe": [
         "1. 찹쌀가루 체 치기",
-        "2. 체 친 찹쌀 가루, 뜨거운 물을 넣고 익반죽하기",
-        "3. 꿀과 깨를 섞어 꿀깨소를 만듭니다.",
-        "4. 반죽 안에 속 재료(꿀깨소)를 넣어 빚습니다.",
-        "5. 꿀떡 반죽을 찜기에 넣고 찝니다."
+        "2. 익반죽하기",
+        "3. 꿀과 깨를 섞어 꿀깨소 만들기",
+        "4. 반죽 빚기",
+        "5. 반죽 찌기"
       ],
       "recipeImageBundle": [
         {
@@ -214,7 +214,7 @@
         {
           "tool": "MixingBowl.png",
           "ingredients": [ "Sieve_Chapssalgaru.png", "HotWater.png" ],
-          "result": "Hot_Mixing_Chapssal.png"
+          "result": "Mixing_Chapssal_Hot.png"
         },
         {
           "tool": "MixingBowl.png",
@@ -223,7 +223,7 @@
         },
         {
           "tool": "ShapeMaker.png",
-          "ingredients": [ "Hot_Mixing_Chapssal.png", "Kkulkkaeso.png" ],
+          "ingredients": [ "Mixing_Chapssal_Hot.png", "Kkulkkaeso.png" ],
           "result": "Kkultteokbanjuk.png"
         },
         {
@@ -239,11 +239,38 @@
       "image": "Baramtteok",
       "description": "바람떡은 달콤한 팥소를 넣어 반달 모양으로 빚은 전통 떡입니다.\n떡 사이에 바람이 들어갈 만큼 얇게 빚는다는 데서 유래했고,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
       "recipe": [
-        "1. 멥쌀가루를 체에 칩니다.",
-        "2. 체 친 멥쌀가루, 뜨거운 물을 넣고 익반죽합니다.",
-        "3. 팥을 으깨 팥 앙금을 만듭니다.",
-        "4. 반죽 안에 팥앙금을 넣어 빚습니다.",
-        "5. 바람떡 반죽을 찜기에 넣고 찝니다."
+        "1. 체 치기",
+        "2. 익반죽하기",
+        "3. 팥앙금 만들기",
+        "4. 빚기",
+        "5. 찌기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Mepssalgaru.png" ],
+          "result": "Sieve_Mepssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Sieve_Mepssalgaru.png", "HotWater.png" ],
+          "result": "Mixing_Mepssal_Hot.png"
+        },
+        {
+          "tool": "Grinder.png",
+          "ingredients": [ "RedBean.png" ],
+          "result": "Grind_Redbean.png"
+        },
+        {
+          "tool": "ShapeMaker.png",
+          "ingredients": [ "Mixing_Mepssal_Hot.png", "Grind_Redbean.png" ],
+          "result": "Baramtteokbanjuk.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Baramtteokbanjuk.png" ],
+          "result": "Baramtteok_finish.png"
+        }
       ],
       "category": "떡"
     },
@@ -252,11 +279,38 @@
       "image": "Songpyeon",
       "description": "송편은 솔잎 위에 찌는 반달 모양의 전통 떡으로,\n추석에 조상에게 감사와 소원을 비는 뜻에서 빚어 먹습니다.\n“이제 막 차오르는 반달처럼 앞으로 더 나아지길 기원하는 의미”를 담고 있습니다.\n‘송편을 예쁘게 빚으면 예쁜 딸을 낳는다’는 속설도 있죠.",
       "recipe": [
-        "1. 멥쌀가루를 체에 칩니다.",
-        "2. 체 친 멥쌀가루, 뜨거운 물을 넣고 익반죽합니다.",
-        "3. 팥을 으깨 팥 앙금을 만듭니다.",
-        "4. 반죽 안에 팥앙금을 넣어 빚습니다.",
-        "5. 바람떡 반죽을 찜기에 넣고 찝니다."
+        "1. 체 치기",
+        "2. 익반죽하기",
+        "3. 꿀깨소 만들기",
+        "4. 빚기",
+        "5. 찌기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Mepssalgaru.png" ],
+          "result": "Sieve_Mepssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Sieve_Mepssalgaru.png", "HotWater.png" ],
+          "result": "Mixing_Mepssal_Hot.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Honey.png", "Kkae.png" ],
+          "result": "Kkulkkaeso.png"
+        },
+        {
+          "tool": "ShapeMaker.png",
+          "ingredients": [ "Mixing_Mepssal_Hot.png", "Kkulkkaeso.png" ],
+          "result": "Songpyeonbanjuk.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Songpyeonbanjuk.png" ],
+          "result": "Songpyeon_finish.png"
+        }
       ],
       "category": "떡"
     },
@@ -265,23 +319,356 @@
       "image": "Chapssaltteok",
       "description": "바람떡은 달콤한 팥소를 넣어\n반달 모양으로 빚은 전통 손떡입니다.\n떡 사이에 ‘바람(공기)’이 들어갈 만큼\n얇게 빚는다는 데서 유래했고,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
       "recipe": [
-        "1. 멥쌀가루를 체에 칩니다.",
-        "2. 체 친 멥쌀가루, 뜨거운 물을 넣고 익반죽합니다.",
-        "3. 팥을 으깨 팥 앙금을 만듭니다.",
-        "4. 반죽 안에 팥앙금을 넣어 빚습니다.",
-        "5. 바람떡 반죽을 찜기에 넣고 찝니다."
+        "1. 체 치기",
+        "2. 익반죽하기",
+        "3. 찌기",
+        "4. 치대기",
+        "5. 팥 으깨기",
+        "6. 빚기",
+        "7. 묻히기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Chapssalgaru.png" ],
+          "result": "Sieve_Chapssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Sieve_Chapssalgaru.png", "HotWater.png" ],
+          "result": "Mixing_Chapssal_Hot.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Mixing_Chapssal_Hot.png" ],
+          "result": "Siru_Chapssal.png"
+        },
+        {
+          "tool": "Grinder.png",
+          "ingredients": [ "Siru_Chapssal.png" ],
+          "result": "Chapssal_banjuk.png"
+        },
+        {
+          "tool": "Grinder.png",
+          "ingredients": [ "RedBean.png" ],
+          "result": "Grind_RedBean.png"
+        },
+        {
+          "tool": "ShapeMaker.png",
+          "ingredients": [ "Chapssal_banjuk.png", "Grinder_RedBean.png" ],
+          "result": "Chapssaltteokbanjuk.png"
+        },
+        {
+          "tool": "Deco.png",
+          "ingredients": [ "Chapssaltteokbanjuk.png", "Flour.png" ],
+          "result": "Chapssaltteok_finish.png"
+        }
       ],
       "category": "떡"
+    },
+    {
+      "name": "절편",
+      "image": "Jeolpyeon",
+      "description": "바람떡은 달콤한 팥소를 넣어\n반달 모양으로 빚은 전통 손떡입니다.\n떡 사이에 ‘바람(공기)’이 들어갈 만큼\n얇게 빚는다는 데서 유래했고,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
+      "recipe": [
+        "1. 체 치기",
+        "2. 익반죽하기",
+        "3. 찌기",
+        "4. 무늬찍기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Mepssalgaru.png" ],
+          "result": "Sieve_Mepssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Sieve_Mepssalgaru.png", "HotWater.png" ],
+          "result": "Mixing_Mepssal_Hot.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Mixing_Mepssal_Hot.png" ],
+          "result": "Siru_Mepssal.png"
+        },
+        {
+          "tool": "ShapeMaker.png",
+          "ingredients": [ "Siru_Mepssal.png" ],
+          "result": "Jeolpyeon_finish.png"
+        }
+      ],
+      "category": "떡"
+    },
+    {
+      "name": "사과정과",
+      "image": "Jeonggwa_Apple",
+      "description": "바람떡은 달콤한 팥소를 넣어\n반달 모양으로 빚은 전통 손떡입니다.\n떡 사이에 ‘바람(공기)’이 들어갈 만큼\n얇게 빚는다는 데서 유래했고,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
+      "recipe": [
+        "1. 자르기",
+        "2. 찌기",
+        "3. 묻히기",
+        "4. 건조하기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Cutting.png",
+          "ingredients": [ "Apple.png" ],
+          "result": "Cutting_Apple.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Cutting_Apple.png" ],
+          "result": "Siru_Apple.png"
+        },
+        {
+          "tool": "Deco.png",
+          "ingredients": [ "Siru_Apple.png", "Sugar_white.png" ],
+          "result": "Sugar_Apple.png"
+        },
+        {
+          "tool": "Drying.png",
+          "ingredients": [ "Sugar_Apple.png" ],
+          "result": "Jeonggwa_Apple_finish.png"
+        }
+      ],
+      "category": "떡"
+    },
+    {
+      "name": "금귤정과",
+      "image": "Jeonggwa_Geumgyul",
+      "description": "바람떡은 달콤한 팥소를 넣어\n반달 모양으로 빚은 전통 손떡입니다.\n떡 사이에 ‘바람(공기)’이 들어갈 만큼\n얇게 빚는다는 데서 유래했고,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
+      "recipe": [
+        "1. 자르기",
+        "2. 졸이기",
+        "3. 건조하기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Cutting.png",
+          "ingredients": [ "Geumgyul.png" ],
+          "result": "Cutting_Geumgyul.png"
+        },
+        {
+          "tool": "Pot.png",
+          "ingredients": [ "Cutting_Geumgyul.png", "Water.png", "Sugar_white.png" ],
+          "result": "Pot_Geumgyul.png"
+        },
+        {
+          "tool": "Drying.png",
+          "ingredients": [ "Pot_Geumgyul.png" ],
+          "result": "Jeonggwa_Geumgyul_finish.png"
+        }
+      ],
+      "category": "떡"
+    },
+    {
+      "name": "경단",
+      "image": "Gyeongdan",
+      "description": "바람떡은 달콤한 팥소를 넣어\n반달 모양으로 빚은 전통 손떡입니다.\n떡 사이에 ‘바람(공기)’이 들어갈 만큼\n얇게 빚는다는 데서 유래했고,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
+      "recipe": [
+        "1. 체 치기",
+        "2. 익반죽하기",
+        "3. 빚기",
+        "4. 삶기",
+        "5. 묻히기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Chapssalgaru.png" ],
+          "result": "Sieve_Chapssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Sieve_Chapssalgaru.png", "HotWater.png" ],
+          "result": "Mixing_Chapssal_Hot.png"
+        },
+        {
+          "tool": "ShapeMaker.png",
+          "ingredients": [ "Mixing_Chapssal_Hot.png" ],
+          "result": "Gyeongdanbanjuk.png"
+        },
+        {
+          "tool": "Pot.png",
+          "ingredients": [ "Mixing_Chapssal_Hot.png", "Water.png" ],
+          "result": "Pot_Gyeongdanbanjuk.png"
+        },
+        {
+          "tool": "Deco.png",
+          "ingredients": [ "Pot_Gyeongdanbanjuk.png", "Konggaru.png" ],
+          "result": "Gyeongdan_finish.png"
+        }
+      ],
+      "category": "떡"
+    },
+    {
+      "name": "망개떡",
+      "image": "Manggaetteok",
+      "description": "바람떡은 달콤한 팥소를 넣어 반달 모양으로 빚은 전통 떡입니다.\n떡 사이에 바람이 들어갈 만큼 얇게 빚는다는 데서 유래했고,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
+      "recipe": [
+        "1. 체 치기",
+        "2. 익반죽하기",
+        "3. 팥앙금 만들기",
+        "4. 빚기",
+        "5. 찌기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Mepssalgaru.png" ],
+          "result": "Sieve_Mepssalgaru.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Sieve_Mepssalgaru.png", "HotWater.png" ],
+          "result": "Mixing_Mepssal_Hot.png"
+        },
+        {
+          "tool": "Grinder.png",
+          "ingredients": [ "RedBean.png" ],
+          "result": "Grind_Redbean.png"
+        },
+        {
+          "tool": "ShapeMaker.png",
+          "ingredients": [ "Mixing_Mepssal_Hot.png", "Grind_Redbean.png" ],
+          "result": "Baramtteokbanjuk.png"
+        },
+        {
+          "tool": "Siru.png",
+          "ingredients": [ "Baramtteokbanjuk.png", "Manggaeleaf" ],
+          "result": "Manggaetteok_finish.png"
+        }
+      ],
+      "category": "떡"
+    },
+    {
+      "name": "식혜",
+      "image": "Sikhye",
+      "description": "수백 년 전부터 먹어왔다는 기록이 있다..\n새콤달콤한 디저트가 당길 때 강력 추천.",
+      "recipe": [
+        "1. 체 치기",
+        "2. 끓이기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Sieve.png",
+          "ingredients": [ "Chapssalgaru.png" ],
+          "result": "Sieve_Chapssalgaru.png"
+        },
+        {
+          "tool": "Pot.png",
+          "ingredients": [ "Sieve_Chapssalgaru.png", "Malt.png", "Water.png", "Sugar_white.png" ],
+          "result": "Sikhye_finish.png"
+        }
+      ],
+      "category": "음료"
     },
     {
       "name": "유자차",
       "image": "Yujacha",
       "description": "수백 년 전부터 먹어왔다는 기록이 있다..\n새콤달콤한 디저트가 당길 때 강력 추천.",
       "recipe": [
-        "1. 유자로 청을 만든다.",
-        "2. 유자청으로 차를 끓인다."
+        "1. 자르기",
+        "2. 청 만들기",
+        "3. 차 끓이기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Cutting.png",
+          "ingredients": [ "Yuja.png" ],
+          "result": "Cutting_Yuja.png"
+        },
+        {
+          "tool": "ChungMaker.png",
+          "ingredients": [ "Cutting_Yuja.png", "Sugar_white.png", "Honey.png" ],
+          "result": "Chung_Yuja.png"
+        },
+        {
+          "tool": "TeaMaker.png",
+          "ingredients": [ "Chung_Yuja.png", "HotWater.png" ],
+          "result": "Yujacha_finish.png"
+        }
+      ],
+      "category": "음료"
+    },
+    {
+      "name": "모과차",
+      "image": "Mogwacha",
+      "description": "수백 년 전부터 먹어왔다는 기록이 있다..\n새콤달콤한 디저트가 당길 때 강력 추천.",
+      "recipe": [
+        "1. 자르기",
+        "2. 청 만들기",
+        "3. 차 끓이기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Cutting.png",
+          "ingredients": [ "Mogwa.png" ],
+          "result": "Cutting_Mogwa.png"
+        },
+        {
+          "tool": "ChungMaker.png",
+          "ingredients": [ "Cutting_Mogwa.png", "Sugar_white.png", "Honey.png" ],
+          "result": "Chung_Mogwa.png"
+        },
+        {
+          "tool": "TeaMaker.png",
+          "ingredients": [ "Chung_Mogwa.png", "HotWater.png" ],
+          "result": "Mogwacha_finish.png"
+        }
+      ],
+      "category": "음료"
+    },
+    {
+      "name": "오미자차",
+      "image": "Omijacha",
+      "description": "수백 년 전부터 먹어왔다는 기록이 있다..\n새콤달콤한 디저트가 당길 때 강력 추천.",
+      "recipe": [
+        "1. 청 만들기",
+        "2. 차 끓이기",
+        "3. 마무리하기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "ChungMaker.png",
+          "ingredients": [ "Omija.png", "Sugar_white.png", "Honey.png" ],
+          "result": "Chung_Omija.png"
+        },
+        {
+          "tool": "TeaMaker.png",
+          "ingredients": [ "Chung_Omija.png", "HotWater.png" ],
+          "result": "Omijacha.png"
+        },
+        {
+          "tool": "TeaMaker.png",
+          "ingredients": [ "Chung_Omija.png", "Jat.png" ],
+          "result": "Omijacha_finish.png"
+        }
+      ],
+      "category": "음료"
+    },
+    {
+      "name": "수정과",
+      "image": "Sujeonggwa",
+      "description": "수백 년 전부터 먹어왔다는 기록이 있다..\n새콤달콤한 디저트가 당길 때 강력 추천.",
+      "recipe": [
+        "1. 차 끓이기",
+        "2. 마무리하기"
+      ],
+      "recipeImageBundle": [
+        {
+          "tool": "Pot.png",
+          "ingredients": [ "Water.png", "Cinnamon.png", "Sugar_brown.png", "Ginger.png" ],
+          "result": "Sujeonggwa.png"
+        },
+        {
+          "tool": "Deco.png",
+          "ingredients": [ "Sujeonggwa.png", "Jat.png", "Gotgam.png" ],
+          "result": "Sujeonggwa_finish.png"
+        }
       ],
       "category": "음료"
     }
   ]
-}
+    }
