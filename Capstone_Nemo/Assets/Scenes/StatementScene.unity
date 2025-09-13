@@ -425,7 +425,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -456,7 +456,7 @@ CanvasGroup:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 747344558}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Alpha: 0
   m_Interactable: 1
   m_BlocksRaycasts: 1
@@ -507,25 +507,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cutPanel: {fileID: 747344558}
   fadeImage: {fileID: 1970356558}
-  fadeSeconds: 1.5
   holdSeconds: 3
-  fadeOutAtEnd: 1
-  onFinished:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1937835381}
-        m_TargetAssemblyTypeName: StatementManager, Assembly-CSharp
-        m_MethodName: OnNextDayButtonClicked
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  nextSceneName: 
+  fadeSeconds: 1.5
+  playOnStart: 0
 --- !u!1 &1177908387
 GameObject:
   m_ObjectHideFlags: 0
@@ -851,9 +835,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1937835381}
-        m_TargetAssemblyTypeName: StatementManager, Assembly-CSharp
-        m_MethodName: OnNextDayButtonClicked
+      - m_Target: {fileID: 900761227}
+        m_TargetAssemblyTypeName: NextDayCutscene, Assembly-CSharp
+        m_MethodName: Play
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
