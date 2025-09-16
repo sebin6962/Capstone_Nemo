@@ -2501,6 +2501,8 @@ GameObject:
   - component: {fileID: 222526896}
   - component: {fileID: 222526895}
   - component: {fileID: 222526897}
+  - component: {fileID: 222526899}
+  - component: {fileID: 222526898}
   m_Layer: 0
   m_Name: Sink
   m_TagString: Untagged
@@ -2609,7 +2611,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0.7092624}
+  m_Offset: {x: 0, y: 0.6473057}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -2620,7 +2622,70 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 0.39397526}
+  m_Size: {x: 1, y: 0.27006197}
+  m_EdgeRadius: 0
+--- !u!114 &222526898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 222526894}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3684a575a32e86b409546c0f8abb348a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  progressBarPrefab: {fileID: 1745278171229669937, guid: aa909b98d2421cb4a91539c1ba7ea254, type: 3}
+  worldCanvasParent: {fileID: 2098681224}
+  waterSprite: {fileID: 21300000, guid: 7948fb91a92550841b946408a81d218f, type: 3}
+  waterItemName: Water
+  fillDuration: 1.5
+  barOffset: {x: 0, y: 1.2, z: 0}
+--- !u!61 &222526899
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 222526894}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.0041304827, y: 0.31804526}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1, y: 1.625}
+    newSize: {x: 1, y: 1.625}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.21521258, y: 0.9889095}
   m_EdgeRadius: 0
 --- !u!1 &222691701
 GameObject:
@@ -8428,6 +8493,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemSpot: {fileID: 1199299674}
   currentPlacedObject: {fileID: 0}
+  spawnInitialItemOnStart: 1
+  initialItemSpriteName: YakgwaMold
+  spriteResourceDir: Sprites/Ingredients/
+  initialScale: {x: 1, y: 1, z: 1}
+  sortingLayerName: Obj
+  sortingOrder: 100
 --- !u!114 &710149692
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9659,6 +9730,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemSpot: {fileID: 1271984191}
   currentPlacedObject: {fileID: 0}
+  spawnInitialItemOnStart: 1
+  initialItemSpriteName: 
+  spriteResourceDir: Sprites/Ingredients/
+  initialScale: {x: 0.6, y: 0.6, z: 1}
+  sortingLayerName: Obj
+  sortingOrder: 100
 --- !u!114 &837059797
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20345,7 +20422,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1892705614}
   m_Layer: 0
-  m_Name: Bottom
+  m_Name: Table
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
