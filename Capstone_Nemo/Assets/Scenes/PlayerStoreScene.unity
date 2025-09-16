@@ -492,6 +492,7 @@ GameObject:
   - component: {fileID: 27338055}
   - component: {fileID: 27338056}
   - component: {fileID: 27338058}
+  - component: {fileID: 27338059}
   m_Layer: 10
   m_Name: Fryolator
   m_TagString: Untagged
@@ -670,6 +671,28 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.053249627, y: 1.14902}
   m_EdgeRadius: 0
+--- !u!114 &27338059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 27338052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f36431383b70cc4ebb22832c01ee83e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerId: Fryolator
+  currentResultObject: {fileID: 0}
+  inputItemNames: []
+  inputItemSprites: []
+  slotUIManagerPrefab: {fileID: 5509430333715856358, guid: a3fb2e1c675f2384281fabecfe1d11b0, type: 3}
+  slotUIManager: {fileID: 0}
+  worldCanvasParent: {fileID: 2098681224}
+  progressBarPrefab: {fileID: 1745278171229669937, guid: aa909b98d2421cb4a91539c1ba7ea254, type: 3}
+  resultItemPrefab: {fileID: 1096294367421740299, guid: 1d7fd1926562e4a49928c3395ecf69f2, type: 3}
+  ProgressworldCanvasParent: {fileID: 2098681224}
 --- !u!1 &52822164
 GameObject:
   m_ObjectHideFlags: 0
@@ -7911,6 +7934,7 @@ MonoBehaviour:
   tteokButton: {fileID: 1259102166}
   drinkButton: {fileID: 1475328431}
   guestButton: {fileID: 845986935}
+  recipeRoot: {fileID: 1441867790}
   scrollRect: {fileID: 2087286697}
   itemImage: {fileID: 1519702911}
   nameText: {fileID: 231502880}
@@ -7919,6 +7943,16 @@ MonoBehaviour:
   recipeContentParent: {fileID: 2087286696}
   recipeImagePrefab: {fileID: 1939492125899785001, guid: fb61d63889969224384c6bb2250af340, type: 3}
   recipeLineBackgroundPrefab: {fileID: 4628084609069061040, guid: a33e924efc0961b42b9ff344e3da0b40, type: 3}
+  howToRoot: {fileID: 1441867789}
+  howToButton: {fileID: 1441867788}
+  howToPrevButton: {fileID: 1441867787}
+  howToNextButton: {fileID: 1441867786}
+  SubTitle: {fileID: 1441867785}
+  howToTitleText: {fileID: 1441867784}
+  howToLeftPageParent: {fileID: 1441867783}
+  howToRightPageParent: {fileID: 1441867782}
+  howToItemPrefab: {fileID: 7343146904178594133, guid: d3e1c577ee3e4604394576ff177c01a2, type: 3}
+  howToItemsPerSpread: 4
 --- !u!1 &626991028
 GameObject:
   m_ObjectHideFlags: 0
@@ -14845,6 +14879,75 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1435499538}
   m_CullTransparentMesh: 1
+--- !u!224 &1441867782 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 9940534493364461, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 2087286693}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &1441867783 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 5271718571992459755, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 2087286693}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1441867784 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3327708022257627627, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 2087286693}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1 &1441867785 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7515425164303136288, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 2087286693}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1441867786 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6756999535133552995, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 2087286693}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1441867787 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3821661669171469809, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 2087286693}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1441867788 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4911437015457404149, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 2087286693}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1 &1441867789 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7421453316027363200, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 2087286693}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1441867790 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3825360190496713086, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 2087286693}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1447919833 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1090979730512286002, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
