@@ -59,6 +59,11 @@ public class NewGameManager : MonoBehaviour
         };
         File.WriteAllText(savePath, JsonUtility.ToJson(saveData, true));
 
+        File.WriteAllText(Application.persistentDataPath + $"/playerStarData_{serverName}.json", "{\"starlight\":0}");
+        File.WriteAllText(Application.persistentDataPath + $"/player_level_data_{serverName}.json", "{\"Level\":1,\"Exp\":0}");
+        File.WriteAllText(Application.persistentDataPath + $"/dayData_{serverName}.json", "{\"day\":1}");
+        //File.WriteAllText(Application.persistentDataPath + $"/timeData_{serverName}.json", "{\"hour\":9, \"minute\":0}");
+
         PlayerPrefs.SetString("SelectedSave", serverName);
         FadeManager.Instance.FadeToScene("CutScene");
     }

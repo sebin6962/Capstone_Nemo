@@ -57,12 +57,12 @@
     },
     {
       "makerId": "Mixing01",
-      "ingredients": [ "Sieve_Chapssalgaru", "Hot_Water" ],
+      "ingredients": [ "Sieve_Chapssalgaru", "HotWater" ],
       "resultSprite": "Mixing_Chapssal_Hot"
     },
     {
       "makerId": "Mixing01",
-      "ingredients": [ "Sieve_Mepssalgaru", "Hot_Water" ],
+      "ingredients": [ "Sieve_Mepssalgaru", "HotWater" ],
       "resultSprite": "Mixing_Meppssal_Hot"
     },
     {
@@ -77,7 +77,17 @@
     },
     {
       "makerId": "Mixing01",
-      "ingredients": [ "Flour","Cinamongaru", "Chamgireum", "Honey" ],
+      "ingredients": [ "Flour", "Sieve_Chapssalgaru", "Alcohol", "Water" ],
+      "resultSprite": "Gaesungjuakbanjuk"
+    },
+    {
+      "makerId": "Mixing01",
+      "ingredients": [ "Honey", "Sieve_Chapssalgaru", "Alcohol", "Chamgireum" ],
+      "resultSprite": "Sanjabanjuk"
+    },
+    {
+      "makerId": "Mixing01",
+      "ingredients": [ "Flour", "Cinamongaru", "Chamgireum", "Honey" ],
       "resultSprite": "Yakgwabanjuk"
     },
     {
@@ -207,6 +217,11 @@
     },
     {
       "makerId": "Pot01",
+      "ingredients": [ "Water" ],
+      "resultSprite": "HotWater"
+    },
+    {
+      "makerId": "Pot01",
       "ingredients": [ "Water", "Gyeongdanbanjuk" ],
       "resultSprite": "Pot_Gyeongdanbanjuk"
     },
@@ -219,6 +234,21 @@
       "makerId": "Pot01",
       "ingredients": [ "Water", "Cinamon", "Sugar_brown", "Ginger" ],
       "resultSprite": "Sujeonggwa"
+    },
+    {
+      "makerId": "Pot01",
+      "ingredients": [ "Frying_Yakgwabanjuk", "Honey" ],
+      "resultSprite": "Yakgwa_finish"
+    },
+    {
+      "makerId": "Pot01",
+      "ingredients": [ "Frying_Gaesungjuakbanjuk", "Honey" ],
+      "resultSprite": "Gaesungjuak_finish"
+    },
+    {
+      "makerId": "Pot01",
+      "ingredients": [ "Frying_Sanjabanjuk", "Honey" ],
+      "resultSprite": "Honey_Sanjabanjuk"
     },
     {
       "makerId": "Pot02",
@@ -227,6 +257,11 @@
     },
     {
       "makerId": "Pot02",
+      "ingredients": [ "Water" ],
+      "resultSprite": "HotWater"
+    },
+    {
+      "makerId": "Pot02",
       "ingredients": [ "Water", "Gyeongdanbanjuk" ],
       "resultSprite": "Pot_Gyeongdanbanjuk"
     },
@@ -239,6 +274,21 @@
       "makerId": "Pot02",
       "ingredients": [ "Water", "Cinamon", "Sugar_brown", "Ginger" ],
       "resultSprite": "Sujeonggwa"
+    },
+    {
+      "makerId": "Pot02",
+      "ingredients": [ "Frying_Yakgwabanjuk", "Honey" ],
+      "resultSprite": "Yakgwa_finish"
+    },
+    {
+      "makerId": "Pot02",
+      "ingredients": [ "Frying_Gaesungjuakbanjuk", "Honey" ],
+      "resultSprite": "Gaesungjuak_finish"
+    },
+    {
+      "makerId": "Pot02",
+      "ingredients": [ "Frying_Sanjabanjuk", "Honey" ],
+      "resultSprite": "Honey_Sanjabanjuk"
     },
     {
       "makerId": "Grinder",
@@ -287,17 +337,17 @@
     },
     {
       "makerId": "TeaMaker",
-      "ingredients": [ "Chung_Yuja", "Hot_Water" ],
+      "ingredients": [ "Chung_Yuja", "HotWater" ],
       "resultSprite": "Yujacha_finish"
     },
     {
       "makerId": "TeaMaker",
-      "ingredients": [ "Chung_Mogwa", "Hot_Water" ],
+      "ingredients": [ "Chung_Mogwa", "HotWater" ],
       "resultSprite": "Mogwacha_finish"
     },
     {
       "makerId": "TeaMaker",
-      "ingredients": [ "Chung_Omija", "Hot_Water" ],
+      "ingredients": [ "Chung_Omija", "HotWater" ],
       "resultSprite": "Omijacha"
     },
     {
@@ -336,6 +386,31 @@
       "resultSprite": "Chapssaltteokbanjuk"
     },
     {
+      "makerId": "ShapeMaker",
+      "ingredients": [ "Yakgwabanjuk" ],
+      "resultSprite": "ShapeMake_Yakgwabanjuk"
+    },
+    {
+      "makerId": "ShapeMaker",
+      "ingredients": [ "Gaesungjuakbanjuk" ],
+      "resultSprite": "ShapeMake_Gaesungjuakbanjuk"
+    },
+    {
+      "makerId": "Fryolator",
+      "ingredients": [ "ShapeMake_Yakgwabanjuk" ],
+      "resultSprite": "Frying_Yakgwabanjuk"
+    },
+    {
+      "makerId": "Fryolator",
+      "ingredients": [ "ShapeMake_Gaesungjuakbanjuk" ],
+      "resultSprite": "Frying_Gaesungjuakbanjuk"
+    },
+    {
+      "makerId": "Fryolator",
+      "ingredients": [ "Sanjabanjuk" ],
+      "resultSprite": "Frying_Sanjabanjuk"
+    },
+    {
       "makerId": "Deco",
       "ingredients": [ "Konggaru", "Injeolmibanjuk" ],
       "resultSprite": "Injeolmi_finish"
@@ -347,7 +422,7 @@
     },
     {
       "makerId": "Deco",
-      "ingredients": [ "Chapssaltteokbanjuk", "Flour" ],
+      "ingredients": [ "Chapssaltteokbanjuk", "Powder" ],
       "resultSprite": "Chapssaltteok_finish"
     },
     {
@@ -363,7 +438,12 @@
     {
       "makerId": "Deco",
       "ingredients": [ "Sujeonggwa", "Gotgam", "Jat" ],
-      "resultSprite": "Gyeongdan_finish"
+      "resultSprite": "Sujeonggwa_finish"
+    },
+    {
+      "makerId": "Deco",
+      "ingredients": [ "Honey_Sanjabanjuk", "Friedrice" ],
+      "resultSprite": "Sanja_finish"
     },
     {
       "makerId": "Drying",

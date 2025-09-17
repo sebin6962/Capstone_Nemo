@@ -16,62 +16,76 @@ public class PlayerInteract : MonoBehaviour
     //private bool requestCrafting = false;
 
     private BoxObject nearbyBox;
+    private SinkInfo nearbySink;
 
     private void Awake()
     {
         Instance = this;
     }
 
+    private static readonly HashSet<string> NonIngredientTools = new HashSet<string>
+    {
+        "YakgwaMold", // 약과 틀(도구) 이름
+    };
+
     private void Update()
     {
         // E키
-    if (Input.GetKeyDown(interactKey))
-    {
-        // 1. 상자(창고) 인벤토리가 열려 있고, 플레이어가 상자와 닿아있을 때 E키 → UI 닫기
-        if (nearbyBox != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
+        if (Input.GetKeyDown(interactKey))
         {
-            PlayerStoreBoxInventoryUIManager.Instance.CloseUI();
-            Debug.Log("[E] 상자 인벤토리 닫힘");
-            return;
-        }
-
-        // 2. 상자(창고)에 닿아 있고, UI가 닫혀 있을 때 → E키로 열기
-        if (nearbyBox != null)
-        {
-            PlayerStoreBoxInventoryUIManager.Instance.OpenUI(nearbyStorage);
-            Debug.Log("[E] 상자 인벤토리 열기");
-            return;
-        }
-
-        // 3. 제작기 근처에 있을 때
-        if (isNearMaker && currentMaker != null)
-        {
-            Debug.Log($"[E] 제작기와 접촉: {currentMaker}");
-
-            // (1) 제작기에 완성된 결과물이 있는 경우
-            if (currentMaker.currentResultObject != null)
+            // 1. 상자(창고) 인벤토리가 열려 있고, 플레이어가 상자와 닿아있을 때 E키 → UI 닫기
+            if (nearbyBox != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
             {
-                    if (!HeldItemManager.Instance.IsHoldingItem())
-                    {
-                    var sr = currentMaker.currentResultObject.GetComponent<SpriteRenderer>();
-                    if (sr != null)
-                    {
-                        Sprite resultSprite = sr.sprite;
-                        string resultName = resultSprite.name;
-                        HeldItemManager.Instance.ShowHeldItem(resultSprite, resultName);
-                        Destroy(currentMaker.currentResultObject);
-                        currentMaker.currentResultObject = null;
-                        Debug.Log($"[E] 결과물 {resultName} 소지 시작");
-
-                        SFXManager.Instance.PlayBbyongSFX();
-                    }
-                }
-                else
-                {
-                    Debug.Log("이미 들고 있는 아이템이 있습니다! 결과물 소지 불가.");
-                }
+                PlayerStoreBoxInventoryUIManager.Instance.CloseUI();
+                Debug.Log("[E] 상자 인벤토리 닫힘");
                 return;
             }
+
+            // 2. 상자(창고)에 닿아 있고, UI가 닫혀 있을 때 → E키로 열기
+            if (nearbyBox != null)
+            {
+                PlayerStoreBoxInventoryUIManager.Instance.OpenUI(nearbyStorage);
+                Debug.Log("[E] 상자 인벤토리 열기");
+                return;
+            }
+
+            // 싱크: 빈손일 때 E키 → 진행바 → 물 지급
+            if (nearbySink != null && !HeldItemManager.Instance.IsHoldingItem())
+            {
+                StartCoroutine(nearbySink.FillAndGiveWater());
+                return;
+            }
+
+            // 3. 제작기 근처에 있을 때
+            if (isNearMaker && currentMaker != null)
+            {
+                Debug.Log($"[E] 제작기와 접촉: {currentMaker}");
+
+                // (1) 제작기에 완성된 결과물이 있는 경우
+                if (currentMaker.currentResultObject != null)
+                {
+                    if (!HeldItemManager.Instance.IsHoldingItem())
+                    {
+                        var sr = currentMaker.currentResultObject.GetComponent<SpriteRenderer>();
+                        if (sr != null)
+                        {
+                            Sprite resultSprite = sr.sprite;
+                            string resultName = resultSprite.name;
+                            HeldItemManager.Instance.ShowHeldItem(resultSprite, resultName);
+                            Destroy(currentMaker.currentResultObject);
+                            currentMaker.currentResultObject = null;
+                            Debug.Log($"[E] 결과물 {resultName} 소지 시작");
+
+                            SFXManager.Instance.PlayBbyongSFX();
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("이미 들고 있는 아이템이 있습니다! 결과물 소지 불가.");
+                    }
+                    return;
+                }
+
 
                 // (2) 제작기에 결과물이 없고, 플레이어가 아이템을 들고 있다면 → 재료 투입(최대 4개)
                 if (HeldItemManager.Instance.IsHoldingItem())
@@ -91,6 +105,12 @@ public class PlayerInteract : MonoBehaviour
                         return;
                     }
 
+                    if (NonIngredientTools.Contains(heldItemName))
+                    {
+                        Debug.Log($"[CraftingTable] 도구({heldItemName})는 재료로 투입되지 않음");
+                        return;
+                    }
+
                     currentMaker.inputItemNames.Add(heldItemName);
                     currentMaker.inputItemSprites.Add(heldItemSprite);
 
@@ -104,7 +124,7 @@ public class PlayerInteract : MonoBehaviour
                     SFXManager.Instance.PlayBbyongSFX();
                     return;
                 }
-        }
+            }
 
             // 4. 탁자에 아이템 놓기
             if (nearbyTable != null && HeldItemManager.Instance.IsHoldingItem())
@@ -128,7 +148,7 @@ public class PlayerInteract : MonoBehaviour
                 sr.sortingOrder = 100;              // 탁자 SpriteRenderer보다 더 큰 값
 
                 // 아이템 크기 조정 (예: 0.6배로 줄이기)
-                tableItemObj.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
+                tableItemObj.transform.localScale = new Vector3(1f, 1f, 1f);
 
                 // Spot 위치에 배치
                 tableItemObj.transform.position = nearbyTable.itemSpot.position;
@@ -190,23 +210,51 @@ public class PlayerInteract : MonoBehaviour
             if (isNearMaker && currentMaker != null && currentMaker.inputItemNames.Count > 0)
             {
                 bool isRecipeMatched;
-                var recipeSet = new HashSet<string>(currentMaker.inputItemNames);
-                Sprite resultSprite = CraftingRecipeManager.Instance.GetResultSprite(currentMaker.makerId, recipeSet, out isRecipeMatched);
 
-                
-                    // 제작 시작 시 슬롯 UI 비활성화 (여러 제작기 독립)
+                // (추가) 약과 전용: ShapeMaker에서 Yakgwabanjuk을 만들려면 YakgwaMold를 들고 있어야 함
+                bool requiresYakgwaMold =
+                    currentMaker.makerId == "ShapeMaker"
+                    && currentMaker.inputItemNames.Count == 1
+                    && currentMaker.inputItemNames.Contains("Yakgwabanjuk");
+
+                bool hasYakgwaMoldInHand = HeldItemManager.Instance.IsHoldingItem()
+                                           && HeldItemManager.Instance.GetHeldItemName() == "YakgwaMold";
+
+                if (requiresYakgwaMold && !hasYakgwaMoldInHand)
+                {
+                    // 틀 미보유 → 강제 실패 결과 스폰
+                    // (레시피 매칭 대신 실패 스프라이트 로드)
                     currentMaker.DeactivateSlotUI();
 
-                    Debug.Log("[Space] 제작 성공, 결과: " + resultSprite.name);
+                    Sprite fail = Resources.Load<Sprite>("Sprites/Ingredients/FailRiceCake_finish");
+                    StartCoroutine(currentMaker.ShowProgressAndSpawnItem(fail));
 
-                    // 진행바 + 결과 생성
-                    StartCoroutine(currentMaker.ShowProgressAndSpawnItem(resultSprite));
-
-                    // 인풋 인벤토리, 슬롯 UI 초기화
                     currentMaker.inputItemNames.Clear();
                     currentMaker.inputItemSprites.Clear();
                     if (currentMaker.slotUIManager != null)
                         currentMaker.slotUIManager.ClearSlots();
+
+                    Debug.Log("[Space] Yakgwabanjuk 이지만 YakgwaMold 미보유 → 실패 처리");
+                    return;
+                }
+
+                var recipeSet = new HashSet<string>(currentMaker.inputItemNames);
+                Sprite resultSprite = CraftingRecipeManager.Instance.GetResultSprite(currentMaker.makerId, recipeSet, out isRecipeMatched);
+
+
+                // 제작 시작 시 슬롯 UI 비활성화 (여러 제작기 독립)
+                currentMaker.DeactivateSlotUI();
+
+                Debug.Log("[Space] 제작 성공, 결과: " + resultSprite.name);
+
+                // 진행바 + 결과 생성
+                StartCoroutine(currentMaker.ShowProgressAndSpawnItem(resultSprite));
+
+                // 인풋 인벤토리, 슬롯 UI 초기화
+                currentMaker.inputItemNames.Clear();
+                currentMaker.inputItemSprites.Clear();
+                if (currentMaker.slotUIManager != null)
+                    currentMaker.slotUIManager.ClearSlots();
 
                 if (isRecipeMatched)
                     Debug.Log("[Space] 제작 성공, 결과: " + resultSprite.name);
@@ -221,30 +269,30 @@ public class PlayerInteract : MonoBehaviour
     //private IEnumerator DelayedCraftingRoutine()
     //{
     //    yield return null; // 1프레임 대기
-
+    //
     //    if (currentMaker != null)
     //    {
     //        Debug.Log($"[지연된 제작 시도] makerId: {currentMaker.makerId}");
-
+    //
     //        // 1. 플레이어가 들고 있는 아이템 이름만 가져옴
     //        string heldItemName = HeldItemManager.Instance.GetHeldItemName();
-
+    //
     //        // 2. 레시피 인자 준비 (항상 한 가지 아이템만)
     //        var recipeSet = new HashSet<string>();
     //        if (!string.IsNullOrEmpty(heldItemName))
     //            recipeSet.Add(heldItemName);
-
+    //
     //        // 3. 실제 제작 실행
     //        Sprite resultSprite = CraftingRecipeManager.Instance.GetResultSprite(currentMaker.makerId, recipeSet);
-
+    //
     //        if (resultSprite != null)
     //        {
     //            // 제작 성공!
     //            Debug.Log("[제작 성공] 결과: " + resultSprite.name);
-
+    //
     //            // 소지 아이템 소모
     //            HeldItemManager.Instance.HideHeldItem();
-
+    //
     //            // 결과 오브젝트 스폰 
     //            StartCoroutine(currentMaker.ShowProgressAndSpawnItem(resultSprite));
     //        }
@@ -284,7 +332,14 @@ public class PlayerInteract : MonoBehaviour
             nearbyTable = other.GetComponent<TableInfo>();
             Debug.Log($"테이블 접근");
         }
-            
+
+        var sink = other.GetComponent<SinkInfo>();
+        if (sink != null)
+        {
+            nearbySink = sink;
+            Debug.Log("[PlayerInteract] 싱크 접근");
+        }
+
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -305,5 +360,13 @@ public class PlayerInteract : MonoBehaviour
 
         if (other.CompareTag("Table") && other.GetComponent<TableInfo>() == nearbyTable)
             nearbyTable = null;
+
+        if (other.GetComponent<SinkInfo>() == nearbySink)
+        {
+            nearbySink = null;
+            Debug.Log("[PlayerInteract] 싱크 이탈");
+        }
     }
+
 }
+

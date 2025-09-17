@@ -16,14 +16,14 @@ public class StatementManager : MonoBehaviour
         PlayerPrefs.SetInt("NextDayFlag", 1);
 
         // ¾À ÀüÈ¯Àº ÄÆ½Å Á¾·á ÈÄ¿¡
-        cutscene.onFinished.RemoveAllListeners();
-        cutscene.onFinished.AddListener(() =>
-        {
-            if (FadeManager.Instance != null)
-                FadeManager.Instance.FadeToScene("VillageScene", 0.5f);
-            else
-                SceneManager.LoadScene("VillageScene");
-        });
+        //cutscene.onFinished.RemoveAllListeners();
+        //cutscene.onFinished.AddListener(() =>
+        //{
+        //    if (FadeManager.Instance != null)
+        //        FadeManager.Instance.FadeToScene("VillageScene", 0.5f);
+        //    else
+        //        SceneManager.LoadScene("VillageScene");
+        //});
 
         cutscene.Play();
 
