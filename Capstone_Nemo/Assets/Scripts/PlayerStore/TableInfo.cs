@@ -12,7 +12,7 @@ public class TableInfo : MonoBehaviour
     public string spriteResourceDir = "Sprites/Ingredients/"; // 프로젝트 구조에 맞게
     public Vector3 initialScale = new Vector3(1f, 1f, 1f);
     public string sortingLayerName = "Obj";
-    public int sortingOrder = 100;
+    public int sortingOrder = 15;
 
     void Start()
     {
