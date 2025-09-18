@@ -38,8 +38,8 @@ public class OrderManager : MonoBehaviour
         HashSet<string> order = new HashSet<string>();
         foreach (var recipe in recipeList.recipes)
         {
-            /* if (!string.IsNullOrEmpty(recipe.resultSprite) && recipe.resultSprite.Contains("finish"))*/ //스프라이트 다 추가되면..
-            if (!string.IsNullOrEmpty(recipe.resultSprite) && manualSprites.Contains(recipe.resultSprite))
+            if (!string.IsNullOrEmpty(recipe.resultSprite) && recipe.resultSprite.Contains("finish")) //스프라이트 다 추가되면..
+            /*if (!string.IsNullOrEmpty(recipe.resultSprite) && manualSprites.Contains(recipe.resultSprite))*/
                 order.Add(recipe.resultSprite);
         }
         dagwaList = new List<string>(order);
