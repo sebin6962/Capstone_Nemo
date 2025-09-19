@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+using System.Linq;
+
 public class MakerInfo : MonoBehaviour
 {
     public string makerId;
@@ -19,6 +21,11 @@ public class MakerInfo : MonoBehaviour
     public RectTransform progressBarPrefab; // 진행바 프리팹
     public GameObject resultItemPrefab;     // 결과물 프리팹(스프라이트 렌더러 필요)
     public Transform ProgressworldCanvasParent;     // 월드 캔버스(진행바용)
+
+    [Header("Lock Visual")]
+    public Color unlockedColor = Color.white;
+    public Color lockedColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+    private bool _isLocked;
 
     // 슬롯UI가 없으면 동적으로 생성, 이미 있으면 그대로 사용
     public void EnsureSlotUIInstance()
@@ -109,4 +116,37 @@ public class MakerInfo : MonoBehaviour
         Debug.Log($"[제작기] 결과물 {resultSprite.name} 생성");
     }
 
+    // 잠금 상태 조회 (PlayerInteract에서 참고)
+    public bool IsLocked() => _isLocked;
+
+    // 잠금/해제 시 비주얼 + 상호작용 동기화
+    public void ApplyLockState(bool locked)
+    {
+        _isLocked = locked;
+
+        // 1) 월드 오브젝트 색상(스프라이트) 틴트
+        var srs = GetComponentsInChildren<SpriteRenderer>(includeInactive: true);
+        foreach (var sr in srs)
+            sr.color = locked ? lockedColor : unlockedColor;
+
+        // 2) UI 이미지도 회색 처리(있다면)
+        //var imgs = GetComponentsInChildren<Image>(includeInactive: true);
+        //foreach (var img in imgs)
+        //    img.color = locked ? lockedColor : unlockedColor;
+
+        // 3) 상호작용 차단: 콜라이더 비활성
+        var cols = GetComponentsInChildren<Collider2D>(includeInactive: true);
+        foreach (var c in cols)
+        {
+            if (!c.isTrigger) continue;   // 비트리거는 손대지 않음
+            c.enabled = !locked;          // 트리거만 잠금/해제
+        }
+
+        // 4) 슬롯 UI/진행바 등 표시 요소는 잠그면 감추기
+        if (locked && slotUIManager != null)
+            slotUIManager.ClearSlots();
+    }
+
 }
+
+

@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 
 public class TimeManager : MonoBehaviour
 {
+    public static event Action OnNewDayStarted;
     public static TimeManager Instance { get; private set; }
 
     public int hour = 9;
@@ -152,6 +153,8 @@ public class TimeManager : MonoBehaviour
         hour = 9;           // 날짜 넘길 때 시간 초기화!
         minute = 0;
         SaveDayData();          // 증가한 날짜 저장!
+
+        OnNewDayStarted?.Invoke();
 
         yield return new WaitForSeconds(1f);
 

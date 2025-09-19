@@ -56,6 +56,13 @@ public class PlayerInteract : MonoBehaviour
                 return;
             }
 
+            if (isNearMaker && currentMaker != null && currentMaker.IsLocked())
+            {
+                Debug.Log("[E] 잠긴 제작기라 상호작용 불가");
+                SFXManager.Instance.PlayBbyongSFX();
+                return;
+            }
+
             // 3. 제작기 근처에 있을 때
             if (isNearMaker && currentMaker != null)
             {
@@ -185,10 +192,20 @@ public class PlayerInteract : MonoBehaviour
                 }
             }
         }
-
+        
         // Space키: 제작 시도 (제작기 근처에서만)
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            if (isNearMaker && currentMaker != null)
+            {
+                if (currentMaker.IsLocked())
+                {
+                    Debug.Log("[Space] 잠긴 제작기라 제작 불가");
+                    SFXManager.Instance.PlayBbyongSFX();
+                    return;
+                }
+            }
+
             // 1. 상자(창고) 인벤토리가 열려 있고, 플레이어가 아이템을 들고 있다면
             if (PlayerStoreBoxInventoryUIManager.Instance.IsOpen() &&
                 HeldItemManager.Instance.IsHoldingItem())

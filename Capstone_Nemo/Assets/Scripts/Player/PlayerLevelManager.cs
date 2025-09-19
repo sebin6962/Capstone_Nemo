@@ -40,6 +40,7 @@ public class PlayerLevelManager : MonoBehaviour
             Exp -= ExpToNextLevel;
             Level++;
             Debug.Log($"레벨업! 현재 레벨: {Level}");
+            UnlockManager.Instance?.ScheduleUnlockForLevel(Level); //레벨업 시 다음 날 적용
         }
         Debug.Log($"경험치 획득: {amount}, 현재 Exp: {Exp}/{ExpToNextLevel}");
         Save(); // 경험치가 바뀔 때마다 저장
