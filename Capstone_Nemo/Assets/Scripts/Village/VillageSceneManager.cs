@@ -45,6 +45,9 @@ public class VillageSceneManager : MonoBehaviour
         TimeManager.Instance?.SetServerName(serverName);
         TimeManager.Instance?.LoadDay();
 
+        UnlockManager.Instance?.SetServerName(serverName);
+        UnlockManager.Instance?.LoadUnlockData();
+
         if (PlayerPrefs.GetInt("StartTimeOnEnter", 0) == 1)
         {
             PlayerPrefs.SetInt("StartTimeOnEnter", 0);
