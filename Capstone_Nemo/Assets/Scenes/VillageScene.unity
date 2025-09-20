@@ -300,6 +300,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c878551b72f27aa49b40162f73d153c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hideLockedRecipes: 1
   panel: {fileID: 1552623641}
   openButton: {fileID: 351511335}
   closeButton: {fileID: 121095679}
@@ -308,6 +309,7 @@ MonoBehaviour:
   tteokButton: {fileID: 1755558993}
   drinkButton: {fileID: 1292401615}
   guestButton: {fileID: 793675038}
+  lockCoverPanel: {fileID: 412662751}
   recipeRoot: {fileID: 1839917419}
   scrollRect: {fileID: 414248053}
   itemImage: {fileID: 1977697023}
@@ -1898,6 +1900,11 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &412662751 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1142377161444888609, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 4885431749207441011}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &414248053 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3538054431575111751, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}

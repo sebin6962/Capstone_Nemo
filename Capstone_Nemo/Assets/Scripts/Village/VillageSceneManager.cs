@@ -53,6 +53,8 @@ public class VillageSceneManager : MonoBehaviour
             PlayerPrefs.SetInt("StartTimeOnEnter", 0);
             TimeManager.Instance?.SetTimeFlow(true);
         }
+
+        TimeManager.Instance?.BeginSessionForSelectedSave();
     }
 
     void SetupServerNameAllManagers(string serverName)

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro; 
 using System.IO;
 using System.Collections.Generic;
+using System;
 
 [System.Serializable]
 public class SlotUI
@@ -17,15 +18,65 @@ public class SlotUI
     public Button deleteButton;
 }
 
+
 public class SaveSelectManager : MonoBehaviour
 {
-
+    [Serializable] class PlaytimeData 
+    { 
+        public long seconds; 
+        public string lastPlayed; 
+    }
 
     public SlotUI[] saveSlots; // 슬롯 3개 연결
     public GameObject newGamePopup;
 
     public Color normalSlotColor = Color.white;
     public Color emptySlotColor = Color.gray;
+
+    static void TryDelete(string path)
+    {
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+            Debug.Log($"[Delete] {path}");
+        }
+    }
+
+    // 세이브(서버) 하나를 지울 때 함께 지울 파일들
+    void DeleteServerFiles(string serverName)
+    {
+        var p = Application.persistentDataPath;
+
+        // 1) 이 서버의 개별 데이터 파일들
+        TryDelete(Path.Combine(p, $"save_myuser_{serverName}.json"));
+        TryDelete(Path.Combine(p, $"playerStarData_{serverName}.json"));
+        TryDelete(Path.Combine(p, $"player_level_data_{serverName}.json"));
+        TryDelete(Path.Combine(p, $"dayData_{serverName}.json"));
+        TryDelete(Path.Combine(p, $"timeData_{serverName}.json"));   // 사용 중이면
+        TryDelete(Path.Combine(p, $"unlock_{serverName}.json"));     // 퍼서버 해금 저장을 사용한다면
+        TryDelete(Path.Combine(p, $"playtime_{serverName}.json"));
+
+        // 2) 레거시 해금 파일(섞임의 주범) 더 이상 쓰지 않는다면 지워버리는 걸 권장
+        var legacy = Path.Combine(p, "unlock_state.json");
+        if (File.Exists(legacy)) TryDelete(legacy);
+
+        // 3) 프로필 목록에서 엔트리 제거 (프로필을 쓰고 있다면)
+        var profilePath = Path.Combine(p, "profile_myuser.json");
+        if (File.Exists(profilePath))
+        {
+            var json = File.ReadAllText(profilePath);
+            var profile = JsonUtility.FromJson<Profile>(json);
+            if (profile != null && profile.saves != null)
+            {
+                profile.saves.RemoveAll(s => s.serverName == serverName);
+                File.WriteAllText(profilePath, JsonUtility.ToJson(profile, true));
+            }
+        }
+
+        // 4) 현재 선택된 세이브였다면 선택값 초기화
+        if (PlayerPrefs.GetString("SelectedSave", "") == serverName)
+            PlayerPrefs.DeleteKey("SelectedSave");
+    }
 
     void OnEnable()
     {
@@ -140,11 +191,15 @@ public class SaveSelectManager : MonoBehaviour
                 int level = LoadLevel(serverName);
                 int day = LoadDay(serverName);
 
+                var pt = LoadPlaytimeData(serverName);
+                slot.txtPlaytime.text = FormatHMS(pt.seconds);
+                slot.txtLastPlayed.text = string.IsNullOrEmpty(pt.lastPlayed) ? "-" : pt.lastPlayed;
+
                 slot.txtServerName.text = $"‘{saveData.serverName}’";
                 slot.txtStarlight.text = $"{starlight} 별빛";
                 slot.txtLevel.text = $"{level} Lv";
-                slot.txtPlaytime.text = $"플레이 타임 : 약 {(day - 1) * 20}분";
-                slot.txtLastPlayed.text = $"마지막 접속 : {saveInfo.lastPlayed}";
+                //slot.txtPlaytime.text = $"플레이 타임 : 약 {(day - 1) * 20}분";
+                //slot.txtLastPlayed.text = $"마지막 접속 : {saveInfo.lastPlayed}";
                 slot.backgroundImage.color = normalSlotColor;
 
                 btn.onClick.AddListener(() =>
@@ -161,7 +216,9 @@ public class SaveSelectManager : MonoBehaviour
                 {
                     ConfirmPopup.Instance.Open($"[{serverName}] 세이브 파일을 삭제할까요?", () =>
                     {
-                        DeleteSave(serverName);
+                        //DeleteSave(serverName);
+                        DeleteServerFiles(serverName); 
+                        RefreshSaveSlots();
                     });
                 });
             }
@@ -181,8 +238,22 @@ public class SaveSelectManager : MonoBehaviour
                 });
             }
         }
+    }
 
+    PlaytimeData LoadPlaytimeData(string serverName)
+    {
+        string path = Application.persistentDataPath + $"/playtime_{serverName}.json";
+        if (!File.Exists(path)) return new PlaytimeData { seconds = 0, lastPlayed = "" };
+        try { return JsonUtility.FromJson<PlaytimeData>(File.ReadAllText(path)); }
+        catch { return new PlaytimeData { seconds = 0, lastPlayed = "" }; }
+    }
 
+    string FormatHMS(long seconds)
+    {
+        var ts = TimeSpan.FromSeconds(Math.Max(0, seconds));
+        // 총 시간은 HH 누적(24 넘으면 25:13:02 처럼 표기)
+        int hh = (int)ts.TotalHours;
+        return $"{hh:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
     }
 }
 

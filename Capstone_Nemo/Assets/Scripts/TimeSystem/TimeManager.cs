@@ -5,7 +5,15 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Globalization;
 using UnityEngine.SceneManagement;
+
+[Serializable]
+public class PlaytimeData
+{
+    public long seconds;          // 누적 플레이타임(초)
+    public string lastPlayed;     // 마지막 접속 표시(로컬 시간 문자열)
+}
 
 public class TimeManager : MonoBehaviour
 {
@@ -28,6 +36,14 @@ public class TimeManager : MonoBehaviour
     private string savePath;
 
     public bool isTimeFlow = true; // 시간 흐름 제어 변수
+
+    private DateTime? _sessionStartUtc;
+    private string _currentServerForPlay;
+    private long _cachedPlaySeconds;
+
+    private string PlaytimePath(string server)
+        => Path.Combine(Application.persistentDataPath, $"playtime_{server}.json");
+
 
     void Awake()
     {
@@ -60,6 +76,13 @@ public class TimeManager : MonoBehaviour
         clockHandImage = GameObject.Find("DayPanel_niddle")?.GetComponent<Image>();
         UpdateDayUI();
         UpdateClockProgressUI();
+
+        var name = scene.name;
+        bool shouldPause =
+            name == "IntroScene" ||
+            name == "SaveSelectScene" ||
+            name == "StatementScene";
+        isTimeFlow = !shouldPause;
     }
     void Start()
     {
@@ -76,6 +99,8 @@ public class TimeManager : MonoBehaviour
 
     void Update()
     {
+        if (!isTimeFlow) return;
+
         // 명세서 씬(StatementScene)에서는 시간 진행 X
         if (SceneManager.GetActiveScene().name == "StatementScene")
             return;
@@ -181,21 +206,101 @@ public class TimeManager : MonoBehaviour
         Debug.Log($"[SaveDayData] {currentDay}일차 {hour}:{minute} 저장 ({savePath})");
     }
 
-    void OnApplicationQuit()
+    void OnEnable()
     {
-        SaveDayData();
+        SceneManager.sceneLoaded += OnSceneLoaded_PlaySession;
     }
 
     void OnDisable()
     {
         if (this == Instance)
             SaveDayData();
+        SceneManager.sceneLoaded -= OnSceneLoaded_PlaySession;
     }
 
     // 외부에서 시간 흐름 On/Off
     public void SetTimeFlow(bool flow)
     {
         isTimeFlow = flow;
+    }
+
+    public void BeginSessionForSelectedSave()
+    {
+        var server = PlayerPrefs.GetString("SelectedSave", "");
+        if (!string.IsNullOrEmpty(server)) BeginSession(server);
+    }
+
+    public void BeginSession(string serverName)
+    {
+        // 이전 세션 종료(혹시 열려있다면)
+        EndAndPersistSession();
+
+        _currentServerForPlay = serverName;
+        _cachedPlaySeconds = 0;
+
+        // 기존 누적 불러오기
+        var path = PlaytimePath(serverName);
+        if (File.Exists(path))
+        {
+            try
+            {
+                var data = JsonUtility.FromJson<PlaytimeData>(File.ReadAllText(path));
+                if (data != null) _cachedPlaySeconds = data.seconds;
+            }
+            catch { /* 무시: 손상 시 0부터 */ }
+        }
+        _sessionStartUtc = DateTime.UtcNow;
+    }
+
+    public void EndAndPersistSession()
+    {
+        if (_sessionStartUtc == null || string.IsNullOrEmpty(_currentServerForPlay)) return;
+
+        var elapsed = (long)Math.Max(0, (DateTime.UtcNow - _sessionStartUtc.Value).TotalSeconds);
+        _cachedPlaySeconds += elapsed;
+
+        var data = new PlaytimeData
+        {
+            seconds = _cachedPlaySeconds,
+            lastPlayed = DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
+        };
+        try
+        {
+            File.WriteAllText(PlaytimePath(_currentServerForPlay), JsonUtility.ToJson(data, true));
+        }
+        catch { /* 디스크 에러 무시 */ }
+
+        _sessionStartUtc = null;
+    }
+
+    private void OnSceneLoaded_PlaySession(Scene scene, LoadSceneMode mode)
+    {
+        var name = scene.name;
+
+        // Intro/SaveSelect/Statement 씬에선 시간 멈춤 + 세션 종료
+        bool nonPlayScene = name == "IntroScene" || name == "SaveSelectScene" || name == "StatementScene";
+        isTimeFlow = !nonPlayScene;           // 시간 흐름 제어(이미 쓰고 있던 플래그)
+
+        if (nonPlayScene)
+        {
+            EndAndPersistSession();           // 플레이 중이었다면 종료+저장
+        }
+        else
+        {
+            // 플레이 씬에 진입 → 현재 SelectedSave 기준으로 세션 시작
+            BeginSessionForSelectedSave();
+        }
+    }
+
+    void OnApplicationPause(bool pause)
+    {
+        if (pause) EndAndPersistSession();    // 일시정지 시 세션 저장
+    }
+
+    void OnApplicationQuit()
+    {
+        EndAndPersistSession();               // 종료 직전 세션 저장
+        SaveDayData();
     }
 }
 

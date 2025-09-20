@@ -5,10 +5,15 @@ using TMPro;
 using UnityEngine.EventSystems;
 using Newtonsoft.Json;
 using System.IO;
+using System.Linq;
 
 public class DoGamUIManager : MonoBehaviour
 {
     public static DoGamUIManager Instance;
+
+    [Header("Unlock Filter")]
+    [Tooltip("잠긴 레시피는 리스트에서 숨길지 여부")]
+    [SerializeField] private bool hideLockedRecipes = true;
 
     [Header("Common")]
     public GameObject panel;
@@ -24,6 +29,9 @@ public class DoGamUIManager : MonoBehaviour
     public Button drinkButton;
     public Button guestButton;
 
+    [Header("잠금 오버레이")]
+    [SerializeField] private GameObject lockCoverPanel;   // 도감 위를 가리는 패널(자물쇠, 블러 등)
+
     // =============== [레시피 탭 레이아웃] ===============
     [Header("Recipe (레시피)")]
     public GameObject recipeRoot;         // 레시피 전용 루트
@@ -38,10 +46,17 @@ public class DoGamUIManager : MonoBehaviour
     public GameObject recipeImagePrefab;  // 작은 아이콘 프리팹
     public GameObject recipeLineBackgroundPrefab;
 
-    private int currentIndex = 0;
-    private List<DoGamEntry> entryList = new(); // 현재 표시 리스트
+    // 기존 리스트/인덱스
+    private int currentIndex = 0;               // (legacy) entryList 인덱스 기반
+    private List<DoGamEntry> entryList = new(); // 현재 표시 리스트(보통 해금만)
     private List<DoGamEntry> allEntries = new(); // 전체 리스트
     private Dictionary<string, DoGamEntry> doGamDict;
+
+    // 잠금 오버레이/페이지 운용용 내부 리스트
+    private List<DoGamEntry> _allInCat = new();       // 해당 카테고리의 전체
+    private List<DoGamEntry> _unlockedInCat = new();  // 해당 카테고리에서 해금된 것들
+    private int _unlockedCount = 0;                   // 해금 개수
+    private int _currentIndex = 0;                    // 0.._unlockedCount (마지막+1 = 잠금 첫 페이지)
 
     // =============== [게임방법 탭 레이아웃] ===============
     [Header("How-To (게임 방법)")]
@@ -97,8 +112,8 @@ public class DoGamUIManager : MonoBehaviour
         if (Instance == null) Instance = this;
 
         // 데이터 먼저 로드
-        LoadDoGamDataFromJSON();
-        LoadHowToFromJSON();
+        LoadDoGamDataFromJSON();  // 레시피
+        LoadHowToFromJSON();      // 게임방법
 
         // 열기/닫기
         openButton.onClick.AddListener(() => OpenDoGam("백설기"));
@@ -124,17 +139,14 @@ public class DoGamUIManager : MonoBehaviour
         SetRecipeNavVisible(false);
         SetHowToNavVisible(false);
         if (howToRoot != null) howToRoot.SetActive(false); // 시작 시 비활성
-
-        // 데이터 로드
-        LoadDoGamDataFromJSON();  // 레시피
-        LoadHowToFromJSON();      // 게임방법
+        if (lockCoverPanel) lockCoverPanel.SetActive(false);
     }
 
     // ===================== 공통 토글 =====================
     private void SetRecipeLayout(bool on)
     {
         if (recipeRoot != null) recipeRoot.SetActive(on);
-        SetRecipeNavVisible(on && entryList.Count > 0);
+        SetRecipeNavVisible(on && (entryList.Count > 0 || _unlockedCount >= 0));
     }
     private void SetHowToLayout(bool on)
     {
@@ -190,7 +202,9 @@ public class DoGamUIManager : MonoBehaviour
         nameText.text = entry.name;
         descriptionText.text = entry.description;
         recipeText.text = string.Join("\n", entry.recipe);
-        itemImage.sprite = Resources.Load<Sprite>("Sprites/Dagwa/" + entry.image);
+        itemImage.sprite = Resources.Load<Sprite>("Sprites/Ingredients/" + entry.image);
+
+        if (lockCoverPanel) lockCoverPanel.SetActive(false);
     }
 
     public bool IsOpen() => panel != null && panel.activeSelf;
@@ -206,6 +220,8 @@ public class DoGamUIManager : MonoBehaviour
 
         if (openButton != null) openButton.interactable = true;
         isHowToOpen = false;
+
+        if (lockCoverPanel) lockCoverPanel.SetActive(false);
     }
 
     // ===================== 레시피 탭 =====================
@@ -239,22 +255,76 @@ public class DoGamUIManager : MonoBehaviour
         SubTitle.SetActive(false);
         isHowToOpen = false;
 
-        entryList = allEntries.FindAll(e => e.category == category);
-        if (entryList.Count == 0)
+        if (lockCoverPanel) lockCoverPanel.SetActive(false);
+
+        // 카테고리 분류
+        _allInCat = allEntries.Where(e => e.category == category).ToList();
+        _unlockedInCat = _allInCat.Where(IsEntryUnlocked).ToList();
+        _unlockedCount = _unlockedInCat.Count;
+
+        // entryList는 UI 바인딩용(해금만 또는 전체)
+        entryList = hideLockedRecipes ? new List<DoGamEntry>(_unlockedInCat) : new List<DoGamEntry>(_allInCat);
+
+        // 시작 페이지는 0
+        _currentIndex = 0;
+        UpdatePage(); // 잠금/해금/오버레이 상태 반영
+        SetRecipeNavVisible(true);
+    }
+
+    /// <summary>
+    /// 페이지(해금/잠금 첫 페이지) 상태를 갱신한다.
+    /// </summary>
+    private void UpdatePage()
+    {
+        // 범위: 0.._unlockedCount (마지막+1 = 잠금 첫 페이지)
+        if (_currentIndex < 0) _currentIndex = 0;
+        if (_currentIndex > _unlockedCount) _currentIndex = _unlockedCount;
+
+        bool onLockedPeek = (_currentIndex == _unlockedCount);
+
+        // ① 잠금 오버레이
+        if (lockCoverPanel) lockCoverPanel.SetActive(onLockedPeek);
+
+        // ② 콘텐츠 표시
+        if (!onLockedPeek)
         {
-            Debug.LogWarning($"카테고리 '{category}'에 해당하는 레시피가 없습니다.");
-            // 내용 비우기
-            if (itemImage) itemImage.sprite = null;
-            if (nameText) nameText.text = "";
-            if (descriptionText) descriptionText.text = "";
-            ClearRecipeLines();
-            SetRecipeNavVisible(false);
-            return;
+            // 해금 리스트가 비었으면 아무 것도 표시하지 않음
+            if (_unlockedCount > 0)
+            {
+                ShowEntryUnlocked(_currentIndex);
+            }
+            else
+            {
+                // 해금이 하나도 없을 때(선택) - 오버레이가 가리므로 비워둬도 무방
+                ClearRecipeLines();
+                if (itemImage) itemImage.sprite = null;
+                if (nameText) nameText.text = "";
+                if (descriptionText) descriptionText.text = "";
+            }
+        }
+        else
+        {
+            // 잠금 페이지에서는 콘텐츠 표시 생략(오버레이가 가림)
         }
 
-        currentIndex = 0;
+        // ③ 내비게이션 버튼 상태(선택)
+        if (prevButton) prevButton.interactable = (_currentIndex > 0);
+        if (nextButton) nextButton.interactable = true; // 잠금 페이지에서도 눌러도 더는 넘어가지 않음
+    }
+
+    /// <summary>
+    /// 해금 리스트 기준으로 표시(실제 ShowEntry는 entryList 인덱스를 요구하므로 매핑)
+    /// </summary>
+    private void ShowEntryUnlocked(int unlockedIndex)
+    {
+        var entry = _unlockedInCat[unlockedIndex];
+
+        // entryList가 해금 전용이면 인덱스 동일, 전체 리스트면 매핑 필요
+        int idxInCurrentList = entryList.IndexOf(entry);
+        if (idxInCurrentList < 0) idxInCurrentList = 0;
+
+        currentIndex = idxInCurrentList; // legacy 인덱스 유지
         ShowEntry(currentIndex);
-        SetRecipeNavVisible(true);
     }
 
     public void ShowEntry(int index)
@@ -266,8 +336,9 @@ public class DoGamUIManager : MonoBehaviour
         var entry = entryList[index];
 
         // 2) 상단 정보 바인딩
-        if (itemImage) itemImage.sprite = Resources.Load<Sprite>("Sprites/Dagwa/" + entry.image);
+        if (itemImage) itemImage.sprite = Resources.Load<Sprite>("Sprites/Ingredients/" + entry.image);
         if (nameText) nameText.text = entry.name;
+        if (descriptionText) nameText.text = entry.name; // (오타 방지: 필요시 descriptionText 로 아래 줄 사용)
         if (descriptionText) descriptionText.text = entry.description;
 
         // 3) 기존 라인 정리
@@ -306,12 +377,12 @@ public class DoGamUIManager : MonoBehaviour
             var toolSlot = lineGO.transform.Find("ToolSlot");
             var resultSlot = lineGO.transform.Find("ResultSlot");
             var ingSlots = new List<Transform>
-        {
-            lineGO.transform.Find("IngredientSlot1"),
-            lineGO.transform.Find("IngredientSlot2"),
-            lineGO.transform.Find("IngredientSlot3"),
-            lineGO.transform.Find("IngredientSlot4")
-        };
+            {
+                lineGO.transform.Find("IngredientSlot1"),
+                lineGO.transform.Find("IngredientSlot2"),
+                lineGO.transform.Find("IngredientSlot3"),
+                lineGO.transform.Find("IngredientSlot4")
+            };
 
             // 제작기
             if (!string.IsNullOrEmpty(bundle.tool) && toolSlot != null)
@@ -391,25 +462,28 @@ public class DoGamUIManager : MonoBehaviour
         if (scrollRect != null) scrollRect.verticalNormalizedPosition = 1f;
     }
 
-
     public void NextEntry()
     {
-        if (entryList == null || entryList.Count == 0) return;
-        if (currentIndex < entryList.Count - 1)
+        // 마지막 해금 페이지에서 한 장 더 → 잠금 첫 페이지로 진입
+        if (_currentIndex < _unlockedCount)
         {
-            currentIndex++;
-            ShowEntry(currentIndex);
+            _currentIndex++;
+            UpdatePage();
+        }
+        else
+        {
+            // 이미 잠금 첫 페이지: 더는 넘어가지 않음(효과음/진동 등 선택)
         }
     }
 
     public void PrevEntry()
     {
-        if (entryList == null || entryList.Count == 0) return;
-        if (currentIndex > 0)
+        if (_currentIndex > 0)
         {
-            currentIndex--;
-            ShowEntry(currentIndex);
+            _currentIndex--;
+            UpdatePage();
         }
+        // 0페이지면 더 못 감
     }
 
     private void ClearRecipeLines()
@@ -484,7 +558,6 @@ public class DoGamUIManager : MonoBehaviour
             howToTitleText.text = page.title;
 
         // 항목 4개 (왼쪽 2, 오른쪽 2) 배치
-        // page.items.Count 가 4 미만이어도 안전하게 동작하도록 방어
         int count = page.items != null ? Mathf.Min(page.items.Count, howToItemsPerSpread) : 0;
         for (int i = 0; i < count; i++)
         {
@@ -512,18 +585,7 @@ public class DoGamUIManager : MonoBehaviour
 
                 if (sprite != null)
                 {
-                    // 핵심 1) 원본 비율 유지
                     icon.preserveAspect = true;
-
-                    // 핵심 2) 부모 크기 안에서 맞추기 (부모 RectTransform 크기 기준으로 축소/확대)
-                    //var arf = icon.GetComponent<AspectRatioFitter>();
-                    //if (arf == null) arf = icon.gameObject.AddComponent<AspectRatioFitter>();
-                    //arf.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
-
-                    // 스프라이트 실제 픽셀 비율 적용
-                    //arf.aspectRatio = sprite.rect.width / sprite.rect.height;
-
-                    // (선택) 레이아웃 강제 재빌드가 필요할 때
                     LayoutRebuilder.MarkLayoutForRebuild(icon.rectTransform);
                 }
             }
@@ -540,5 +602,39 @@ public class DoGamUIManager : MonoBehaviour
         for (int i = t.childCount - 1; i >= 0; i--)
             Destroy(t.GetChild(i).gameObject);
     }
+
+    //==========잠금 판정==============
+    // 도감 엔트리의 "완성 키" 추출: recipeImageBundle의 마지막 result → 없으면 대표 이미지 파일명
+    private string GetFinishKey(DoGamEntry e)
+    {
+        // 1) 레시피 번들 중 result가 있는 마지막 항목을 우선
+        if (e.recipeImageBundle != null && e.recipeImageBundle.Count > 0)
+        {
+            var lastWithResult = e.recipeImageBundle
+                .Where(b => b != null && !string.IsNullOrEmpty(b.result))
+                .LastOrDefault();
+            if (lastWithResult != null)
+                return Path.GetFileNameWithoutExtension(lastWithResult.result);
+        }
+
+        // 2) 번들이 비었으면, 엔트리 대표 이미지(완성품)가 곧 키라고 가정
+        if (!string.IsNullOrEmpty(e.image))
+            return Path.GetFileNameWithoutExtension(e.image);
+
+        return null; // 키를 유추 못하면 잠금 처리
+    }
+
+    // “완성 키”가 해금되어야만 도감에서 보이도록
+    private bool IsEntryUnlocked(DoGamEntry e)
+    {
+        var um = UnlockManager.Instance;
+        if (um == null) return true; // 초기 로딩 안전장치
+
+        var finishKey = GetFinishKey(e);
+        if (string.IsNullOrWhiteSpace(finishKey)) return false; // 보수적으로 잠금
+
+        return um.IsRecipeUnlocked(finishKey);
+    }
 }
+
 
