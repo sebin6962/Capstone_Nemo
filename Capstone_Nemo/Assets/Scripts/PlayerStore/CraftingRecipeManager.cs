@@ -3,12 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using System.Text;
 
 public class CraftingRecipeManager : MonoBehaviour
 {
     public static CraftingRecipeManager Instance;
 
     private List<CraftingRecipe> allRecipes;
+
+    private static string RecipeKey(CraftingRecipe r) => (r.resultSprite ?? "").Trim();
 
     void Awake()
     {
@@ -38,8 +41,17 @@ public class CraftingRecipeManager : MonoBehaviour
         isMatched = false;
         Debug.Log($"[레시피 매칭 시도] makerId = {makerId}, 재료 = {string.Join(", ", selectedIngredients)}");
 
+
         foreach (var recipe in allRecipes)
         {
+            // 1) 제작기 잠금 체크
+            if (UnlockManager.Instance != null && !UnlockManager.Instance.IsMakerUnlocked(recipe.makerId))
+                continue;
+
+            // 2) 레시피 잠금 체크 (키는 resultSprite 이름 사용)
+            if (UnlockManager.Instance != null && !UnlockManager.Instance.IsRecipeUnlocked(RecipeKey(recipe)))
+                continue;
+
             Debug.Log($"→ 비교 대상: makerId = {recipe.makerId}, 재료 = {string.Join(", ", recipe.ingredients)}");
 
             bool idMatch = recipe.makerId.Trim().ToLower() == makerId.Trim().ToLower();

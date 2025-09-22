@@ -181,7 +181,8 @@ public class Customer : MonoBehaviour
             PlayerLevelManager.Instance?.AddExp(20);
 
             // º°ºû Áö±Þ
-            StarDataManager.Instance?.AddStarlight(10);
+            //StarDataManager.Instance?.AddStarlight(10);
+            StarDataManager.Instance?.AddStarlightFromNormal(10);
 
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
 

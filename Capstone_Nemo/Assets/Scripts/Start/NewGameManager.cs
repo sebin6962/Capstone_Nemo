@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System;
 using System.IO;
 using TMPro;
+using System.Collections.Generic;
 
 public class NewGameManager : MonoBehaviour
 {
@@ -55,6 +56,7 @@ public class NewGameManager : MonoBehaviour
         SaveData saveData = new SaveData
         {
             serverName = serverName,
+
             //playerName = playerName // 플레이어 이름 저장
         };
         File.WriteAllText(savePath, JsonUtility.ToJson(saveData, true));

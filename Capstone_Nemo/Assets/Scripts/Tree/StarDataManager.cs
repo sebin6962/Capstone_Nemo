@@ -9,12 +9,22 @@ public class PlayerData
     public int starlight;
 }
 
+[System.Serializable]
+public struct DayReport
+{
+    public int normalCount, normalStars;
+    public int questCount, questStars;
+    public int TotalStars => normalStars + questStars;
+}
+
 public class StarDataManager : MonoBehaviour
 {
     public static StarDataManager Instance;
     public PlayerData playerData = new PlayerData();
 
     private string savePath;
+
+    private DayReport _today, _yesterday;
 
     void Awake()
     {
@@ -32,6 +42,40 @@ public class StarDataManager : MonoBehaviour
         }
     }
 
+    // 하루 끝(다음 날 시작 이벤트)에 스냅샷 전환
+    void OnEnable()
+    {
+        TimeManager.OnNewDayStarted += SnapshotAndReset; // TimeManager 이벤트가 이미 존재한다고 가정
+    }
+    void OnDisable()
+    {
+        TimeManager.OnNewDayStarted -= SnapshotAndReset;
+    }
+
+    private void SnapshotAndReset()
+    {
+        _yesterday = _today;        // 어제 성과로 스냅샷
+        _today = new DayReport();   // 금일 집계 초기화
+    }
+
+    // 외부에서 읽기 위한 getter
+    public DayReport GetYesterdayReport() => _yesterday;
+
+    // 집계 + 총 별빛 반영 (정규 손님)
+    public void AddStarlightFromNormal(int amount)
+    {
+        _today.normalCount++;
+        _today.normalStars += amount;
+        AddStarlight(amount); // 기존 총 별빛 저장/UI 갱신 로직 그대로 사용
+    }
+
+    // 집계 + 총 별빛 반영 (특별 손님)
+    public void AddStarlightFromQuest(int amount)
+    {
+        _today.questCount++;
+        _today.questStars += amount;
+        AddStarlight(amount);
+    }
     /// <summary>
     /// SaveSelect/NewGame에서 이미 SelectedSave를 세팅함.
     /// 씬 진입 시 여기서 경로/로드를 보장.
