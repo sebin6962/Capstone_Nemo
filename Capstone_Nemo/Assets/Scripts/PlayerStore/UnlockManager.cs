@@ -90,7 +90,7 @@ public class UnlockManager : MonoBehaviour
         if (!save.initialized || save.appliedLevels == null || save.appliedLevels.Count == 0)
         {
             int playerLevel = Mathf.Max(1, PlayerLevelManager.Instance ? PlayerLevelManager.Instance.Level : 1);
-            SeedAppliedLevelsUpTo(playerLevel); // ★ 아래 함수
+            SeedAppliedLevelsUpTo(playerLevel); // 아래 함수
             RebuildUnlockedFromApplied();
             save.initialized = true;
             SaveState();
@@ -223,7 +223,7 @@ public class UnlockManager : MonoBehaviour
             save.appliedLevels.Add(lv);
             save.pendingLevels.Remove(lv);
         }
-        RebuildUnlockedFromApplied();           // ★ 항상 한 번에 재계산
+        RebuildUnlockedFromApplied();           // 항상 한 번에 재계산
         RefreshMakerActivationInScene();
         //SaveState();
     }
