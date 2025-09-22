@@ -32,6 +32,12 @@ public class DoGamUIManager : MonoBehaviour
     [Header("잠금 오버레이")]
     [SerializeField] private GameObject lockCoverPanel;   // 도감 위를 가리는 패널(자물쇠, 블러 등)
 
+    [Header("Tab Sprites")]
+    public Sprite tabNormalSprite;
+    public Sprite tabPressedSprite;
+
+    private Button _activeTabButton = null; // 현재 선택된 탭
+
     // =============== [레시피 탭 레이아웃] ===============
     [Header("Recipe (레시피)")]
     public GameObject recipeRoot;         // 레시피 전용 루트
@@ -57,6 +63,8 @@ public class DoGamUIManager : MonoBehaviour
     private List<DoGamEntry> _unlockedInCat = new();  // 해당 카테고리에서 해금된 것들
     private int _unlockedCount = 0;                   // 해금 개수
     private int _currentIndex = 0;                    // 0.._unlockedCount (마지막+1 = 잠금 첫 페이지)
+
+    private bool _suppressLockOnce = false;
 
     // =============== [게임방법 탭 레이아웃] ===============
     [Header("How-To (게임 방법)")]
@@ -120,9 +128,12 @@ public class DoGamUIManager : MonoBehaviour
         closeButton.onClick.AddListener(CloseDoGam);
 
         // 레시피 카테고리
-        tteokButton.onClick.AddListener(() => FilterByCategory("떡"));
-        drinkButton.onClick.AddListener(() => FilterByCategory("음료"));
-        guestButton.onClick.AddListener(() => FilterByCategory("손님"));
+        //tteokButton.onClick.AddListener(() => FilterByCategory("떡"));
+        //drinkButton.onClick.AddListener(() => FilterByCategory("음료"));
+        //guestButton.onClick.AddListener(() => FilterByCategory("손님"));
+        tteokButton.onClick.AddListener(() => { FilterByCategory("떡"); });
+        drinkButton.onClick.AddListener(() => { FilterByCategory("음료"); });
+        guestButton.onClick.AddListener(() => { FilterByCategory("손님"); });
 
         // 레시피 네비
         nextButton.onClick.AddListener(() => NextEntry());
@@ -152,6 +163,9 @@ public class DoGamUIManager : MonoBehaviour
     {
         if (howToRoot != null) howToRoot.SetActive(on);
         SetHowToNavVisible(on && howToPages.Count > 0);
+
+        // 게임방법 탭이 켜질 땐 잠금패널은 항상 꺼짐
+        if (on && lockCoverPanel) lockCoverPanel.SetActive(false);
     }
     private void SetRecipeNavVisible(bool on)
     {
@@ -181,6 +195,7 @@ public class DoGamUIManager : MonoBehaviour
         }
 
         FilterByCategory("떡"); // 기본은 레시피 탭의 '떡'으로
+        SetActiveTab(tteokButton);
 
         // 버튼을 가장 위로 (레이캐스트 우선순위)
         prevButton.transform.SetAsLastSibling();
@@ -255,7 +270,10 @@ public class DoGamUIManager : MonoBehaviour
         SubTitle.SetActive(false);
         isHowToOpen = false;
 
-        if (lockCoverPanel) lockCoverPanel.SetActive(false);
+        //if (lockCoverPanel) lockCoverPanel.SetActive(false);
+
+        //_suppressLockOnce = true;
+        //if (lockCoverPanel) lockCoverPanel.SetActive(false);
 
         // 카테고리 분류
         _allInCat = allEntries.Where(e => e.category == category).ToList();
@@ -269,6 +287,34 @@ public class DoGamUIManager : MonoBehaviour
         _currentIndex = 0;
         UpdatePage(); // 잠금/해금/오버레이 상태 반영
         SetRecipeNavVisible(true);
+
+        ApplyTabSpritesForCategory(category);
+    }
+
+    private void SetActiveTab(Button b)
+    {
+        // 모든 탭을 일반 스프라이트로 되돌림
+        if (tteokButton) tteokButton.image.sprite = tabNormalSprite;
+        if (drinkButton) drinkButton.image.sprite = tabNormalSprite;
+        if (guestButton) guestButton.image.sprite = tabNormalSprite;
+        if (howToButton) howToButton.image.sprite = tabNormalSprite;
+
+        // 현재 탭만 pressed 스프라이트로 고정
+        _activeTabButton = b;
+        if (_activeTabButton) _activeTabButton.image.sprite = tabPressedSprite;
+
+        // 탭 버튼은 전환 애니메이션 영향 안 받도록(권장)
+        if (tteokButton) tteokButton.transition = Selectable.Transition.None;
+        if (drinkButton) drinkButton.transition = Selectable.Transition.None;
+        if (guestButton) guestButton.transition = Selectable.Transition.None;
+        if (howToButton) howToButton.transition = Selectable.Transition.None;
+    }
+
+    private void ApplyTabSpritesForCategory(string category)
+    {
+        if (category == "떡") SetActiveTab(tteokButton);
+        else if (category == "음료") SetActiveTab(drinkButton);
+        else if (category == "손님") SetActiveTab(guestButton);
     }
 
     /// <summary>
@@ -282,8 +328,15 @@ public class DoGamUIManager : MonoBehaviour
 
         bool onLockedPeek = (_currentIndex == _unlockedCount);
 
-        // ① 잠금 오버레이
-        if (lockCoverPanel) lockCoverPanel.SetActive(onLockedPeek);
+        if (_suppressLockOnce)
+        {
+            if (lockCoverPanel) lockCoverPanel.SetActive(false);
+            _suppressLockOnce = false; // 한 번만 적용
+        }
+        else
+        {
+            if (lockCoverPanel) lockCoverPanel.SetActive(onLockedPeek);
+        }
 
         // ② 콘텐츠 표시
         if (!onLockedPeek)
@@ -305,6 +358,11 @@ public class DoGamUIManager : MonoBehaviour
         else
         {
             // 잠금 페이지에서는 콘텐츠 표시 생략(오버레이가 가림)
+            ClearRecipeLines();
+            if (itemImage) itemImage.sprite = null;
+            if (nameText) nameText.text = "";
+            if (descriptionText) descriptionText.text = "";
+            if (recipeText) recipeText.text = "";
         }
 
         // ③ 내비게이션 버튼 상태(선택)
@@ -527,11 +585,15 @@ public class DoGamUIManager : MonoBehaviour
         SetHowToLayout(true);
         isHowToOpen = true;
 
+        SetActiveTab(howToButton);
+
         if (howToPages == null || howToPages.Count == 0)
             LoadHowToFromJSON();
 
         howToSpreadIndex = 0;
         RenderHowToSpread();
+
+        if (lockCoverPanel) lockCoverPanel.SetActive(false);
     }
 
     private void ChangeHowToSpread(int delta)

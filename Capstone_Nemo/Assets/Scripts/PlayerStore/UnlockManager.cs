@@ -4,7 +4,6 @@ using UnityEngine;
 using System.IO;
 using System.Linq;
 using System;
-using UnityEditorInternal;
 using UnityEngine.SceneManagement;
 
 [Serializable] class UnlockLevelEntry { public int level; public List<string> makers; public List<string> recipes; }
