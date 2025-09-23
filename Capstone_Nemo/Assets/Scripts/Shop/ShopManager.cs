@@ -36,14 +36,14 @@ public class ShopManager : MonoBehaviour
 
     void LoadShopData()
     {
-        if (!File.Exists(shopDataPath))
+        TextAsset jsonText = Resources.Load<TextAsset>("Data/shopData");
+        if (jsonText == null)
         {
-            Debug.LogWarning("shopData.json 파일이 존재하지 않음");
+            Debug.LogWarning("Resources/data/shopData.json 파일을 찾을 수 없음");
             return;
         }
 
-        string json = File.ReadAllText(shopDataPath);
-        ShopDataList data = JsonUtility.FromJson<ShopDataList>(json);
+        ShopDataList data = JsonUtility.FromJson<ShopDataList>(jsonText.text);
         ShopItems = data.items;
 
         Debug.Log($"상점 아이템 {ShopItems.Count}개 로드됨");
