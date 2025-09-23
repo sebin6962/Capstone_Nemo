@@ -58,6 +58,6 @@ public class ShopItemSlot : MonoBehaviour
 
     public void UpdateDisplay(int quantity)
     {
-        quantityText.text = $"{quantity} °³";
+        quantityText.text = $"{quantity}";
     }
 }

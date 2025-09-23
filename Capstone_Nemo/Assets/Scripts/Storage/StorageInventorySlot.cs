@@ -93,7 +93,11 @@ public static class ItemTooltipDB
         { "Rice_seedBag", "쌀 모종" },
         { "Baekseolgi_finish", "백설기" },
         { "Danhobakseolgi_finish", "단호박설기" },
-        { "Rainbowseolgi_finish", "무지개설기" }
+        { "Rainbowseolgi_finish", "무지개설기" },
+        { "Chamgireum", "참기름" },
+        { "Honey", "꿀" },
+        { "Kkae", "깨" },
+        { "Jat", "잣" }
         // 필요한 만큼 추가
     };
 }
