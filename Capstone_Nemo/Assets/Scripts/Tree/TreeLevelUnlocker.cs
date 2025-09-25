@@ -16,8 +16,8 @@ public class TreeLevelUnlocker : MonoBehaviour
     public TMP_Text[] levelDescTexts;
     public int[] starlightNeededForLevel;
     public string[] levelDescriptions;
-    //public Color unlockedColor;
-    //public Color lockedColor;
+    public Color unlockedColor;
+    public Color lockedColor;
 
     public GameObject tooltipPanel;
     public TMP_Text tooltipText;
@@ -38,11 +38,6 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     private TreeUnlockData unlockData;
     private string savePath;
-
-    [Header("Panel-based Tree Unlock UI")]
-    public Image unlockPopupPanelImage;          // 나무 해금 팝업(전체 패널)의 Image
-    public Sprite lockedPanelSprite;             // 레벨 0(잠김)용
-    public Sprite[] levelUnlockedPanelSprites;   // 레벨 1..N 해금용 (index = level-1)
 
     void Awake()
     {
@@ -76,8 +71,6 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         // 3) 버튼/텍스트 갱신
         UpdateLevelButtons();
-        // 패널 스프라이트 동기화
-        ApplyPanelSprite();
 
         // 4) 버튼들에 툴팁 트리거 연결
         if (levelButtons != null)
@@ -99,25 +92,6 @@ public class TreeLevelUnlocker : MonoBehaviour
         }
     }
 
-    public void ApplyPanelSprite()
-    {
-        if (unlockPopupPanelImage == null) return;
-
-        if (currentUnlockedLevel <= 0)
-        {
-            if (lockedPanelSprite != null)
-                unlockPopupPanelImage.sprite = lockedPanelSprite;
-        }
-        else
-        {
-            int idx = Mathf.Clamp(currentUnlockedLevel - 1, 0, levelUnlockedPanelSprites.Length - 1);
-            if (levelUnlockedPanelSprites != null && levelUnlockedPanelSprites.Length > 0)
-                unlockPopupPanelImage.sprite = levelUnlockedPanelSprites[idx];
-        }
-
-        // 필요 시 원본 크기 반영
-        // unlockPopupPanelImage.SetNativeSize();
-    }
     public void ShowTooltip(int levelIdx)
     {
         bool unlocked = levelIdx < currentUnlockedLevel;
@@ -178,7 +152,6 @@ public class TreeLevelUnlocker : MonoBehaviour
         SaveUnlockData();
 
         UpdateLevelButtons();
-        ApplyPanelSprite();
 
         ShowUnlockEffectPanel(currentUnlockedLevel);
     }
@@ -229,10 +202,10 @@ public class TreeLevelUnlocker : MonoBehaviour
         {
             bool unlocked = i < currentUnlockedLevel;
             bool canUnlock = i == currentUnlockedLevel;
-            //var colors = levelButtons[i].colors;
+            var colors = levelButtons[i].colors;
             levelButtons[i].interactable = canUnlock;
-            //var img = levelButtons[i].GetComponent<Image>();
-            //if (img != null) img.color = unlocked ? unlockedColor : lockedColor;
+            var img = levelButtons[i].GetComponent<Image>();
+            if (img != null) img.color = unlocked ? unlockedColor : lockedColor;
 
             if (unlocked)
                 levelDescTexts[i].text = levelDescriptions[i];
@@ -309,7 +282,6 @@ public class TreeLevelUnlocker : MonoBehaviour
         CurrentLevel = currentUnlockedLevel;
         SaveUnlockData();
         UpdateLevelButtons();
-        ApplyPanelSprite();
     }
 }
 

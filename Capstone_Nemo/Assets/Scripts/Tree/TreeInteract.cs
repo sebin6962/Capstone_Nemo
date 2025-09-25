@@ -21,11 +21,6 @@ public class TreeInteract : MonoBehaviour
     {
         bool isActive = popupUI.activeSelf;
         popupUI.SetActive(!isActive);
-
-        if (!isActive && TreeLevelUnlocker.Instance != null)
-        {
-            TreeLevelUnlocker.Instance.ApplyPanelSprite(); // 팝업 오픈 시 최신 스프라이트 반영
-        }
     }
     public void ClosePopup()
     {
