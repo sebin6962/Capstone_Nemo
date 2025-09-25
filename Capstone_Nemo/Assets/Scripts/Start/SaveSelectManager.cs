@@ -225,12 +225,13 @@ public class SaveSelectManager : MonoBehaviour
             else
             {
                 delBtn.gameObject.SetActive(false);
-                slot.txtServerName.text = "새 가게 만들기";
+                slot.txtServerName.text = "";
                 slot.txtStarlight.text = "";
                 slot.txtLevel.text = "";
                 slot.txtPlaytime.text = "";
                 slot.txtLastPlayed.text = "";
-                slot.backgroundImage.color = emptySlotColor;
+                var emptySprite = Resources.Load<Sprite>("Sprites/UI/start_file_slot_plus");
+                slot.backgroundImage.sprite = emptySprite;
 
                 btn.onClick.AddListener(() =>
                 {
