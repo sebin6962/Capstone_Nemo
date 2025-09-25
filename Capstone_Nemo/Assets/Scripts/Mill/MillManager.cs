@@ -74,7 +74,7 @@ public class MillManager : MonoBehaviour
     private bool IsMillable(string itemName)
     {
         //가루로 만들 수 있는 재료
-        return itemName == "Danhobak" || itemName == "Baeknyeoncho" || itemName == "Mugwort";
+        return itemName == "Danhobak" || itemName == "Baeknyeoncho" || itemName == "Mugwort" || itemName == "Redbean" || itemName == "cinnamon";
     }
 
 

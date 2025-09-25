@@ -9,6 +9,7 @@ public class MillDB : MonoBehaviour
         { "Redbean", "Grind_Redbean" },
         { "Mugwort", "Mugwortgaru" },
         { "Danhobak", "Danhobakgaru" },
-        { "Baeknyeoncho", "Baeknyeonchogaru" }
+        { "Baeknyeoncho", "Baeknyeonchogaru" },
+        { "cinnamon", "Cinamongaru" }
     };
 }

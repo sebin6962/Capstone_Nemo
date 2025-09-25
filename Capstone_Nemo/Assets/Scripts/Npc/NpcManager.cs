@@ -6,22 +6,25 @@ public class NpcManager : MonoBehaviour
 {
     public GameObject shopPanel;
     public ShopManager shopManager;
+    public NpcTrigger trigger;
 
-    // Update is called once per frame
+    public string dataPath;
+
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E) && NpcTrigger.isPlayerNearNpc && !IsShopOpen())
+        if (Input.GetKeyDown(KeyCode.E) && trigger.isPlayerNearNpc && !IsShopOpen())
         {
             Debug.Log("E키 눌림 - 상점 토글 시도");
-            OpenShop();
+            shopManager.LoadShopData(dataPath);
+            shopManager.OpenShop();
         }
     }
 
-    private void OpenShop()
+    /*private void OpenShop()
     {
         shopPanel.SetActive(true);
-        shopManager.OpenShop();
-    }
+        OpenShop();
+    }*/
 
     public bool IsShopOpen()
     {

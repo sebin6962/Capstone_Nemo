@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class NpcTrigger : MonoBehaviour
 {
-    public static bool isPlayerNearNpc;
+    public bool isPlayerNearNpc { get; private set; }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
