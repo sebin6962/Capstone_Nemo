@@ -28,30 +28,30 @@ public class ShopManager : MonoBehaviour
 
     private string shopDataPath;
 
-    void Awake()
+/*    void Awake()
     {
         shopDataPath = Path.Combine(Application.persistentDataPath, "shopData.json");
         LoadShopData();
-    }
+    }*/
 
-    void LoadShopData()
+    public void LoadShopData(string resourcePath)
     {
-        TextAsset jsonText = Resources.Load<TextAsset>("Data/shopData");
+        TextAsset jsonText = Resources.Load<TextAsset>(resourcePath);
         if (jsonText == null)
         {
-            Debug.LogWarning("Resources/data/shopData.json 파일을 찾을 수 없음");
+            Debug.LogWarning($"{resourcePath}.json 파일을 찾을 수 없음");
             return;
         }
 
         ShopDataList data = JsonUtility.FromJson<ShopDataList>(jsonText.text);
         ShopItems = data.items;
 
-        Debug.Log($"상점 아이템 {ShopItems.Count}개 로드됨");
+        Debug.Log($"{ShopItems.Count}개 로드됨 ({resourcePath})");
     }
 
     public void OpenShop()
     {
-
+        shopPanel.SetActive(true);
         Debug.Log("OpenShop 실행됨");
 
         /*if (itemSlotPrefab == null) Debug.LogError("itemSlotPrefab이 null입니다.");

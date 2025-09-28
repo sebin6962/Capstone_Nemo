@@ -97,7 +97,17 @@ public static class ItemTooltipDB
         { "Chamgireum", "Âü±â¸§" },
         { "Honey", "²Ü" },
         { "Kkae", "±ú" },
-        { "Jat", "Àã" }
+        { "Jat", "Àã" },
+        { "Powder", "³ì¸»°¡·ç" },
+        { "Sugar_white", "¼³ÅÁ" },
+        { "cinnamon", "°èÇÇ" },
+        { "ginger", "»ý°­" },
+        { "sugar_brown", "Èæ¼³ÅÁ" },
+        { "gotgam", "°ù°¨" },
+        { "Flour", "¹Ð°¡·ç" },
+        { "Alcohol", "¼ú" },
+        { "FriedRice", "½ÒÆ¢¹ä" },
+        { "malt", "¿³±â¸§" }
         // ÇÊ¿äÇÑ ¸¸Å­ Ãß°¡
     };
 }
