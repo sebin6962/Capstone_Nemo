@@ -4,7 +4,6 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using UnityEngine.EventSystems;
-using UnityEditor.Overlays;
 
 public class FadeManager : MonoBehaviour
 {
