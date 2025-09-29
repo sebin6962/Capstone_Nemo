@@ -28,11 +28,11 @@ public class ShopManager : MonoBehaviour
 
     private string shopDataPath;
 
-/*    void Awake()
-    {
-        shopDataPath = Path.Combine(Application.persistentDataPath, "shopData.json");
-        LoadShopData();
-    }*/
+    /*    void Awake()
+        {
+            shopDataPath = Path.Combine(Application.persistentDataPath, "shopData.json");
+            LoadShopData();
+        }*/
 
     public void LoadShopData(string resourcePath)
     {

@@ -68,7 +68,7 @@ public class MillManager : MonoBehaviour
 
         selectedItem = null;
         selectedSlot.Clear();
-        
+
     }
 
     private bool IsMillable(string itemName)
@@ -86,7 +86,7 @@ public class MillManager : MonoBehaviour
             selectedItem = null;
             selectedSlot.Clear();
             UpdateInventoryUI();
-            confirmButton.interactable = false;  
+            confirmButton.interactable = false;
             return;
         }
 
@@ -100,7 +100,7 @@ public class MillManager : MonoBehaviour
         selectedItem = item;
         selectedSlot.Set(item);
         UpdateInventoryUI();
-        confirmButton.interactable = true;  
+        confirmButton.interactable = true;
     }
 
     private void UpdateInventoryUI()
@@ -112,7 +112,7 @@ public class MillManager : MonoBehaviour
         }
     }
 
-    
+
 
     public void Confirm()
     {
@@ -120,7 +120,7 @@ public class MillManager : MonoBehaviour
             return;
 
         string sourceName = selectedItem.itemName;
-        if(!MillDB.GrindResult.TryGetValue(sourceName, out string resultName))
+        if (!MillDB.GrindResult.TryGetValue(sourceName, out string resultName))
         {
             return;
         }
@@ -141,7 +141,7 @@ public class MillManager : MonoBehaviour
         selectedSlot.Clear();
         UpdateInventoryUI();
         confirmButton.interactable = false;
-        
+
     }
 
     public void ShowResutEffect(Sprite sprite)

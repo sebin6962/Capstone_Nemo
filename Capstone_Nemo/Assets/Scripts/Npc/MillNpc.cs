@@ -6,7 +6,7 @@ public class MillNpc : MonoBehaviour
 {
     public GameObject MillPanel;
     public NpcTrigger trigger;
-    
+
     // Update is called once per frame
     void Update()
     {
