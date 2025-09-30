@@ -15,14 +15,63 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public string tooltipText;
 
+    private bool isTakenOut = false;
+
+    void Update()
+    {
+        // 스페이스바로 돌려놓기
+        if (IsInfiniteSeedSlot() && isTakenOut && Input.GetKeyDown(KeyCode.Space))
+        {
+            BoxInventoryManager.Instance.RemoveHeldItem();
+            itemImage.color = Color.white;
+            isTakenOut = false;
+        }
+    }
+
+    // 무한 슬롯 판별
+    public bool IsInfiniteSeedSlot()
+    {
+        if (BoxInventoryManager.Instance == null) return false;
+        int idx = BoxInventoryManager.Instance.slots.IndexOf(this);
+        return idx >= 0 && idx < 4; // 0~3번 무한 슬롯
+    }
+
     public void OnClick()
     {
         bool isHolding = HeldItemManager.Instance.IsHoldingItem();
         string heldName = HeldItemManager.Instance.GetHeldItemName();
 
+        // [무한 슬롯 클릭 처리]
+        if (IsInfiniteSeedSlot())
+        {
+            if (!isHolding && !isTakenOut)
+            {
+                // 꺼내기
+                BoxInventoryManager.Instance.HoldItemFromSlot(GetSprite(), GetItemName());
+                itemImage.color = Color.gray;
+                isTakenOut = true;
+                return;
+            }
+            else if (isTakenOut)
+            {
+                // 돌려놓기
+                BoxInventoryManager.Instance.RemoveHeldItem();
+                itemImage.color = Color.white;
+                isTakenOut = false;
+                return;
+            }
+        }
+
         // [1] 손에 없음 → 슬롯에서 아이템 집기
         if (!isHolding && HasItem())
         {
+            if (IsInfiniteSeedSlot())
+            {
+                // 무한: 수량 줄이지 않음
+                BoxInventoryManager.Instance.HoldItemFromSlot(GetSprite(), GetItemName());
+                return;
+            }
+
             if (GetItemCount() > 1)
             {
                 BoxInventoryManager.Instance.HoldItemFromSlot(GetSprite(), GetItemName());
@@ -37,17 +86,21 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             return;
         }
 
-        // [2] 손에 아이템 있음 → 인벤토리에 자동저장처럼 처리
+        // [2] 손에 아이템 있음
         if (isHolding)
         {
-            // [2-1] 도구는 저장 불가
+            if (IsInfiniteSeedSlot())
+            {
+                Debug.Log("[무한 슬롯] 저장 불가");
+                return;
+            }
+
             if (ToolData.Instance != null && ToolData.Instance.IsTool(heldName))
             {
                 Debug.Log("도구는 저장할 수 없습니다: " + heldName);
                 return;
             }
 
-            // [2-2] 기존 슬롯에 있는 경우 수량 +1
             foreach (var slot in BoxInventoryManager.Instance.slots)
             {
                 if (slot.HasItem() && slot.GetItemName() == heldName)
@@ -55,54 +108,39 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
                     slot.SetItem(slot.GetSprite(), heldName, slot.GetItemCount() + 1);
                     BoxInventoryManager.Instance.RemoveHeldItem();
                     BoxInventoryManager.Instance.SaveInventory();
-                    Debug.Log("슬롯 클릭: 기존 슬롯에 자동 추가됨");
                     return;
                 }
             }
 
-            // [2-3] 빈 슬롯에 저장
             foreach (var slot in BoxInventoryManager.Instance.slots)
             {
-                if (!slot.HasItem())
+                if (!slot.HasItem() && !slot.IsInfiniteSeedSlot())
                 {
                     slot.SetItem(BoxInventoryManager.Instance.GetHeldSprite(), heldName, 1);
                     BoxInventoryManager.Instance.RemoveHeldItem();
                     BoxInventoryManager.Instance.SaveInventory();
-                    Debug.Log("슬롯 클릭: 빈 슬롯에 저장됨");
                     return;
                 }
             }
-
-            Debug.Log("슬롯 클릭: 저장 실패 - 슬롯 부족");
         }
     }
 
     public void SetItem(Sprite sprite, string name = "", int count = 1)
     {
-        if (sprite == null)
-        {
-            Debug.LogWarning("SetItem: null 스프라이트 전달됨!");
-            return;
-        }
+        if (sprite == null) return;
 
         itemImage.sprite = sprite;
         itemImage.enabled = true;
         itemName = string.IsNullOrEmpty(name) ? sprite.name.Replace("(Clone)", "").Trim() : name.Replace("(Clone)", "").Trim();
         this.count = count;
 
-        // 한글 툴팁 텍스트 매핑
         if (!ItemTooltipDB.TooltipTexts.TryGetValue(name, out tooltipText))
-            tooltipText = name; // 혹시 없을 때 대비 예외 처리
+            tooltipText = name;
 
-        if (count <= 0)
-        {
-            ClearSlot(); // 완전 제거
-            return;
-        }
+        // ? 무한 슬롯은 삭제하지 않음
+        if (count == 0) { ClearSlot(); return; }
 
         UpdateUI();
-
-        Debug.Log($"슬롯에 아이템 설정됨: {itemName} x{count}");
     }
 
     public void ClearSlot()
@@ -111,7 +149,6 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         itemImage.enabled = false;
         itemName = "";
         count = 0;
-
         UpdateUI();
     }
 
@@ -122,17 +159,16 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         if (HasItem())
         {
             countText.enabled = true;
-            countText.text = (count > 1) ? count.ToString() : "";
+            if (count < 0)
+                countText.text = "∞"; //  무한대
+            else
+                countText.text = (count > 1) ? count.ToString() : "";
         }
         else
         {
             countText.text = "";
-            countText.enabled = false; // 슬롯이 비었을 땐 숨김
+            countText.enabled = false;
         }
-        //if (countText != null)
-        //{
-        //    countText.text = (count > 1) ? count.ToString() : "";
-        //}
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -140,8 +176,8 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         if (!string.IsNullOrEmpty(itemName))
         {
             InventoryTooltipManager.Instance.Show(
-                tooltipText, // 툴팁에 쓸 텍스트
-                GetComponent<RectTransform>() // 슬롯 RectTransform
+                tooltipText,
+                GetComponent<RectTransform>()
             );
         }
     }
@@ -150,12 +186,10 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         InventoryTooltipManager.Instance.Hide();
     }
-    public bool HasItem()
-    {
-        return itemImage != null && itemImage.sprite != null;
-    }
 
+    public bool HasItem() => itemImage != null && itemImage.sprite != null;
     public string GetItemName() => itemName;
     public int GetItemCount() => count;
     public Sprite GetSprite() => itemImage.sprite;
 }
+
