@@ -172,7 +172,6 @@ public class FarmManager : MonoBehaviour
             tile.cropOverlayObject.GetComponent<SpriteRenderer>().sprite = tile.cropData.stages[tile.currentStage].sprite;
 
             overlayTilemap.SetTile(pos, null);
-            wateredTiles.Remove(pos);
         }
 
         //overlayTilemap.ClearTile(pos);
@@ -212,7 +211,6 @@ public class FarmManager : MonoBehaviour
 
         // ¡•¿∫ »Î ¡¶∞≈
         overlayTilemap.SetTile(pos, null);
-        wateredTiles.Remove(pos);
 
         // ªÛ≈¬ ¡¶∞≈
         growingTiles.Remove(pos);

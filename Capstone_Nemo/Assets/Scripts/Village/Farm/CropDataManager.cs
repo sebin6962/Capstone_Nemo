@@ -39,9 +39,7 @@ public class CropDataManager : MonoBehaviour
     private Dictionary<string, string> itemToCropNameMap = new()
 {
     { "Rice_seedBag", "RiceCrop" },
-    { "Mugwort_seedBag", "MugwortCrop" },
-    { "Danhobak_seedBag", "DanhobakCrop" },
-    { "Baeknyeoncho_seedBag", "BaeknyeonchoCrop" }
+    { "Mugwort_seedBag", "MugwortCrop" }
     // 필요한 아이템 추가
 };
 }
