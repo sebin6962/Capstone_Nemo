@@ -8,6 +8,8 @@ public class SettingsApply : MonoBehaviour
     [SerializeField] private Slider masterVolumeSlider;
     [SerializeField] private Slider bgmVolumeSlider;
     [SerializeField] private Slider sfxVolumeSlider;
+    [SerializeField] private Slider brightnessSlider;
+
 
     void Start()
     {
@@ -16,6 +18,7 @@ public class SettingsApply : MonoBehaviour
         masterVolumeSlider.value = sm.masterVolume;
         bgmVolumeSlider.value = sm.bgmVolume;
         sfxVolumeSlider.value = sm.sfxVolume;
+        brightnessSlider.value = sm.brightness;
     }
 
     public void OnApplySettingsPressed()

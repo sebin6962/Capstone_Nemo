@@ -21,7 +21,7 @@ public class UIManager : MonoBehaviour
     public void ShowAudioPanel()
     {
         audioPanel.SetActive(true);
-        screenPanel.SetActive(false);
+        screenPanel.SetActive(true);
         keyPanel.SetActive(false);
     }
 

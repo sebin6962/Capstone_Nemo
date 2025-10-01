@@ -32,6 +32,7 @@ public class SettingsManager : MonoBehaviour
     public float bgmVolume = 1f;
     public float sfxVolume = 1f;
     public float UIScale = 1f;
+    public float brightness = 1f;
 
 
     public bool isFullScreen = true;

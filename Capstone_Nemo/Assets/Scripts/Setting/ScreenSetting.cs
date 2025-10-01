@@ -6,6 +6,14 @@ using UnityEngine.UI;
 public class ScreenSetting : MonoBehaviour
 {
     [SerializeField] private CanvasScaler canvasScaler;
+    [SerializeField] private Image brightnessPanel;
+    [SerializeField] private Slider brightnessSlider;
+
+    void Start()
+    {
+        brightnessSlider.onValueChanged.AddListener(SetBrightness);
+    }
+
     public void SetUISize_Small()
     {
         SetUIScale(0.75f);
@@ -18,7 +26,7 @@ public class ScreenSetting : MonoBehaviour
 
     public void SetUISize_Large()
     {
-        SetUIScale(1.25f);
+        SetUIScale(1.15f);
     }
 
     public void SetUIScale(float scale)
@@ -50,5 +58,17 @@ public class ScreenSetting : MonoBehaviour
         Screen.fullScreen = true;
         SettingsManager.Instance.isFullScreen = true;
         Debug.Log("[화면 모드] 전체화면으로 전환됨");
+    }
+
+    public void SetBrightness(float value)
+    {
+        if (brightnessPanel != null)
+        {
+            float maxAlpha = 0.8f;
+            Color panelColor = brightnessPanel.color;
+            panelColor.a = Mathf.Lerp(maxAlpha, 0f, value);
+            brightnessPanel.color = panelColor;
+        }
+        SettingsManager.Instance.brightness = value;
     }
 }
