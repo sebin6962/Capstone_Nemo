@@ -22,6 +22,9 @@ public class BoxInventoryManager : MonoBehaviour
 
         savePath = Path.Combine(Application.persistentDataPath, "boxInventory.json");
         LoadInventory();
+
+        // 씨앗 무한 슬롯 세팅
+        SetupInfiniteSeedSlots();
     }
 
     void Update()
@@ -35,26 +38,20 @@ public class BoxInventoryManager : MonoBehaviour
 
     private void ToggleInventory()
     {
-        // 도감 패널 또는 창고 패널이 열려 있으면 박스 인벤토리 열기 금지!
         if ((DoGamUIManager.Instance != null && DoGamUIManager.Instance.panel.activeSelf))
             return;
 
-        // 재고 패널이 열려 있으면 창고 열기/닫기 막기
         if (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen())
             return;
 
         bool isActive = inventoryPanel.activeSelf;
         inventoryPanel.SetActive(!isActive);
 
-        // 인벤토리 닫힐 때 툴팁도 무조건 끄기
         if (!inventoryPanel.activeSelf && InventoryTooltipManager.Instance != null)
             InventoryTooltipManager.Instance.Hide();
     }
 
-    public bool IsInventoryOpen()
-    {
-        return inventoryPanel.activeSelf;
-    }
+    public bool IsInventoryOpen() => inventoryPanel.activeSelf;
 
     public bool IsHoldingTool(string toolName)
     {
@@ -67,13 +64,10 @@ public class BoxInventoryManager : MonoBehaviour
     public bool IsHoldingWateringCan()
     {
         if (!HeldItemManager.Instance.IsHoldingItem()) return false;
-
         string name = HeldItemManager.Instance.GetHeldItemName();
         if (string.IsNullOrEmpty(name)) return false;
-
         return name == "wateringCan" && ToolData.Instance != null && ToolData.Instance.IsTool(name);
     }
-
 
     public void RemoveHeldItem()
     {
@@ -91,41 +85,29 @@ public class BoxInventoryManager : MonoBehaviour
         if (spriteRenderer != null)
         {
             heldSprite = spriteRenderer.sprite;
-            //heldItemName = item.name;
             heldItemName = item.name.Replace("(Clone)", "").Trim();
-
             HeldItemManager.Instance.ShowHeldItem(heldSprite, heldItemName);
-
-            Debug.Log($"[DEBUG] 들고 있는 아이템 이름: {heldItemName}");
-            Debug.Log($"[DEBUG] IsTool: {ToolData.Instance.IsTool(heldItemName)}");
-            Debug.Log($"[DEBUG] IsHoldingWateringCan: {IsHoldingWateringCan()}");
         }
-
         Destroy(item);
     }
 
     public void PlaceHeldItemInSlot(InventorySlot clickedSlot = null)
     {
-        Debug.Log("슬롯 클릭 - 아이템 넣기 시도");
+        if (heldSprite == null) return;
 
-        if (heldSprite == null)
-        {
-            Debug.LogWarning("들고 있는 스프라이트가 없음! 아이템이 null임");
-            return;
-        }
-
-        // 도구는 저장 불가
         if (ToolData.Instance.IsTool(heldItemName))
         {
             Debug.Log("도구는 상자에 저장할 수 없습니다: " + heldItemName);
             return;
         }
 
-        // 1. 동일 아이템 있는 슬롯 찾기
         foreach (var slot in slots)
         {
             if (slot.HasItem() && slot.GetItemName() == heldItemName)
             {
+                // 무한 슬롯은 제외
+                if (slot.IsInfiniteSeedSlot()) continue;
+
                 int newCount = slot.GetItemCount() + 1;
                 slot.SetItem(slot.GetSprite(), heldItemName, newCount);
                 RemoveHeldItem();
@@ -134,10 +116,9 @@ public class BoxInventoryManager : MonoBehaviour
             }
         }
 
-        // 2. 빈 슬롯 찾기
         foreach (var slot in slots)
         {
-            if (!slot.HasItem())
+            if (!slot.HasItem() && !slot.IsInfiniteSeedSlot())
             {
                 slot.SetItem(heldSprite, heldItemName, 1);
                 RemoveHeldItem();
@@ -159,18 +140,19 @@ public class BoxInventoryManager : MonoBehaviour
 
         slot.ClearSlot();
         HeldItemManager.Instance.ShowHeldItem(heldSprite, heldItemName);
-
         SFXManager.Instance.PlayBbyongSFX();
-
-        Debug.Log("인벤토리에서 아이템 다시 듦: " + heldItemName);
         SaveInventory();
     }
 
     public void SaveInventory()
     {
         var data = new InventorySaveData();
-        foreach (var slot in slots)
+        for (int i = 0; i < slots.Count; i++)
         {
+            var slot = slots[i];
+            // 무한 슬롯은 저장 제외
+            if (slot.IsInfiniteSeedSlot()) continue;
+
             data.items.Add(new InventorySlotData
             {
                 itemName = slot.HasItem() ? slot.GetItemName() : "",
@@ -180,16 +162,11 @@ public class BoxInventoryManager : MonoBehaviour
 
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(savePath, json);
-        Debug.Log($"[저장 완료] {savePath}");
     }
 
     public void LoadInventory()
     {
-        if (!File.Exists(savePath))
-        {
-            Debug.Log("인벤토리 저장 파일 없음");
-            return;
-        }
+        if (!File.Exists(savePath)) return;
 
         string json = File.ReadAllText(savePath);
         var data = JsonUtility.FromJson<InventorySaveData>(json);
@@ -207,67 +184,59 @@ public class BoxInventoryManager : MonoBehaviour
                 slots[i].ClearSlot();
             }
         }
-
-        Debug.Log("인벤토리 불러오기 완료");
     }
 
-    public Sprite GetHeldSprite()
-    {
-        return heldSprite;
-    }
+    public Sprite GetHeldSprite() => heldSprite;
 
-    //수량 분리해서 들기 함수(한 번 클릭 시 아이템 하나만 들기)
     public void HoldItemFromSlot(Sprite sprite, string itemName)
     {
         heldSprite = sprite;
         heldItemName = itemName;
         heldItem = null;
-
-        // 이름도 전달하도록 수정
         HeldItemManager.Instance.ShowHeldItem(heldSprite, heldItemName);
-        Debug.Log($"[분리] 슬롯에서 {itemName} 1개만 손에 듬");
-
         SFXManager.Instance.PlayBbyongSFX();
     }
 
     public void TryAutoStoreHeldItem()
     {
-        if (heldSprite == null || string.IsNullOrEmpty(heldItemName))
-            return;
+        if (heldSprite == null || string.IsNullOrEmpty(heldItemName)) return;
+        if (ToolData.Instance.IsTool(heldItemName)) return;
 
-        if (ToolData.Instance.IsTool(heldItemName))
-        {
-            Debug.Log("도구는 자동 저장할 수 없습니다: " + heldItemName);
-            return;
-        }
-
-        // 기존 슬롯에 있는 경우 수량 +1
         foreach (var slot in slots)
         {
-            if (slot.HasItem() && slot.GetItemName() == heldItemName)
+            if (slot.HasItem() && slot.GetItemName() == heldItemName && !slot.IsInfiniteSeedSlot())
             {
                 slot.SetItem(slot.GetSprite(), heldItemName, slot.GetItemCount() + 1);
                 RemoveHeldItem();
                 SaveInventory();
-                Debug.Log("자동 저장: 기존 슬롯에 추가됨");
                 return;
             }
         }
 
-        // 비어있는 슬롯에 새로 저장
         foreach (var slot in slots)
         {
-            if (!slot.HasItem())
+            if (!slot.HasItem() && !slot.IsInfiniteSeedSlot())
             {
                 slot.SetItem(heldSprite, heldItemName, 1);
                 RemoveHeldItem();
                 SaveInventory();
-                Debug.Log("자동 저장: 새 슬롯에 저장됨");
                 return;
             }
         }
+    }
 
-        Debug.Log("상자 가득 참: 저장 실패");
+    // 무한 씨앗 슬롯 세팅
+    private void SetupInfiniteSeedSlots()
+    {
+        // 고정 순서: 쌀 모종, 쑥 씨앗, 단호박, 백년초
+        string[] seedNames = { "Rice_seedBag", "Mugwort_seedBag", "Danhobak_seedBag", "Baeknyeoncho_seedBag" };
+
+        for (int i = 0; i < 4 && i < slots.Count; i++)
+        {
+            Sprite sprite = Resources.Load<Sprite>("Sprites/SeedBags/" + seedNames[i]);
+            if (sprite != null)
+                slots[i].SetItem(sprite, seedNames[i], -1); // -1 = 무한
+        }
     }
 
     [System.Serializable]
@@ -283,3 +252,4 @@ public class BoxInventoryManager : MonoBehaviour
         public List<InventorySlotData> items = new();
     }
 }
+
