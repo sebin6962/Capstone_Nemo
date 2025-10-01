@@ -1638,6 +1638,7 @@ GameObject:
   m_Component:
   - component: {fileID: 174300422}
   - component: {fileID: 174300423}
+  - component: {fileID: 174300424}
   m_Layer: 5
   m_Name: Slider
   m_TagString: Untagged
@@ -1696,6 +1697,21 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &174300424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 174300421}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e1acd7f0a7afdd4785ac35419be2a84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSlider: {fileID: 2012783975}
+  bgmSlider: {fileID: 1739385245}
+  sfxSlider: {fileID: 1338949654}
 --- !u!1 &216891745
 GameObject:
   m_ObjectHideFlags: 0
@@ -3441,7 +3457,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 459383938}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: AudioSetting, Assembly-CSharp
         m_MethodName: MuteSFX
         m_Mode: 1
@@ -4317,17 +4333,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0262221d9dc5eed4c952bb78cd4c2d65, type: 3}
---- !u!114 &459383938 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 474413656707084481, guid: 0262221d9dc5eed4c952bb78cd4c2d65, type: 3}
-  m_PrefabInstance: {fileID: 459383937}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 55c2fb7098859384bb29695424fe1758, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &477891010
 GameObject:
   m_ObjectHideFlags: 0
@@ -11185,7 +11190,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 459383938}
+      - m_Target: {fileID: 1565731775}
         m_TargetAssemblyTypeName: AudioSetting, Assembly-CSharp
         m_MethodName: MuteBGM
         m_Mode: 1
@@ -11583,11 +11588,11 @@ MonoBehaviour:
   m_MinValue: 0.0001
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0.0001
+  m_Value: 0.5
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 459383938}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: AudioSetting, Assembly-CSharp
         m_MethodName: ChangeSFXVolume
         m_Mode: 4
@@ -13192,9 +13197,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.00069224834
+    y: 0.000055611134
     width: 1
-    height: 0.9986155
+    height: 0.9998888
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -13244,6 +13249,51 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   referenceAspect: {x: 16, y: 9}
   barColor: {r: 0, g: 0, b: 0, a: 1}
+--- !u!1 &1565731774
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1565731776}
+  - component: {fileID: 1565731775}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1565731775
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1565731774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55c2fb7098859384bb29695424fe1758, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioMixer: {fileID: 24100000, guid: 0681352c6b3ca4d428f64c4721675022, type: 2}
+--- !u!4 &1565731776
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1565731774}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.1327014, y: -0.29768735, z: 842.6968}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1577481423
 GameObject:
   m_ObjectHideFlags: 0
@@ -14925,11 +14975,11 @@ MonoBehaviour:
   m_MinValue: 0.0001
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0.0001
+  m_Value: 0.5
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 459383938}
+      - m_Target: {fileID: 1565731775}
         m_TargetAssemblyTypeName: AudioSetting, Assembly-CSharp
         m_MethodName: ChangeBGMVolume
         m_Mode: 4
@@ -15839,7 +15889,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 459383938}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: AudioSetting, Assembly-CSharp
         m_MethodName: MuteMaster
         m_Mode: 1
@@ -15923,7 +15973,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -403.09, y: -194}
+  m_AnchoredPosition: {x: -403.09003, y: -198.9}
   m_SizeDelta: {x: 205.74, y: 58.31}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1887657735
@@ -15946,10 +15996,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Brightness
+  m_text: "\uD654\uBA74 \uBC1D\uAE30\n"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: f72dec92490df084f808002811cb6c36, type: 2}
-  m_sharedMaterial: {fileID: -7377522703759812159, guid: f72dec92490df084f808002811cb6c36, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 254faa5d2cf5fb54f99f5ceec196efa6, type: 2}
+  m_sharedMaterial: {fileID: 3162937654041563834, guid: 254faa5d2cf5fb54f99f5ceec196efa6, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -16717,11 +16767,11 @@ MonoBehaviour:
   m_MinValue: 0.0001
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0.0001
+  m_Value: 0.5
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 459383938}
+      - m_Target: {fileID: 1565731775}
         m_TargetAssemblyTypeName: AudioSetting, Assembly-CSharp
         m_MethodName: ChangeMasterVolume
         m_Mode: 4
@@ -17924,6 +17974,7 @@ SceneRoots:
   - {fileID: 1275163475}
   - {fileID: 1688285090}
   - {fileID: 774353192}
+  - {fileID: 1565731776}
   - {fileID: 239003101}
   - {fileID: 459383937}
   - {fileID: 1399565394}

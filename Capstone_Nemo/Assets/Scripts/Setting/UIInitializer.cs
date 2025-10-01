@@ -7,16 +7,23 @@ public class UIInitializer : MonoBehaviour
 {
     [SerializeField] private CanvasScaler canvasScaler;
 
+    void Start()
+    {
+        if (SettingsManager.Instance != null)
+        {
+            ApplySettings(SettingsManager.Instance.UIScale);
+        }
+    }
 
     public void ApplySettings()
     {
-        float userScale = Mathf.Clamp(SettingsManager.Instance.UIScale, 0.5f, 2f);
+        float userScale = Mathf.Clamp(SettingsManager.Instance.UIScale, 0.75f, 1.15f);
         ApplySettings(userScale);
     }
 
     public void ApplySettings(float userScale)
     {
-        userScale = Mathf.Clamp(SettingsManager.Instance.UIScale, 0.5f, 2f);
+        userScale = Mathf.Clamp(SettingsManager.Instance.UIScale, 0.75f, 1.15f);
 
         Vector2 baseResolution = new Vector2(1920, 1080);
         canvasScaler.referenceResolution = baseResolution / userScale;

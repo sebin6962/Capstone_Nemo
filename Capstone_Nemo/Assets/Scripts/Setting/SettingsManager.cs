@@ -9,6 +9,7 @@ public class SettingsManager : MonoBehaviour
     public static SettingsManager Instance;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+
      static void EnsureCreated()
     {
         if (Instance == null)
