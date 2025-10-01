@@ -28,6 +28,8 @@ public class ShopManager : MonoBehaviour
 
     private string shopDataPath;
 
+    private bool isMillShop = false;
+
     /*    void Awake()
         {
             shopDataPath = Path.Combine(Application.persistentDataPath, "shopData.json");
@@ -45,6 +47,9 @@ public class ShopManager : MonoBehaviour
 
         ShopDataList data = JsonUtility.FromJson<ShopDataList>(jsonText.text);
         ShopItems = data.items;
+
+        //방앗간판정
+        isMillShop = resourcePath.ToLower().Contains("mill");
 
         Debug.Log($"{ShopItems.Count}개 로드됨 ({resourcePath})");
     }
@@ -66,6 +71,16 @@ public class ShopManager : MonoBehaviour
 
         foreach (var item in ShopItems)
         {
+            //해금
+            bool unlocked = true;
+
+            if (UnlockManager.Instance != null)
+            {
+                unlocked = UnlockManager.Instance.IsShopItemUnlocked(item.itemName, isMillShop);
+            }
+
+            if (!unlocked) continue;
+
             var slotObj = Instantiate(itemSlotPrefab, itemListParent);
             var slot = slotObj.GetComponent<ShopItemSlot>();
             slot.Setup(item, this);

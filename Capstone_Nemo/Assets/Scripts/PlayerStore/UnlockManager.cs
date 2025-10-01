@@ -6,13 +6,14 @@ using System.Linq;
 using System;
 using UnityEngine.SceneManagement;
 
-[Serializable] class UnlockLevelEntry { public int level; public List<string> makers; public List<string> recipes; }
+[Serializable] class UnlockLevelEntry { public int level; public List<string> makers; public List<string> recipes; public List<string> shopItems; }
 [Serializable] class UnlockConfig { public List<UnlockLevelEntry> levels; }
 
 [Serializable] class UnlockSaveData
 {
     public HashSet<string> unlockedMakers = new();
     public HashSet<string> unlockedRecipes = new();
+    public HashSet<string> unlockedShopItems = new();
     public HashSet<int> pendingLevels = new();
     public HashSet<int> appliedLevels = new();  // 추가
     public bool initialized;
@@ -38,6 +39,11 @@ public class UnlockManager : MonoBehaviour
     {
         if (save?.unlockedRecipes == null) return false;
         return save.unlockedRecipes.Contains(Norm(recipeKey));
+    }
+    public bool IsShopItemUnlocked(string itemId, bool isMillShop)
+    {
+        string key = (isMillShop ? "mill:" : "shop:") + Norm(itemId);
+        return save?.unlockedShopItems?.Contains(key) ?? false;
     }
 
     public void SwitchToServer(string serverName)
@@ -144,6 +150,7 @@ public class UnlockManager : MonoBehaviour
         // 항상 클리어 후 재계산
         save.unlockedMakers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         save.unlockedRecipes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        save.unlockedShopItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         if (save.appliedLevels == null) return;
 
@@ -159,6 +166,10 @@ public class UnlockManager : MonoBehaviour
             if (entry.recipes != null)
                 foreach (var r in entry.recipes)
                     if (!string.IsNullOrWhiteSpace(r)) save.unlockedRecipes.Add(Norm(r));
+
+            if (entry.shopItems != null)
+                foreach (var r in entry.shopItems)
+                    if (!string.IsNullOrWhiteSpace(r)) save.unlockedShopItems.Add(Norm(r));
         }
         SaveState();
     }
