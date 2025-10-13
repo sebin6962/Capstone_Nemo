@@ -24,6 +24,19 @@ public class LevelUpRevealPanel : MonoBehaviour
     [SerializeField] private string resourcesPrefix = "";
     [SerializeField] private string[] sheetNames;
 
+    [Header("Level Title (Sprite Mode)")]
+    // 공통 LEVEL UP 타이틀 스프라이트 사용
+    [SerializeField] private bool useCommonLevelUpSprite = true;
+    [SerializeField] private Image levelTitleImage;
+    // 1순위: 직접 드래그한 스프라이트
+    [SerializeField] private Sprite commonLevelUpSprite;
+
+    // 2순위: 아틀라스/리소스 키 (예: "ui_level_up")
+    [SerializeField] private string commonLevelUpKey = "ui_level_up";
+
+    // 스프라이트 성공 시 텍스트 숨김
+    [SerializeField] private bool hideLevelTextWhenSprite = true;
+
     [Header("Timing")]
     [SerializeField] private float panelDelaySeconds = 1f;
     [SerializeField] private float fadeInSeconds = 0.35f;
@@ -113,7 +126,7 @@ public class LevelUpRevealPanel : MonoBehaviour
 
     private void BuildUI(int level, IList<string> keys)
     {
-        if (levelText != null) levelText.text = $"{level} 레벨로 레벨업!";
+        SetupLevelTitle(level);
 
         for (int i = slotsParent.childCount - 1; i >= 0; i--)
             Destroy(slotsParent.GetChild(i).gameObject);
@@ -124,6 +137,40 @@ public class LevelUpRevealPanel : MonoBehaviour
             var go = Instantiate(slotPrefab, slotsParent);
             var img = go.GetComponentInChildren<Image>(true);
             if (img != null) img.sprite = ResolveSprite(key);
+        }
+    }
+
+    private void SetupLevelTitle(int level)
+    {
+        Sprite titleSprite = null;
+
+        // 1) 인스펙터에 직접 넣은 스프라이트가 있으면 그걸 사용
+        if (useCommonLevelUpSprite && commonLevelUpSprite != null)
+            titleSprite = commonLevelUpSprite;
+
+        // 2) 키로 찾기(아틀라스 → Resources)
+        if (useCommonLevelUpSprite && titleSprite == null && !string.IsNullOrEmpty(commonLevelUpKey))
+            titleSprite = ResolveSprite(commonLevelUpKey);
+
+        bool hasSprite = (titleSprite != null);
+
+        if (useCommonLevelUpSprite && levelTitleImage != null && hasSprite)
+        {
+            levelTitleImage.sprite = titleSprite;
+            levelTitleImage.enabled = true;
+            if (hideLevelTextWhenSprite && levelText != null)
+                levelText.gameObject.SetActive(false);
+        }
+        else
+        {
+            // 폴백: 기존 텍스트
+            if (levelText != null)
+            {
+                levelText.text = "LEVEL UP!";
+                levelText.gameObject.SetActive(true);
+            }
+            if (levelTitleImage != null)
+                levelTitleImage.enabled = false;
         }
     }
 
