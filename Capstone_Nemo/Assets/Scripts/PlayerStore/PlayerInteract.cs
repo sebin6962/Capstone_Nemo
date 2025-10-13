@@ -17,6 +17,12 @@ public class PlayerInteract : MonoBehaviour
 
     private BoxObject nearbyBox;
     private SinkInfo nearbySink;
+    private TrashCanInfo nearbyTrash;
+
+    private static readonly HashSet<string> NonDiscardableItems = new HashSet<string>
+{
+    "YakgwaMold", // 보호 아이템: 버려지지 않음
+};
 
     private void Awake()
     {
@@ -25,7 +31,7 @@ public class PlayerInteract : MonoBehaviour
 
     private static readonly HashSet<string> NonIngredientTools = new HashSet<string>
     {
-        "YakgwaMold", // 약과 틀(도구) 이름
+        "YakgwaMold", // 약과 틀 이름
     };
 
     private void Update()
@@ -46,6 +52,26 @@ public class PlayerInteract : MonoBehaviour
             {
                 PlayerStoreBoxInventoryUIManager.Instance.OpenUI(nearbyStorage);
                 Debug.Log("[E] 상자 인벤토리 열기");
+                return;
+            }
+
+            // 쓰레기통과 닿아있고, 아이템을 손에 든 상태일 때 E키 → 아이템 폐기
+            if (nearbyTrash != null && HeldItemManager.Instance.IsHoldingItem())
+            {
+                string heldName = HeldItemManager.Instance.GetHeldItemName();
+
+                // 보호 아이템은 버려지지 않음
+                if (NonDiscardableItems.Contains(heldName))
+                {
+                    Debug.Log($"[Trash] 보호 아이템({heldName})은(는) 버릴 수 없음");
+                    SFXManager.Instance.PlayBbyongSFX();
+                    return;
+                }
+
+                // 정상 폐기
+                HeldItemManager.Instance.HideHeldItem();
+                SFXManager.Instance.PlayBbyongSFX();
+                Debug.Log($"[Trash] {heldName} 아이템을 버림");
                 return;
             }
 
@@ -357,6 +383,13 @@ public class PlayerInteract : MonoBehaviour
             Debug.Log("[PlayerInteract] 싱크 접근");
         }
 
+        var trash = other.GetComponent<TrashCanInfo>();
+        if (trash != null)
+        {
+            nearbyTrash = trash;
+            Debug.Log("[PlayerInteract] 쓰레기통 접근");
+        }
+
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -382,6 +415,12 @@ public class PlayerInteract : MonoBehaviour
         {
             nearbySink = null;
             Debug.Log("[PlayerInteract] 싱크 이탈");
+        }
+
+        if (other.GetComponent<TrashCanInfo>() == nearbyTrash)
+        {
+            nearbyTrash = null;
+            Debug.Log("[PlayerInteract] 쓰레기통 이탈");
         }
     }
 
