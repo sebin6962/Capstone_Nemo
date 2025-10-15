@@ -15,7 +15,7 @@ public class ShopManager : MonoBehaviour
     public Button resetButton;
     public Button closeButton;
     public List<ShopData> ShopItems;
-    //public int playerStar = 100;
+
 
     public Transform itemListParent;
     public Transform basketListParent;

@@ -27,6 +27,10 @@ public class MakerInfo : MonoBehaviour
     public Color lockedColor = new Color(0.55f, 0.55f, 0.55f, 1f);
     private bool _isLocked;
 
+    //이펙트
+    public GameObject craftCompleteEffect;
+    private GameObject activeEffect;
+
     // 슬롯UI가 없으면 동적으로 생성, 이미 있으면 그대로 사용
     public void EnsureSlotUIInstance()
     {
@@ -103,6 +107,18 @@ public class MakerInfo : MonoBehaviour
         // 4. 진행바 파괴
         Destroy(progressBar.gameObject);
 
+        //이펙트재생추가
+        if (craftCompleteEffect != null)
+        {
+            if (activeEffect != null) Destroy(activeEffect);
+
+            activeEffect = Instantiate(craftCompleteEffect, worldPos, Quaternion.identity);
+
+            var ps = activeEffect.GetComponentInChildren<ParticleSystem>();
+            if (ps != null)
+                ps.Play();
+        }
+
         // 5. 결과물 생성 및 스폰
         GameObject result = Instantiate(resultItemPrefab, worldPos, Quaternion.identity);
         SpriteRenderer sr = result.GetComponent<SpriteRenderer>();
@@ -147,6 +163,20 @@ public class MakerInfo : MonoBehaviour
             slotUIManager.ClearSlots();
     }
 
+
+    public void KillActiveEffect(float delay = 0f)
+    {
+        if (activeEffect == null) return;
+
+        var ps = activeEffect.GetComponentInChildren<ParticleSystem>();
+        if (ps != null)
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
+        if (delay > 0f) Destroy(activeEffect, delay);
+        else Destroy(activeEffect);
+
+        activeEffect = null;
+    }
 }
 
 

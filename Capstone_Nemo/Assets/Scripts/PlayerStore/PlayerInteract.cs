@@ -110,6 +110,9 @@ public class PlayerInteract : MonoBehaviour
                             Debug.Log($"[E] 결과물 {resultName} 소지 시작");
 
                             SFXManager.Instance.PlayBbyongSFX();
+
+                            //제작완료이펙트삭제
+                            currentMaker.KillActiveEffect(0.5f);
                         }
                     }
                     else

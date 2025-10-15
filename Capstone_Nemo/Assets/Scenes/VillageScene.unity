@@ -6140,6 +6140,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b560c73f2f4a59f488d6c56f7c4eadf4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  audioSource: {fileID: 1056733945}
+  startBGM: {fileID: 8300000, guid: ab335115c05929c4eab1716009a12d51, type: 3}
+  cutsceneBGM: {fileID: 8300000, guid: ea1677424d2be7648b1bbc753435f8f5, type: 3}
+  mainBGM: {fileID: 8300000, guid: 8c89e05467e350c4893569ec7241d4a5, type: 3}
+  treeBGM: {fileID: 8300000, guid: 0a4c9546162328a4582d3bd223aabc19, type: 3}
 --- !u!82 &1056733945
 AudioSource:
   m_ObjectHideFlags: 0
@@ -6150,7 +6155,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 7410935016729825494, guid: 0681352c6b3ca4d428f64c4721675022, type: 2}
-  m_audioClip: {fileID: 8300000, guid: 479375779791f504e8220475404c68a4, type: 3}
+  m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 0.7
   m_Pitch: 1
@@ -12980,7 +12985,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -671.9999, y: 326}
+  m_AnchoredPosition: {x: -672, y: 326}
   m_SizeDelta: {x: -1423.4169, y: -719.6829}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1757436636
@@ -15635,9 +15640,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.00033786893
+    y: 0.000055611134
     width: 1
-    height: 0.99932426
+    height: 0.9998888
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -15675,7 +15680,7 @@ Transform:
   m_GameObject: {fileID: 2130387756}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -12.868426, y: 5.71307, z: -10}
+  m_LocalPosition: {x: -12.87323, y: 5.71306, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

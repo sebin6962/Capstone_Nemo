@@ -12,6 +12,7 @@ public class ShopItemSlot : MonoBehaviour
     [SerializeField] private Button plusButton;
     [SerializeField] private Button minusButton;
     [SerializeField] private Image itemImage;
+    [SerializeField] private Image alarmImage;
 
     private ShopData item;
     private ShopManager manager;
