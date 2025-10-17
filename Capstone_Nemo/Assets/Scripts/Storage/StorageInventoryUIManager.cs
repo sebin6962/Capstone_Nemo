@@ -10,6 +10,33 @@ public class StorageInventoryUIManager : MonoBehaviour
     public GameObject panel;                     // 창고 패널
     public List<StorageInventorySlot> slots;     // 미리 배치된 슬롯들
 
+    void Awake()
+    {
+        Instance = this;
+        if (StorageInventory.Instance != null)
+            StorageInventory.Instance.LoadStorage();
+        SyncMaxSlotsToInventory();
+        UpdateSlots();
+    }
+
+    void OnEnable()
+    {
+        if (StorageInventory.Instance != null)
+            StorageInventory.Instance.LoadStorage();
+        SyncMaxSlotsToInventory();
+    }
+
+    public void SyncMaxSlotsToInventory()
+    {
+        if (StorageInventory.Instance == null) return;
+
+
+        int available = slots.Count;
+
+
+        StorageInventory.Instance.maxSlots = available;
+    }
+
     public void ToggleStorageUI()
     {
         // 가게 박스 인벤토리 열려 있으면 창고 열기/닫기 막기

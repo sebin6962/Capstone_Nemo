@@ -37,6 +37,9 @@ public class PlayerStoreBoxInventoryUIManager : MonoBehaviour
         if (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen())
             return;
 
+        if (StorageInventory.Instance != null)
+            StorageInventory.Instance.LoadStorage();
+
         currentInventory = storage;
 
         panel.SetActive(true);

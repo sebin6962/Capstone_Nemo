@@ -17,44 +17,61 @@ public class StorageIconFlyEffect : MonoBehaviour
         if (Instance == null) Instance = this;
     }
 
-    public void Play(Sprite sprite, Vector3 worldPos)
+    public void Play(Sprite sprite, Vector3 worldPos, Camera sourceCamera = null)
     {
-        Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPos);
+        if (!canvas || !targetUI || !flyIconPrefab) return;
+        if (sourceCamera == null) sourceCamera = Camera.main;
 
-        GameObject icon = Instantiate(flyIconPrefab, canvas.transform);
-        Image image = icon.GetComponent<Image>();
-        image.sprite = sprite;
+        // 1) 아이콘을 '도착지와 같은 Canvas' 아래에 생성
+        var go = Instantiate(flyIconPrefab, canvas.transform);
+        var icon = go.GetComponent<RectTransform>();
+        var img = go.GetComponent<UnityEngine.UI.Image>();
+        if (img) img.sprite = sprite;
 
-        RectTransform rt = icon.GetComponent<RectTransform>();
-        rt.position = screenPos;
-        rt.localScale = Vector3.one * 1.7f;
+        icon.anchorMin = icon.anchorMax = icon.pivot = new Vector2(0.5f, 0.5f);
+        icon.localScale = Vector3.one;
 
-        StartCoroutine(FlyToTarget(rt));
+        // 2) 시작점: 월드 -> 스크린 -> Canvas 로컬(anchoredPosition)
+        Vector2 screenStart = RectTransformUtility.WorldToScreenPoint(sourceCamera, worldPos);
+        Vector2 startAP;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            (RectTransform)canvas.transform,
+            screenStart,
+            canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
+            out startAP
+        );
+        icon.anchoredPosition = startAP;
+
+        // 3) 도착점: targetUI의 '월드' -> 스크린 -> Canvas 로컬
+        Vector2 screenEnd = RectTransformUtility.WorldToScreenPoint(
+            canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
+            targetUI.position
+        );
+        Vector2 endAP;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            (RectTransform)canvas.transform,
+            screenEnd,
+            canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
+            out endAP
+        );
+
+        // 4) 트윈/코루틴으로 anchoredPosition을 startAP -> endAP로 이동
+        StartCoroutine(Fly(icon, startAP, endAP));
     }
 
-    private IEnumerator FlyToTarget(RectTransform icon)
+    IEnumerator Fly(RectTransform icon, Vector2 a, Vector2 b)
     {
-        Vector3 start = icon.position;
-        Vector3 end = targetUI.position;
-
-        float time = 0f;
-        float duration = 1f;
-
-        while (time < duration)
+        float t = 0f, dur = 0.8f;
+        while (t < 1f)
         {
-            time += Time.deltaTime;
-            float t = time / duration;
-
-            // 살짝 곡선 느낌
-            float curve = Mathf.Sin(t * Mathf.PI);
-            Vector3 mid = Vector3.Lerp(start, end, t) + new Vector3(0, curve * 50f, 0);
-            icon.position = mid;
-
-            icon.localScale = Vector3.Lerp(Vector3.one * 1.7f, Vector3.one * 0.85f, t);
-
+            t += Time.deltaTime / dur;
+            float s = Mathf.SmoothStep(0f, 1f, t);
+            // 살짝 위로 휘는 포물선
+            float hump = Mathf.Sin(s * Mathf.PI) * 50f;
+            icon.anchoredPosition = Vector2.Lerp(a, b, s) + new Vector2(0, hump);
             yield return null;
         }
-
         Destroy(icon.gameObject);
     }
+
 }

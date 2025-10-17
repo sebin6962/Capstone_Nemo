@@ -23,6 +23,12 @@ public class StorageInventory : MonoBehaviour
     private Dictionary<string, int> storage = new();
     private string savePath;
 
+    public int maxSlots = 12;          // 서로 다른 아이템 종류 수(슬롯) 최대치
+    public int maxStackPerItem = 99;   // 아이템 1종류당 최대 수량 (0이면 무제한)
+
+    public int OccupiedSlots => storage.Count;                 // 사용 중 슬롯 수
+    public int FreeSlots => Mathf.Max(0, maxSlots - storage.Count); // 남은 슬롯 수
+
     private void Awake()
     {
         if (Instance == null)
@@ -134,6 +140,28 @@ public class StorageInventory : MonoBehaviour
         if (entries == null) return;
         foreach (var entry in entries)
             storage[entry.name] = entry.amount;
+    }
+
+    public bool HasRoomFor(string itemName, int amount)
+    {
+        if (string.IsNullOrEmpty(itemName) || amount <= 0) return true;
+
+        // 같은 아이템이면: 99 초과 금지 (슬롯 가득이어도 누적 허용)
+        if (storage.TryGetValue(itemName, out int current))
+        {
+            long after = (long)current + amount;
+            return after <= maxStackPerItem;   // 100 이상이면 false
+        }
+
+        // 새 아이템이면: 반드시 빈 슬롯 필요
+        return FreeSlots >= 1 && amount <= maxStackPerItem;
+    }
+
+    public bool TryAddItem(string itemName, int amount)
+    {
+        if (!HasRoomFor(itemName, amount)) return false;
+        AddItem(itemName, amount); // 기존 AddItem 재사용(음수 방어 등)
+        return true;
     }
 }
 
