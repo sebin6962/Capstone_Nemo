@@ -48,7 +48,12 @@ public class FarmManager : MonoBehaviour
 
     private HashSet<Vector3Int> wateredTiles = new();
 
-    string FarmSavePath => Path.Combine(Application.persistentDataPath, "farm_state.json");
+    string CurrentServer => PlayerPrefs.GetString("SelectedSave", "");
+
+    string FarmSavePath
+        => string.IsNullOrEmpty(CurrentServer)
+           ? null
+           : System.IO.Path.Combine(Application.persistentDataPath, $"farm_{CurrentServer}.json");
 
     private bool IsTreeLocked(CropData data)
     {
@@ -106,6 +111,8 @@ public class FarmManager : MonoBehaviour
 
     public void SaveFarmState()
     {
+        if (string.IsNullOrEmpty(FarmSavePath)) return;   // 세이브 미선택 시 스킵
+
         var data = new FarmSaveData();
 
         // 1) 심어진 작물 저장
@@ -123,6 +130,8 @@ public class FarmManager : MonoBehaviour
                 isWatered = t.isWatered,
                 isTree = t.cropData.isTree
             });
+
+            System.IO.File.WriteAllText(FarmSavePath, JsonUtility.ToJson(data, true));
         }
 
         // 2) 젖은 흙 저장
@@ -140,6 +149,7 @@ public class FarmManager : MonoBehaviour
 
     public void LoadFarmState()
     {
+        if (string.IsNullOrEmpty(FarmSavePath)) return;
         if (!File.Exists(FarmSavePath)) return;
 
         var json = File.ReadAllText(FarmSavePath);

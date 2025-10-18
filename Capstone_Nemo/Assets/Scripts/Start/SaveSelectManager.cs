@@ -57,6 +57,7 @@ public class SaveSelectManager : MonoBehaviour
         TryDelete(Path.Combine(p, $"timeData_{serverName}.json"));   // 사용 중이면
         TryDelete(Path.Combine(p, $"unlock_{serverName}.json"));     // 퍼서버 해금 저장을 사용한다면
         TryDelete(Path.Combine(p, $"playtime_{serverName}.json"));
+        TryDelete(System.IO.Path.Combine(p, $"farm_{serverName}.json"));
 
         // 2) 레거시 해금 파일(섞임의 주범) 더 이상 쓰지 않는다면 지워버리는 걸 권장
         var legacy = Path.Combine(p, "unlock_state.json");
