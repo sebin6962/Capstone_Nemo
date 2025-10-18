@@ -89,7 +89,9 @@ public class VillagePlayerManager : MonoBehaviour
         int dx = Mathf.Abs(clickedCell.x - playerCell.x);
         int dy = Mathf.Abs(clickedCell.y - playerCell.y);
 
-        return dx <= 1 && dy <= 1 && farmManager.IsFarmTile(worldPos);
+        //return dx <= 1 && dy <= 1 && farmManager.IsFarmTile(worldPos);
+        return dx <= 1 && dy <= 1 &&
+       (farmManager.IsFarmTile(worldPos) || farmManager.HasPlantedAt(worldPos));
     }
 
     private void OnTriggerEnter2D(Collider2D other)

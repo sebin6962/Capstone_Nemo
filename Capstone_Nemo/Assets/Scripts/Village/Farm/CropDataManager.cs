@@ -45,7 +45,11 @@ public class CropDataManager : MonoBehaviour
     { "Danhobak_seedBag", "DanhobakCrop" },
     { "Danhobak", "DanhobakCrop" },
     { "Baeknyeoncho_seedBag", "BaeknyeonchoCrop" },
-    { "Baeknyeoncho", "BaeknyeonchoCrop" }
+    { "Baeknyeoncho", "BaeknyeonchoCrop" },
+    {"Omija", "OmijaTree" },
+    { "Yuja", "YujaTree" },
+    { "Mogwa", "MogwaTree" },
+    { "Geumgyul", "GeumgyulTree" },
     // 필요한 아이템 추가
 };
 }

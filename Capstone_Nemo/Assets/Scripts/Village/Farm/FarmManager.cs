@@ -13,6 +13,8 @@ public class CropTileSave
     public float timer;              // 현 단계 진행 타이머
     public bool isWatered;           // 물 유무
     public string lastWaterTime;
+
+    public bool isTree;
 }
 
 [System.Serializable]
@@ -47,7 +49,16 @@ public class FarmManager : MonoBehaviour
     private HashSet<Vector3Int> wateredTiles = new();
 
     string FarmSavePath => Path.Combine(Application.persistentDataPath, "farm_state.json");
-    
+
+    private bool IsTreeLocked(CropData data)
+    {
+        if (data == null || !data.isTree) return false;
+        var lvMgr = PlayerLevelManager.Instance; // null-safe
+        int playerLv = (lvMgr != null) ? lvMgr.Level : 1;
+        int needLv = Mathf.Max(1, data.minLevelToInteract); // 기본 7로 세팅됨
+        return playerLv < needLv;
+    }
+
     void Start()
     {
         RegisterFarmTiles();
@@ -59,6 +70,8 @@ public class FarmManager : MonoBehaviour
         }
         StorageInventoryUIManager.Instance?.SyncMaxSlotsToInventory(); // UI ↔ maxSlots 동기화
         StorageInventoryUIManager.Instance?.UpdateSlots();
+
+        RegisterAllTreeAnchorsInScene();
     }
 
     void OnDisable() { SaveFarmState(); }
@@ -104,10 +117,11 @@ public class FarmManager : MonoBehaviour
             {
                 x = pos.x,
                 y = pos.y,
-                harvestItemName = t.cropData.harvestItemName,
+                harvestItemName = t.cropData.cropName,
                 currentStage = t.currentStage,
                 timer = t.timer,
-                isWatered = t.isWatered
+                isWatered = t.isWatered,
+                isTree = t.cropData.isTree
             });
         }
 
@@ -157,7 +171,9 @@ public class FarmManager : MonoBehaviour
         {
             var pos = new Vector3Int(c.x, c.y, 0);
             // 밭 영역만 복원(혹시 밭 확장이 바뀐 경우 대비)
-            if (!farmPositions.Contains(pos)) continue;
+            //if (!farmPositions.Contains(pos)) continue;
+            bool isFarm = farmPositions.Contains(pos);
+            if (!isFarm && !c.isTree) continue;
 
             // CropData 찾기 (프로젝트 매니저에 맞게)
             var cropData = CropDataManager.Instance.GetCropDataByItemName(c.harvestItemName);
@@ -211,6 +227,11 @@ public class FarmManager : MonoBehaviour
             GameObject overlay = Instantiate(cropOverlayPrefab, overlayWorldPos, Quaternion.identity, transform);
             overlay.GetComponent<SpriteRenderer>().sprite = cropData.stages[Mathf.Clamp(stage, 0, cropData.stages.Count - 1)].sprite;
 
+            if (cropData.isTree)
+            {
+                SetupTreeComponents(overlay);
+            }
+
             var cropInfo = new CropTile(pos, cropData, overlay)
             {
                 currentStage = stage,   
@@ -232,6 +253,74 @@ public class FarmManager : MonoBehaviour
         }
         Debug.Log($"[Farm] Loaded: {data.crops.Count} crops, {data.wetXs.Count} wet tiles");
     }
+
+    private void RegisterAllTreeAnchorsInScene()
+    {
+        var anchors = FindObjectsOfType<TreeAnchor>();
+        foreach (var a in anchors)
+        {
+            RegisterTreeAtWorldPos(a.transform.position, a.treeData, a.startStage);
+        }
+    }
+
+    public void RegisterTreeAtWorldPos(Vector3 worldPos, CropData treeData, int startStage)
+    {
+        Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
+        if (growingTiles.ContainsKey(cellPos)) return;
+
+        // 오버레이 스프라이트(나무 본체 스프라이트 역할) 생성
+        Vector3 overlayWorldPos = overlayTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0f);
+        GameObject overlay = Instantiate(cropOverlayPrefab, overlayWorldPos, Quaternion.identity, transform);
+
+        // 시작 단계 스프라이트 적용
+        var sr = overlay.GetComponent<SpriteRenderer>();
+        int clampedStage = Mathf.Clamp(startStage, 0, treeData.stages.Count - 1);
+        sr.sprite = treeData.stages[clampedStage].sprite;
+
+        if (treeData.isTree)
+        {
+            SetupTreeComponents(overlay);
+        }
+
+        // growingTiles에 등록
+        var tile = new CropTile(cellPos, treeData, overlay)
+        {
+            currentStage = clampedStage,
+            timer = 0f,
+            isWatered = false
+        };
+        growingTiles.Add(cellPos, tile);
+    }
+
+    private void SetupTreeComponents(GameObject overlay)
+    {
+
+        // 1) YSort
+        if (!overlay.TryGetComponent<YSort>(out var ysort))
+            ysort = overlay.AddComponent<YSort>();
+
+        // 2) 중앙 줄기 충돌 박스 (비-트리거)
+        if (!overlay.TryGetComponent<BoxCollider2D>(out var box))
+            box = overlay.AddComponent<BoxCollider2D>();
+
+        box.isTrigger = false;
+
+        box.offset = new Vector2(0f, 1.33518f);
+        box.size = new Vector2(0.9f, 0.89344f);
+
+        var sr = overlay.GetComponent<SpriteRenderer>();
+
+        if (sr != null)
+        {
+            sr.sortingLayerName = "Obj";     // ← 반드시 프로젝트에 "Obj" 레이어가 있어야 함
+                                             // sr.sortingOrder는 YSort가 조정하도록 둠
+        }
+
+        // 3) 레이어(오타 수정): 필요 시 프로젝트에서 "Interactable" or "Obstacle" 사용
+        int layer = LayerMask.NameToLayer("Interactable"); // ← 존재하는 레이어명으로
+        if (layer != -1) overlay.layer = layer;
+    }
+
 
     // 1. 타일맵에서 밭 범위 자동 등록
     void RegisterFarmTiles()
@@ -278,16 +367,45 @@ public class FarmManager : MonoBehaviour
         SFXManager.Instance.PlayFarmWaterSFX();
         Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
 
+        //if (IsFarmTile(worldPos))
+        //{
+        //    overlayTilemap.SetTile(cellPos, wetSoilTile);
+        //    wateredTiles.Add(cellPos); // 물 준 위치 저장
+
+        //    if (growingTiles.TryGetValue(cellPos, out var tileInfo))
+        //    {
+        //        tileInfo.isWatered = true;
+        //        Debug.Log($"작물 타일 {cellPos}에 물을 줌 → 성장 시작");
+        //    }
+        //}
+
+        // 1) 이미 작물/나무가 있다면 → 밭 여부와 무관하게 물주기 + 젖은 흙 표시
+        if (growingTiles.TryGetValue(cellPos, out var tileInfo))
+        {
+            if (IsTreeLocked(tileInfo.cropData))
+            {
+                Debug.Log("[Tree Locked] 레벨 미만이라 나무에 물을 줄 수 없습니다.");
+                return; // 젖은 흙도 깔지 않음
+            }
+
+            overlayTilemap.SetTile(cellPos, wetSoilTile);  // 젖은 흙 연출
+            wateredTiles.Add(cellPos);
+            tileInfo.isWatered = true;                     // 성장 타이머가 돌도록
+            return;
+        }
+
+        // 2) 심어진 게 없고 '밭'이면 기존처럼 젖은 흙만 표시 (씨앗 심을 준비)
         if (IsFarmTile(worldPos))
         {
             overlayTilemap.SetTile(cellPos, wetSoilTile);
-            wateredTiles.Add(cellPos); // 물 준 위치 저장
+            wateredTiles.Add(cellPos);
+        }
 
-            if (growingTiles.TryGetValue(cellPos, out var tileInfo))
-            {
-                tileInfo.isWatered = true;
-                Debug.Log($"작물 타일 {cellPos}에 물을 줌 → 성장 시작");
-            }
+        bool IsFarmTile(Vector3 worldPos)
+        {
+            Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
+            // 변경: "밭"이거나 "이미 작물/나무가 심어진 칸"이면 true
+            return farmPositions.Contains(cellPos) || growingTiles.ContainsKey(cellPos);
         }
     }
 
@@ -384,13 +502,21 @@ public class FarmManager : MonoBehaviour
 
     private void HarvestCrop(Vector3Int pos, string cropName)
     {
-        var cropData = growingTiles[pos].cropData;
+        //var cropData = growingTiles[pos].cropData;
+        if (!growingTiles.TryGetValue(pos, out var tile)) return;
+        var data = tile.cropData;
+
+        if (IsTreeLocked(data))
+        {
+            Debug.Log("[Tree Locked] 레벨 미만이라 나무를 수확할 수 없습니다.");
+            return;
+        }
 
         // 1) 수확 예정 수량 계산
         int amount = TreeLevelUnlocker.CurrentLevel >= 1 ? 2 : 1;
 
         // 2) 수확물 키
-        string itemKey = cropData.harvestItemName;
+        string itemKey = data.harvestItemName;
 
         // 3) 창고 공간 확인 (없으면 경고 패널만 띄우고 return)
         if (!StorageInventory.Instance.HasRoomFor(itemKey, amount))
@@ -404,16 +530,16 @@ public class FarmManager : MonoBehaviour
         StorageInventory.Instance.TryAddItem(itemKey, amount);
         StorageInventory.Instance.SaveStorage();
 
-        // 작물 스프라이트 제거
-        if (growingTiles[pos].cropOverlayObject != null)
-            Destroy(growingTiles[pos].cropOverlayObject);
+        //// 작물 스프라이트 제거
+        //if (growingTiles[pos].cropOverlayObject != null)
+        //    Destroy(growingTiles[pos].cropOverlayObject);
 
-        // 젖은 흙 제거
-        overlayTilemap.SetTile(pos, null);
-        wateredTiles.Remove(pos);
+        //// 젖은 흙 제거
+        //overlayTilemap.SetTile(pos, null);
+        //wateredTiles.Remove(pos);
 
-        // 상태 제거
-        growingTiles.Remove(pos);
+        //// 상태 제거
+        //growingTiles.Remove(pos);
 
         //string itemKey = cropData.harvestItemName; // 수확물 이름 사용
         // 창고 인벤토리에 추가
@@ -437,8 +563,41 @@ public class FarmManager : MonoBehaviour
         // 0.5초 뒤 알림 등록
         StorageAlertManager.Instance.NotifyNewHarvestedItem(cropName);
 
+        if (data.isTree)
+        {
+            // 나무: 제거하지 않고 1단계로 되감기
+            tile.currentStage = Mathf.Clamp(data.harvestResetStage, 0, data.stages.Count - 1);
+            tile.timer = 0f;
+            tile.isWatered = false;
+
+            // 스프라이트 갱신
+            if (tile.cropOverlayObject != null)
+            {
+                var sr = tile.cropOverlayObject.GetComponent<SpriteRenderer>();
+                sr.sprite = data.stages[tile.currentStage].sprite;
+            }
+
+            // 젖은 흙 비주얼은 제거(수확 후 바로 젖어있지 않음)
+            overlayTilemap.SetTile(pos, null);
+            wateredTiles.Remove(pos);
+        }
+        else
+        {
+            // 밭 작물: 기존처럼 제거
+            if (tile.cropOverlayObject != null) Destroy(tile.cropOverlayObject);
+            overlayTilemap.SetTile(pos, null);
+            wateredTiles.Remove(pos);
+            growingTiles.Remove(pos);
+        }
+
         Debug.Log($"작물 {cropName} 수확됨 → 창고로 이동");
 
+    }
+
+    public bool HasPlantedAt(Vector3 worldPos)
+    {
+        var cell = fieldTilemap.WorldToCell(worldPos);
+        return growingTiles.ContainsKey(cell);
     }
 
     public void ShowStorageFull()
