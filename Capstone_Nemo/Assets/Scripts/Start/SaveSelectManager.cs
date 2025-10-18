@@ -12,7 +12,9 @@ public class SlotUI
     public TMP_Text txtServerName;
     public TMP_Text txtStarlight;
     public TMP_Text txtLevel;
+    public TMP_Text Playtime;
     public TMP_Text txtPlaytime;
+    public TMP_Text LastPlayed;
     public TMP_Text txtLastPlayed;
     public Image backgroundImage;
     public Button deleteButton;
@@ -194,10 +196,12 @@ public class SaveSelectManager : MonoBehaviour
                 var pt = LoadPlaytimeData(serverName);
                 slot.txtPlaytime.text = FormatHMS(pt.seconds);
                 slot.txtLastPlayed.text = string.IsNullOrEmpty(pt.lastPlayed) ? "-" : pt.lastPlayed;
-
-                slot.txtServerName.text = $"‘{saveData.serverName}’";
+                slot.Playtime.gameObject.SetActive(true);
+                slot.LastPlayed.gameObject.SetActive(true);
+                slot.txtServerName.text = $"{saveData.serverName}";
                 slot.txtStarlight.text = $"{starlight} 별빛";
-                slot.txtLevel.text = $"{level} Lv";
+                slot.txtLevel.text = $"{level}";
+                
                 //slot.txtPlaytime.text = $"플레이 타임 : 약 {(day - 1) * 20}분";
                 //slot.txtLastPlayed.text = $"마지막 접속 : {saveInfo.lastPlayed}";
                 slot.backgroundImage.color = normalSlotColor;
@@ -230,6 +234,8 @@ public class SaveSelectManager : MonoBehaviour
                 slot.txtLevel.text = "";
                 slot.txtPlaytime.text = "";
                 slot.txtLastPlayed.text = "";
+                slot.Playtime.gameObject.SetActive(false);
+                slot.LastPlayed.gameObject.SetActive(false);
                 var emptySprite = Resources.Load<Sprite>("Sprites/UI/start_file_slot_plus");
                 slot.backgroundImage.sprite = emptySprite;
 

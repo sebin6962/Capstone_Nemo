@@ -16,6 +16,12 @@ public class SaveSelectTabManager : MonoBehaviour
     public SaveSelectManager saveSelectManager; // 추가 연결
     public Button btnGameExit;
 
+    [Header("Sprites (탭 스프라이트)")]
+    public Sprite normalSprite;
+    public Sprite pressedSprite;
+
+    private Button _activeTabButton = null;
+
     public Color selectedColor = Color.gray;
     public Color normalColor = Color.white;
 
@@ -31,6 +37,15 @@ public class SaveSelectTabManager : MonoBehaviour
         {
             QuitGame();
         });
+
+        DisableButtonTransitions();
+    }
+
+    void DisableButtonTransitions()
+    {
+        if (btnFileSelect) btnFileSelect.transition = Selectable.Transition.None;
+        if (btnSetting) btnSetting.transition = Selectable.Transition.None;
+        if (btnExit) btnExit.transition = Selectable.Transition.None;
     }
 
     public void QuitGame()
@@ -45,10 +60,36 @@ public class SaveSelectTabManager : MonoBehaviour
         settingPanel.SetActive(tab == "Setting");
         exitPanel.SetActive(tab == "Exit");
 
-        SetButtonColor(btnFileSelect, tab == "File");
-        SetButtonColor(btnSetting, tab == "Setting");
-        SetButtonColor(btnExit, tab == "Exit");
+        if (tab == "File")
+        {
+            SetActiveTab(btnFileSelect);
+            // 파일 탭 진입 때 슬롯 최신화(선택)
+            if (saveSelectManager != null)
+                saveSelectManager.RefreshSaveSlots();
+        }
+        else if (tab == "Setting")
+        {
+            SetActiveTab(btnSetting);
+        }
+        else // "Exit"
+        {
+            SetActiveTab(btnExit);
+        }
     }
+
+    private void SetActiveTab(Button b)
+    {
+        // 모든 탭을 normal로 되돌리기
+        if (btnFileSelect && btnFileSelect.image) btnFileSelect.image.sprite = normalSprite;
+        if (btnSetting && btnSetting.image) btnSetting.image.sprite = normalSprite;
+        if (btnExit && btnExit.image) btnExit.image.sprite = normalSprite;
+
+        // 현재 탭만 pressed 스프라이트 적용
+        _activeTabButton = b;
+        if (_activeTabButton && _activeTabButton.image)
+            _activeTabButton.image.sprite = pressedSprite;
+    }
+
     private void SetButtonColor(Button button, bool isSelected)
     {
         var colors = button.colors;

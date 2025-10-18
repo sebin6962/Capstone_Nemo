@@ -16,6 +16,12 @@ public class StorageInventoryUIManager : MonoBehaviour
         if (StorageInventory.Instance != null)
             StorageInventory.Instance.LoadStorage();
         SyncMaxSlotsToInventory();
+        StartCoroutine(RefreshNextFrame());
+    }
+
+    System.Collections.IEnumerator RefreshNextFrame()
+    {
+        yield return null;        // 다른 싱글턴/Collider 재빌드 대기
         UpdateSlots();
     }
 
@@ -77,6 +83,10 @@ public class StorageInventoryUIManager : MonoBehaviour
         // 모든 슬롯 초기화
         foreach (var slot in slots)
             slot.ClearSlot();
+
+        // 인벤토리 싱글턴이 아직 준비 안 됐으면 그냥 리턴
+        var inv = StorageInventory.Instance;
+        if (inv == null) return;
 
         // 창고 데이터 채우기
         int i = 0;
