@@ -48,6 +48,15 @@ public class FarmManager : MonoBehaviour
 
     private HashSet<Vector3Int> wateredTiles = new();
 
+    [Header("나무 레벨 부족 패널")]
+    public GameObject levelTooLowPanel;
+    public CanvasGroup levelTooLowGroup;
+    private Coroutine levelTooLowCo = null;
+
+    [Header("상호작용 세팅")]
+    public Transform player;           // 플레이어 Transform 할당
+    public float interactRadius = 1.6f; // E키 범위
+
     string CurrentServer => PlayerPrefs.GetString("SelectedSave", "");
 
     string FarmSavePath
@@ -77,6 +86,8 @@ public class FarmManager : MonoBehaviour
         StorageInventoryUIManager.Instance?.UpdateSlots();
 
         RegisterAllTreeAnchorsInScene();
+        if (levelTooLowPanel) levelTooLowPanel.SetActive(false);
+        if (levelTooLowGroup) levelTooLowGroup.alpha = 0f;
     }
 
     void OnDisable() { SaveFarmState(); }
@@ -105,7 +116,7 @@ public class FarmManager : MonoBehaviour
         {
             AdvanceCropStage(pos);
         }
-
+        HandleTreeLevelWarningByInput();
         HandleRightClickHarvest();
     }
 
@@ -540,18 +551,6 @@ public class FarmManager : MonoBehaviour
         StorageInventory.Instance.TryAddItem(itemKey, amount);
         StorageInventory.Instance.SaveStorage();
 
-        //// 작물 스프라이트 제거
-        //if (growingTiles[pos].cropOverlayObject != null)
-        //    Destroy(growingTiles[pos].cropOverlayObject);
-
-        //// 젖은 흙 제거
-        //overlayTilemap.SetTile(pos, null);
-        //wateredTiles.Remove(pos);
-
-        //// 상태 제거
-        //growingTiles.Remove(pos);
-
-        //string itemKey = cropData.harvestItemName; // 수확물 이름 사용
         // 창고 인벤토리에 추가
         //StorageInventory.Instance.AddItem(cropData.harvestItemName, 1);
         Debug.Log("현재 나무 레벨: " + TreeLevelUnlocker.CurrentLevel);
@@ -603,6 +602,96 @@ public class FarmManager : MonoBehaviour
         Debug.Log($"작물 {cropName} 수확됨 → 창고로 이동");
 
     }
+
+    private void HandleTreeLevelWarningByInput()
+    {
+        // 1) 마우스 왼클릭: 커서 아래 나무 잠금이면 경고
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
+
+            if (growingTiles.TryGetValue(cellPos, out var tile))
+            {
+                var data = tile.cropData;
+                if (data != null && data.isTree && IsTreeLocked(data)) // IsTreeLocked는 FarmManager에 이미 존재:contentReference[oaicite:4]{index=4}
+                {
+                    ShowLevelTooLowByInput();
+                    return;
+                }
+            }
+        }
+
+        // 2) E키: 플레이어 주변 반경 내에 '나무 잠금'이 하나라도 있으면 경고
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            if (player == null) return;
+
+            // growingTiles는 <cellPos, CropTile> 딕셔너리 (FarmManager 내부):contentReference[oaicite:5]{index=5}
+            foreach (var kv in growingTiles)
+            {
+                var cell = kv.Key;
+                var cropTile = kv.Value;
+                var data = cropTile.cropData;
+
+                if (data == null || !data.isTree) continue;
+
+                // 타일의 월드 중앙 좌표
+                Vector3 tileCenter = overlayTilemap.CellToWorld(cell) + new Vector3(0.5f, 0.5f, 0f);
+
+                // 플레이어와 거리 체크
+                if (Vector2.Distance(player.position, tileCenter) <= interactRadius)
+                {
+                    if (IsTreeLocked(data))
+                    {
+                        ShowLevelTooLowByInput();
+                        return; // 하나라도 걸리면 경고 후 종료
+                    }
+                }
+            }
+        }
+    }
+
+    public void ShowLevelTooLowByInput()
+    {
+        if (levelTooLowPanel == null || levelTooLowGroup == null) return;
+        if (levelTooLowCo != null) StopCoroutine(levelTooLowCo);
+        levelTooLowCo = StartCoroutine(LevelTooLowRoutine());
+    }
+
+    private IEnumerator LevelTooLowRoutine()
+    {
+        levelTooLowPanel.SetActive(true);
+
+        float duration = 0.5f;
+        float t = 0f;
+
+        // Fade In
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            levelTooLowGroup.alpha = Mathf.Lerp(0f, 1f, t / duration);
+            yield return null;
+        }
+        levelTooLowGroup.alpha = 1f;
+
+        // 유지
+        yield return new WaitForSeconds(1f);
+
+        // Fade Out
+        t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            levelTooLowGroup.alpha = Mathf.Lerp(1f, 0f, t / duration);
+            yield return null;
+        }
+        levelTooLowGroup.alpha = 0f;
+
+        levelTooLowPanel.SetActive(false);
+        levelTooLowCo = null;
+    }
+
 
     public bool HasPlantedAt(Vector3 worldPos)
     {

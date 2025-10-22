@@ -62,6 +62,28 @@ public class HeldItemManager : MonoBehaviour
         heldItemImage.sprite = sprite;
         heldItemImage.enabled = true;
 
+        // 스프라이트 비율 유지하도록 이미지 크기 조정
+        RectTransform rt = heldItemImage.GetComponent<RectTransform>();
+        if (rt != null && sprite != null)
+        {
+            float spriteRatio = (float)sprite.rect.width / sprite.rect.height;
+            float imageRatio = rt.rect.width / rt.rect.height;
+
+            // 현재 이미지 비율과 다르면 높이나 넓이 중 하나를 맞춰줌
+            if (spriteRatio > imageRatio)
+            {
+                // 스프라이트가 더 가로로 긴 경우: 가로를 기준으로 높이 조정
+                float newHeight = rt.rect.width / spriteRatio;
+                rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newHeight);
+            }
+            else
+            {
+                // 스프라이트가 더 세로로 긴 경우: 세로를 기준으로 가로 조정
+                float newWidth = rt.rect.height * spriteRatio;
+                rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, newWidth);
+            }
+        }
+
         Debug.Log("ShowHeldItem: 아이템 표시됨 - " + sprite.name);
     }
 
