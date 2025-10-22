@@ -39,13 +39,17 @@ public class TreeLevelUnlocker : MonoBehaviour
     private TreeUnlockData unlockData;
     private string savePath;
 
-    [Header("Panel-based Tree Unlock UI")]
+    [Header("나무 해금 패널 UI")]
     public Image unlockPopupPanelImage;          // 나무 해금 팝업(전체 패널)의 Image
     public Sprite lockedPanelSprite;             // 레벨 0(잠김)용
     public Sprite[] levelUnlockedPanelSprites;   // 레벨 1..N 해금용 (index = level-1)
 
     //해금 이펙트
     public GameObject unlockEffectPrefab;
+
+    [Header("해금 7단계 맵 스프라이트 교체")]
+    public SpriteRenderer mapSpriteRenderer;   // 교체 대상 (씬 배경 SpriteRenderer)
+    public Sprite[] mapSpritesByLevel;
 
     void Awake()
     {
@@ -81,6 +85,8 @@ public class TreeLevelUnlocker : MonoBehaviour
         UpdateLevelButtons();
         // 패널 스프라이트 동기화
         ApplyPanelSprite();
+        // 맵 스프라이트 동기화
+        ApplyMapSprite();
 
         // 4) 버튼들에 툴팁 트리거 연결
         if (levelButtons != null)
@@ -121,6 +127,30 @@ public class TreeLevelUnlocker : MonoBehaviour
         // 필요 시 원본 크기 반영
         // unlockPopupPanelImage.SetNativeSize();
     }
+
+    public void ApplyMapSprite()
+    {
+        if (mapSpriteRenderer == null)
+        {
+            Debug.LogWarning("[TreeLevelUnlocker] mapSpriteRenderer가 연결되지 않았습니다.");
+            return;
+        }
+
+        // 기본 잠금 상태: index = -1
+        if (currentUnlockedLevel <= 0)
+        {
+            // mapSpritesByLevel[0] 이전의 "어두운 기본 맵"이 필요하면 따로 Sprite 지정 가능
+            return;
+        }
+
+        int idx = Mathf.Clamp(currentUnlockedLevel - 1, 0, mapSpritesByLevel.Length - 1);
+        if (mapSpritesByLevel != null && mapSpritesByLevel.Length > 0 && mapSpritesByLevel[idx] != null)
+        {
+            mapSpriteRenderer.sprite = mapSpritesByLevel[idx];
+            Debug.Log($"[TreeLevelUnlocker] 맵 스프라이트 {idx + 1}레벨 버전으로 교체됨.");
+        }
+    }
+
     public void ShowTooltip(int levelIdx)
     {
         bool unlocked = levelIdx < currentUnlockedLevel;
@@ -182,6 +212,8 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         UpdateLevelButtons();
         ApplyPanelSprite();
+
+        ApplyMapSprite();
 
         PlayUnlockEffect(levelIdx);
 
@@ -316,6 +348,7 @@ public class TreeLevelUnlocker : MonoBehaviour
         SaveUnlockData();
         UpdateLevelButtons();
         ApplyPanelSprite();
+        ApplyMapSprite();
     }
 
     //해금 이펙트
