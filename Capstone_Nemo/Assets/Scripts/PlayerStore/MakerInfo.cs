@@ -112,7 +112,9 @@ public class MakerInfo : MonoBehaviour
         {
             if (activeEffect != null) Destroy(activeEffect);
 
-            activeEffect = Instantiate(craftCompleteEffect, worldPos, Quaternion.identity);
+            Vector3 effectPos = worldPos + new Vector3(0f, -1f, 0f);
+
+            activeEffect = Instantiate(craftCompleteEffect, effectPos, Quaternion.identity);
 
             var ps = activeEffect.GetComponentInChildren<ParticleSystem>();
             if (ps != null)

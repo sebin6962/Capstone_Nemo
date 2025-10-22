@@ -44,6 +44,9 @@ public class TreeLevelUnlocker : MonoBehaviour
     public Sprite lockedPanelSprite;             // 레벨 0(잠김)용
     public Sprite[] levelUnlockedPanelSprites;   // 레벨 1..N 해금용 (index = level-1)
 
+    //해금 이펙트
+    public GameObject unlockEffectPrefab;
+
     void Awake()
     {
         Instance = this;
@@ -180,7 +183,10 @@ public class TreeLevelUnlocker : MonoBehaviour
         UpdateLevelButtons();
         ApplyPanelSprite();
 
-        ShowUnlockEffectPanel(currentUnlockedLevel);
+        PlayUnlockEffect(levelIdx);
+
+        //중간발표 대비 비활성화
+        //ShowUnlockEffectPanel(currentUnlockedLevel);
     }
 
     public void SaveUnlockData()
@@ -310,6 +316,43 @@ public class TreeLevelUnlocker : MonoBehaviour
         SaveUnlockData();
         UpdateLevelButtons();
         ApplyPanelSprite();
+    }
+
+    //해금 이펙트
+    private void PlayUnlockEffect(int levelIdx)
+    {
+        if (unlockEffectPrefab == null) return;
+        if (levelButtons == null || levelIdx < 0 || levelIdx >= levelButtons.Length) return;
+
+        var btn = levelButtons[levelIdx];
+        if (btn == null) return;
+
+        RectTransform btnRect = btn.GetComponent<RectTransform>();
+        if (btnRect == null) return;
+
+        // 버튼의 자식으로 생성(로컬 좌표/스케일 그대로)
+        GameObject fx = Instantiate(unlockEffectPrefab, btnRect);
+        var fxRect = fx.GetComponent<RectTransform>();
+        if (fxRect != null)
+        {
+            // 버튼 중앙 정렬
+            /*fxRect.anchorMin = new Vector2(0.5f, 0.5f);
+            fxRect.anchorMax = new Vector2(0.5f, 0.5f);
+            fxRect.pivot = new Vector2(0.5f, 0.5f);
+            fxRect.anchoredPosition = Vector2.zero; // 정확히 버튼 중앙
+            fxRect.localScale = Vector3.one;*/
+            // 배경/전경 선택 (주석 중 하나 선택)
+
+            fxRect.localScale = Vector3.one;
+        }
+
+        // 클릭 방해 방지(필요 시)
+        var cg = fx.GetComponent<CanvasGroup>();
+        if (cg == null) cg = fx.AddComponent<CanvasGroup>();
+        cg.blocksRaycasts = false;
+
+        // 자동 제거
+        Destroy(fx, 5f);
     }
 }
 
