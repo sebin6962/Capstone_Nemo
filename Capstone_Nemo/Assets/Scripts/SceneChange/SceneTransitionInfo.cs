@@ -6,10 +6,10 @@ public class SceneTransitionInfo : MonoBehaviour
 {
     public static SceneTransitionInfo Instance;
 
-    public string fromScene = "";
-    public string toScene = "";
+    public string fromScene;
+    public string toScene;
 
-    public string entranceID = ""; // "FromStore", "FromVillage" µî
+    public string entranceID; 
 
     void Awake()
     {
@@ -23,4 +23,15 @@ public class SceneTransitionInfo : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    private void OnEnable()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+    }
+
+
 }
