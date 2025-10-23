@@ -28,6 +28,8 @@ public class ScenePortal : MonoBehaviour
     {
         if (isInTrigger && (Input.GetKeyDown(KeyCode.E)))
         {
+            SceneTransitionInfo.Instance.fromScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            SceneTransitionInfo.Instance.toScene = targetScene;
             SceneTransitionInfo.Instance.entranceID = entranceID;
             Debug.Log($"[Portal] Scene change to {targetScene}, entranceID set to {entranceID}");
             FadeManager.Instance.FadeToScene(targetScene, 0.5f);
