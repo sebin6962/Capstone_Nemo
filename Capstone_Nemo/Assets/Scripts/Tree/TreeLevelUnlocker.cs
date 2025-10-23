@@ -330,28 +330,19 @@ public class TreeLevelUnlocker : MonoBehaviour
         RectTransform btnRect = btn.GetComponent<RectTransform>();
         if (btnRect == null) return;
 
-        // 버튼의 자식으로 생성(로컬 좌표/스케일 그대로)
+        //버튼 자식
         GameObject fx = Instantiate(unlockEffectPrefab, btnRect);
         var fxRect = fx.GetComponent<RectTransform>();
         if (fxRect != null)
         {
-            // 버튼 중앙 정렬
-            /*fxRect.anchorMin = new Vector2(0.5f, 0.5f);
-            fxRect.anchorMax = new Vector2(0.5f, 0.5f);
-            fxRect.pivot = new Vector2(0.5f, 0.5f);
-            fxRect.anchoredPosition = Vector2.zero; // 정확히 버튼 중앙
-            fxRect.localScale = Vector3.one;*/
-            // 배경/전경 선택 (주석 중 하나 선택)
-
             fxRect.localScale = Vector3.one;
         }
 
-        // 클릭 방해 방지(필요 시)
+        //클릭 방해
         var cg = fx.GetComponent<CanvasGroup>();
         if (cg == null) cg = fx.AddComponent<CanvasGroup>();
         cg.blocksRaycasts = false;
 
-        // 자동 제거
         Destroy(fx, 5f);
     }
 }

@@ -37,6 +37,14 @@ public class LevelUpRevealPanel : MonoBehaviour
     // 스프라이트 성공 시 텍스트 숨김
     [SerializeField] private bool hideLevelTextWhenSprite = true;
 
+    //레벨업 숫자
+    [Header("Level Number")]
+    [SerializeField] private Image levelNumberImage;
+    [SerializeField] private Sprite[] levelNumberSprites;
+
+    [Header("Effect")]
+    [SerializeField] private ParticleSystemRenderer[] preplacedFxRenderers;
+
     [Header("Timing")]
     [SerializeField] private float panelDelaySeconds = 1f;
     [SerializeField] private float fadeInSeconds = 0.35f;
@@ -49,6 +57,18 @@ public class LevelUpRevealPanel : MonoBehaviour
     private static readonly Dictionary<string, Sprite> _cache = new();
     private CanvasGroup _cgPanel;
     private CanvasGroup _cgSlots; // 추가
+
+    void Awake()
+    {
+        SetFxRenderers(false); 
+    }
+
+    private void SetFxRenderers(bool on)
+    {
+        if (preplacedFxRenderers == null) return;
+        foreach (var r in preplacedFxRenderers)
+            if (r) r.enabled = on;
+    }
 
     public void Show(int level, IList<string> finishKeys, Action onComplete)
     {
@@ -69,6 +89,13 @@ public class LevelUpRevealPanel : MonoBehaviour
             go.SetActive(false); // ★ 처음엔 안 보이게
         }
 
+        //이펙트
+        if (preplacedFxRenderers != null)
+        {
+            foreach (var r in preplacedFxRenderers)
+                if (r) r.enabled = false;
+        }
+
         StopAllCoroutines();
         BuildUI(level, finishKeys);       // 슬롯은 만들어두되 숨겨둠
         panelRoot.SetActive(true);
@@ -80,8 +107,18 @@ public class LevelUpRevealPanel : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(panelDelaySeconds);
 
-        // 1) 패널 페이드인
-        yield return Fade(_cgPanel, 0f, 1f, fadeInSeconds);
+        /*// 1) 패널 페이드인
+        yield return Fade(_cgPanel, 0f, 1f, fadeInSeconds);*/
+
+        //1) 패널 페이드인 + 이펙트 
+        var panelIn = Fade(_cgPanel, 0f, 1f, fadeInSeconds);
+
+        if (preplacedFxRenderers != null)
+        {
+            foreach (var r in preplacedFxRenderers)
+                if (r) r.enabled = true; 
+        }
+        yield return panelIn;
 
         // 2) 슬롯 지연
         yield return new WaitForSecondsRealtime(slotDelaySeconds);
@@ -99,8 +136,18 @@ public class LevelUpRevealPanel : MonoBehaviour
         // 5) 컷신 크로스페이드 시작
         if (crossfadeWithCutscene) onComplete?.Invoke();
 
-        // 6) 패널 페이드아웃 (슬롯도 함께 사라짐)
-        yield return Fade(_cgPanel, 1f, 0f, fadeOutSeconds);
+        /*// 6) 패널 페이드아웃 (슬롯도 함께 사라짐)
+        yield return Fade(_cgPanel, 1f, 0f, fadeOutSeconds);*/
+
+        //6) 페이드아웃 + 이펙트
+        var panelOut = Fade(_cgPanel, 1f, 0f, fadeOutSeconds);
+
+        if (preplacedFxRenderers != null)
+        {
+            foreach (var r in preplacedFxRenderers)
+                if (r) r.enabled = false;
+        }
+        yield return panelOut;
 
         // 7) 컷신을 나중에 시작하고 싶으면(크로스페이드 X)
         if (!crossfadeWithCutscene) onComplete?.Invoke();
@@ -171,6 +218,23 @@ public class LevelUpRevealPanel : MonoBehaviour
             }
             if (levelTitleImage != null)
                 levelTitleImage.enabled = false;
+        }
+
+        //레벨
+        if (levelNumberImage != null && levelNumberSprites != null)
+        {
+            int idx = Mathf.Clamp(level - 1, 0, levelNumberSprites.Length - 1);
+            var numSprite = levelNumberSprites[idx];
+
+            if (numSprite != null)
+            {
+                levelNumberImage.sprite = numSprite;
+                levelNumberImage.enabled = true;
+            }
+            else
+            {
+                levelNumberImage.enabled = false; // 스프라이트 없으면 숨김
+            }
         }
     }
 
