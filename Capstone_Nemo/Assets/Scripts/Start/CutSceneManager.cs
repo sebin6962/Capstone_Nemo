@@ -77,6 +77,16 @@ public class CutSceneManager : MonoBehaviour
     [Header("컷 종료시 자막/그라데이션 동시 페이드 아웃 시간")]
     public float overlayFadeOutSeconds = 0.35f;
 
+    [Header("타자기(스르륵) 옵션")]
+    [Tooltip("초당 나타나는 글자 수 (커질수록 빠름)")]
+    public float charsPerSecond = 28f;
+
+    [Tooltip("줄이 완성되기 전 클릭하면 해당 줄을 즉시 완성")]
+    public bool clickCompletesCurrentLine = true;
+
+    [Tooltip("해당 컷의 모든 자막이 완성된 상태에서 클릭하면 다음 컷으로 즉시 진행")]
+    public bool clickToSkipAfterAllLines = true;
+
     private void Awake()
     {
         // 컷 패널 비활성화
@@ -283,6 +293,65 @@ public class CutSceneManager : MonoBehaviour
         return !string.IsNullOrWhiteSpace(raw);
     }
 
+    //private IEnumerator ShowSubtitleStackRoutine(int index)
+    //{
+    //    if (gradientGroup != null)
+    //        StartCoroutine(FadeCanvasGroup(gradientGroup, gradientGroup.alpha, 1f, gradientFadeSeconds));
+
+    //    if (subtitleContainer == null || subtitleLinePrefab == null) yield break;
+
+    //    string raw = subtitles[index]?.content ?? "";
+    //    if (string.IsNullOrWhiteSpace(raw)) yield break;
+
+    //    // 1) 블록 분리 (한 블록 = 한 줄)
+    //    string[] segments = raw.Split(new string[] { segmentDelimiter }, System.StringSplitOptions.None);
+
+    //    // 2) 모든 줄을 '미리' 생성해 배치 (알파=0)
+    //    ClearSubtitleContainer();
+    //    var lineGroups = new List<CanvasGroup>(segments.Length);
+
+    //    for (int s = 0; s < segments.Length; s++)
+    //    {
+    //        string seg = (segments[s] ?? "").Replace("\\n", "\n").TrimEnd('\r', '\n', ' ');
+
+    //        var line = Instantiate(subtitleLinePrefab, subtitleContainer);
+
+    //        var tmp = line as TMP_Text;
+    //        tmp.alignment = TextAlignmentOptions.Top; // 'Top' = 상단 중앙
+    //        tmp.enableWordWrapping = true;
+    //        tmp.enableAutoSizing = false;
+    //        tmp.lineSpacing = textLineSpacing;
+
+    //        // CanvasGroup으로 투명하게 자리만 잡아둠
+    //        var cg = line.GetComponent<CanvasGroup>();
+    //        if (cg == null) cg = line.gameObject.AddComponent<CanvasGroup>();
+    //        cg.alpha = 0f;
+
+    //        line.text = seg;
+    //        lineGroups.Add(cg);
+
+    //        // 과도한 높이 강제 방지
+    //        var le = line.GetComponent<LayoutElement>();
+    //        if (le != null) { le.minHeight = 0f; le.preferredHeight = -1f; le.flexibleHeight = 0f; }
+    //    }
+
+
+    //    // 레이아웃 즉시 갱신: 실행 시 Spacing/높이 반영
+    //    LayoutRebuilder.ForceRebuildLayoutImmediate(subtitleContainer);
+
+    //    // 4) 순차적으로 페이드 인 (첫 줄은 처음부터 최종 위치에서 등장)
+    //    yield return new WaitForSeconds(firstLineDelay);
+
+    //    for (int s = 0; s < lineGroups.Count; s++)
+    //    {
+    //        yield return FadeCanvasGroup(lineGroups[s], 0f, 1f, lineFadeSeconds);
+    //        if (s < lineGroups.Count - 1)
+    //            yield return new WaitForSeconds(betweenLinesDelay);
+    //    }
+
+    //    if (afterAllLinesHoldSeconds > 0f)
+    //        yield return new WaitForSeconds(afterAllLinesHoldSeconds);
+    //}
     private IEnumerator ShowSubtitleStackRoutine(int index)
     {
         if (gradientGroup != null)
@@ -293,54 +362,129 @@ public class CutSceneManager : MonoBehaviour
         string raw = subtitles[index]?.content ?? "";
         if (string.IsNullOrWhiteSpace(raw)) yield break;
 
-        // 1) 블록 분리 (한 블록 = 한 줄)
+        // 1 블록 분리 (한 블록 = 한 줄)
         string[] segments = raw.Split(new string[] { segmentDelimiter }, System.StringSplitOptions.None);
 
-        // 2) 모든 줄을 '미리' 생성해 배치 (알파=0)
+        // 2 모든 줄을 미리 만들되, 알파=1로 보이게 하고 글자만 0부터 보여줌
         ClearSubtitleContainer();
-        var lineGroups = new List<CanvasGroup>(segments.Length);
+        var lines = new List<TextMeshProUGUI>(segments.Length);
 
         for (int s = 0; s < segments.Length; s++)
         {
             string seg = (segments[s] ?? "").Replace("\\n", "\n").TrimEnd('\r', '\n', ' ');
 
             var line = Instantiate(subtitleLinePrefab, subtitleContainer);
-
             var tmp = line as TMP_Text;
-            tmp.alignment = TextAlignmentOptions.Top; // 'Top' = 상단 중앙
+            tmp.alignment = TextAlignmentOptions.Top;    // 상단 정렬
             tmp.enableWordWrapping = true;
             tmp.enableAutoSizing = false;
             tmp.lineSpacing = textLineSpacing;
 
-            // CanvasGroup으로 투명하게 자리만 잡아둠
+            // “보임 상태”로 두되, 글자 수만 0부터 증가시킴
             var cg = line.GetComponent<CanvasGroup>();
-            if (cg == null) cg = line.gameObject.AddComponent<CanvasGroup>();
-            cg.alpha = 0f;
+            if (!cg) cg = line.gameObject.AddComponent<CanvasGroup>();
+            cg.alpha = 1f;
 
             line.text = seg;
-            lineGroups.Add(cg);
+            line.ForceMeshUpdate();
+            line.maxVisibleCharacters = 0;   // 핵심!
 
-            // 과도한 높이 강제 방지
+            lines.Add(line);
+
+            // 레이아웃 제한(선택)
             var le = line.GetComponent<LayoutElement>();
             if (le != null) { le.minHeight = 0f; le.preferredHeight = -1f; le.flexibleHeight = 0f; }
         }
 
-
-        // 레이아웃 즉시 갱신: 실행 시 Spacing/높이 반영
+        // 레이아웃 즉시 갱신
         LayoutRebuilder.ForceRebuildLayoutImmediate(subtitleContainer);
 
-        // 4) 순차적으로 페이드 인 (첫 줄은 처음부터 최종 위치에서 등장)
+        // 3 순차적으로 “타자기” 재생
         yield return new WaitForSeconds(firstLineDelay);
 
-        for (int s = 0; s < lineGroups.Count; s++)
+        for (int s = 0; s < lines.Count; s++)
         {
-            yield return FadeCanvasGroup(lineGroups[s], 0f, 1f, lineFadeSeconds);
-            if (s < lineGroups.Count - 1)
-                yield return new WaitForSeconds(betweenLinesDelay);
+            yield return TypeLine(lines[s]);
+
+            // 줄 사이 지연 ? 단, 다음 줄로 넘어가기 전에 클릭해서 ‘즉시 진행’하길 원한다면 여기서도 클릭 체크 가능
+            if (s < lines.Count - 1 && betweenLinesDelay > 0f)
+            {
+                float t = 0f;
+                while (t < betweenLinesDelay)
+                {
+                    if (clickCompletesCurrentLine && Input.GetMouseButtonDown(0))
+                        break; // 사용자 클릭 시 다음 줄 바로 진행
+                    t += Time.deltaTime;
+                    yield return null;
+                }
+            }
         }
 
-        if (afterAllLinesHoldSeconds > 0f)
-            yield return new WaitForSeconds(afterAllLinesHoldSeconds);
+        // 4 모든 줄이 끝난 상태: 클릭하면 즉시 컷 종료(다음 컷 전환)
+        if (clickToSkipAfterAllLines)
+        {
+            float hold = afterAllLinesHoldSeconds;
+            float t = 0f;
+            while (t < hold)
+            {
+                if (Input.GetMouseButtonDown(0))
+                    break; // 클릭으로 대기 스킵
+                t += Time.deltaTime;
+                yield return null;
+            }
+        }
+        else
+        {
+            if (afterAllLinesHoldSeconds > 0f)
+                yield return new WaitForSeconds(afterAllLinesHoldSeconds);
+        }
+    }
+
+    // 한 줄을 왼→오 표시. 진행 중 클릭하면 즉시 완성
+    private IEnumerator TypeLine(TextMeshProUGUI line)
+    {
+        if (line == null) yield break;
+
+        line.ForceMeshUpdate();
+        int total = line.textInfo.characterCount;
+        // 공백/개행 포함한 전체 글자 수 기준. 필요하면 가시문자만 카운트하도록 커스터마이즈 가능.
+
+        // 속도 → 글자당 시간
+        float cps = Mathf.Max(1f, charsPerSecond);
+        float perChar = 1f / cps;
+
+        int visible = 0;
+        while (visible < total)
+        {
+            // 클릭하면 즉시 완성
+            if (clickCompletesCurrentLine && Input.GetMouseButtonDown(0))
+            {
+                visible = total;
+                line.maxVisibleCharacters = visible;
+                break;
+            }
+
+            visible++;
+            line.maxVisibleCharacters = visible;
+
+            // 다음 글자까지 대기
+            float t = 0f;
+            while (t < perChar)
+            {
+                // 대기 중에도 클릭 체크해서 즉시 완성 허용
+                if (clickCompletesCurrentLine && Input.GetMouseButtonDown(0))
+                {
+                    visible = total;
+                    line.maxVisibleCharacters = visible;
+                    yield break;
+                }
+                t += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        // 안전하게 최종 값 보정
+        line.maxVisibleCharacters = total;
     }
 
 

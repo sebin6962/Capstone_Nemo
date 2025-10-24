@@ -2592,6 +2592,43 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &183447713 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 362310517413591743, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 642015996}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &183447714 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2024710707131786506, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 642015996}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!224 &183447715 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 8225645503460927941, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 642015996}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &183447716 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 2144734230886579992, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 642015996}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &183447717 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7986641440557459712, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 642015996}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &185418013
 GameObject:
   m_ObjectHideFlags: 0
@@ -8295,7 +8332,6 @@ MonoBehaviour:
   prevButton: {fileID: 642016004}
   tteokButton: {fileID: 642016007}
   drinkButton: {fileID: 642016006}
-  guestButton: {fileID: 642016005}
   lockCoverPanel: {fileID: 642015999}
   tabNormalSprite: {fileID: -87069319, guid: a2013f53fdc2ab540a211b6f076ce9bb, type: 3}
   tabPressedSprite: {fileID: 2142220538, guid: a2013f53fdc2ab540a211b6f076ce9bb, type: 3}
@@ -8318,6 +8354,14 @@ MonoBehaviour:
   howToRightPageParent: {fileID: 1821744850}
   howToItemPrefab: {fileID: 7343146904178594133, guid: d3e1c577ee3e4604394576ff177c01a2, type: 3}
   howToItemsPerSpread: 4
+  makerRoot: {fileID: 183447717}
+  makerButton: {fileID: 642016005}
+  makerPrevButton: {fileID: 183447714}
+  makerNextButton: {fileID: 183447713}
+  makerLeftPageParent: {fileID: 183447716}
+  makerRightPageParent: {fileID: 183447715}
+  makerItemPrefab: {fileID: 7343146904178594133, guid: d75639a1c5c3ec8428b05b380838f9ae, type: 3}
+  makerItemsPerSpread: 4
 --- !u!1 &626991028
 GameObject:
   m_ObjectHideFlags: 0
@@ -10626,7 +10670,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: NaN, y: -448.75183}
+  m_AnchoredPosition: {x: NaN, y: -448.7518}
   m_SizeDelta: {x: -1286.296, y: -964.354}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &793036837
@@ -11971,7 +12015,7 @@ PrefabInstance:
     - target: {fileID: 6476800199685998724, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 527273124}
     - target: {fileID: 6476800199685998724, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: ToggleStorageUI
@@ -17366,8 +17410,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4281677898
+  m_fontColor: {r: 0.28930807, g: 0.2196593, b: 0.20651864, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -23250,15 +23294,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.5176471}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.7411765}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: abeb1680f6afa3c4998ceae7e74efc10, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -23821,9 +23865,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.00015056133
+    x: 0.0003977418
     y: 0
-    width: 0.9996989
+    width: 0.9992045
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
@@ -24186,7 +24230,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: NaN, y: -296.99988}
+  m_AnchoredPosition: {x: NaN, y: -296.99985}
   m_SizeDelta: {x: -1554.7, y: -965.858}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1888613671

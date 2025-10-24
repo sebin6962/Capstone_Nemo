@@ -86,14 +86,49 @@ public class FadeManager : MonoBehaviour
 
         yield return StartCoroutine(FadeIn());
 
+        // 1) 포인터가 완전히 올라갈 때까지 대기
+        yield return new WaitUntil(() => !IsPointerDown());
+
+        // 2) 레거시 입력축 리셋
+        Input.ResetInputAxes();
+
+        // 3) EventSystem 재초기화 (모듈을 한 프레임 껐다 켜기 + 선택 해제)
+        var es = EventSystem.current;
+        if (es != null)
+        {
+            es.SetSelectedGameObject(null);
+
+            // StandaloneInputModule (레거시)
+            var stand = es.GetComponent<StandaloneInputModule>();
+            if (stand != null) { stand.enabled = false; yield return null; stand.enabled = true; }
+
+#if ENABLE_INPUT_SYSTEM
+    // InputSystemUIInputModule (새 입력 시스템)
+    var inputSys = es.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+    if (inputSys != null) { inputSys.enabled = false; yield return null; inputSys.enabled = true; }
+#endif
+        }
+
         // 마우스 버튼이 눌린 상태였다면 뗄 때까지 잠깐 대기
         yield return new WaitUntil(() => !Input.GetMouseButton(0));
 
         // 이벤트시스템 한 프레임 껐다 켜서 상태 초기화
-        var es = EventSystem.current;
-        if (es != null) { es.enabled = false; yield return null; es.enabled = true; }
+        //var es = EventSystem.current;
+        //if (es != null) { es.enabled = false; yield return null; es.enabled = true; }
 
         isFading = false;
+    }
+
+    // 마우스 버튼이 완전히 올라갈 때까지 확인 (레거시 & 새 입력 시스템 겸용)
+    private bool IsPointerDown()
+    {
+        if (Input.GetMouseButton(0)) return true; // 레거시
+
+#if ENABLE_INPUT_SYSTEM
+    var mouse = UnityEngine.InputSystem.Mouse.current;
+    if (mouse != null && mouse.leftButton.isPressed) return true; // 새 입력 시스템
+#endif
+        return false;
     }
 
     /// <summary>

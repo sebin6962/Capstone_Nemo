@@ -27,7 +27,6 @@ public class DoGamUIManager : MonoBehaviour
     [Header("Category Buttons (Recipe Tab)")]
     public Button tteokButton;
     public Button drinkButton;
-    public Button guestButton;
 
     [Header("잠금 오버레이")]
     [SerializeField] private GameObject lockCoverPanel;   // 도감 위를 가리는 패널(자물쇠, 블러 등)
@@ -114,6 +113,46 @@ public class DoGamUIManager : MonoBehaviour
     private int howToSpreadIndex = 0;
     private bool isHowToOpen = false;
 
+    // =============== [제작대정보 탭 레이아웃] ===============
+    [Header("Workbench (제작대 정보)")]
+    public GameObject makerRoot;          // 제작대 탭 루트
+    public Button makerButton;            // 상단 "제작대 정보" 탭 버튼
+    public Button makerPrevButton;        // 스프레드 이전
+    public Button makerNextButton;        // 스프레드 다음
+
+
+
+    [Tooltip("왼쪽 페이지(2개) 부모")]
+    public Transform makerLeftPageParent;
+
+    [Tooltip("오른쪽 페이지(2개) 부모")]
+    public Transform makerRightPageParent;
+
+    [Tooltip("카드 프리팹(Icon(Image), Body(TMP)) - HowTo용과 동일 프리팹 재사용 가능")]
+    public GameObject makerItemPrefab;
+
+    [Tooltip("스프레드당 항목 수(왼쪽 2 + 오른쪽 2 = 4)")]
+    public int makerItemsPerSpread = 4;
+
+    [System.Serializable]
+    public class MakerItemData
+    {
+        public string name;    // 제작기 이름
+        public string image;   // Resources/Sprites/Guide/{image}
+        public string desc;    // 제작기 설명
+    }
+
+    [System.Serializable]
+    public class MakerBookData
+    {
+        public List<MakerItemData> items; // 평면 리스트(타이틀 없음)
+    }
+
+    // 멤버 변수
+    private List<MakerItemData> makerItems = new();
+    private int makerSpreadIndex = 0;
+    private List<HowToPageData> makerPages = new();
+
     // ===================== 초기화 =====================
     private void Awake()
     {
@@ -133,7 +172,6 @@ public class DoGamUIManager : MonoBehaviour
         //guestButton.onClick.AddListener(() => FilterByCategory("손님"));
         tteokButton.onClick.AddListener(() => { FilterByCategory("떡"); });
         drinkButton.onClick.AddListener(() => { FilterByCategory("음료"); });
-        guestButton.onClick.AddListener(() => { FilterByCategory("손님"); });
 
         // 레시피 네비
         nextButton.onClick.AddListener(() => NextEntry());
@@ -144,13 +182,21 @@ public class DoGamUIManager : MonoBehaviour
         if (howToNextButton != null) howToNextButton.onClick.AddListener(() => ChangeHowToSpread(+1));
         if (howToPrevButton != null) howToPrevButton.onClick.AddListener(() => ChangeHowToSpread(-1));
 
+        // 제작대 정보 열기 / 네비
+        if (makerButton != null) makerButton.onClick.AddListener(OpenMakerTab);
+        if (makerNextButton != null) makerNextButton.onClick.AddListener(() => ChangeMakerSpread(+1));
+        if (makerPrevButton != null) makerPrevButton.onClick.AddListener(() => ChangeMakerSpread(-1));
+
+
         // 초기 표시 상태
         panel.SetActive(false);
         SubTitle.SetActive(false);
         SetRecipeNavVisible(false);
         SetHowToNavVisible(false);
+        SetMakerNavVisible(false);
         if (howToRoot != null) howToRoot.SetActive(false); // 시작 시 비활성
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
+        if (makerRoot != null) makerRoot.SetActive(false);
     }
 
     // ===================== 공통 토글 =====================
@@ -209,6 +255,7 @@ public class DoGamUIManager : MonoBehaviour
         // 레이아웃: 레시피 탭 On / 게임방법 탭 Off
         SetRecipeLayout(true);
         SetHowToLayout(false);
+        SetMakerLayout(false);
         SubTitle.SetActive(false);
         isHowToOpen = false;
 
@@ -268,6 +315,7 @@ public class DoGamUIManager : MonoBehaviour
         SetRecipeLayout(true);
         SetHowToLayout(false);
         SubTitle.SetActive(false);
+        SetMakerLayout(false);
         isHowToOpen = false;
 
         //if (lockCoverPanel) lockCoverPanel.SetActive(false);
@@ -296,8 +344,8 @@ public class DoGamUIManager : MonoBehaviour
         // 모든 탭을 일반 스프라이트로 되돌림
         if (tteokButton) tteokButton.image.sprite = tabNormalSprite;
         if (drinkButton) drinkButton.image.sprite = tabNormalSprite;
-        if (guestButton) guestButton.image.sprite = tabNormalSprite;
         if (howToButton) howToButton.image.sprite = tabNormalSprite;
+        if (makerButton) makerButton.image.sprite = tabNormalSprite;
 
         // 현재 탭만 pressed 스프라이트로 고정
         _activeTabButton = b;
@@ -306,15 +354,14 @@ public class DoGamUIManager : MonoBehaviour
         // 탭 버튼은 전환 애니메이션 영향 안 받도록(권장)
         if (tteokButton) tteokButton.transition = Selectable.Transition.None;
         if (drinkButton) drinkButton.transition = Selectable.Transition.None;
-        if (guestButton) guestButton.transition = Selectable.Transition.None;
         if (howToButton) howToButton.transition = Selectable.Transition.None;
+        if (makerButton) makerButton.transition = Selectable.Transition.None;
     }
 
     private void ApplyTabSpritesForCategory(string category)
     {
         if (category == "떡") SetActiveTab(tteokButton);
         else if (category == "음료") SetActiveTab(drinkButton);
-        else if (category == "손님") SetActiveTab(guestButton);
     }
 
     /// <summary>
@@ -396,7 +443,7 @@ public class DoGamUIManager : MonoBehaviour
         // 2) 상단 정보 바인딩
         if (itemImage) itemImage.sprite = Resources.Load<Sprite>("Sprites/Ingredients/" + entry.image);
         if (nameText) nameText.text = entry.name;
-        if (descriptionText) nameText.text = entry.name; // (오타 방지: 필요시 descriptionText 로 아래 줄 사용)
+        //if (descriptionText) nameText.text = entry.name; // (오타 방지: 필요시 descriptionText 로 아래 줄 사용)
         if (descriptionText) descriptionText.text = entry.description;
 
         // 3) 기존 라인 정리
@@ -583,6 +630,7 @@ public class DoGamUIManager : MonoBehaviour
         // 레이아웃 전환: 레시피 Off, 게임방법 On
         SetRecipeLayout(false);
         SetHowToLayout(true);
+        SetMakerLayout(false);
         isHowToOpen = true;
 
         SetActiveTab(howToButton);
@@ -664,6 +712,127 @@ public class DoGamUIManager : MonoBehaviour
         for (int i = t.childCount - 1; i >= 0; i--)
             Destroy(t.GetChild(i).gameObject);
     }
+
+    //==========제작기 탭==============
+    private void SetMakerLayout(bool on)
+    {
+        if (makerRoot != null) makerRoot.SetActive(on);
+        SetMakerNavVisible(on && makerItems.Count > 0);
+        if (on && lockCoverPanel) lockCoverPanel.SetActive(false);
+    }
+
+    private void SetMakerNavVisible(bool on)
+    {
+        if (makerPrevButton != null) makerPrevButton.gameObject.SetActive(on);
+        if (makerNextButton != null) makerNextButton.gameObject.SetActive(on);
+    }
+
+    private void LoadMakerFromJSON()
+    {
+        TextAsset json = Resources.Load<TextAsset>("Data/Maker");
+        if (json == null)
+        {
+            Debug.LogWarning("[Maker] Data/Maker.json 없음");
+            makerItems = new List<MakerItemData>();
+            return;
+        }
+        try
+        {
+            var data = JsonConvert.DeserializeObject<MakerBookData>(json.text);
+            makerItems = (data != null && data.items != null) ? data.items : new List<MakerItemData>();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("[Maker] JSON 파싱 실패: " + e.Message);
+            makerItems = new List<MakerItemData>();
+        }
+    }
+
+    public void OpenMakerTab()
+    {
+        panel.SetActive(true);
+        SubTitle.SetActive(false);
+        openButton.interactable = false;
+
+        SetRecipeLayout(false);
+        SetHowToLayout(false);
+        
+
+        if (makerItems == null || makerItems.Count == 0)
+            LoadMakerFromJSON();
+
+        SetMakerLayout(true);
+        SetActiveTab(makerButton);
+
+        makerSpreadIndex = 0;
+        RenderMakerSpread();
+        if (lockCoverPanel) lockCoverPanel.SetActive(false);
+    }
+
+    private void ChangeMakerSpread(int delta)
+    {
+        if (makerItems == null || makerItems.Count == 0) return;
+        int spreadCount = Mathf.CeilToInt((float)makerItems.Count / makerItemsPerSpread);
+        makerSpreadIndex = Mathf.Clamp(makerSpreadIndex + delta, 0, Mathf.Max(0, spreadCount - 1));
+        RenderMakerSpread();
+    }
+
+
+    //public int makerItemsPerSpread = 4; // 좌2 + 우2
+
+    private void RenderMakerSpread()
+    {
+        if (makerRoot == null) return;
+
+        // 부모 비우기 (게임방법과 동일 유틸)
+        ClearChildren(makerLeftPageParent);
+        ClearChildren(makerRightPageParent);
+
+        if (makerItems == null || makerItems.Count == 0) return;
+
+        // 스프레드 범위 계산
+        int start = makerSpreadIndex * makerItemsPerSpread;
+        int end = Mathf.Min(start + makerItemsPerSpread, makerItems.Count);
+
+        for (int i = start; i < end; i++)
+        {
+            var parent = ((i - start) < 2) ? makerLeftPageParent : makerRightPageParent;
+            var item = makerItems[i];
+
+            var go = Instantiate(makerItemPrefab != null ? makerItemPrefab : howToItemPrefab, parent);
+            var icon = go.transform.Find("Icon")?.GetComponent<Image>();
+            var name = go.transform.Find("Name")?.GetComponent<TextMeshProUGUI>();
+            var body = go.transform.Find("Body")?.GetComponent<TextMeshProUGUI>();
+
+            if (name != null) name.text = item.name;
+            if (body != null) body.text = item.desc;
+
+            if (icon != null)
+            {
+                var sprite = Resources.Load<Sprite>("Sprites/restaurant/" + item.image);
+                if (sprite == null)
+                {
+                    var all = Resources.LoadAll<Sprite>("Sprites/restaurant/" + item.image);
+                    if (all != null && all.Length > 0) sprite = all[0];
+                }
+                icon.sprite = sprite;
+                icon.enabled = sprite != null;
+                if (sprite != null)
+                {
+                    icon.preserveAspect = true;
+                    LayoutRebuilder.MarkLayoutForRebuild(icon.rectTransform);
+                }
+            }
+        }
+
+        // 내비 버튼 상태
+        int spreadCount = Mathf.CeilToInt((float)makerItems.Count / makerItemsPerSpread);
+        makerPrevButton.interactable = (makerSpreadIndex > 0);
+        makerNextButton.interactable = (makerSpreadIndex < spreadCount - 1);
+
+    }
+
+
 
     //==========잠금 판정==============
     // 도감 엔트리의 "완성 키" 추출: recipeImageBundle의 마지막 result → 없으면 대표 이미지 파일명
