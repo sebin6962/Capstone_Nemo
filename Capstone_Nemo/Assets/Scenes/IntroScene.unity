@@ -209,6 +209,7 @@ GameObject:
   - component: {fileID: 259708888}
   - component: {fileID: 259708887}
   - component: {fileID: 259708886}
+  - component: {fileID: 259708890}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -292,11 +293,13 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 977206687}
+  - {fileID: 515982941}
   - {fileID: 663137372}
   - {fileID: 968330952}
   - {fileID: 2042210194}
   - {fileID: 311967740}
   - {fileID: 480295561}
+  - {fileID: 721798373}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -304,6 +307,39 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &259708890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 259708885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69644e3a8f7761e469710ce49e64ea54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spawnParent: {fileID: 515982941}
+  prefab: {fileID: 8850937140474588364, guid: 6c83f9fb578926c44b4d434cf0ab47b6, type: 3}
+  moonPanel: {fileID: 663137372}
+  spawnIntervalMin: 0.8
+  spawnIntervalMax: 2
+  spawnChance: 0.6
+  maxConcurrent: 1
+  baseDirection: {x: -0.5, y: -0.35}
+  speedMin: 220
+  speedMax: 420
+  topMarginPx: 40
+  leftRightPaddingPx: 60
+  angleJitterDeg: 10
+  prewarmCount: 6
+  maxPool: 16
+  starSprites:
+  - {fileID: -1681788981, guid: 62272dd0567dada4aa33d8ed27b13038, type: 3}
+  - {fileID: 932844455, guid: 62272dd0567dada4aa33d8ed27b13038, type: 3}
+  - {fileID: 423714170, guid: 62272dd0567dada4aa33d8ed27b13038, type: 3}
+  - {fileID: -1037278172, guid: 62272dd0567dada4aa33d8ed27b13038, type: 3}
+  randomSpriteEverySpawn: 1
 --- !u!1 &311324715
 GameObject:
   m_ObjectHideFlags: 0
@@ -614,6 +650,41 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!1 &515982940
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 515982941}
+  m_Layer: 5
+  m_Name: spawnParent
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &515982941
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 515982940}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 259708889}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &663137371
 GameObject:
   m_ObjectHideFlags: 0
@@ -688,6 +759,81 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 663137371}
+  m_CullTransparentMesh: 1
+--- !u!1 &721798372
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 721798373}
+  - component: {fileID: 721798375}
+  - component: {fileID: 721798374}
+  m_Layer: 5
+  m_Name: SpaceShip
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &721798373
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721798372}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 259708889}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -1078, y: 435}
+  m_SizeDelta: {x: 140, y: 80}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &721798374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721798372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: -245776570, guid: 62f516ae91366434fbf5b6a4621d565b, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &721798375
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721798372}
   m_CullTransparentMesh: 1
 --- !u!1 &968330951
 GameObject:
@@ -932,10 +1078,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.0004916489
-    y: 0
-    width: 0.9990167
-    height: 1
+    x: 0
+    y: 0.000934124
+    width: 1
+    height: 0.99813175
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -996,6 +1142,19 @@ MonoBehaviour:
   bottomAlpha: 0.8
   topAlpha: 0
   gradientFadeSeconds: 0.6
+  spaceshipUI: {fileID: 721798373}
+  shipPxPerSec: 120
+  offscreenMarginPx: 30
+  startShipAfterText: 1
+  waveAmplitudePx: 18
+  waveFrequency: 0.6
+  wavePhaseDegrees: 0
+  spaceshipImage: {fileID: 721798374}
+  shipCycle:
+  - {fileID: -245776570, guid: 62f516ae91366434fbf5b6a4621d565b, type: 3}
+  - {fileID: 1436339314, guid: 62f516ae91366434fbf5b6a4621d565b, type: 3}
+  - {fileID: 916570254, guid: 62f516ae91366434fbf5b6a4621d565b, type: 3}
+  - {fileID: 786203026, guid: 62f516ae91366434fbf5b6a4621d565b, type: 3}
 --- !u!114 &1367691876
 MonoBehaviour:
   m_ObjectHideFlags: 0
