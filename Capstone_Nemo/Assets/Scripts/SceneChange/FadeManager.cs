@@ -20,6 +20,9 @@ public class FadeManager : MonoBehaviour
     Canvas overlayCanvas;
     CanvasGroup fadeGroup;
 
+    [Header("로딩 직후 블랙 유지(초)")]
+    [SerializeField] float preRevealHoldSeconds = 0.12f;
+
     private void Awake()
     {
         EnsureOverlay();
@@ -83,6 +86,9 @@ public class FadeManager : MonoBehaviour
         TimeManager.Instance?.SaveDayData();
         SceneManager.LoadScene(sceneName);
         yield return null; // 씬 완전히 로드될 때까지 1프레임 대기
+
+        //if (preRevealHoldSeconds > 0f)
+        //    yield return new WaitForSeconds(preRevealHoldSeconds);
 
         yield return StartCoroutine(FadeIn());
 

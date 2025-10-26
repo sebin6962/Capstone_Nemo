@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ScenePortal : MonoBehaviour
 {
@@ -26,13 +27,25 @@ public class ScenePortal : MonoBehaviour
 
     private void Update()
     {
-        if (isInTrigger && (Input.GetKeyDown(KeyCode.E)))
+        if (!isInTrigger) return;
+        if (!Input.GetKeyDown(KeyCode.E)) return;
+
+        // 1 전역 전환 정보
+        if (SceneTransitionInfo.Instance != null)
         {
-            SceneTransitionInfo.Instance.fromScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            SceneTransitionInfo.Instance.fromScene = SceneManager.GetActiveScene().name;
             SceneTransitionInfo.Instance.toScene = targetScene;
             SceneTransitionInfo.Instance.entranceID = entranceID;
-            Debug.Log($"[Portal] Scene change to {targetScene}, entranceID set to {entranceID}");
-            FadeManager.Instance.FadeToScene(targetScene, 0.5f);
         }
+
+        // 2 세이프 브리지
+        PlayerPrefs.SetString("__fromScene", SceneManager.GetActiveScene().name);
+        PlayerPrefs.SetString("__toScene", targetScene ?? "");
+        PlayerPrefs.SetString("__entranceID", entranceID ?? "");
+        PlayerPrefs.Save();
+
+        Debug.Log($"[Portal] to={targetScene}, id={entranceID}");
+        FadeManager.Instance.FadeToScene(targetScene, 0.5f);
+        
     }
 }

@@ -9,24 +9,49 @@ public class PlayerSpwaner : MonoBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
+        StartCoroutine(SafeSpawnFallback());
+    }
 
-        string entrance = SceneTransitionInfo.Instance.entranceID;
+    private IEnumerator SafeSpawnFallback()
+    {
+        // VSD가 있으면 우선권을 줌: 몇 프레임 기다려 본다
+        bool hasDirector = (FindObjectOfType<VillageSpawnDirector>() != null);
+        if (hasDirector)
+        {
+            // VSD가 entranceID를 소비할 시간을 준다
+            int frames = 0;
+            while (frames < 10) // 약 10프레임 대기
+            {
+                if (SceneTransitionInfo.Instance != null &&
+                    string.IsNullOrEmpty(SceneTransitionInfo.Instance.entranceID))
+                    yield break; // VSD가 이미 처리함
+
+                frames++;
+                yield return null;
+            }
+        }
+
+        // 여기까지 왔다는 건 VSD가 없거나 또는 아직 처리를 못 했다는 뜻
+        var info = SceneTransitionInfo.Instance;
+        if (info == null || string.IsNullOrEmpty(info.entranceID)) yield break;
+
+        string entrance = info.entranceID;
         GameObject spawnPoint = GameObject.Find(entrance);
 
         if (spawnPoint != null)
         {
-            //transform.position = spawnPoint.transform.position;
-            // 기존 위치에서 z값만 0으로
             Vector3 spawnPos = spawnPoint.transform.position;
-            spawnPos.z = 0f; // z값을 0으로 고정
+            spawnPos.z = 0f;
             transform.position = spawnPos;
 
-            Debug.Log($"[Spawner] entranceID: {entrance}");
+            Debug.Log($"[Spawner-Fallback] entranceID: {entrance}");
 
             // 방향 지정
-            var animator = GetComponent<Animator>();
             if (entrance == "FromVillage(Store)") LookUp();
             else if (entrance == "FromPlayerStore") LookDown();
+
+            // 내가 처리했으니 소모
+            info.entranceID = null;
         }
     }
 
