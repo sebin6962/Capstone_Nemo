@@ -42,6 +42,7 @@ public class LevelUpRevealPanel : MonoBehaviour
     [SerializeField] private Image levelNumberImage;
     [SerializeField] private Sprite[] levelNumberSprites;
 
+    //¿Ã∆Â∆Æ
     [Header("Effect")]
     [SerializeField] private ParticleSystemRenderer[] preplacedFxRenderers;
 
@@ -182,8 +183,28 @@ public class LevelUpRevealPanel : MonoBehaviour
         foreach (var key in keys)
         {
             var go = Instantiate(slotPrefab, slotsParent);
-            var img = go.GetComponentInChildren<Image>(true);
-            if (img != null) img.sprite = ResolveSprite(key);
+
+            var unlock = go.transform.Find("UnlockImage");
+            if(unlock != null)
+            {
+                var img = unlock.GetComponent<Image>();
+                if (img != null)
+                    img.sprite = ResolveSprite(key);
+            }
+
+            var nameText = go.transform.Find("UnlockName");
+            if (nameText != null)
+            {
+                var txt = nameText.GetComponent<TMP_Text>();
+                if (txt != null)
+                {
+                    string displayName = key;
+                    if (ItemTooltipDB.TooltipTexts.TryGetValue(key, out var localizedName))
+                        displayName = localizedName;
+
+                    txt.text = displayName;
+                }
+            }
         }
     }
 
