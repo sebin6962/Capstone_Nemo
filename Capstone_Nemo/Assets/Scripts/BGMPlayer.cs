@@ -93,7 +93,7 @@ public class BGMPlayer : MonoBehaviour
             float t = 0f;
             while (t < fadeDuration)
             {
-                t += Time.deltaTime;
+                t += Time.unscaledDeltaTime;
                 audioSource.volume = Mathf.Lerp(start, 0f, t / fadeDuration);
                 yield return null;
             }
@@ -114,7 +114,7 @@ public class BGMPlayer : MonoBehaviour
             float t = 0f;
             while (t < fadeDuration)
             {
-                t += Time.deltaTime;
+                t += Time.unscaledDeltaTime;
                 audioSource.volume = Mathf.Lerp(0f, targetVolume, t / fadeDuration);
                 yield return null;
             }

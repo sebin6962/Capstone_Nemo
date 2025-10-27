@@ -81,7 +81,7 @@ public class FadeManager : MonoBehaviour
         yield return StartCoroutine(FadeOut());
 
         if (delay > 0f)
-            yield return new WaitForSeconds(delay);
+            yield return new WaitForSecondsRealtime(delay);
 
         TimeManager.Instance?.SaveDayData();
         SceneManager.LoadScene(sceneName);
@@ -155,7 +155,7 @@ public class FadeManager : MonoBehaviour
 
         while (t < fadeDuration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             color.a = Mathf.Lerp(0, 1, t / fadeDuration);
             fadeImage.color = color;
             yield return null;
@@ -180,7 +180,7 @@ public class FadeManager : MonoBehaviour
 
         while (t < fadeDuration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             color.a = Mathf.Lerp(1, 0, t / fadeDuration);
             fadeImage.color = color;
             yield return null;
