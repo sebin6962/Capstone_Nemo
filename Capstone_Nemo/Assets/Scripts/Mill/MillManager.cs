@@ -74,7 +74,7 @@ public class MillManager : MonoBehaviour
     private bool IsMillable(string itemName)
     {
         //가루로 만들 수 있는 재료
-        return itemName == "Danhobak" || itemName == "Baeknyeoncho" || itemName == "Mugwort" || itemName == "Redbean" || itemName == "cinnamon";
+        return itemName == "Danhobak" || itemName == "Baeknyeoncho" || itemName == "Mugwort" || itemName == "cinnamon";
     }
 
 
@@ -132,7 +132,7 @@ public class MillManager : MonoBehaviour
 
         Sprite resultSprite = Resources.Load<Sprite>("Sprites/Ingredients/" + resultName);
         if (resultSprite != null)
-            ShowResutEffect(resultSprite);
+            ShowResultEffect(resultSprite);
 
         else
             Debug.LogWarning($"[MillManager] 스프라이트 로드 실패: {resultName}");
@@ -144,7 +144,7 @@ public class MillManager : MonoBehaviour
 
     }
 
-    public void ShowResutEffect(Sprite sprite)
+    public void ShowResultEffect(Sprite sprite)
     {
         ResultEffectImage.sprite = sprite;
         ResultEffectImage.gameObject.SetActive(true);

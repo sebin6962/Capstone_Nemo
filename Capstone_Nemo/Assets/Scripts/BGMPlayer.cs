@@ -13,6 +13,11 @@ public class BGMPlayer : MonoBehaviour
     public AudioClip mainBGM;
     public AudioClip treeBGM;
 
+    public float fadeDuration = 1.5f;
+    public float targetVolume = 1.0f;
+
+    private Coroutine currentFade;
+
     void Awake()
     {
         // 이미 존재하는 BGMPlayer가 있으면 새로 생성된 건 파괴
@@ -51,6 +56,7 @@ public class BGMPlayer : MonoBehaviour
         {
             case "IntroScene":
             case "SaveSelectScene":
+            case "StatementScene":
                 newClip = startBGM;
                 break;
             case "CutScene":
@@ -69,7 +75,52 @@ public class BGMPlayer : MonoBehaviour
         if (audioSource.clip == newClip && audioSource.isPlaying)
             return;
 
+        PlayBGM(newClip);
+    }
+
+    public void PlayBGM(AudioClip newClip)
+    {
+        if (currentFade != null) StopCoroutine(currentFade);
+        currentFade = StartCoroutine(FadeAndPlay(newClip));
+    }
+
+    private IEnumerator FadeAndPlay(AudioClip newClip)
+    {
+        //페이드아웃
+        if (audioSource.isPlaying && audioSource.clip != null && fadeDuration > 0f)
+        {
+            float start = audioSource.volume;
+            float t = 0f;
+            while (t < fadeDuration)
+            {
+                t += Time.deltaTime;
+                audioSource.volume = Mathf.Lerp(start, 0f, t / fadeDuration);
+                yield return null;
+            }
+            audioSource.volume = 0f;
+            audioSource.Stop();
+        }
+        else
+        {
+            audioSource.Stop();
+            audioSource.volume = 0f;
+        }
+
         audioSource.clip = newClip;
-        audioSource.Play();
+        if (newClip != null) audioSource.Play();
+
+        if (fadeDuration > 0f && newClip != null)
+        {
+            float t = 0f;
+            while (t < fadeDuration)
+            {
+                t += Time.deltaTime;
+                audioSource.volume = Mathf.Lerp(0f, targetVolume, t / fadeDuration);
+                yield return null;
+            }
+        }
+        audioSource.volume = newClip != null ? targetVolume : 0f;
+
+        currentFade = null;
     }
 }
