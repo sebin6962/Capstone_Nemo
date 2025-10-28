@@ -215,6 +215,9 @@ public class SaveSelectManager : MonoBehaviour
 
                 btn.onClick.AddListener(() =>
                 {
+                    if (SFXManager.Instance != null)
+                        SFXManager.Instance.PlaySlotClickSFX();
+
                     PlayerPrefs.SetString("SelectedSave", serverName);
                     if (VillageSceneManager.Instance != null)
                     {
@@ -225,6 +228,9 @@ public class SaveSelectManager : MonoBehaviour
 
                 delBtn.onClick.AddListener(() =>
                 {
+                    if (SFXManager.Instance != null)
+                        SFXManager.Instance.PlaySlotClickSFX();
+
                     ConfirmPopup.Instance.Open($"[{serverName}] 세이브 파일을 삭제할까요?", () =>
                     {
                         //DeleteSave(serverName);

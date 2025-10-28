@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class SFXManager : MonoBehaviour
 {
     public static SFXManager Instance;
@@ -22,6 +23,13 @@ public class SFXManager : MonoBehaviour
     public AudioClip sieveMakerInputClip;
     public AudioClip siruMakerInputClip;
     public AudioClip mixingMakerInputClip;
+
+    [Header("SaveSelectScene")]
+    public AudioClip slotClickSFX;
+
+    [Header("Dogam")]
+    public AudioClip pageFlipSFX;
+    public AudioClip dogamOpenSFX;
 
     void Awake()
     {
@@ -135,6 +143,30 @@ public class SFXManager : MonoBehaviour
             audioSource.Stop();
             audioSource.loop = false;
             audioSource.clip = null;
+        }
+    }
+
+    public void PlaySlotClickSFX()
+    {
+        if (audioSource != null && slotClickSFX != null)
+        {
+            audioSource.PlayOneShot(slotClickSFX);
+        }
+    }
+
+    public void PlayDogamOpenSFX()
+    {
+        if (audioSource != null && dogamOpenSFX != null)
+        {
+            audioSource.PlayOneShot(dogamOpenSFX);
+        }
+    }
+
+    public void PlayPageFlipSFX()
+    {
+        if (audioSource != null && pageFlipSFX != null)
+        {
+            audioSource.PlayOneShot(pageFlipSFX);
         }
     }
 }
