@@ -70,7 +70,7 @@ public class PlayerInteract : MonoBehaviour
 
                 // 정상 폐기
                 HeldItemManager.Instance.HideHeldItem();
-                SFXManager.Instance.PlayBbyongSFX();
+                SFXManager.Instance.PlayTrashDiscardSFX();
                 Debug.Log($"[Trash] {heldName} 아이템을 버림");
                 return;
             }

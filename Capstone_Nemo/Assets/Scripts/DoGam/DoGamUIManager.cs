@@ -191,7 +191,7 @@ public class DoGamUIManager : MonoBehaviour
 
         // 게임방법 열기 / 네비
         if (howToButton != null) howToButton.onClick.AddListener(() => {
-            if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
+            if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
             OpenHowToTab();
         });
         if (howToNextButton != null) howToNextButton.onClick.AddListener(() => {
@@ -206,7 +206,7 @@ public class DoGamUIManager : MonoBehaviour
 
         // 제작대 정보 열기 / 네비
         if (makerButton != null) makerButton.onClick.AddListener(() => {
-            if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
+            if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
             OpenMakerTab();
         });
         if (makerNextButton != null) makerNextButton.onClick.AddListener(() => {

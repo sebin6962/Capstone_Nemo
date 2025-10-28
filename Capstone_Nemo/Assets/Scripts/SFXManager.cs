@@ -25,11 +25,18 @@ public class SFXManager : MonoBehaviour
     public AudioClip mixingMakerInputClip;
 
     [Header("SaveSelectScene")]
-    public AudioClip slotClickSFX;
+    public AudioClip btnClickSFX;
+    public AudioClip fileSelectSFX;
 
     [Header("Dogam")]
     public AudioClip pageFlipSFX;
     public AudioClip dogamOpenSFX;
+
+    [Header("Scene Change")]
+    public AudioClip doorOpenSFX;
+
+    [Header("Trash Can Sounds")]
+    public AudioClip trashDiscardClip;   // Á¤»ó Æó±â
 
     void Awake()
     {
@@ -146,11 +153,19 @@ public class SFXManager : MonoBehaviour
         }
     }
 
-    public void PlaySlotClickSFX()
+    public void PlayBtnClickSFX()
     {
-        if (audioSource != null && slotClickSFX != null)
+        if (audioSource != null && btnClickSFX != null)
         {
-            audioSource.PlayOneShot(slotClickSFX);
+            audioSource.PlayOneShot(btnClickSFX);
+        }
+    }
+
+    public void PlayFileSelectSFX()
+    {
+        if (audioSource != null && fileSelectSFX != null)
+        {
+            audioSource.PlayOneShot(fileSelectSFX);
         }
     }
 
@@ -168,5 +183,19 @@ public class SFXManager : MonoBehaviour
         {
             audioSource.PlayOneShot(pageFlipSFX);
         }
+    }
+
+    public void PlayDoorOpenSFX()
+    {
+        if (audioSource != null && doorOpenSFX != null)
+        {
+            audioSource.PlayOneShot(doorOpenSFX);
+        }
+    }
+
+    public void PlayTrashDiscardSFX()
+    {
+        if (audioSource != null && trashDiscardClip != null)
+            audioSource.PlayOneShot(trashDiscardClip);
     }
 }
