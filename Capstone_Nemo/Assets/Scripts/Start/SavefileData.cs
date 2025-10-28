@@ -54,6 +54,9 @@ public class SaveData
         level = 1;
         currentUnlockedTreeLevel = 0;
         storageItems = new List<StorageEntry>();
+
+        storageItems.Add(new StorageEntry { name = "Mepssalgaru", amount = 10 });
+
         // 위치/방향 기본값(0)
         playerPosX = 0f; playerPosY = 0f;
         moveDirX = 0f; moveDirY = 1f;
