@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class TutorialManager : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private CanvasGroup overlayBlocker;
     [SerializeField] private PlayerManager player;
     [SerializeField] private DoGamUIManager dogamUI;
+    [SerializeField] private GameObject tutorialText;
 
     private string server;
     private TutorialStateData state;
@@ -36,7 +38,11 @@ public class TutorialManager : MonoBehaviour
             overlayBlocker.blocksRaycasts = true;
             overlayBlocker.interactable = true;
             overlayBlocker.alpha = 0.8f;
+        }
 
+        if (tutorialText)
+        {
+            tutorialText.gameObject.SetActive(true);
         }
 
         if (dogamButton)
@@ -89,6 +95,11 @@ public class TutorialManager : MonoBehaviour
             overlayBlocker.interactable = false;
             overlayBlocker.alpha = 0f;
             overlayBlocker.gameObject.SetActive(false);
+        }
+
+        if (tutorialText)
+        {
+            tutorialText.gameObject.SetActive(false);
         }
 
         if (dogamHighlightFX)
