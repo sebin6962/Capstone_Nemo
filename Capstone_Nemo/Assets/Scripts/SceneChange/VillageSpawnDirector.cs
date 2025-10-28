@@ -8,6 +8,11 @@ public class VillageSpawnDirector : MonoBehaviour
     [Tooltip("이 씬의 스폰 지점 매핑")]
     public SpawnPointCollection spawnPoints;
 
+    [SerializeField] private Transform defaultSpawnPoint; // 마을 씬 단독 재생용 기본 스폰
+    [SerializeField] private string playerActionMapName = "Player"; // 신 Input System일 때
+
+    private bool _spawnedOnce;
+
     void Awake()
     {
         // 슬롯 비워도 자동 연결
@@ -57,6 +62,28 @@ public class VillageSpawnDirector : MonoBehaviour
         if (string.IsNullOrEmpty(id))
         {
             Debug.LogWarning("[VillageSpawnDirector] entranceID 없음(빌드 브리지 포함) → 기본 위치 유지");
+            Time.timeScale = 1f;
+
+#if ENABLE_INPUT_SYSTEM
+    var pi = FindObjectOfType<UnityEngine.InputSystem.PlayerInput>();
+    if (pi != null)
+    {
+        if (!pi.enabled) pi.enabled = true;
+        if (!string.IsNullOrEmpty(playerActionMapName) &&
+            (pi.currentActionMap == null || pi.currentActionMap.name != playerActionMapName))
+        {
+            pi.SwitchCurrentActionMap(playerActionMapName);
+        }
+    }
+#endif
+
+            // 브리지 키 정리(혹시 남아 있던 값 제거)
+            PlayerPrefs.DeleteKey("__entranceID");
+            PlayerPrefs.DeleteKey("__fromScene");
+            PlayerPrefs.DeleteKey("__toScene");
+
+            // 중복 실행 방지
+            _spawnedOnce = true;
             yield break;
         }
 
