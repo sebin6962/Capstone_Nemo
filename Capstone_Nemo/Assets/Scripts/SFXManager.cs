@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class SFXManager : MonoBehaviour
 {
     public static SFXManager Instance;
@@ -22,6 +23,20 @@ public class SFXManager : MonoBehaviour
     public AudioClip sieveMakerInputClip;
     public AudioClip siruMakerInputClip;
     public AudioClip mixingMakerInputClip;
+
+    [Header("SaveSelectScene")]
+    public AudioClip btnClickSFX;
+    public AudioClip fileSelectSFX;
+
+    [Header("Dogam")]
+    public AudioClip pageFlipSFX;
+    public AudioClip dogamOpenSFX;
+
+    [Header("Scene Change")]
+    public AudioClip doorOpenSFX;
+
+    [Header("Trash Can Sounds")]
+    public AudioClip trashDiscardClip;   // Á¤»ó Æó±â
 
     void Awake()
     {
@@ -136,5 +151,51 @@ public class SFXManager : MonoBehaviour
             audioSource.loop = false;
             audioSource.clip = null;
         }
+    }
+
+    public void PlayBtnClickSFX()
+    {
+        if (audioSource != null && btnClickSFX != null)
+        {
+            audioSource.PlayOneShot(btnClickSFX);
+        }
+    }
+
+    public void PlayFileSelectSFX()
+    {
+        if (audioSource != null && fileSelectSFX != null)
+        {
+            audioSource.PlayOneShot(fileSelectSFX);
+        }
+    }
+
+    public void PlayDogamOpenSFX()
+    {
+        if (audioSource != null && dogamOpenSFX != null)
+        {
+            audioSource.PlayOneShot(dogamOpenSFX);
+        }
+    }
+
+    public void PlayPageFlipSFX()
+    {
+        if (audioSource != null && pageFlipSFX != null)
+        {
+            audioSource.PlayOneShot(pageFlipSFX);
+        }
+    }
+
+    public void PlayDoorOpenSFX()
+    {
+        if (audioSource != null && doorOpenSFX != null)
+        {
+            audioSource.PlayOneShot(doorOpenSFX);
+        }
+    }
+
+    public void PlayTrashDiscardSFX()
+    {
+        if (audioSource != null && trashDiscardClip != null)
+            audioSource.PlayOneShot(trashDiscardClip);
     }
 }

@@ -170,22 +170,54 @@ public class DoGamUIManager : MonoBehaviour
         //tteokButton.onClick.AddListener(() => FilterByCategory("떡"));
         //drinkButton.onClick.AddListener(() => FilterByCategory("음료"));
         //guestButton.onClick.AddListener(() => FilterByCategory("손님"));
-        tteokButton.onClick.AddListener(() => { FilterByCategory("떡"); });
-        drinkButton.onClick.AddListener(() => { FilterByCategory("음료"); });
+        tteokButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
+            FilterByCategory("떡"); });
+        drinkButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
+            FilterByCategory("음료"); });
 
         // 레시피 네비
-        nextButton.onClick.AddListener(() => NextEntry());
-        prevButton.onClick.AddListener(() => PrevEntry());
+        nextButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
+            NextEntry();
+        });
+
+        prevButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
+            PrevEntry();
+        });
+
 
         // 게임방법 열기 / 네비
-        if (howToButton != null) howToButton.onClick.AddListener(OpenHowToTab);
-        if (howToNextButton != null) howToNextButton.onClick.AddListener(() => ChangeHowToSpread(+1));
-        if (howToPrevButton != null) howToPrevButton.onClick.AddListener(() => ChangeHowToSpread(-1));
+        if (howToButton != null) howToButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
+            OpenHowToTab();
+        });
+        if (howToNextButton != null) howToNextButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
+            ChangeHowToSpread(+1);
+        });
+        if (howToPrevButton != null) howToPrevButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
+            ChangeHowToSpread(-1);
+        });
+
 
         // 제작대 정보 열기 / 네비
-        if (makerButton != null) makerButton.onClick.AddListener(OpenMakerTab);
-        if (makerNextButton != null) makerNextButton.onClick.AddListener(() => ChangeMakerSpread(+1));
-        if (makerPrevButton != null) makerPrevButton.onClick.AddListener(() => ChangeMakerSpread(-1));
+        if (makerButton != null) makerButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
+            OpenMakerTab();
+        });
+        if (makerNextButton != null) makerNextButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
+            ChangeMakerSpread(+1);
+        });
+        if (makerPrevButton != null) makerPrevButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
+            ChangeMakerSpread(-1);
+        });
+
 
 
         // 초기 표시 상태
@@ -227,6 +259,9 @@ public class DoGamUIManager : MonoBehaviour
     // ===================== 도감 열기/닫기 =====================
     public void OpenDoGam(string itemName)
     {
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayDogamOpenSFX();
+
         // 박스 인벤토리 열려 있으면 도감 오픈 막기
         if (BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen())
             return;

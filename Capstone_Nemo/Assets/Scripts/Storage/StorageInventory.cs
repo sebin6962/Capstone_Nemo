@@ -119,7 +119,10 @@ public class StorageInventory : MonoBehaviour
         else
         {
             Debug.LogWarning("[StorageInventory] 파일 없음! 초기화!");
+
+            
             storage.Clear();
+            AddItem("Mepssalgaru", 10);
             SaveStorage();
         }
     }
