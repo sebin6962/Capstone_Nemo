@@ -12,12 +12,14 @@ public class SelectedSlot : MonoBehaviour
     public void Set(MillItemData item)
     {
         icon.sprite = item.icon;
+        icon.enabled = true;
         /*nameText.text = item.itemName;*/
     }
 
     public void Clear()
     {
         icon.sprite = null;
+        icon.enabled = false;
         /*nameText.text = "";*/
     }
 }
