@@ -37,7 +37,7 @@ public class TutorialManager : MonoBehaviour
             overlayBlocker.gameObject.SetActive(true);
             overlayBlocker.blocksRaycasts = true;
             overlayBlocker.interactable = true;
-            overlayBlocker.alpha = 0.8f;
+            overlayBlocker.alpha = 0.9f;
         }
 
         if (tutorialText)

@@ -56,7 +56,6 @@ public class BGMPlayer : MonoBehaviour
         {
             case "IntroScene":
             case "SaveSelectScene":
-            case "StatementScene":
                 newClip = startBGM;
                 break;
             case "CutScene":
