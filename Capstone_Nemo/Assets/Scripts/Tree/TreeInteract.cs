@@ -10,6 +10,11 @@ public class TreeInteract : MonoBehaviour
     public GameObject popupUI; // 팝업창 오브젝트
     //private PlayerManager playerManager; // 이동 관리 스크립트 참조
 
+    private void Awake()
+    {
+        Instance = this; // 싱글턴 인스턴스 지정
+    }
+
     void Update()
     {
         if (isPlayerNear && Input.GetKeyDown(KeyCode.E))
@@ -47,5 +52,10 @@ public class TreeInteract : MonoBehaviour
         {
             isPlayerNear = false;
         }
+    }
+
+    public bool IsOpen()
+    {
+        return popupUI != null && popupUI.activeSelf;
     }
 }

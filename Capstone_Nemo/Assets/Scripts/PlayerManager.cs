@@ -26,11 +26,13 @@ public class PlayerManager : MonoBehaviour
 
     void Update()
     {
+        //팝업 활성화 시 플레이어 이동 잠금
         if ((BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen()) ||
     (PopupInventoryUIManager.Instance != null && PopupInventoryUIManager.Instance.IsPopupOpen()) ||
     (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen()) ||
     (DoGamUIManager.Instance != null && DoGamUIManager.Instance.IsOpen()) ||
-    (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen())) // ← 추가
+    (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen()) ||
+                (TreeInteract.Instance != null && TreeInteract.Instance.IsOpen()))
         {
             movement = Vector2.zero;
             animator.SetBool("IsWalking", false);

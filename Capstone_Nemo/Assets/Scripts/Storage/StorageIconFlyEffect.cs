@@ -8,8 +8,8 @@ public class StorageIconFlyEffect : MonoBehaviour
 {
     public static StorageIconFlyEffect Instance;
 
-    public RectTransform targetUI;            // 날아갈 UI 타겟 (예: 창고 버튼)
-    public Canvas canvas;                     // UI Canvas
+    public RectTransform targetUI;            // 날아갈 UI 타겟 
+    public Canvas canvas;                     // UI 캔버스
     public GameObject flyIconPrefab;          // 날아가는 스프라이트 프리팹
 
     private void Awake()
@@ -31,7 +31,7 @@ public class StorageIconFlyEffect : MonoBehaviour
         icon.anchorMin = icon.anchorMax = icon.pivot = new Vector2(0.5f, 0.5f);
         icon.localScale = Vector3.one;
 
-        // 2) 시작점: 월드 -> 스크린 -> Canvas 로컬(anchoredPosition)
+        // 2) 시작점: 월드 -> 스크린 -> Canvas 로컬
         Vector2 screenStart = RectTransformUtility.WorldToScreenPoint(sourceCamera, worldPos);
         Vector2 startAP;
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
