@@ -42,6 +42,14 @@ public class SFXManager : MonoBehaviour
     public AudioClip treeInterectClip;
     public AudioClip treeOpenClip;
 
+    [Header("Statement")]
+    public AudioClip moneyCountClip;
+    public AudioClip totalMoneyClip;
+
+    [Header("Level UP")]
+    public AudioClip levelRevealClip;
+    public AudioClip unlockSlotClip;
+
     void Awake()
     {
         if (Instance == null)
@@ -213,5 +221,29 @@ public class SFXManager : MonoBehaviour
     {
         if (audioSource != null && treeOpenClip != null)
             audioSource.PlayOneShot(treeOpenClip);
+    }
+
+    public void PlayMoneyCountSFX()
+    {
+        if (audioSource != null && moneyCountClip != null)
+            audioSource.PlayOneShot(moneyCountClip);
+    }
+
+    public void PlayTotalMoneySFX()
+    {
+        if (audioSource != null && totalMoneyClip != null)
+            audioSource.PlayOneShot(totalMoneyClip);
+    }
+
+    public void PlayLevelUpSFX()
+    {
+        if (audioSource != null && levelRevealClip != null)
+            audioSource.PlayOneShot(levelRevealClip);
+    }
+
+    public void PlayUnlockSlotSFX()
+    {
+        if (audioSource != null && unlockSlotClip != null)
+            audioSource.PlayOneShot(unlockSlotClip);
     }
 }

@@ -76,8 +76,8 @@ public class StatementManager : MonoBehaviour
         // 전날 레벨업 여부 검사 (다음 날 적용 예약이 있으면 true)
         if (um != null && um.HasLevelUpRevealToShow())  // ok
         {
-            int newLevel = um.GetLevelUpRevealLevel();        // ★ 표시용 레벨
-            var finishKeys = um.GetLevelUpRevealFinishKeys();   // ★ 표시용 키들
+            int newLevel = um.GetLevelUpRevealLevel();        // 표시용 레벨
+            var finishKeys = um.GetLevelUpRevealFinishKeys();   // 표시용 키들
 
             if (statementPanel != null) statementPanel.SetActive(false);
 
@@ -119,6 +119,7 @@ public class StatementManager : MonoBehaviour
         // 1) 일반 손님 수
         if (txtNormalCount != null)
         {
+            if (SFXManager.Instance) SFXManager.Instance.PlayMoneyCountSFX();
             txtNormalCount.text = $"{rep.normalCount:N0}";
             yield return FadeTextIn(txtNormalCount, fadeSec);
         }
@@ -127,6 +128,7 @@ public class StatementManager : MonoBehaviour
         // 2) 일반 별빛
         if (txtNormalStars != null)
         {
+            if (SFXManager.Instance) SFXManager.Instance.PlayMoneyCountSFX();
             txtNormalStars.text = $"{rep.normalStars:N0}";
             yield return FadeTextIn(txtNormalStars, fadeSec);
         }
@@ -135,6 +137,7 @@ public class StatementManager : MonoBehaviour
         // 3) 특별 손님 수
         if (txtQuestCount != null)
         {
+            if (SFXManager.Instance) SFXManager.Instance.PlayMoneyCountSFX();
             txtQuestCount.text = $"{rep.questCount:N0}";
             yield return FadeTextIn(txtQuestCount, fadeSec);
         }
@@ -143,16 +146,19 @@ public class StatementManager : MonoBehaviour
         // 4) 특별 별빛
         if (txtQuestStars != null)
         {
+            if (SFXManager.Instance) SFXManager.Instance.PlayMoneyCountSFX();
             txtQuestStars.text = $"{rep.questStars:N0}";
             yield return FadeTextIn(txtQuestStars, fadeSec);
         }
         yield return new WaitForSecondsRealtime(rowDelay);
 
-        // 5) 총 별빛: 먼저 보이게 만들고, 숫자를 0→총합으로 보간
+        // 5) 총 별빛: 먼저 보이게 만들고, 숫자를 0→총합으로
         if (txtTotalStars != null)
         {
             // 알파만 즉시 1로
             yield return FadeTextIn(txtTotalStars, 0.01f);
+
+            if (SFXManager.Instance) SFXManager.Instance.PlayTotalMoneySFX();
 
             int from = 0;
             int to = rep.TotalStars;

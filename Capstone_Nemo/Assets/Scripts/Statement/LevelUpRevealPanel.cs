@@ -25,13 +25,13 @@ public class LevelUpRevealPanel : MonoBehaviour
     [SerializeField] private string[] sheetNames;
 
     [Header("Level Title (Sprite Mode)")]
-    // 공통 LEVEL UP 타이틀 스프라이트 사용
+    // 공통 타이틀 스프라이트 사용
     [SerializeField] private bool useCommonLevelUpSprite = true;
     [SerializeField] private Image levelTitleImage;
     // 1순위: 직접 드래그한 스프라이트
     [SerializeField] private Sprite commonLevelUpSprite;
 
-    // 2순위: 아틀라스/리소스 키 (예: "ui_level_up")
+    // 2순위: 아틀라스/리소스 키 
     [SerializeField] private string commonLevelUpKey = "ui_level_up";
 
     // 스프라이트 성공 시 텍스트 숨김
@@ -49,9 +49,9 @@ public class LevelUpRevealPanel : MonoBehaviour
     [Header("Timing")]
     [SerializeField] private float panelDelaySeconds = 1f;
     [SerializeField] private float fadeInSeconds = 0.35f;
-    [SerializeField] private float slotDelaySeconds = 2f;     // ★ 패널 먼저, 2초 뒤 슬롯
-    [SerializeField] private float slotFadeSeconds = 0.25f;  // ★ 슬롯 자체 페이드
-    [SerializeField] private float slotsVisibleSeconds = 3f; // ★ 슬롯 보이는 시간
+    [SerializeField] private float slotDelaySeconds = 2f;     // 패널 먼저, 2초 뒤 슬롯
+    [SerializeField] private float slotFadeSeconds = 0.25f;  // 슬롯 자체 페이드
+    [SerializeField] private float slotsVisibleSeconds = 3f; // 슬롯 보이는 시간
     [SerializeField] private float fadeOutSeconds = 0.35f;
     [SerializeField] private bool crossfadeWithCutscene = true;
 
@@ -87,7 +87,7 @@ public class LevelUpRevealPanel : MonoBehaviour
             var go = slotsParent.gameObject;
             _cgSlots = go.GetComponent<CanvasGroup>() ?? go.AddComponent<CanvasGroup>();
             _cgSlots.alpha = 0f;
-            go.SetActive(false); // ★ 처음엔 안 보이게
+            go.SetActive(false); // 처음엔 안 보이게
         }
 
         //이펙트
@@ -114,6 +114,8 @@ public class LevelUpRevealPanel : MonoBehaviour
         //1) 패널 페이드인 + 이펙트 
         var panelIn = Fade(_cgPanel, 0f, 1f, fadeInSeconds);
 
+        if (SFXManager.Instance) SFXManager.Instance.PlayLevelUpSFX();
+
         if (preplacedFxRenderers != null)
         {
             foreach (var r in preplacedFxRenderers)
@@ -127,6 +129,7 @@ public class LevelUpRevealPanel : MonoBehaviour
         // 3) 슬롯 활성 + 슬롯 페이드인
         if (_cgSlots != null)
         {
+            if (SFXManager.Instance) SFXManager.Instance.PlayUnlockSlotSFX();
             _cgSlots.gameObject.SetActive(true);
             yield return Fade(_cgSlots, 0f, 1f, slotFadeSeconds);
         }
@@ -150,7 +153,7 @@ public class LevelUpRevealPanel : MonoBehaviour
         }
         yield return panelOut;
 
-        // 7) 컷신을 나중에 시작하고 싶으면(크로스페이드 X)
+        // 7) 컷신을 나중에 시작하고 싶으면
         if (!crossfadeWithCutscene) onComplete?.Invoke();
 
         panelRoot.SetActive(false);
@@ -216,7 +219,7 @@ public class LevelUpRevealPanel : MonoBehaviour
         if (useCommonLevelUpSprite && commonLevelUpSprite != null)
             titleSprite = commonLevelUpSprite;
 
-        // 2) 키로 찾기(아틀라스 → Resources)
+        // 2) 키로 찾기
         if (useCommonLevelUpSprite && titleSprite == null && !string.IsNullOrEmpty(commonLevelUpKey))
             titleSprite = ResolveSprite(commonLevelUpKey);
 
