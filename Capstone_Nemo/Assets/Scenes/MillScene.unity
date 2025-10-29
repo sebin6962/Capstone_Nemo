@@ -4894,9 +4894,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.0001385212
+    x: 0.00029188395
     y: 0
-    width: 0.99972296
+    width: 0.99941623
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
@@ -7074,6 +7074,7 @@ GameObject:
   - component: {fileID: 972785261}
   - component: {fileID: 972785260}
   - component: {fileID: 972785264}
+  - component: {fileID: 972785265}
   m_Layer: 11
   m_Name: MillNpc1
   m_TagString: Untagged
@@ -7211,6 +7212,27 @@ MonoBehaviour:
   showDelay: 1.5
   visibleTime: 4
   deactivateOnStart: 1
+--- !u!95 &972785265
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972785259}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 9504be7713ff24546af058c58d4ab0bb, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &973593098
 GameObject:
   m_ObjectHideFlags: 0
@@ -9685,7 +9707,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 19}
-  m_SizeDelta: {x: 400, y: 50}
+  m_SizeDelta: {x: 500, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1258576165
 MonoBehaviour:
@@ -9707,7 +9729,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uAC00\uB8E8 \uC0AC\uB7EC \uC654\uC5B4?"
+  m_text: "\uC0AC\uC7A5\uB2D8! \uC548\uB155!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 254faa5d2cf5fb54f99f5ceec196efa6, type: 2}
   m_sharedMaterial: {fileID: 3162937654041563834, guid: 254faa5d2cf5fb54f99f5ceec196efa6, type: 2}
@@ -9740,7 +9762,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535

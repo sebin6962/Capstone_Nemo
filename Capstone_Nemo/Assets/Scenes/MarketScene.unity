@@ -251,10 +251,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.00017857552
-    width: 1
-    height: 0.99964285
+    x: 0.0003708899
+    y: 0
+    width: 0.9992582
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -2409,7 +2409,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 19}
-  m_SizeDelta: {x: 400, y: 50}
+  m_SizeDelta: {x: 500, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &413164647
 MonoBehaviour:
@@ -2464,7 +2464,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -5502,6 +5502,7 @@ GameObject:
   - component: {fileID: 1322121596}
   - component: {fileID: 1322121594}
   - component: {fileID: 1322121599}
+  - component: {fileID: 1322121600}
   m_Layer: 11
   m_Name: ShopNpc
   m_TagString: Untagged
@@ -5639,6 +5640,27 @@ MonoBehaviour:
   showDelay: 1.5
   visibleTime: 4
   deactivateOnStart: 1
+--- !u!95 &1322121600
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1322121593}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: b176ab4df517eb94e8c2826993d7ca2d, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1331897962
 GameObject:
   m_ObjectHideFlags: 0
@@ -6653,6 +6675,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetScene: VillageScene
   entranceID: FromMarket
+  sfxLead: 0.06
 --- !u!1 &1677659627
 GameObject:
   m_ObjectHideFlags: 0
