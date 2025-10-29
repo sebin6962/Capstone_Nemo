@@ -56,6 +56,7 @@ public class ShopManager : MonoBehaviour
 
     public void OpenShop()
     {
+        if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
         shopPanel.SetActive(true);
         Debug.Log("OpenShop ½ÇÇàµÊ");
 

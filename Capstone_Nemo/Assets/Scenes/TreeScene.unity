@@ -365,6 +365,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetScene: VillageScene
   entranceID: FromTree
+  sfxLead: 0.06
 --- !u!61 &81214011
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -3498,6 +3499,7 @@ GameObject:
   - component: {fileID: 620563959}
   - component: {fileID: 620563961}
   - component: {fileID: 620563960}
+  - component: {fileID: 620563962}
   m_Layer: 5
   m_Name: TreePanel
   m_TagString: Untagged
@@ -3572,6 +3574,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 620563958}
   m_CullTransparentMesh: 1
+--- !u!114 &620563962
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 620563958}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding: {x: 0, y: 0, z: 0, w: 0}
+  m_Softness: {x: 0, y: 0}
 --- !u!1 &623017629
 GameObject:
   m_ObjectHideFlags: 0
@@ -5371,10 +5387,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.00017857552
-    width: 1
-    height: 0.99964285
+    x: 0.0001385212
+    y: 0
+    width: 0.99972296
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -5969,7 +5985,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 470, y: 263}
+  m_AnchoredPosition: {x: 461, y: 257}
   m_SizeDelta: {x: 80, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1072200355
@@ -6002,7 +6018,7 @@ MonoBehaviour:
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 2126395328, guid: f82aa40b99b6d0441b0e9885fa5ee589, type: 3}
+    m_PressedSprite: {fileID: -140823993, guid: d42a5a2ab52f92d41b7827fe55417a22, type: 3}
     m_SelectedSprite: {fileID: 0}
     m_DisabledSprite: {fileID: 0}
   m_AnimationTriggers:
@@ -6048,7 +6064,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 1698194184, guid: f82aa40b99b6d0441b0e9885fa5ee589, type: 3}
+  m_Sprite: {fileID: -1460089875, guid: d42a5a2ab52f92d41b7827fe55417a22, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

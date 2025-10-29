@@ -204,6 +204,8 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         StarDataManager.Instance.SpendStarlight(needStarlight);
 
+        if (SFXManager.Instance) SFXManager.Instance.PlayTreeOpenSFX();
+
         currentUnlockedLevel = Mathf.Max(currentUnlockedLevel, levelIdx + 1);
         if (unlockData == null) unlockData = new TreeUnlockData();
         unlockData.currentUnlockedLevel = currentUnlockedLevel;

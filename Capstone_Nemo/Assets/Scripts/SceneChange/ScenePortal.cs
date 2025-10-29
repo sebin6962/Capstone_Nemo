@@ -13,6 +13,8 @@ public class ScenePortal : MonoBehaviour
 
     private bool isInTrigger = false;
 
+    [SerializeField] private float sfxLead = 0.06f;
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
@@ -44,8 +46,27 @@ public class ScenePortal : MonoBehaviour
         PlayerPrefs.SetString("__entranceID", entranceID ?? "");
         PlayerPrefs.Save();
 
-        Debug.Log($"[Portal] to={targetScene}, id={entranceID}");
-        FadeManager.Instance.FadeToScene(targetScene, 0.5f);
+        // SFX 먼저 재생 → 아주 짧게 대기 → 페이드/전환
+        StartCoroutine(PlaySfxThenFade());
+
+        //Debug.Log($"[Portal] to={targetScene}, id={entranceID}");
+        //FadeManager.Instance.FadeToScene(targetScene, 0.5f);
         
     }
+
+    private IEnumerator PlaySfxThenFade()
+    {
+
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayDoorOpenSFX(); 
+        }
+
+        // FadeManager가 timescale을 건드려도 안전하게: 실시간 대기
+        if (sfxLead > 0f) yield return new WaitForSecondsRealtime(sfxLead);
+
+        Debug.Log($"[Portal] to={targetScene}, id={entranceID}");
+        FadeManager.Instance.FadeToScene(targetScene, 0.5f);
+    }
 }
+

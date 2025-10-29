@@ -38,6 +38,10 @@ public class SFXManager : MonoBehaviour
     [Header("Trash Can Sounds")]
     public AudioClip trashDiscardClip;   // Á¤»ó Æó±â
 
+    [Header("Tree Interect")]
+    public AudioClip treeInterectClip;
+    public AudioClip treeOpenClip;
+
     void Awake()
     {
         if (Instance == null)
@@ -197,5 +201,17 @@ public class SFXManager : MonoBehaviour
     {
         if (audioSource != null && trashDiscardClip != null)
             audioSource.PlayOneShot(trashDiscardClip);
+    }
+
+    public void PlayTreeInterectSFX()
+    {
+        if (audioSource != null && treeInterectClip != null)
+            audioSource.PlayOneShot(treeInterectClip);
+    }
+
+    public void PlayTreeOpenSFX()
+    {
+        if (audioSource != null && treeOpenClip != null)
+            audioSource.PlayOneShot(treeOpenClip);
     }
 }

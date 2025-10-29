@@ -77,6 +77,7 @@ public class MillManager : MonoBehaviour
 
     public void OpenMill()
     {
+        if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
         gameObject.SetActive(true);
 
         foreach (Transform child in inventoryPanelParent)
@@ -95,6 +96,7 @@ public class MillManager : MonoBehaviour
 
     public void OnSelectedSlotClicked()
     {
+        if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
         Debug.Log("[MillManager] OnSelectedSlotClicked");
         // 선택창을 눌렀을 때 inventory 패널을 켠다
         RebuildInventoryGrid();
@@ -121,6 +123,7 @@ public class MillManager : MonoBehaviour
 
     public void SelectItem(MillItemData item)
     {
+        if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
         if (ReferenceEquals(selectedItem, item))
         {
             item.itemQuantity += 1;
@@ -173,6 +176,7 @@ public class MillManager : MonoBehaviour
 
     public void Confirm()
     {
+        if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
         if (selectedItem == null)
             return;
 

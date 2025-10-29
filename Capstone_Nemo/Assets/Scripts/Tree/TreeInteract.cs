@@ -24,6 +24,7 @@ public class TreeInteract : MonoBehaviour
     }
     private void TogglePopup()
     {
+        if (SFXManager.Instance) SFXManager.Instance.PlayTreeInterectSFX();
         bool isActive = popupUI.activeSelf;
         popupUI.SetActive(!isActive);
 
