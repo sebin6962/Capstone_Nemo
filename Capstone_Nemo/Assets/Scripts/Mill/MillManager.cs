@@ -33,6 +33,10 @@ public class MillManager : MonoBehaviour
     private string cachedSourceName, cachedResultName;
     private Sprite cachedResultSprite;
 
+    [Header("재고 추가 효과")]
+    [SerializeField] private Transform flyStartWorld; 
+    [SerializeField] private Camera sourceUICamera;
+
     void Start()
     {
         /*Inventory = new List<MillItemData>
@@ -246,8 +250,69 @@ public class MillManager : MonoBehaviour
         StorageInventory.Instance.SaveStorage();
         Debug.Log($"{cachedSourceName} → {cachedResultName} 변환 완료(애니 종료 후)");
 
-        // 결과 이펙트
-        if (cachedResultSprite) ShowResultEffect(cachedResultSprite);
+        //==결과 이펙트 끝나고 재고 추가 효과 시작하도록 코루틴으로 분리했어요!!==
+        StartCoroutine(PlayResultThenFlyAndAlert());
+
+        //// 결과 이펙트
+        //if (cachedResultSprite) ShowResultEffect(cachedResultSprite);
+
+        //// === [추가] 창고로 날아가는 효과 ===
+        //if (cachedResultSprite && StorageIconFlyEffect.Instance != null)
+        //{
+        //    var startPos = flyStartWorld != null
+        //        ? flyStartWorld.position
+        //        : (jeolguUI != null ? jeolguUI.transform.position : transform.position);
+
+        //    var cam = sourceUICamera != null ? sourceUICamera : Camera.main;
+        //    StorageIconFlyEffect.Instance.Play(cachedResultSprite, startPos, cam);
+        //}
+
+        //// === [추가] 창고 NEW 알림 ===
+        //if (StorageAlertManager.Instance != null)
+        //{
+        //    StorageAlertManager.Instance.NotifyNewHarvestedItem(cachedResultName);
+        //}
+
+        //// 선택/인벤토리/UI 정리
+        //if (selectedItem != null) selectedItem = null;
+        //selectedSlot.Clear();
+        //UpdateInventoryUI();
+        //confirmButton.interactable = true;
+
+        //// 절구 UI 끄기
+        //if (hideJeolguUIAfter && jeolguUI) jeolguUI.SetActive(false);
+
+        //isMilling = false;
+    }
+
+    // ===================코루틴 추가====================
+    private IEnumerator PlayResultThenFlyAndAlert()
+    {
+        // 결과 이펙트 표시 
+        if (cachedResultSprite)
+        {
+            ResultEffectImage.sprite = cachedResultSprite;
+            ResultEffectImage.gameObject.SetActive(true);
+            yield return new WaitForSeconds(displayDuration); // 결과 이펙트 표시 시간만큼 대기
+            ResultEffectImage.gameObject.SetActive(false);    // 이펙트 종료
+        }
+
+        // 창고로 날아가는 효과
+        if (cachedResultSprite && StorageIconFlyEffect.Instance != null)
+        {
+            var startPos = flyStartWorld != null
+                ? flyStartWorld.position
+                : (jeolguUI != null ? jeolguUI.transform.position : transform.position);
+
+            var cam = sourceUICamera != null ? sourceUICamera : Camera.main;
+            StorageIconFlyEffect.Instance.Play(cachedResultSprite, startPos, cam);
+        }
+
+        // 창고 NEW 알림
+        if (StorageAlertManager.Instance != null)
+        {
+            StorageAlertManager.Instance.NotifyNewHarvestedItem(cachedResultName);
+        }
 
         // 선택/인벤토리/UI 정리
         if (selectedItem != null) selectedItem = null;
@@ -255,11 +320,10 @@ public class MillManager : MonoBehaviour
         UpdateInventoryUI();
         confirmButton.interactable = true;
 
-        // 절구 UI 끄기
         if (hideJeolguUIAfter && jeolguUI) jeolguUI.SetActive(false);
-
         isMilling = false;
     }
+
 
 
     public void ShowResultEffect(Sprite sprite)
