@@ -338,6 +338,7 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     public void ClosePanel()
     {
+        if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
         unlockEffectPanel.SetActive(false);
     }
 

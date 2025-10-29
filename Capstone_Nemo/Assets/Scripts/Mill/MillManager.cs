@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class MillManager : MonoBehaviour
 {
+    public static MillManager Instance;
+
     public GameObject MillPanel;
     public Transform inventoryPanelParent;
     public GameObject inventoryPanel;
@@ -37,7 +39,11 @@ public class MillManager : MonoBehaviour
     [SerializeField] private Transform flyStartWorld; 
     [SerializeField] private Camera sourceUICamera;
 
-    void Start()
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
+        void Start()
     {
         /*Inventory = new List<MillItemData>
         {
@@ -77,7 +83,16 @@ public class MillManager : MonoBehaviour
 
     public void OpenMill()
     {
+        // 박스 인벤토리 열려 있으면 오픈 막기
+        if (BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen())
+            return;
+
+        // 도감 패널이 열려 있으면 오픈 막기
+        if (DoGamUIManager.Instance != null && DoGamUIManager.Instance.IsOpen())
+            return;
+
         if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
+
         gameObject.SetActive(true);
 
         foreach (Transform child in inventoryPanelParent)
@@ -297,6 +312,7 @@ public class MillManager : MonoBehaviour
         {
             ResultEffectImage.sprite = cachedResultSprite;
             ResultEffectImage.gameObject.SetActive(true);
+            if (SFXManager.Instance) SFXManager.Instance.PlayCorrectSFX();
             yield return new WaitForSeconds(displayDuration); // 결과 이펙트 표시 시간만큼 대기
             ResultEffectImage.gameObject.SetActive(false);    // 이펙트 종료
         }
@@ -352,6 +368,12 @@ public class MillManager : MonoBehaviour
             selectedItem = null;
             UpdateInventoryUI();
         }
+        SFXManager.Instance.PlayBbyongSFX();
         MillPanel.SetActive(false);
+    }
+
+    public bool IsOpen()
+    {
+        return MillPanel != null && MillPanel.activeSelf;
     }
 }

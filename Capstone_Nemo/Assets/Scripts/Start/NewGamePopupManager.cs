@@ -97,6 +97,9 @@ public class NewGamePopupManager : MonoBehaviour
 
         btnCreate.onClick.AddListener(() =>
         {
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.PlayBtnClickSFX();
+
             string serverName = inputServerName.text.Trim();
             if (string.IsNullOrEmpty(serverName)) return;
 

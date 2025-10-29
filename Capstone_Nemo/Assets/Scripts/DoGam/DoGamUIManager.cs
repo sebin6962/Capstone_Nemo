@@ -259,14 +259,21 @@ public class DoGamUIManager : MonoBehaviour
     // ===================== 도감 열기/닫기 =====================
     public void OpenDoGam(string itemName)
     {
-        if (SFXManager.Instance != null)
-            SFXManager.Instance.PlayDogamOpenSFX();
+        
 
         // 박스 인벤토리 열려 있으면 도감 오픈 막기
         if (BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen())
             return;
         // 가게 박스 인벤토리 열려 있으면 도감 오픈 막기
         if (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
+            return;
+
+        // 가루 변환 패널 열려 있으면 도감 오픈 막기
+        if (MillManager.Instance != null && MillManager.Instance.IsOpen())
+            return;
+
+        // 상점 패널 열려 있으면 도감 오픈 막기
+        if (ShopManager.Instance != null && ShopManager.Instance.IsOpen())
             return;
 
         if (doGamDict == null || !doGamDict.ContainsKey(itemName))
@@ -282,7 +289,8 @@ public class DoGamUIManager : MonoBehaviour
         prevButton.transform.SetAsLastSibling();
         nextButton.transform.SetAsLastSibling();
 
-        SFXManager.Instance.PlayBbyongSFX();
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayDogamOpenSFX();
 
         var entry = doGamDict[itemName];
         panel.SetActive(true);

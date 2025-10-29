@@ -57,6 +57,14 @@ public class StorageInventoryUIManager : MonoBehaviour
         if (DoGamUIManager.Instance != null && DoGamUIManager.Instance.IsOpen())
             return;
 
+        // 가루 변환 패널 열려 있으면 도감 오픈 막기
+        if (MillManager.Instance != null && MillManager.Instance.IsOpen())
+            return;
+
+        // 상점 패널 열려 있으면 도감 오픈 막기
+        if (ShopManager.Instance != null && ShopManager.Instance.IsOpen())
+            return;
+
         // UI 버튼 외에는 열 수 없게 조건문 추가
         if (!EventSystem.current.currentSelectedGameObject ||
             EventSystem.current.currentSelectedGameObject.GetComponent<Button>() == null)

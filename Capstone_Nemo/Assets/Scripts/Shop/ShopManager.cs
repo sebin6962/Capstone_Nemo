@@ -7,6 +7,8 @@ using System.IO;
 
 public class ShopManager : MonoBehaviour
 {
+    public static ShopManager Instance;
+
     public GameObject shopPanel;
     public TMP_Text itemNameText;
     public TMP_Text totalPriceText;
@@ -36,6 +38,11 @@ public class ShopManager : MonoBehaviour
             LoadShopData();
         }*/
 
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
+
     public void LoadShopData(string resourcePath)
     {
         TextAsset jsonText = Resources.Load<TextAsset>(resourcePath);
@@ -56,6 +63,14 @@ public class ShopManager : MonoBehaviour
 
     public void OpenShop()
     {
+        // 도감 패널이 열려 있으면 창고 열기/닫기 막기
+        if (DoGamUIManager.Instance != null && DoGamUIManager.Instance.IsOpen())
+            return;
+
+        // 박스 인벤토리 열려 있으면 도감 오픈 막기
+        if (BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen())
+            return;
+
         if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
         shopPanel.SetActive(true);
         Debug.Log("OpenShop 실행됨");
@@ -244,6 +259,7 @@ public class ShopManager : MonoBehaviour
 
     public void CloseShop()
     {
+        SFXManager.Instance.PlayBbyongSFX();
         shopPanel.SetActive(false);
 
         foreach (var entry in basketDict.Values)
@@ -266,6 +282,9 @@ public class ShopManager : MonoBehaviour
             buyButton.interactable = (entry.quantity > 0);
     }
 
-
+    public bool IsOpen()
+    {
+        return shopPanel != null && shopPanel.activeSelf;
+    }
 
 }
