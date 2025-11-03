@@ -55,7 +55,9 @@ public class StatementManager : MonoBehaviour
 
     public void OnNextDayButtonClicked()
     {
-        SFXManager.Instance.PlayBtnClickSFX();
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayFileSelectSFX();
+
         PlayerPrefs.SetFloat("SpawnX", -16f);
         PlayerPrefs.SetFloat("SpawnY", 5f);
         PlayerPrefs.SetFloat("SpawnZ", 0f);

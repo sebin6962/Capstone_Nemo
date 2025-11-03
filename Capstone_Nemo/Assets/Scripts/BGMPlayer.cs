@@ -14,7 +14,7 @@ public class BGMPlayer : MonoBehaviour
     public AudioClip treeBGM;
 
     public float fadeDuration = 1.5f;
-    public float targetVolume = 1.0f;
+    public float targetVolume = 0.7f;
 
     private Coroutine currentFade;
 

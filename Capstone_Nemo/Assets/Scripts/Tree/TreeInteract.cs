@@ -35,6 +35,8 @@ public class TreeInteract : MonoBehaviour
     }
     public void ClosePopup()
     {
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayFileSelectSFX();
         popupUI.SetActive(false);
         // 필요하면 플레이어 이동 잠금 해제
     }

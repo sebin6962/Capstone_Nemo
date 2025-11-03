@@ -229,7 +229,7 @@ public class SaveSelectManager : MonoBehaviour
                 delBtn.onClick.AddListener(() =>
                 {
                     if (SFXManager.Instance != null)
-                        SFXManager.Instance.PlayBtnClickSFX();
+                        SFXManager.Instance.PlayFileSelectSFX();
 
                     ConfirmPopup.Instance.Open($"[{serverName}] 세이브 파일을 삭제할까요?", () =>
                     {

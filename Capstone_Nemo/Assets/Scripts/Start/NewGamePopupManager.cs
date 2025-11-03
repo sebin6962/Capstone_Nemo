@@ -44,6 +44,20 @@ public class NewGamePopupManager : MonoBehaviour
         // 경고 패널 리셋
         if (nameTooLongPanel) nameTooLongPanel.SetActive(false);
         if (nameTooLongGroup) nameTooLongGroup.alpha = 0f;
+
+        inputServerName.characterLimit = 0; // TMP 내부 제한 비활성화
+
+        inputServerName.onValueChanged.RemoveAllListeners();
+        inputServerName.onValueChanged.AddListener(OnNameChanged);
+    }
+
+    private void OnNameChanged(string text)
+    {
+        if (text.Length > 6)
+        {
+            inputServerName.text = text.Substring(0, 6);
+            ShowNameTooLong();
+        }
     }
 
     void OnDisable()
@@ -70,6 +84,9 @@ public class NewGamePopupManager : MonoBehaviour
 
         btnCancel.onClick.AddListener(() =>
         {
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.PlayFileSelectSFX();
+
             suppressWarnings = true;
 
             // 2) Validate 해제 (이후 동작 중 onValidateInput이 끼어들지 못하게)
@@ -98,7 +115,7 @@ public class NewGamePopupManager : MonoBehaviour
         btnCreate.onClick.AddListener(() =>
         {
             if (SFXManager.Instance != null)
-                SFXManager.Instance.PlayBtnClickSFX();
+                SFXManager.Instance.PlayFileSelectSFX();
 
             string serverName = inputServerName.text.Trim();
             if (string.IsNullOrEmpty(serverName)) return;
