@@ -12,6 +12,16 @@ public class InventoryTooltipManager : MonoBehaviour
     {
         Instance = this;
         tooltipPanel.SetActive(false);
+
+        // 툴팁 패널은 레이캐스트 막지 않도록
+        var cg = tooltipPanel.GetComponent<CanvasGroup>();
+        if (cg == null) cg = tooltipPanel.AddComponent<CanvasGroup>();
+        cg.blocksRaycasts = false;
+        cg.interactable = false;
+
+        // 텍스트도 raycastTarget 끄기
+        if (tooltipText != null)
+            tooltipText.raycastTarget = false;
     }
 
     public void Show(string text, RectTransform slotRect)
