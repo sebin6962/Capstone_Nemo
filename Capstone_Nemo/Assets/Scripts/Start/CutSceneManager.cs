@@ -87,6 +87,12 @@ public class CutSceneManager : MonoBehaviour
     [Tooltip("해당 컷의 모든 자막이 완성된 상태에서 클릭하면 다음 컷으로 즉시 진행")]
     public bool clickToSkipAfterAllLines = true;
 
+    [Tooltip("클릭 안내용 화살표 ui")]
+    public GameObject nextArrowIndicator;
+
+    [Tooltip("컷신 씬 진입 후 화살표 활성화 딜레이(초)")]
+    public float arrowDelaySeconds = 2f;
+
     private void Awake()
     {
         // 컷 패널 비활성화
@@ -156,7 +162,23 @@ public class CutSceneManager : MonoBehaviour
 
     private void Start()
     {
+        // 화살표
+        if (nextArrowIndicator != null)
+            nextArrowIndicator.SetActive(false);
+
         StartCoroutine(PlayCutAndTransition());
+
+        // 일정 시간 후 화살표 표시
+        if (nextArrowIndicator != null)
+            StartCoroutine(ShowArrowAfterDelay());
+    }
+
+    private IEnumerator ShowArrowAfterDelay()
+    {
+        yield return new WaitForSeconds(arrowDelaySeconds);
+
+        if (nextArrowIndicator != null)
+            nextArrowIndicator.SetActive(true);
     }
 
     private IEnumerator PlayCutAndTransition()
@@ -195,6 +217,9 @@ public class CutSceneManager : MonoBehaviour
             // 마지막 컷이면 씬 전환
             if (i == cutPanels.Count - 1)
             {
+                if (nextArrowIndicator != null)
+                    nextArrowIndicator.SetActive(false);
+
                 // 자막 전체를 부드럽게 걷어내기
                 if (subtitleGroup != null)
                     yield return FadeCanvasGroup(subtitleGroup, subtitleGroup.alpha, 0f, 0.4f);
