@@ -22,7 +22,7 @@ public class TimeManager : MonoBehaviour
 
     public int hour = 9;
     public int minute = 0;
-    public float realSecondsPerGameMinute = 0.25f;
+    public float realSecondsPerGameMinute = 0.9f;
     private float timer = 0f;
 
     public TMP_Text dayText;               // "1ÀÏÂ÷"

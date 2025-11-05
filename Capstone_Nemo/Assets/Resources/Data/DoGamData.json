@@ -33,8 +33,8 @@
       "image": "Danhobakseolgi_finish",
       "description": "단호박설기는 설기에 가을철 영양 식재료인\n단호박을 더해 풍미를 높인 떡입니다.\n단호박의 노란빛은 복을 상징하여,\n예부터 풍요와 건강을 기원하는 의미로 즐겨 먹었다고 합니다.",
       "recipe": [
-        "1. 단호박 가루를 만듭니다.(방앗간 제조)",
-        "2. 단호박 가루, 물을 넣고 반죽합니다.",
+        "1. 단호박을 가루로 만듭니다.",
+        "2. 단호박 가루를 반죽합니다.",
         "3. 단호박 반죽을 찜기에 넣고 찝니다."
       ],
       "recipeImageBundle": [
@@ -61,16 +61,31 @@
       "image": "Rainbowseolgi_finish",
       "description": "무지개떡은 색색의 반죽을\n겹겹이 쌓아 찐 떡으로,\n화합, 희망의 상징으로 여겨집니다.\n돌잔치, 결혼식 등 축하 자리에 자주 올리며,\n복이 쌓이기를 기원하는 마음이 담겨 있습니다.",
       "recipe": [
-        "1. 무지개 색 재료들을 가루로 만듭니다.(방앗간 제조)",
-        "2. 멥쌀가루를 체에 칩니다.",
-        "2. 가루들과 물을 섞어 무지개 반죽을 만듭니다.",
-        "3. 무지개 반죽을 찜기에 넣고 찝니다."
+        "1. 단호박가루 만들기",
+        "1. 쑥가루 만들기",
+        "1. 백년초가루 만들기",
+        "2. 멥쌀가루 체 치기",
+        "2. 단호박가루 반죽하기",
+        "2. 쑥가루 반죽하기",
+        "2. 백년초가루 반죽하기",
+        "2. 체 친 멥쌀가루 반죽하기",
+        "3. 모든 반죽 찌기"
       ],
       "recipeImageBundle": [
         {
           "tool": "Jeolgu.png",
-          "ingredients": [ "Danhobak.png", "Mugwort.png", "Baeknyeoncho.png" ],
+          "ingredients": [ "Danhobak.png" ],
           "result": "Danhobakgaru.png"
+        },
+        {
+          "tool": "Jeolgu.png",
+          "ingredients": [ "Mugwort.png" ],
+          "result": "Mugwortgaru.png"
+        },
+        {
+          "tool": "Jeolgu.png",
+          "ingredients": [ "Baeknyeoncho.png" ],
+          "result": "Baeknyeonchogaru.png"
         },
         {
           "tool": "Sieve.png",
@@ -79,8 +94,23 @@
         },
         {
           "tool": "MixingBowl.png",
-          "ingredients": [ "Water.png", "Danhobakgaru.png", "Mugwort.png", "Baeknyeoncho.png" ],
+          "ingredients": [ "Water.png", "Danhobakgaru.png" ],
           "result": "Mixing_Danhobak.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Water.png", "Mugwortgaru.png" ],
+          "result": "Mixing_Mugwort.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Water.png", "Baeknyeonchogaru.png" ],
+          "result": "Mixing_Baeknyeoncho.png"
+        },
+        {
+          "tool": "MixingBowl.png",
+          "ingredients": [ "Water.png", "Sieve_Mepssalgaru.png" ],
+          "result": "Mixing_Mepssal.png"
         },
         {
           "tool": "Siru.png",
@@ -95,10 +125,10 @@
       "image": "Redbeansiru_finish",
       "description": "팥시루떡은 ‘시루’라는 전통 찜틀에\n쌀가루와 고물을 켜켜이 담아 쪄낸 떡입니다.\n제사, 돌잔치 등 중요한 날에\n올리는 대표적인 의례용 떡이기도 합니다.",
       "recipe": [
-        "1. 멥쌀가루를 체에 칩니다.",
-        "2. 체 친 멥쌀가루, 물을 넣고 반죽합니다.",
-        "3. 팥을 으깨줍니다.",
-        "4. 멥쌀가루 반죽, 팥을 두개씩 찜기에 넣고 찝니다."
+        "1. 멥쌀가루 체 치기",
+        "2. 반죽하기",
+        "3. 팥 으깨기",
+        "4. 찌기"
       ],
       "recipeImageBundle": [
         {
@@ -129,11 +159,11 @@
       "image": "Injeolmi_finish",
       "description": "인절미는 찹쌀떡을 찐 후 절구로 친 뒤,\n먹기 좋게 썰어 콩고물을 묻힌 고소한 떡입니다.\n먼 옛날, 왕에게 올렸던 찹쌀떡이 인절미의\n기원이 되었다는 설화도 전해져 내려옵니다.",
       "recipe": [
-        "1. 찹쌀가루를 체에 칩니다.",
-        "2. 체 친 찹쌀가루, 물을 넣고 반죽합니다.",
-        "3. 찹쌀가루 반죽을 찜기에 넣고 찝니다.",
-        "4. 찐 찹쌀가루 반죽을 치댑니다.",
-        "5. 인절미 반죽에 콩가루를 묻힙니다."
+        "1. 찹쌀가루 체 치기",
+        "2. 반죽하기",
+        "3. 찌기",
+        "4. 치대기",
+        "5. 콩가루 묻히기"
       ],
       "recipeImageBundle": [
         {
@@ -152,6 +182,11 @@
           "result": "Siru_Chapssal.png"
         },
         {
+          "tool": "Grinder.png",
+          "ingredients": [ "Siru_Chapssal.png" ],
+          "result": "Injeolmibanjuk.png"
+        },
+        {
           "tool": "Deco.png",
           "ingredients": [ "Siru_Chapssal.png", "Konggaru.png" ],
           "result": "Injeolmi_finish.png"
@@ -164,11 +199,11 @@
       "image": "MugwortInjeolmi_finish",
       "description": "쑥 인절미는 봄철 약초인 쑥으로 만든 건강 떡입니다.\n예로부터 쑥은 액운을 쫓고 몸을 따뜻하게 한다 하여,\n봄철 기력 회복과 부정 방지의 의미로\n자주 먹었다고 합니다.",
       "recipe": [
-        "1. 가루 만들기",
+        "1. 쑥가루 만들기",
         "2. 반죽하기",
         "3. 찌기",
         "4. 치대기",
-        "5. 데코하기"
+        "5. 콩가루 묻히기"
       ],
       "recipeImageBundle": [
         {
@@ -184,10 +219,15 @@
         {
           "tool": "Siru.png",
           "ingredients": [ "Mixing_Mugwort.png" ],
-          "result": "MugwortInjeolmibanjuk.png"
+          "result": "Siru_Mugwort.png"
         },
         {
           "tool": "Grinder.png",
+          "ingredients": [ "Siru_Mugwort.png" ],
+          "result": "MugwortInjeolmibanjuk.png"
+        },
+        {
+          "tool": "Deco.png",
           "ingredients": [ "MugwortInjeolmibanjuk.png", "Konggaru.png" ],
           "result": "MugwortInjeolmi_finish.png"
         }
@@ -239,7 +279,7 @@
       "image": "Baramtteok_finish",
       "description": "바람떡은 달콤한 팥소를 넣어 반달 모양으로\n빚은 전통 떡입니다.\n떡 사이에 바람이 들어갈 만큼 얇게 빚으며,\n어떤 지역에선 바람을 피지 말라는 의미로\n혼례 때도 나눴다고 합니다.",
       "recipe": [
-        "1. 체 치기",
+        "1. 멥쌀가루 체 치기",
         "2. 익반죽하기",
         "3. 팥앙금 만들기",
         "4. 빚기",
@@ -279,7 +319,7 @@
       "image": "Songpyeon_finish",
       "description": "송편은 솔잎 위에 찌는 반달 모양의 떡으로,\n추석에 조상에게 소원을 비는 뜻에서 먹습니다.\n‘송편을 예쁘게 빚으면\n예쁜 딸을 낳는다’는 속설도 있죠.",
       "recipe": [
-        "1. 체 치기",
+        "1. 멥쌀가루 체 치기",
         "2. 익반죽하기",
         "3. 꿀깨소 만들기",
         "4. 빚기",
@@ -319,7 +359,7 @@
       "image": "Chapssaltteok_finish",
       "description": "찹쌀떡은 찹쌀가루 반죽 속에\n단팥소나 밤소를 넣은 전통 떡입니다.\n명절이나 시험 같이 특별한 날에\n복을 기원하며 먹는 떡이며,\n‘좋은 일만 붙으라’는 의미가 있습니다.",
       "recipe": [
-        "1. 체 치기",
+        "1. 찹쌀가루 체 치기",
         "2. 익반죽하기",
         "3. 찌기",
         "4. 치대기",
@@ -371,7 +411,7 @@
       "image": "Jeolpyeon_finish",
       "description": "절편은 찹쌀가루를 찐 후 납작하게 눌러\n먹기 좋은 조각으로 자른 떡입니다.\n고려시대부터 이어진 전통 떡으로, \n명절이나 제사상에 자주 오르며,\n복을 기원하는 떡으로 여겨졌습니다.",
       "recipe": [
-        "1. 체 치기",
+        "1. 멥쌀가루 체 치기",
         "2. 익반죽하기",
         "3. 찌기",
         "4. 무늬찍기"
@@ -467,7 +507,7 @@
       "image": "Gyeongdan_finish",
       "description": "경단은 찹쌀가루를 동그랗게 빚어 삶은 후\n고물을 묻혀 먹는 전통 간식입니다.\n궁중에서는 귀한 대접을 받았으며,\n잔치·명절 상차림에도 자주 올랐던 떡입니다.",
       "recipe": [
-        "1. 체 치기",
+        "1. 찹쌀가루 체 치기",
         "2. 익반죽하기",
         "3. 빚기",
         "4. 삶기",

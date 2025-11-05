@@ -9,14 +9,22 @@ public class SinkInfo : MonoBehaviour
     public Transform worldCanvasParent;       // 진행바를 붙일 월드 캔버스 (Maker의 ProgressworldCanvasParent와 동일 계열)
 
     [Header("물 아이템")]
-    public Sprite waterSprite;                // 손에 표시할 ‘물’ 스프라이트
+    public Sprite waterSprite;                // 결과 오브젝트에 표시할 ‘물’ 스프라이트
     public string waterItemName = "water";    // HeldItemManager에 전달될 아이템 이름
+    public GameObject waterResultPrefab;      // 싱크 위에 생성될 물 결과 프리팹(분무기, 물컵 등 스프라이트 렌더러 포함)
 
     [Header("연출")]
     public float fillDuration = 1.5f;         // 물 긷는 시간
     public Vector3 barOffset = new Vector3(0f, 1.2f, 0f);
+    public Vector3 resultOffset = new Vector3(0f, 1.2f, 0f); // 물 결과물 위치 오프셋
 
+    // 진행 중 여부/결과 오브젝트
     private bool isRunning = false;
+    [HideInInspector] public GameObject currentWaterObject;
+
+    // PlayerInteract에서 읽기용 프로퍼티
+    public bool IsRunning => isRunning;
+    public bool HasWaterResult => currentWaterObject != null;
 
     public IEnumerator FillAndGiveWater()
     {
@@ -56,19 +64,74 @@ public class SinkInfo : MonoBehaviour
         SFXManager.Instance.StopMakerProgressSFX();
         Destroy(progressBar.gameObject);
 
-        // 아직 빈손이라면 물을 손에 쥐어줌
-        if (!HeldItemManager.Instance.IsHoldingItem())
+        // 이미 결과물이 있으면 하나만 유지
+        if (currentWaterObject != null)
         {
-            HeldItemManager.Instance.ShowHeldItem(waterSprite, waterItemName);
-            SFXManager.Instance.PlayBbyongSFX();
-            Debug.Log("[SinkInfo] 물을 손에 들었습니다.");
+            Destroy(currentWaterObject);
+            currentWaterObject = null;
+        }
+
+        // 싱크 위에 결과 오브젝트 스폰 (제작기 결과랑 같은 느낌)
+        Vector3 resultPos = transform.position + resultOffset;
+        GameObject resultObj = Instantiate(waterResultPrefab, resultPos, Quaternion.identity);
+
+        SpriteRenderer sr = resultObj.GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.sprite = waterSprite;
         }
         else
         {
-            Debug.Log("[SinkInfo] 진행 중에 다른 아이템을 들어서 물 지급을 건너뜀");
+            Debug.LogError("[SinkInfo] waterResultPrefab에 SpriteRenderer가 없습니다!");
         }
 
+        currentWaterObject = resultObj;
+        Debug.Log("[SinkInfo] 싱크 위에 물 결과물을 생성했습니다.");
+
         isRunning = false;
+    }
+
+    /// <summary>
+    /// 싱크 위에 생성된 물 결과물을 플레이어 손으로 옮김
+    /// (제작기 currentResultObject 줍는 로직과 동일한 패턴)
+    /// </summary>
+    public void PickupWaterResult()
+    {
+        if (currentWaterObject == null)
+        {
+            Debug.Log("[SinkInfo] 줍기 시도했지만 currentWaterObject가 없습니다.");
+            return;
+        }
+
+        if (HeldItemManager.Instance.IsHoldingItem())
+        {
+            Debug.Log("[SinkInfo] 이미 다른 아이템을 들고 있어 물을 집을 수 없습니다.");
+            return;
+        }
+
+        SpriteRenderer sr = currentWaterObject.GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            HeldItemManager.Instance.ShowHeldItem(sr.sprite, waterItemName);
+            SFXManager.Instance.PlayBbyongSFX();
+            Debug.Log("[SinkInfo] 싱크 위에 있던 물을 손에 들었습니다.");
+        }
+        else
+        {
+            Debug.LogError("[SinkInfo] currentWaterObject에 SpriteRenderer가 없습니다.");
+        }
+
+        Destroy(currentWaterObject);
+        currentWaterObject = null;
+    }
+
+    public void ClearWaterResult()
+    {
+        if (currentWaterObject != null)
+        {
+            Destroy(currentWaterObject);
+            currentWaterObject = null;
+        }
     }
 }
 

@@ -94,8 +94,13 @@ public class UnlockManager : MonoBehaviour
         // 파일이 없거나 미초기화: 현재 플레이어 레벨까지 시드
         if (!save.initialized || save.appliedLevels == null || save.appliedLevels.Count == 0)
         {
+            if (save.appliedLevels == null)
+                save.appliedLevels = new HashSet<int>();
+
+            // 현재 플레이어 레벨까지 시드
             int playerLevel = Mathf.Max(1, PlayerLevelManager.Instance ? PlayerLevelManager.Instance.Level : 1);
-            SeedAppliedLevelsUpTo(playerLevel); // 아래 함수
+            SeedAppliedLevelsUpTo(playerLevel);
+
             RebuildUnlockedFromApplied();
             save.initialized = true;
             SaveState();
@@ -252,6 +257,13 @@ public class UnlockManager : MonoBehaviour
         if (_lastAppliedLevels.Count > 0) return _lastAppliedLevels.Max();
         var persisted = LoadRevealLevels();
         return persisted.Count > 0 ? Mathf.Max(persisted.ToArray()) : 0;
+    }
+    public int GetMaxAppliedLevel()
+    {
+        if (save == null || save.appliedLevels == null || save.appliedLevels.Count == 0)
+            return 1; // 최소 1레벨
+
+        return save.appliedLevels.Max();
     }
 
     public void RefreshMakerActivationInScene()

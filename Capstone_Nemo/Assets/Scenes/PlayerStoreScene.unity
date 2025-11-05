@@ -3111,8 +3111,11 @@ MonoBehaviour:
   worldCanvasParent: {fileID: 2098681224}
   waterSprite: {fileID: 21300000, guid: 7948fb91a92550841b946408a81d218f, type: 3}
   waterItemName: Water
+  waterResultPrefab: {fileID: 1096294367421740299, guid: 1d7fd1926562e4a49928c3395ecf69f2, type: 3}
   fillDuration: 1.5
   barOffset: {x: 0, y: 1.2, z: 0}
+  resultOffset: {x: 0, y: 0.8, z: 0}
+  currentWaterObject: {fileID: 0}
 --- !u!61 &222526899
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -4386,6 +4389,18 @@ MonoBehaviour:
   sieveMakerInputClip: {fileID: 8300000, guid: 9f49c985cfae0174787d0a878fbbce56, type: 3}
   siruMakerInputClip: {fileID: 8300000, guid: 390889485d8ace243af2eeecb2bf5208, type: 3}
   mixingMakerInputClip: {fileID: 8300000, guid: 3ce463da0623f96479146134430bd18f, type: 3}
+  btnClickSFX: {fileID: 0}
+  fileSelectSFX: {fileID: 0}
+  pageFlipSFX: {fileID: 0}
+  dogamOpenSFX: {fileID: 0}
+  doorOpenSFX: {fileID: 0}
+  trashDiscardClip: {fileID: 0}
+  treeInterectClip: {fileID: 0}
+  treeOpenClip: {fileID: 0}
+  moneyCountClip: {fileID: 0}
+  totalMoneyClip: {fileID: 0}
+  levelRevealClip: {fileID: 0}
+  unlockSlotClip: {fileID: 0}
 --- !u!4 &318533205 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4626255125801582266, guid: 22b598cfa698ad640b90a46f1177f4b3, type: 3}
@@ -23527,9 +23542,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.0003708899
+    x: 0.0005005002
     y: 0
-    width: 0.9992582
+    width: 0.998999
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
@@ -25093,6 +25108,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetScene: VillageScene
   entranceID: FromPlayerStore
+  sfxLead: 0.06
 --- !u!1 &2058554431
 GameObject:
   m_ObjectHideFlags: 0

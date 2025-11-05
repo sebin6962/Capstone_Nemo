@@ -76,10 +76,25 @@ public class PlayerInteract : MonoBehaviour
             }
 
             // 싱크: 빈손일 때 E키 → 진행바 → 물 지급
-            if (nearbySink != null && !HeldItemManager.Instance.IsHoldingItem())
+            if (nearbySink != null)
             {
-                StartCoroutine(nearbySink.FillAndGiveWater());
-                return;
+                // 1) 싱크 위에 이미 물 결과물이 있고, 플레이어는 빈손인 경우 → 물 줍기
+                if (nearbySink.HasWaterResult && !HeldItemManager.Instance.IsHoldingItem())
+                {
+                    nearbySink.PickupWaterResult();
+                    return;
+                }
+
+                // 2) 아직 결과물이 없고, 빈손이며, 진행 중이 아닐 때 → 물 긷기 시작 (진행바 + 결과물 생성)
+                if (!HeldItemManager.Instance.IsHoldingItem() &&
+                    !nearbySink.IsRunning &&
+                    !nearbySink.HasWaterResult)
+                {
+                    StartCoroutine(nearbySink.FillAndGiveWater());
+                    return;
+                }
+
+                // 3) 그 외 (이미 뭔가 들고 있거나, 진행 중이거나, 결과물이 있는데 손에 뭔가 들고 있을 때)는 무시
             }
 
             if (isNearMaker && currentMaker != null && currentMaker.IsLocked())
