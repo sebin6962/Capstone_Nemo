@@ -221,6 +221,15 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         //중간발표 대비 비활성화
         //ShowUnlockEffectPanel(currentUnlockedLevel);
+
+        if (levelIdx == levelButtons.Length - 1)
+        {
+            // FadeManager 싱글톤이 살아 있다면 페이드 전환
+            if (FadeManager.Instance != null)
+            {
+                FadeManager.Instance.FadeToScene("EndingScene");
+            }
+        }
     }
 
     public void SaveUnlockData()

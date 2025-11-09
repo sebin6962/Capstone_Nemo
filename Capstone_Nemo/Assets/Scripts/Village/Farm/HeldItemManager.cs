@@ -47,12 +47,12 @@ public class HeldItemManager : MonoBehaviour
     {
         if (sprite == null)
         {
-            Debug.LogWarning("ShowHeldItem: 스프라이트가 null입니다!");
+            Debug.LogWarning("ShowHeldItem: 스프라이트가 null입니다.");
             return;
         }
         if (heldItemImage == null)
         {
-            Debug.LogError("heldItemImage가 연결되지 않았습니다! Inspector에서 Image를 드래그해 연결하세요.");
+            Debug.LogError("heldItemImage가 연결되지 않았습니다. Inspector에서 Image를 드래그해 연결하세요.");
             return;
         }
 
@@ -69,7 +69,6 @@ public class HeldItemManager : MonoBehaviour
             float spriteRatio = (float)sprite.rect.width / sprite.rect.height;
             float imageRatio = rt.rect.width / rt.rect.height;
 
-            // 현재 이미지 비율과 다르면 높이나 넓이 중 하나를 맞춰줌
             if (spriteRatio > imageRatio)
             {
                 // 스프라이트가 더 가로로 긴 경우: 가로를 기준으로 높이 조정
