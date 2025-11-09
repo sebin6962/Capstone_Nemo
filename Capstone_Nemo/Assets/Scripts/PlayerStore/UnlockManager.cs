@@ -81,36 +81,73 @@ public class UnlockManager : MonoBehaviour
 
     public void LoadUnlockData()
     {
-        // 서버명이 아직 안 들어왔다면 SelectedSave로 한번 더 보정
+        //====================기존 로직===========================
+        //// 서버명이 아직 안 들어왔다면 SelectedSave로 한번 더 보정
+        //if (string.IsNullOrEmpty(_serverName))
+        //    SetServerName(PlayerPrefs.GetString("SelectedSave", ""));
+
+        //// 로드 전에 초기화
+        //save = new UnlockSaveData();
+
+        //LoadState();
+
+
+        //// 파일이 없거나 미초기화: 현재 플레이어 레벨까지 시드
+        //if (!save.initialized || save.appliedLevels == null || save.appliedLevels.Count == 0)
+        //{
+        //    if (save.appliedLevels == null)
+        //        save.appliedLevels = new HashSet<int>();
+
+        //    // 현재 플레이어 레벨까지 시드
+        //    int playerLevel = Mathf.Max(1, PlayerLevelManager.Instance ? PlayerLevelManager.Instance.Level : 1);
+        //    SeedAppliedLevelsUpTo(playerLevel);
+
+        //    RebuildUnlockedFromApplied();
+        //    save.initialized = true;
+        //    SaveState();
+        //}
+        //else
+        //{
+        //    // 기존 파일 → 항상 재구성으로 정합성 보장
+        //    RebuildUnlockedFromApplied();
+        //}
+
+        //RefreshMakerActivationInScene();
+
+
+        //================수정 버전======================
+        // 서버명이 아직 안 들어왔다면 SelectedSave로 보정
         if (string.IsNullOrEmpty(_serverName))
             SetServerName(PlayerPrefs.GetString("SelectedSave", ""));
 
-        // 로드 전에 초기화
+        // 1 파일이 이미 있는지 먼저 확인
+        bool existed = File.Exists(savePath);
+
+        // 항상 깨끗한 인스턴스로 시작
         save = new UnlockSaveData();
 
-        LoadState();
+        // 2 파일이 있으면 그대로 로드
+        if (existed)
+        {
+            LoadState();   // pending / applied / unlocked* 그대로 불러오기
+        }
 
-
-        // 파일이 없거나 미초기화: 현재 플레이어 레벨까지 시드
-        if (!save.initialized || save.appliedLevels == null || save.appliedLevels.Count == 0)
+        //  파일이 "아예 없을 때"만, 현재 플레이어 레벨까지 시드
+        if (!existed)
         {
             if (save.appliedLevels == null)
                 save.appliedLevels = new HashSet<int>();
 
-            // 현재 플레이어 레벨까지 시드
+            // 새 세이브 처음 생성 시: 플레이어 현재 레벨(보통 1)까지 해금
             int playerLevel = Mathf.Max(1, PlayerLevelManager.Instance ? PlayerLevelManager.Instance.Level : 1);
             SeedAppliedLevelsUpTo(playerLevel);
 
-            RebuildUnlockedFromApplied();
             save.initialized = true;
-            SaveState();
-        }
-        else
-        {
-            // 기존 파일 → 항상 재구성으로 정합성 보장
-            RebuildUnlockedFromApplied();
+            SaveState();   // 초기 상태 저장 (appliedLevels에 기본 레벨 세팅)
         }
 
+        // 4 이후로는 오직 appliedLevels만 기준으로 해금 재구성
+        RebuildUnlockedFromApplied();
         RefreshMakerActivationInScene();
     }
 
@@ -134,7 +171,8 @@ public class UnlockManager : MonoBehaviour
         var selected = PlayerPrefs.GetString("SelectedSave", "");
         if (!string.IsNullOrEmpty(selected))
         {
-            SetServerName(selected);// 내부에서 초기화+서버 파일 로드+씬 반영까지 끝
+            SwitchToServer(selected);
+            //SetServerName(selected);// 내부에서 초기화+서버 파일 로드+씬 반영까지 끝
             return;
         }
 
