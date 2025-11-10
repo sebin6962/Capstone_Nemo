@@ -50,6 +50,10 @@ public class SFXManager : MonoBehaviour
     public AudioClip levelRevealClip;
     public AudioClip unlockSlotClip;
 
+    [Header("Player")]
+    public AudioSource walkAudioSource;
+    public AudioClip playerWalkClip;
+
     void Awake()
     {
         if (Instance == null)
@@ -245,5 +249,38 @@ public class SFXManager : MonoBehaviour
     {
         if (audioSource != null && unlockSlotClip != null)
             audioSource.PlayOneShot(unlockSlotClip);
+    }
+
+    public void SetPlayerWalkClip(AudioClip clip)
+    {
+        playerWalkClip = clip;
+
+        if (walkAudioSource != null)
+        {
+            walkAudioSource.clip = playerWalkClip;
+        }
+    }
+
+    public void PlayPlayerWalkLoop()
+    {
+        if (walkAudioSource != null && playerWalkClip != null)
+        {
+            if (!walkAudioSource.isPlaying)
+            {
+                walkAudioSource.clip = playerWalkClip;
+                walkAudioSource.loop = true;
+                walkAudioSource.Play();
+            }
+        }
+    }
+
+    public void StopPlayerWalkLoop()
+    {
+        if (walkAudioSource != null && walkAudioSource.isPlaying)
+        {
+            walkAudioSource.Stop();
+            walkAudioSource.loop = false;
+            walkAudioSource.clip = null;
+        }
     }
 }

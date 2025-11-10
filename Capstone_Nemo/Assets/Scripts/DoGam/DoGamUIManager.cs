@@ -261,9 +261,14 @@ public class DoGamUIManager : MonoBehaviour
     {
         
 
-        // 박스 인벤토리 열려 있으면 도감 오픈 막기
+        // 씨앗 박스 인벤토리 열려 있으면 도감 오픈 막기
         if (BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen())
             return;
+
+        // 재고 박스 인벤토리 열려 있으면 도감 오픈 막기
+        if (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen())
+            return;
+
         // 가게 박스 인벤토리 열려 있으면 도감 오픈 막기
         if (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
             return;
@@ -312,9 +317,13 @@ public class DoGamUIManager : MonoBehaviour
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
     }
 
-    public bool IsOpen() => panel != null && panel.activeSelf;
+    public bool IsOpen()
+    {
+        return panel != null && panel.activeSelf;
+    }
 
-    public void CloseDoGam()
+
+public void CloseDoGam()
     {
         SFXManager.Instance.PlayBbyongSFX();
         panel.SetActive(false);

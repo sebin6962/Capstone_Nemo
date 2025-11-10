@@ -39,6 +39,9 @@ public class PlayerManager : MonoBehaviour
             // 마지막 이동 방향을 사용해서 Idle 방향 고정
             animator.SetFloat("MoveX", lastMoveDir.x);
             animator.SetFloat("MoveY", lastMoveDir.y);
+
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.StopPlayerWalkLoop();
             return;
         }
 
@@ -106,6 +109,9 @@ public class PlayerManager : MonoBehaviour
             animator.SetBool("IsWalking", true);
             animator.SetFloat("MoveX", movement.x);
             animator.SetFloat("MoveY", movement.y);
+
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.PlayPlayerWalkLoop();
         }
         else
         {
@@ -114,6 +120,9 @@ public class PlayerManager : MonoBehaviour
             animator.SetFloat("MoveX", lastMoveDir.x);
             animator.SetFloat("MoveY", lastMoveDir.y);
             //Debug.Log("Manager Idle: lastMoveDir=" + lastMoveDir + ", Animator MoveY=" + animator.GetFloat("MoveY"));
+
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.StopPlayerWalkLoop();
         }
 
         // 다음 프레임 판정을 위한 이전값 저장

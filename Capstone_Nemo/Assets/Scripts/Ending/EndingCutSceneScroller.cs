@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class EndingCutSceneScroller : MonoBehaviour
@@ -23,6 +24,37 @@ public class EndingCutSceneScroller : MonoBehaviour
     public float blackFadeSeconds = 1.5f;
 
     private bool isEnding = false;
+
+    [Header("자막 시퀀스")]
+    public bool useSubtitles = true;
+
+    [Tooltip("검은 화면이 다 찬 후 첫 자막이 뜨기까지 대기 시간")]
+    public float delayBeforeFirstSubtitle = 2f;
+
+    [System.Serializable]
+    public class SubtitleEntry
+    {
+        public GameObject subtitleObject;
+
+        [Tooltip("이전 자막이 켜지고 나서 이 자막이 켜지기까지 대기 시간")]
+        public float delayFromPrevious = 1f;
+
+        [Tooltip("이 자막이 서서히 나타나는 시간(초)")]
+        public float fadeInDuration = 1f;
+    }
+
+    [Tooltip("자막 목록")]
+    public SubtitleEntry[] subtitles;
+
+    [Tooltip("마지막 자막이 켜진 후, 모든 자막을 비활성화하기까지 대기 시간")]
+    public float delayBeforeHideAllSubtitles = 2f;
+
+    [Header("다음 컷씬")]
+    [Tooltip("모든 자막이 꺼진 후, 다음 컷씬 페이드까지 대기 시간")]
+    public float delayBeforeNextCutsceneFade = 0f;
+
+    [Tooltip("다음 컷씬 페이드(또는 씬 전환)를 여기 이벤트에 연결")]
+    public UnityEvent onNextCutsceneFade;
 
     void Start()
     {
@@ -78,10 +110,8 @@ public class EndingCutSceneScroller : MonoBehaviour
             yield return StartCoroutine(FadeBlackImage(0f, 1f, blackFadeSeconds));
         }
 
-        // 이 이후
-        // 자막 매니저 실행
-        // 크레딧 텍스트 타이핑
-        // 버튼 활성화 등
+        // 검은 화면이 다 찬 후 자막 / 다음 컷씬 시퀀스 실행
+        yield return StartCoroutine(SubtitleSequenceRoutine());
     }
 
     private IEnumerator FadeBlackImage(float from, float to, float duration)
@@ -103,5 +133,100 @@ public class EndingCutSceneScroller : MonoBehaviour
         color.a = to;
         blackImage.color = color;
     }
+
+    private IEnumerator SubtitleSequenceRoutine()
+    {
+        // 자막을 안 쓰는 경우-> 바로 다음 컷씬 이벤트만 처리
+        if (!useSubtitles || subtitles == null || subtitles.Length == 0)
+        {
+            if (delayBeforeNextCutsceneFade > 0f)
+                yield return new WaitForSeconds(delayBeforeNextCutsceneFade);
+
+            if (onNextCutsceneFade != null)
+                onNextCutsceneFade.Invoke();
+
+            yield break;
+        }
+
+        // 시작 시 모든 자막 비활성화 + 알파 0으로 초기화
+        foreach (var s in subtitles)
+        {
+            if (s.subtitleObject != null)
+            {
+                s.subtitleObject.SetActive(false);
+
+                CanvasGroup cg = s.subtitleObject.GetComponent<CanvasGroup>();
+                if (cg == null)
+                    cg = s.subtitleObject.AddComponent<CanvasGroup>();
+
+                cg.alpha = 0f;
+            }
+        }
+
+        // 검은 화면이 다 찬 뒤 첫 자막까지 대기
+        if (delayBeforeFirstSubtitle > 0f)
+            yield return new WaitForSeconds(delayBeforeFirstSubtitle);
+
+        // 자막들 순서대로 켜기 (페이드 인)
+        for (int i = 0; i < subtitles.Length; i++)
+        {
+            var entry = subtitles[i];
+
+            if (i > 0 && entry.delayFromPrevious > 0f)
+                yield return new WaitForSeconds(entry.delayFromPrevious);
+
+            if (entry.subtitleObject != null)
+            {
+                float fadeDuration = Mathf.Max(0.01f, entry.fadeInDuration);
+                // 이전 자막의 페이드가 끝날 때까지 기다리도록 순차 실행
+                yield return StartCoroutine(FadeInSubtitle(entry.subtitleObject, fadeDuration));
+            }
+        }
+
+        // 마지막 자막이 켜진 후 잠시 대기
+        if (delayBeforeHideAllSubtitles > 0f)
+            yield return new WaitForSeconds(delayBeforeHideAllSubtitles);
+
+        // 모든 자막 비활성화
+        foreach (var s in subtitles)
+        {
+            if (s.subtitleObject != null)
+                s.subtitleObject.SetActive(false);
+        }
+
+        // 다음 컷씬 페이드 전 대기
+        if (delayBeforeNextCutsceneFade > 0f)
+            yield return new WaitForSeconds(delayBeforeNextCutsceneFade);
+
+        // 다음 컷씬 페이드(또는 씬 전환) 호출
+        if (onNextCutsceneFade != null)
+            onNextCutsceneFade.Invoke();
+    }
+
+    private IEnumerator FadeInSubtitle(GameObject obj, float duration)
+    {
+        if (obj == null)
+            yield break;
+
+        obj.SetActive(true);
+
+        CanvasGroup cg = obj.GetComponent<CanvasGroup>();
+        if (cg == null)
+            cg = obj.AddComponent<CanvasGroup>();
+
+        cg.alpha = 0f;
+
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float a = Mathf.Clamp01(t / duration);
+            cg.alpha = a;
+            yield return null;
+        }
+
+        cg.alpha = 1f;
+    }
+
 }
 

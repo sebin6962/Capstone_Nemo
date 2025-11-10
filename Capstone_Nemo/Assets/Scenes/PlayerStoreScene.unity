@@ -4456,6 +4456,8 @@ MonoBehaviour:
   totalMoneyClip: {fileID: 0}
   levelRevealClip: {fileID: 0}
   unlockSlotClip: {fileID: 0}
+  walkAudioSource: {fileID: 0}
+  playerWalkClip: {fileID: 0}
 --- !u!4 &318533205 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4626255125801582266, guid: 22b598cfa698ad640b90a46f1177f4b3, type: 3}
@@ -5077,6 +5079,7 @@ GameObject:
   m_Component:
   - component: {fileID: 347313419}
   - component: {fileID: 347313418}
+  - component: {fileID: 347313420}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -5111,6 +5114,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &347313420
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347313417}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 814449ace9fabc84fab368ed7d482e1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneFootstepClip: {fileID: 8300000, guid: a728ead4dd4194f4a841df270631e3f9, type: 3}
 --- !u!1 &351601500
 GameObject:
   m_ObjectHideFlags: 0
@@ -10470,7 +10486,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: NaN, y: -448.75183}
+  m_AnchoredPosition: {x: NaN, y: -448.75186}
   m_SizeDelta: {x: -1286.296, y: -964.354}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &793036837
@@ -13914,7 +13930,7 @@ Transform:
   m_GameObject: {fileID: 1058549908}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.002, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13960,7 +13976,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 994475557
   m_SortingLayer: 5
-  m_SortingOrder: 11
+  m_SortingOrder: 7
   m_Sprite: {fileID: 21300000, guid: c88c781a8539e77449c336ee19d8ee08, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -23963,9 +23979,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.0005208552
+    y: 0.000095278025
     width: 1
-    height: 0.9989583
+    height: 0.99980944
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
