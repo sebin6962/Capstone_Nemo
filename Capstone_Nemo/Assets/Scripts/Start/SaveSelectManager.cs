@@ -255,6 +255,8 @@ public class SaveSelectManager : MonoBehaviour
 
                 btn.onClick.AddListener(() =>
                 {
+                    if (SFXManager.Instance != null)
+                        SFXManager.Instance.PlayFileSelectSFX();
                     newGamePopup.SetActive(true);
                 });
             }

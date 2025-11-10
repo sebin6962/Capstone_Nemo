@@ -546,7 +546,7 @@ public class FarmManager : MonoBehaviour
             return;
         }
 
-        SFXManager.Instance.PlayBbyongSFX();
+        SFXManager.Instance.HarvestingSFX();
 
         StorageInventory.Instance.TryAddItem(itemKey, amount);
         StorageInventory.Instance.SaveStorage();
@@ -568,6 +568,7 @@ public class FarmManager : MonoBehaviour
 
         // 날아가는 애니메이션 실행
         StorageIconFlyEffect.Instance.Play(cropSprite, worldPos);
+        SFXManager.Instance.HarvestItemSFX();
 
         // 0.5초 뒤 알림 등록
         StorageAlertManager.Instance.NotifyNewHarvestedItem(cropName);

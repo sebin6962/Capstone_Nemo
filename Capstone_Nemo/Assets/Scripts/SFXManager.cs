@@ -24,7 +24,8 @@ public class SFXManager : MonoBehaviour
     public AudioClip siruMakerInputClip;
     public AudioClip mixingMakerInputClip;
 
-    [Header("SaveSelectScene")]
+    [Header("게임 인트로")]
+    public AudioClip introClickClip;
     public AudioClip btnClickSFX;
     public AudioClip fileSelectSFX;
 
@@ -54,6 +55,10 @@ public class SFXManager : MonoBehaviour
     public AudioSource walkAudioSource;
     public AudioClip playerWalkClip;
 
+    [Header("농사")]
+    public AudioClip harvestingClip; // 작물 수확 소리
+    public AudioClip harvestItemClip; //수확한 아이템 인벤 들어가는 소리
+   
     void Awake()
     {
         if (Instance == null)
@@ -86,6 +91,12 @@ public class SFXManager : MonoBehaviour
     {
         if (audioSource && plateSoundClip)
             audioSource.PlayOneShot(plateSoundClip);
+    }
+
+    public void PlayIntroClickSFX()
+    {
+        if (audioSource && introClickClip)
+            audioSource.PlayOneShot(introClickClip);
     }
 
     public void PlayCorrectSFX()
@@ -251,6 +262,7 @@ public class SFXManager : MonoBehaviour
             audioSource.PlayOneShot(unlockSlotClip);
     }
 
+    //플레이어 걷는 효과음
     public void SetPlayerWalkClip(AudioClip clip)
     {
         playerWalkClip = clip;
@@ -282,5 +294,17 @@ public class SFXManager : MonoBehaviour
             walkAudioSource.loop = false;
             walkAudioSource.clip = null;
         }
+    }
+
+    public void HarvestingSFX()
+    {
+        if (audioSource != null && harvestingClip != null)
+            audioSource.PlayOneShot(harvestingClip);
+    }
+
+    public void HarvestItemSFX()
+    {
+        if (audioSource != null && harvestItemClip != null)
+            audioSource.PlayOneShot(harvestItemClip);
     }
 }

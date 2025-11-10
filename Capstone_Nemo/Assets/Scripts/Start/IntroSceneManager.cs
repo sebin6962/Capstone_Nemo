@@ -103,6 +103,8 @@ public class IntroSceneManager : MonoBehaviour
         if (canClick && !clicked && Input.GetMouseButtonDown(0))
         {
             clicked = true;
+            //if (SFXManager.Instance != null)
+            //    SFXManager.Instance.PlayIntroClickSFX();
             FadeManager.Instance.FadeToScene("SaveSelectScene");
         }
 
@@ -150,13 +152,15 @@ public class IntroSceneManager : MonoBehaviour
         clickTextUI.gameObject.SetActive(true);
         yield return StartCoroutine(FadeCanvasGroup(clickTextUI, 0, 1, textFadeDuration));
 
+        // 4 우주선 이동 시작
+        if (startShipAfterText) SetupAndStartSpaceship();
+        canClick = true;
+
         // 3 깜빡임 시작
         blinking = true;
         StartCoroutine(BlinkText());
 
-        // 4 우주선 이동 시작
-        if (startShipAfterText) SetupAndStartSpaceship();
-        canClick = true;
+        
     }
 
     IEnumerator FadeCanvasGroup(CanvasGroup cg, float from, float to, float duration)
