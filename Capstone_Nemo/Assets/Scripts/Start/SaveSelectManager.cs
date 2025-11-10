@@ -59,7 +59,7 @@ public class SaveSelectManager : MonoBehaviour
         TryDelete(Path.Combine(p, $"playtime_{serverName}.json"));
         TryDelete(Path.Combine(p, $"storage_{serverName}.json"));
         TryDelete(Path.Combine(p, $"treeUnlock_{serverName}.json"));
-        TryDelete(Path.Combine(p, $"tutotial_{serverName}.json"));
+        TryDelete(Path.Combine(p, $"tutorial_{serverName}.json"));
         TryDelete(System.IO.Path.Combine(p, $"farm_{serverName}.json"));
 
         // 2) 레거시 해금 파일(섞임의 주범) 더 이상 쓰지 않는다면 지워버리는 걸 권장

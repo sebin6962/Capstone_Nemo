@@ -19,25 +19,22 @@ public class HeldItemManager : MonoBehaviour
     }
 
     private void LateUpdate()
-    {// 들고 있는 아이템이 없으면 이미지 끄기
+    {
         if (!IsHoldingItem())
         {
             if (heldItemImage.enabled)
-            {
                 heldItemImage.enabled = false;
-            }
             return;
         }
-        // 플레이어 위에 따라다니게 위치 업데이트
+
         if (heldItemImage.enabled)
         {
-            Vector3 offset = new Vector3(0, 1.5f, 0); // 머리 위 위치
-            Vector3 screenPos = Camera.main.WorldToScreenPoint(player.position + offset); // 선언과 초기화 동시에
-            heldItemImage.transform.position = screenPos;
-
-            //Debug.Log("HeldItemImage 위치: " + screenPos);
+            Vector3 offset = new Vector3(0, 1.5f, 0);
+            // 월드 스페이스 캔버스니까 그냥 월드 좌표를 씀
+            heldItemImage.rectTransform.position = player.position + offset;
         }
     }
+
     public string GetHeldItemName()
     {
         return heldItemName;

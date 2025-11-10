@@ -99,7 +99,7 @@ public static class ItemTooltipDB
         { "Rainbowseolgi_finish", "¹«Áö°³¼³±â" },
         { "Injeolmi_finish", "ÀÎÀý¹Ì" },
         { "Redbeansiru_finish", "ÆÏ½Ã·ç¶±" },
-        { "SsookInjeolmi_finish", "¾¦ÀÎÀý¹Ì" },
+        { "MugwortInjeolmi_finish", "¾¦ÀÎÀý¹Ì" },
         { "Kkultteok_finish", "²Ü¶±" },
         { "Songpyeon_finish", "¼ÛÆí" },
         { "Chapssaltteok_finish", "Âý½Ò¶±" },

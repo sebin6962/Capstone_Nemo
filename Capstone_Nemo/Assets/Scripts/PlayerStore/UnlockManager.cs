@@ -190,12 +190,29 @@ public class UnlockManager : MonoBehaviour
 
     void RebuildUnlockedFromApplied()
     {
+        if (save.appliedLevels == null || save.appliedLevels.Count == 0)
+        {
+            if (save.appliedLevels == null)
+                save.appliedLevels = new HashSet<int>();
+
+            int playerLevel = Mathf.Max(
+                1,
+                PlayerLevelManager.Instance ? PlayerLevelManager.Instance.Level : 1
+            );
+
+            Debug.LogWarning($"[Unlock] appliedLevels가 비어 있어서 현재 플레이어 레벨 {playerLevel}까지 시드합니다.");
+
+            // UnlockConfig에 정의된 레벨까지만 안전하게 시드
+            SeedAppliedLevelsUpTo(playerLevel);
+
+            save.initialized = true;
+        }
+
+
         // 항상 클리어 후 재계산
         save.unlockedMakers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         save.unlockedRecipes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         save.unlockedShopItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        if (save.appliedLevels == null) return;
 
         foreach (var lv in save.appliedLevels)
         {
@@ -214,6 +231,7 @@ public class UnlockManager : MonoBehaviour
                 foreach (var r in entry.shopItems)
                     if (!string.IsNullOrWhiteSpace(r)) save.unlockedShopItems.Add(Norm(r));
         }
+
         SaveState();
     }
 
@@ -231,17 +249,48 @@ public class UnlockManager : MonoBehaviour
 
     void LoadState()
     {
-        if (File.Exists(savePath))
+        // 기본값
+        save = new UnlockSaveData();
+
+        if (!File.Exists(savePath)) return;
+
+        try
         {
-            try { save = JsonUtility.FromJson<UnlockSaveData>(File.ReadAllText(savePath)) ?? new UnlockSaveData(); }
-            catch { save = new UnlockSaveData(); }
+            var json = File.ReadAllText(savePath);
+            var dto = JsonUtility.FromJson<UnlockSaveDataDTO>(json);
+
+            if (dto != null)
+            {
+                save.unlockedMakers = new HashSet<string>(dto.unlockedMakers ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+                save.unlockedRecipes = new HashSet<string>(dto.unlockedRecipes ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+                save.unlockedShopItems = new HashSet<string>(dto.unlockedShopItems ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+                save.pendingLevels = new HashSet<int>(dto.pendingLevels ?? new List<int>());
+                save.appliedLevels = new HashSet<int>(dto.appliedLevels ?? new List<int>());
+                save.initialized = dto.initialized;
+            }
+        }
+        catch
+        {
+            // 파손된 파일 등 → 새로 시작
+            save = new UnlockSaveData();
         }
     }
 
     void SaveState()
     {
-        File.WriteAllText(savePath, JsonUtility.ToJson(save, true));
+        var dto = new UnlockSaveDataDTO
+        {
+            unlockedMakers = save.unlockedMakers != null ? new List<string>(save.unlockedMakers) : new List<string>(),
+            unlockedRecipes = save.unlockedRecipes != null ? new List<string>(save.unlockedRecipes) : new List<string>(),
+            unlockedShopItems = save.unlockedShopItems != null ? new List<string>(save.unlockedShopItems) : new List<string>(),
+            pendingLevels = save.pendingLevels != null ? new List<int>(save.pendingLevels) : new List<int>(),
+            appliedLevels = save.appliedLevels != null ? new List<int>(save.appliedLevels) : new List<int>(),
+            initialized = save.initialized
+        };
+
+        File.WriteAllText(savePath, JsonUtility.ToJson(dto, true));
     }
+
     // 레벨업 "즉시 해금"이 아니라 "다음 날 적용" 예약만
     public void ScheduleUnlockForLevel(int level)
     {
@@ -413,5 +462,16 @@ public class UnlockManager : MonoBehaviour
         var shown = PlayerPrefs.GetInt(PPK(PP_RevealShown), 0);
         return $"pending=[{pend}] lastApplied=[{last}] persisted=[{pers}] shownToday={_revealShownToday} PP_Shown={shown}";
     }
+}
+
+[Serializable]
+class UnlockSaveDataDTO
+{
+    public List<string> unlockedMakers;
+    public List<string> unlockedRecipes;
+    public List<string> unlockedShopItems;
+    public List<int> pendingLevels;
+    public List<int> appliedLevels;
+    public bool initialized;
 }
 
