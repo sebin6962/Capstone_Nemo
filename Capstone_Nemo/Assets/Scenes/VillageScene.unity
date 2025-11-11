@@ -320,6 +320,11 @@ MonoBehaviour:
   recipeContentParent: {fileID: 1015421907}
   recipeImagePrefab: {fileID: 1939492125899785001, guid: fb61d63889969224384c6bb2250af340, type: 3}
   recipeLineBackgroundPrefab: {fileID: 4628084609069061040, guid: a33e924efc0961b42b9ff344e3da0b40, type: 3}
+  rewardInfoRoot: {fileID: 1352751934}
+  rewardCurrencyIcon: {fileID: 1061712026}
+  rewardCurrencyText: {fileID: 940523666}
+  rewardExpIcon: {fileID: 1261076571}
+  rewardExpText: {fileID: 1133875831}
   howToRoot: {fileID: 460936418}
   howToButton: {fileID: 95960798}
   howToPrevButton: {fileID: 51440902}
@@ -8577,6 +8582,17 @@ Transform:
   - {fileID: 879268900}
   m_Father: {fileID: 642526639}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &940523666 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 934232617291836399, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 4885431749207441011}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &945314998
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10400,6 +10416,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1061712026 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1685806504067839991, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 4885431749207441011}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1064018509
 GameObject:
   m_ObjectHideFlags: 0
@@ -11880,6 +11907,17 @@ MonoBehaviour:
   targetScene: PlayerStoreScene
   entranceID: FromVillage(Store)
   sfxLead: 0.06
+--- !u!114 &1133875831 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1059826316413760207, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 4885431749207441011}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1166127302
 GameObject:
   m_ObjectHideFlags: 0
@@ -12819,6 +12857,17 @@ EdgeCollider2D:
   m_AdjacentEndPoint: {x: 0, y: 0}
   m_UseAdjacentStartPoint: 0
   m_UseAdjacentEndPoint: 0
+--- !u!114 &1261076571 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6872146453724779972, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 4885431749207441011}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1272297454
 GameObject:
   m_ObjectHideFlags: 0
@@ -13152,6 +13201,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1352751934 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4871795072276272133, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 4885431749207441011}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1357997379
 GameObject:
   m_ObjectHideFlags: 0
@@ -19601,7 +19655,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -121.00244, y: -40.999878}
+  m_AnchoredPosition: {x: -121.00226, y: -40.999878}
   m_SizeDelta: {x: 918, y: 516}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &1711149058
@@ -20270,7 +20324,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -671.99854, y: 326}
+  m_AnchoredPosition: {x: -671.99835, y: 326}
   m_SizeDelta: {x: -1423.4169, y: -719.6829}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1757436636
@@ -22684,9 +22738,17 @@ MonoBehaviour:
   farmWaterClip: {fileID: 8300000, guid: 7912937e4ea4027489a3c09c544e1056, type: 3}
   farmSeedClip: {fileID: 8300000, guid: 5e9bc66cc1e206d40ab52653685851f0, type: 3}
   boxOpenClip: {fileID: 8300000, guid: f8cc2adaa9990a145929dd219b5a5754, type: 3}
-  sieveMakerInputClip: {fileID: 8300000, guid: 9f49c985cfae0174787d0a878fbbce56, type: 3}
-  siruMakerInputClip: {fileID: 8300000, guid: 390889485d8ace243af2eeecb2bf5208, type: 3}
+  sieveMakerInputClip: {fileID: 8300000, guid: 9362a03ac09e90c4598c68019c4cf657, type: 3}
+  siruMakerInputClip: {fileID: 8300000, guid: 3b4a28fd03df54f4aaf4457aa6245bd7, type: 3}
   mixingMakerInputClip: {fileID: 8300000, guid: 3ce463da0623f96479146134430bd18f, type: 3}
+  grinderMakerInputClip: {fileID: 8300000, guid: d6ba471ef4ab3344aa1b237c2d613b09, type: 3}
+  potMakerInputClip: {fileID: 8300000, guid: 53187aee6086af347aa534bd5493ed17, type: 3}
+  chungMakerInputClip: {fileID: 8300000, guid: 0d817b78768b29240829db67aa7d4697, type: 3}
+  dryingMakerInputClip: {fileID: 8300000, guid: ede185cfd3806d047aa278735f8ab9c6, type: 3}
+  decoMakerInputClip: {fileID: 8300000, guid: 1c1b1f60597668c4f9dfcf1d344fd7e5, type: 3}
+  teaMakerInputClip: {fileID: 8300000, guid: 599f242bfd8fd084f8201510bc96f400, type: 3}
+  fryMakerInputClip: {fileID: 8300000, guid: 1edb1d72e368cd242a87ce4ca9ffc2f4, type: 3}
+  introClickClip: {fileID: 0}
   btnClickSFX: {fileID: 8300000, guid: 3a1d9fe9d0191ea44b69b4f94de824a2, type: 3}
   fileSelectSFX: {fileID: 8300000, guid: 1f414ccfce9408741a8e67801b599bc4, type: 3}
   pageFlipSFX: {fileID: 8300000, guid: 6490e6f4b97a6e34bbcfe64550da81c9, type: 3}
@@ -25506,10 +25568,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.00030338764
-    width: 1
-    height: 0.9993932
+    x: 0.0003568828
+    y: 0
+    width: 0.99928623
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -25788,7 +25850,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.3716321, y: -1.855175}
+  m_Offset: {x: 0.3716321, y: -2.3779225}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -25799,7 +25861,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 9.311046, y: 4.067458}
+  m_Size: {x: 9.311046, y: 3.021963}
   m_EdgeRadius: 0
 --- !u!1001 &4885431749207441011
 PrefabInstance:

@@ -55,7 +55,7 @@ public class SaveData
         currentUnlockedTreeLevel = 0;
         storageItems = new List<StorageEntry>();
 
-        storageItems.Add(new StorageEntry { name = "Mepssalgaru", amount = 10 });
+        storageItems.Add(new StorageEntry { name = "Mepssalgaru", amount = 50 });
 
         // 위치/방향 기본값(0)
         playerPosX = 0f; playerPosY = 0f;

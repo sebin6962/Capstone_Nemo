@@ -65,6 +65,14 @@ public class DoGamUIManager : MonoBehaviour
 
     private bool _suppressLockOnce = false;
 
+    // 추가: 다과 팔았을때 보상 정보 UI
+    [Header("Recipe Reward Info")]
+    public GameObject rewardInfoRoot;       // 전체 한 줄 루트
+    public Image rewardCurrencyIcon;        // 재화 아이콘
+    public TextMeshProUGUI rewardCurrencyText;
+    public Image rewardExpIcon;             // 경험치 아이콘
+    public TextMeshProUGUI rewardExpText;
+
     // =============== [게임방법 탭 레이아웃] ===============
     [Header("How-To (게임 방법)")]
     public GameObject howToRoot;              // 게임방법 전용 루트(전체를 On/Off)
@@ -416,6 +424,36 @@ public void CloseDoGam()
         else if (category == "음료") SetActiveTab(drinkButton);
     }
 
+    private void UpdateRewardInfo(DoGamEntry entry)
+    {
+        if (rewardInfoRoot == null) return;
+
+        // entry가 없거나 값이 0이면 숨김
+        if (entry == null || (entry.rewardStarlight <= 0 && entry.rewardExp <= 0))
+        {
+            rewardInfoRoot.SetActive(false);
+            return;
+        }
+
+        // 떡 / 음료만 보이게 하고 싶으면 카테고리 체크 추가
+        if (entry.category != "떡" && entry.category != "음료")
+        {
+            rewardInfoRoot.SetActive(false);
+            return;
+        }
+
+        rewardInfoRoot.SetActive(true);
+
+        if (rewardCurrencyText != null)
+            rewardCurrencyText.text = entry.rewardStarlight.ToString();
+
+        if (rewardExpText != null)
+            rewardExpText.text = entry.rewardExp.ToString();
+
+        // 아이콘은 Inspector에서 미리 세팅했다면 여기서 따로 건들 필요 없음
+    }
+
+
     /// <summary>
     /// 페이지(해금/잠금 첫 페이지) 상태를 갱신한다.
     /// </summary>
@@ -452,6 +490,7 @@ public void CloseDoGam()
                 if (itemImage) itemImage.sprite = null;
                 if (nameText) nameText.text = "";
                 if (descriptionText) descriptionText.text = "";
+                if (rewardInfoRoot != null) rewardInfoRoot.SetActive(false);
             }
         }
         else
@@ -462,6 +501,7 @@ public void CloseDoGam()
             if (nameText) nameText.text = "";
             if (descriptionText) descriptionText.text = "";
             if (recipeText) recipeText.text = "";
+            if (rewardInfoRoot != null) rewardInfoRoot.SetActive(false);
         }
 
         // ③ 내비게이션 버튼 상태(선택)
@@ -497,6 +537,8 @@ public void CloseDoGam()
         if (nameText) nameText.text = entry.name;
         //if (descriptionText) nameText.text = entry.name; // (오타 방지: 필요시 descriptionText 로 아래 줄 사용)
         if (descriptionText) descriptionText.text = entry.description;
+
+        UpdateRewardInfo(entry);
 
         // 3) 기존 라인 정리
         if (recipeContentParent != null)

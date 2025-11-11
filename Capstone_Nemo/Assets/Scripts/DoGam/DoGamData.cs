@@ -20,6 +20,9 @@ public class DoGamEntry
     public List<string> recipe;
     public List<string> recipeImage;
     public List<RecipeImageData> recipeImageBundle;
+
+    public int rewardStarlight; 
+    public int rewardExp;
 }
 
 [System.Serializable]

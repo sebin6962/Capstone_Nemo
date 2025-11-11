@@ -23,6 +23,13 @@ public class SFXManager : MonoBehaviour
     public AudioClip sieveMakerInputClip;
     public AudioClip siruMakerInputClip;
     public AudioClip mixingMakerInputClip;
+    public AudioClip grinderMakerInputClip;
+    public AudioClip potMakerInputClip;
+    public AudioClip chungMakerInputClip;
+    public AudioClip dryingMakerInputClip;
+    public AudioClip decoMakerInputClip;
+    public AudioClip teaMakerInputClip;
+    public AudioClip fryMakerInputClip;
 
     [Header("게임 인트로")]
     public AudioClip introClickClip;
@@ -158,6 +165,30 @@ public class SFXManager : MonoBehaviour
                 break;
             case "Mixing02":
                 audioSource.PlayOneShot(mixingMakerInputClip);
+                break;
+            case "Grinder":
+                audioSource.PlayOneShot(grinderMakerInputClip);
+                break;
+            case "Pot01":
+                audioSource.PlayOneShot(potMakerInputClip);
+                break;
+            case "Pot02":
+                audioSource.PlayOneShot(potMakerInputClip);
+                break;
+            case "ChungMaker":
+                audioSource.PlayOneShot(chungMakerInputClip);
+                break;
+            case "Drying":
+                audioSource.PlayOneShot(dryingMakerInputClip);
+                break;
+            case "TeaMaker":
+                audioSource.PlayOneShot(teaMakerInputClip);
+                break;
+            case "Deco":
+                audioSource.PlayOneShot(decoMakerInputClip);
+                break;
+            case "Fryolator":
+                audioSource.PlayOneShot(fryMakerInputClip);
                 break;
         }
 
@@ -296,6 +327,8 @@ public class SFXManager : MonoBehaviour
         }
     }
 
+
+    //농사 효과음
     public void HarvestingSFX()
     {
         if (audioSource != null && harvestingClip != null)

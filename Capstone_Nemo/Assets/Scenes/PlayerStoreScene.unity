@@ -1283,6 +1283,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 59062860}
   m_CullTransparentMesh: 1
+--- !u!114 &83934897 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1059826316413760207, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 642015996}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &83934898 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6872146453724779972, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 642015996}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &83934899 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 934232617291836399, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 642015996}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &83934900 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1685806504067839991, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 642015996}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1 &83934901 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4871795072276272133, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 642015996}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &89314917
 GameObject:
   m_ObjectHideFlags: 0
@@ -4444,6 +4493,14 @@ MonoBehaviour:
   sieveMakerInputClip: {fileID: 8300000, guid: 9f49c985cfae0174787d0a878fbbce56, type: 3}
   siruMakerInputClip: {fileID: 8300000, guid: 390889485d8ace243af2eeecb2bf5208, type: 3}
   mixingMakerInputClip: {fileID: 8300000, guid: 3ce463da0623f96479146134430bd18f, type: 3}
+  grinderMakerInputClip: {fileID: 0}
+  potMakerInputClip: {fileID: 0}
+  chungMakerInputClip: {fileID: 0}
+  dryingMakerInputClip: {fileID: 0}
+  decoMakerInputClip: {fileID: 0}
+  teaMakerInputClip: {fileID: 0}
+  fryMakerInputClip: {fileID: 0}
+  introClickClip: {fileID: 0}
   btnClickSFX: {fileID: 0}
   fileSelectSFX: {fileID: 0}
   pageFlipSFX: {fileID: 0}
@@ -4458,6 +4515,8 @@ MonoBehaviour:
   unlockSlotClip: {fileID: 0}
   walkAudioSource: {fileID: 0}
   playerWalkClip: {fileID: 0}
+  harvestingClip: {fileID: 0}
+  harvestItemClip: {fileID: 0}
 --- !u!4 &318533205 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4626255125801582266, guid: 22b598cfa698ad640b90a46f1177f4b3, type: 3}
@@ -8345,6 +8404,11 @@ MonoBehaviour:
   recipeContentParent: {fileID: 808603146}
   recipeImagePrefab: {fileID: 1939492125899785001, guid: fb61d63889969224384c6bb2250af340, type: 3}
   recipeLineBackgroundPrefab: {fileID: 4628084609069061040, guid: a33e924efc0961b42b9ff344e3da0b40, type: 3}
+  rewardInfoRoot: {fileID: 83934901}
+  rewardCurrencyIcon: {fileID: 83934900}
+  rewardCurrencyText: {fileID: 83934899}
+  rewardExpIcon: {fileID: 83934898}
+  rewardExpText: {fileID: 83934897}
   howToRoot: {fileID: 642016000}
   howToButton: {fileID: 1821744857}
   howToPrevButton: {fileID: 1821744849}
@@ -23978,10 +24042,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.000095278025
-    width: 1
-    height: 0.99980944
+    x: 0.0003568828
+    y: 0
+    width: 0.99928623
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -24343,7 +24407,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: NaN, y: -296.99988}
+  m_AnchoredPosition: {x: NaN, y: -296.99985}
   m_SizeDelta: {x: -1554.7, y: -965.858}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1888613671
