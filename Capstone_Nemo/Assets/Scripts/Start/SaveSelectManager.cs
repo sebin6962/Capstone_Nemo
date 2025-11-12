@@ -220,6 +220,14 @@ public class SaveSelectManager : MonoBehaviour
                         SFXManager.Instance.PlayFileSelectSFX();
 
                     PlayerPrefs.SetString("SelectedSave", serverName);
+                    PlayerPrefs.Save();
+
+                    // 해금 매니저에 이 서버로 전환하라고 알려줌
+                    if (UnlockManager.Instance != null)
+                    {
+                        UnlockManager.Instance.SwitchToServer(serverName);
+                    }
+
                     if (VillageSceneManager.Instance != null)
                     {
                         VillageSceneManager.Instance.ResetData();

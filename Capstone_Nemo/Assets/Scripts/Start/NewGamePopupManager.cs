@@ -148,6 +148,13 @@ public class NewGamePopupManager : MonoBehaviour
             File.WriteAllText(Application.persistentDataPath + $"/dayData_{serverName}.json", "{\"day\":1,\"hour\":9,\"minute\":0}");
 
             PlayerPrefs.SetString("SelectedSave", serverName);
+            PlayerPrefs.Save();
+
+            if (UnlockManager.Instance != null)
+            {
+                UnlockManager.Instance.SwitchToServer(serverName);
+            }
+
             FadeManager.Instance.FadeToScene("CutScene");
         });
     }
