@@ -428,6 +428,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &22123427
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -754,6 +757,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!1 &52822164
 GameObject:
   m_ObjectHideFlags: 0
@@ -955,7 +961,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &58507125
 Transform:
   m_ObjectHideFlags: 0
@@ -965,7 +971,7 @@ Transform:
   m_GameObject: {fileID: 58507124}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7.423, y: 7.165, z: 41.88461}
+  m_LocalPosition: {x: 3.4219997, y: 8.139999, z: 41.88461}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1590,6 +1596,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &108120271
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1799,6 +1808,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!114 &122247046
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2135,8 +2147,8 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1378311581
   m_SortingLayer: 4
-  m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 1bf6fc99d207b8949a3839a7ed72c91c, type: 3}
+  m_SortingOrder: 15
+  m_Sprite: {fileID: 21300000, guid: 2abefe8387bd366448124a3d9dde883f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -2156,7 +2168,7 @@ Transform:
   m_GameObject: {fileID: 159903005}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.5, y: -2.78, z: 0}
+  m_LocalPosition: {x: 0.01, y: 0.03, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2196,18 +2208,18 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.19871187, y: -0.66792583}
+  m_Offset: {x: 0.013980508, y: -0.4677447}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 2}
+    oldSize: {x: 2, y: 2}
     newSize: {x: 1, y: 2}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.3974237, y: 1.4942641}
+  m_Size: {x: 2.2231705, y: 1.0939019}
   m_EdgeRadius: 0
 --- !u!114 &159903010
 MonoBehaviour:
@@ -2253,18 +2265,18 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: -0.051882505}
+  m_Offset: {x: 0.018767029, y: -0.051882505}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 2}
+    oldSize: {x: 2, y: 2}
     newSize: {x: 1, y: 2}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 0.117409706}
+  m_Size: {x: 1.9383485, y: 0.117409706}
   m_EdgeRadius: 0
 --- !u!114 &159903012
 MonoBehaviour:
@@ -4096,6 +4108,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &287504217
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -4847,7 +4862,7 @@ Transform:
   m_GameObject: {fileID: 342013423}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6.42, y: 6.236, z: 41.88461}
+  m_LocalPosition: {x: 2.419, y: 7.2109995, z: 41.88461}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5723,6 +5738,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &383877123
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -6366,6 +6384,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &476890999
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -7863,6 +7884,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &596998105
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -9493,7 +9517,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &710149686
 Transform:
   m_ObjectHideFlags: 0
@@ -9503,7 +9527,7 @@ Transform:
   m_GameObject: {fileID: 710149685}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6.42, y: 7.175, z: 41.88461}
+  m_LocalPosition: {x: 2.419, y: 8.15, z: 41.88461}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -10550,7 +10574,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: NaN, y: -448.7519}
+  m_AnchoredPosition: {x: NaN, y: -448.75192}
   m_SizeDelta: {x: -1286.296, y: -964.354}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &793036837
@@ -12594,6 +12618,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!114 &858598183
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13505,7 +13532,7 @@ Transform:
   m_GameObject: {fileID: 1008708546}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.926, y: 6.705, z: 41.88461}
+  m_LocalPosition: {x: 6.93, y: 6.597, z: 41.88461}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -15544,6 +15571,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &1208407337
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -16372,6 +16402,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &1292341643
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -17581,7 +17614,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.19871187, y: -0.66792583}
+  m_Offset: {x: 0.007724881, y: -0.46774483}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -17592,7 +17625,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.3974237, y: 1.4942641}
+  m_Size: {x: 2.2106593, y: 1.0939021}
   m_EdgeRadius: 0
 --- !u!114 &1424182378
 MonoBehaviour:
@@ -18077,6 +18110,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!212 &1464317033
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -19305,6 +19341,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &1552437041
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -20297,6 +20336,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &1622656962
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -20613,7 +20655,7 @@ Transform:
   m_GameObject: {fileID: 1636450682}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7.423, y: 6.236, z: 41.88461}
+  m_LocalPosition: {x: 3.4219997, y: 7.2109995, z: 41.88461}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -23197,6 +23239,7 @@ GameObject:
   - component: {fileID: 1770025914}
   - component: {fileID: 1770025913}
   - component: {fileID: 1770025916}
+  - component: {fileID: 1770025917}
   m_Layer: 0
   m_Name: Maker
   m_TagString: Untagged
@@ -23326,6 +23369,18 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1770025917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1770025912}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a680df76444a7df45b875738bdc74ee5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1776112753
 GameObject:
   m_ObjectHideFlags: 0
@@ -23796,6 +23851,9 @@ MonoBehaviour:
   unlockedColor: {r: 1, g: 1, b: 1, a: 1}
   lockedColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
   craftCompleteEffect: {fileID: 6220918490801148041, guid: a736f18f5f57a4a40aba40a462e9fd8e, type: 3}
+  isProducing: 0
+  resultItemName: 
+  craftEndUtcSeconds: 0
 --- !u!61 &1808628576
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -24280,9 +24338,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.0005134642
+    x: 0.0016393363
     y: 0
-    width: 0.9989731
+    width: 0.9967213
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
@@ -24645,7 +24703,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: NaN, y: -296.99982}
+  m_AnchoredPosition: {x: NaN, y: -296.99985}
   m_SizeDelta: {x: -1554.7, y: -965.858}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1888613671
