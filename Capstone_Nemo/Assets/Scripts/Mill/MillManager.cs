@@ -17,6 +17,9 @@ public class MillManager : MonoBehaviour
     public Button confirmButton;
     public Button closeButton;
 
+    public GraphicRaycaster raycaster;
+
+
     private int queuedCount = 0;
 
     private MillItemData selectedItem = null;
@@ -279,6 +282,8 @@ public class MillManager : MonoBehaviour
         isMilling = true;
         confirmButton.interactable = false;
         closeButton.interactable = false;
+        raycaster.enabled = false;
+        inventoryPanel.SetActive(false);
 
         // 절구 UI 보여주고 애니메이션 재생
         if (jeolguUI) jeolguUI.SetActive(true);
@@ -427,6 +432,7 @@ public class MillManager : MonoBehaviour
         UpdateInventoryUI();
         confirmButton.interactable = true;
         closeButton.interactable = true;
+        raycaster.enabled = true;
 
         if (hideJeolguUIAfter && jeolguUI) jeolguUI.SetActive(false);
         isMilling = false;
