@@ -6,6 +6,8 @@ using System.Linq;
 using System;
 using UnityEngine.SceneManagement;
 
+
+
 [Serializable] class UnlockLevelEntry { public int level; public List<string> makers; public List<string> recipes; public List<string> shopItems; }
 [Serializable] class UnlockConfig { public List<UnlockLevelEntry> levels; }
 
@@ -30,6 +32,8 @@ public class UnlockManager : MonoBehaviour
 
     const string PP_RevealLevels = "Unlock_RevealLevels_Today";
     const string PP_RevealShown = "Unlock_RevealShown_Today";
+
+
     public bool IsMakerUnlocked(string makerId)
     {
         if (save?.unlockedMakers == null) return false;
@@ -227,9 +231,25 @@ public class UnlockManager : MonoBehaviour
                 foreach (var r in entry.recipes)
                     if (!string.IsNullOrWhiteSpace(r)) save.unlockedRecipes.Add(Norm(r));
 
-            if (entry.shopItems != null)
+            /*if (entry.shopItems != null)
                 foreach (var r in entry.shopItems)
-                    if (!string.IsNullOrWhiteSpace(r)) save.unlockedShopItems.Add(Norm(r));
+                    if (!string.IsNullOrWhiteSpace(r)) save.unlockedShopItems.Add(Norm(r));*/
+            if (entry.shopItems != null)
+            {
+                foreach (var raw in entry.shopItems)
+                {
+                    if (string.IsNullOrWhiteSpace(raw)) continue;
+                    var k = Norm(raw);
+
+                    if (k.StartsWith("shop:") || k.StartsWith("mill:"))
+                        save.unlockedShopItems.Add(k);
+                    else
+                    {
+                        save.unlockedShopItems.Add("shop:" + k);
+                        save.unlockedShopItems.Add("mill:" + k);
+                    }
+                }
+            }
         }
 
         SaveState();
