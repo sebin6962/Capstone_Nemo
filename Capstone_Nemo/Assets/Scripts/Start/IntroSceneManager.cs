@@ -55,6 +55,7 @@ public class IntroSceneManager : MonoBehaviour
     private bool shipStarted = false;     // 우주선 이동 시작 여부
     private Coroutine flowCoroutine;      // 메인 시퀀스 코루틴 핸들
 
+    private bool allowSkipToText = false;
 
     void Awake()
     {
@@ -108,10 +109,13 @@ public class IntroSceneManager : MonoBehaviour
         // 마우스 왼쪽 클릭 체크
         if (!clicked && Input.GetMouseButtonDown(0))
         {
-            // 아직 텍스트 단계 전이라면 텍스트 바로 등장
             if (!canClick && !textStarted)
             {
-                ForceStartTextStage();
+                // 로고가 다 뜬 이후에만 텍스트 바로 등장 허용
+                if (allowSkipToText)
+                {
+                    ForceStartTextStage();
+                }
             }
             // 텍스트가 이미 다 뜬 상태면 다음 씬으로 이동
             else if (canClick)
@@ -165,6 +169,8 @@ public class IntroSceneManager : MonoBehaviour
 
         if (gradientGroup != null)
             yield return StartCoroutine(FadeCanvasGroup(gradientGroup, 0, 1, gradientFadeSeconds));
+
+        allowSkipToText = true;
 
         // 2 텍스트 등장 (이미 강제 시작되었는지 확인)
         if (!textStarted)

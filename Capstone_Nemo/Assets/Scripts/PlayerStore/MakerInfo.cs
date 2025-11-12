@@ -31,6 +31,43 @@ public class MakerInfo : MonoBehaviour
     public GameObject craftCompleteEffect;
     private GameObject activeEffect;
 
+    [Header("진행 저장용")]
+    public bool isProducing;
+    public string resultItemName;           // 결과 아이템 이름 (스프라이트 이름)
+    public double craftEndUtcSeconds;       // 제작 종료 시각(초)
+
+    // --- 여기부터 씬 전환 시 진행 상태 관련 ---
+    public void StartCraft(Sprite resultSprite, float duration)
+    {
+        // 진행 상태 기록
+        isProducing = true;
+        resultItemName = resultSprite.name;
+
+        double nowUtc = (System.DateTime.UtcNow - System.DateTime.UnixEpoch).TotalSeconds;
+        craftEndUtcSeconds = nowUtc + duration;
+
+        // 실제 진행바 코루틴 시작
+        StartCoroutine(ShowProgressAndSpawnItem(resultSprite, duration));
+    }
+
+    // 제작이 정상적으로 끝났을 때 호출
+    public void OnCraftFinished()
+    {
+        isProducing = false;
+        craftEndUtcSeconds = 0;
+        inputItemNames.Clear();
+        inputItemSprites.Clear();
+
+        // 슬롯 UI 비우기
+        if (slotUIManager != null)
+            slotUIManager.ClearSlots();
+
+        var makerMgr = FindObjectOfType<MakerManager>();
+        if (makerMgr != null)
+            makerMgr.SaveMakerState();
+    }
+
+
     // 슬롯UI가 없으면 동적으로 생성, 이미 있으면 그대로 사용
     public void EnsureSlotUIInstance()
     {
@@ -108,18 +145,19 @@ public class MakerInfo : MonoBehaviour
         Destroy(progressBar.gameObject);
 
         //이펙트재생추가
-        if (craftCompleteEffect != null)
-        {
-            if (activeEffect != null) Destroy(activeEffect);
+        //if (craftCompleteEffect != null)
+        //{
+        //    if (activeEffect != null) Destroy(activeEffect);
 
-            Vector3 effectPos = worldPos + new Vector3(0f, -1f, 0f);
+        //    Vector3 effectPos = worldPos + new Vector3(0f, -1f, 0f);
 
-            activeEffect = Instantiate(craftCompleteEffect, effectPos, Quaternion.identity);
+        //    activeEffect = Instantiate(craftCompleteEffect, effectPos, Quaternion.identity);
 
-            var ps = activeEffect.GetComponentInChildren<ParticleSystem>();
-            if (ps != null)
-                ps.Play();
-        }
+        //    var ps = activeEffect.GetComponentInChildren<ParticleSystem>();
+        //    if (ps != null)
+        //        ps.Play();
+        //}
+        SpawnCompleteEffect();
 
         // 5. 결과물 생성 및 스폰
         GameObject result = Instantiate(resultItemPrefab, worldPos, Quaternion.identity);
@@ -132,6 +170,8 @@ public class MakerInfo : MonoBehaviour
         currentResultObject = result;
 
         Debug.Log($"[제작기] 결과물 {resultSprite.name} 생성");
+
+        OnCraftFinished();
     }
 
     // 잠금 상태 조회 (PlayerInteract에서 참고)
@@ -178,6 +218,25 @@ public class MakerInfo : MonoBehaviour
         else Destroy(activeEffect);
 
         activeEffect = null;
+    }
+
+    public void SpawnCompleteEffect()
+    {
+        if (craftCompleteEffect == null) return;
+
+        // 이전 이펙트가 남아 있으면 제거
+        if (activeEffect != null)
+            Destroy(activeEffect);
+
+        // 진행바와 같은 기준 위치에서 살짝 아래쪽
+        Vector3 worldPos = transform.position + new Vector3(0f, 1.2f, 0f);
+        Vector3 effectPos = worldPos + new Vector3(0f, -1f, 0f);
+
+        activeEffect = Instantiate(craftCompleteEffect, effectPos, Quaternion.identity);
+
+        var ps = activeEffect.GetComponentInChildren<ParticleSystem>();
+        if (ps != null)
+            ps.Play();
     }
 }
 

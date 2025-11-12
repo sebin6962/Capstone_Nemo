@@ -132,6 +132,10 @@ public class PlayerInteract : MonoBehaviour
 
                             //제작완료이펙트삭제
                             currentMaker.KillActiveEffect(0.5f);
+
+                            var makerMgr = FindObjectOfType<MakerManager>();
+                            if (makerMgr != null)
+                                makerMgr.SaveMakerState();
                         }
                     }
                     else
@@ -177,6 +181,12 @@ public class PlayerInteract : MonoBehaviour
                     HeldItemManager.Instance.HideHeldItem();
                     Debug.Log($"[E] {heldItemName} 제작기에 투입, 총 {currentMaker.inputItemNames.Count}/4");
                     SFXManager.Instance.PlayBbyongSFX();
+
+                    // 투입 직후 저장
+                    var makerMgr = FindObjectOfType<MakerManager>();
+                    if (makerMgr != null)
+                        makerMgr.SaveMakerState();
+
                     return;
                 }
             }
@@ -337,14 +347,21 @@ public class PlayerInteract : MonoBehaviour
 
                 Debug.Log("[Space] 제작 성공, 결과: " + resultSprite.name);
 
-                // 진행바 + 결과 생성
-                StartCoroutine(currentMaker.ShowProgressAndSpawnItem(resultSprite));
+                //// 진행바 + 결과 생성
+                //StartCoroutine(currentMaker.ShowProgressAndSpawnItem(resultSprite));
 
-                // 인풋 인벤토리, 슬롯 UI 초기화
-                currentMaker.inputItemNames.Clear();
-                currentMaker.inputItemSprites.Clear();
-                if (currentMaker.slotUIManager != null)
-                    currentMaker.slotUIManager.ClearSlots();
+                //// 인풋 인벤토리, 슬롯 UI 초기화
+                //currentMaker.inputItemNames.Clear();
+                //currentMaker.inputItemSprites.Clear();
+                //if (currentMaker.slotUIManager != null)
+                //    currentMaker.slotUIManager.ClearSlots();
+
+                float duration = 3f; // 기존에 쓰던 제작 시간
+                currentMaker.StartCraft(resultSprite, duration);
+
+                //var makerMgr = FindObjectOfType<MakerManager>();
+                //if (makerMgr != null)
+                //    makerMgr.SaveMakerState();
 
                 if (isRecipeMatched)
                     Debug.Log("[Space] 제작 성공, 결과: " + resultSprite.name);
