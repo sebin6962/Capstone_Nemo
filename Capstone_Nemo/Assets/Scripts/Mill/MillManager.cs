@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class MillManager : MonoBehaviour
 {
@@ -14,11 +15,15 @@ public class MillManager : MonoBehaviour
     public SelectedSlot selectedSlot;
     public Sprite[] testIcons;
     public Button confirmButton;
+    public Button closeButton;
+
+    private int queuedCount = 0;
 
     private MillItemData selectedItem = null;
     private List<MillItemData> Inventory;
 
     [SerializeField] private Image ResultEffectImage;
+    [SerializeField] private TMP_Text ResultEffectText;
     [SerializeField] private float displayDuration = 0.7f;
 
     [Header("애니메이션(추가)")]
@@ -113,7 +118,7 @@ public class MillManager : MonoBehaviour
     {
         if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
         Debug.Log("[MillManager] OnSelectedSlotClicked");
-        // 선택창을 눌렀을 때 inventory 패널을 켠다
+        //선택창 눌렀을 때 inventory 패널 켬
         RebuildInventoryGrid();
 
         if (inventoryPanel == null)
@@ -132,14 +137,15 @@ public class MillManager : MonoBehaviour
     private bool IsMillable(string itemName)
     {
         //가루로 만들 수 있는 재료
-        return itemName == "Danhobak" || itemName == "Baeknyeoncho" || itemName == "Mugwort" || itemName == "cinnamon";
+        return itemName == "Rice" || itemName == "Danhobak" || itemName == "Baeknyeoncho" || itemName == "Mugwort" || itemName == "cinnamon";
     }
 
 
     public void SelectItem(MillItemData item)
     {
         if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
-        if (ReferenceEquals(selectedItem, item))
+        //기존 하나씩만 변환되는 코드
+        /*if (ReferenceEquals(selectedItem, item))
         {
             item.itemQuantity += 1;
             selectedItem = null;
@@ -162,7 +168,67 @@ public class MillManager : MonoBehaviour
         UpdateInventoryUI();
         confirmButton.interactable = true;
 
-        inventoryPanel.SetActive(false);
+        inventoryPanel.SetActive(false);*/
+        if (item.itemQuantity <= 0 && (selectedItem == null || selectedItem.itemName != item.itemName))
+        {
+            return;
+        }
+
+        if (selectedItem == null)
+        {
+            selectedItem = item;
+            queuedCount = 1;
+            item.itemQuantity -= 1;
+
+            selectedSlot.Set(item, queuedCount);
+            UpdateInventoryUI();
+            confirmButton.interactable = true;
+            return;
+        }
+
+        if(selectedItem.itemName == item.itemName)
+        {
+            if (item.itemQuantity <= 0)
+            {
+                return;
+            }
+            item.itemQuantity -= 1;
+            queuedCount += 1;
+
+            selectedSlot.Set(item, queuedCount);
+            UpdateInventoryUI();
+            confirmButton.interactable = true;
+            return;
+        }
+
+        ReturnQueuedToInventory();
+
+        selectedItem = item;
+        item.itemQuantity -= 1;
+        queuedCount = 1;
+
+        selectedSlot.Set(item, queuedCount);
+        UpdateInventoryUI();
+        confirmButton.interactable = true;
+
+    }
+
+    private void ReturnQueuedToInventory()
+    {
+        if(selectedItem != null && queuedCount > 0)
+        {
+            selectedItem.itemQuantity += queuedCount;
+        }
+        queuedCount = 0;
+    }
+
+    private void ClearSelectionUI()
+    {
+        selectedItem = null;
+        queuedCount = 0;
+        selectedSlot.Clear();
+        UpdateInventoryUI();
+        confirmButton.interactable = false;
     }
 
     private void RebuildInventoryGrid()
@@ -212,6 +278,7 @@ public class MillManager : MonoBehaviour
         // 상태 잠금 & 버튼 잠금
         isMilling = true;
         confirmButton.interactable = false;
+        closeButton.interactable = false;
 
         // 절구 UI 보여주고 애니메이션 재생
         if (jeolguUI) jeolguUI.SetActive(true);
@@ -263,9 +330,19 @@ public class MillManager : MonoBehaviour
     // 실제 변환 + UI 갱신 공용 로직
     private void CompleteMilling()
     {
+        int useCount = queuedCount;
+        if (useCount <= 0)
+        {
+            ClearSelectionUI();
+            closeButton.interactable = true;
+            if (hideJeolguUIAfter && jeolguUI) jeolguUI.SetActive(false);
+            isMilling = false;
+            return;
+        }
+
         // 실제 변환(애니 끝난 시점)
-        StorageInventory.Instance.AddItem(cachedSourceName, -1);
-        StorageInventory.Instance.AddItem(cachedResultName, 1);
+        StorageInventory.Instance.AddItem(cachedSourceName, -useCount);
+        StorageInventory.Instance.AddItem(cachedResultName, useCount);
         StorageInventory.Instance.SaveStorage();
         Debug.Log($"{cachedSourceName} → {cachedResultName} 변환 완료(애니 종료 후)");
 
@@ -312,9 +389,19 @@ public class MillManager : MonoBehaviour
         {
             ResultEffectImage.sprite = cachedResultSprite;
             ResultEffectImage.gameObject.SetActive(true);
+
+            if (ResultEffectText != null)
+            {
+                ResultEffectText.text = queuedCount > 1 ? $"{queuedCount}" : "";
+                ResultEffectText.gameObject.SetActive(true);
+            }
+
             if (SFXManager.Instance) SFXManager.Instance.PlayCorrectSFX();
             yield return new WaitForSeconds(displayDuration); // 결과 이펙트 표시 시간만큼 대기
             ResultEffectImage.gameObject.SetActive(false);    // 이펙트 종료
+
+            if (ResultEffectText != null)
+                ResultEffectText.gameObject.SetActive(false);
         }
 
         // 창고로 날아가는 효과
@@ -339,6 +426,7 @@ public class MillManager : MonoBehaviour
         selectedSlot.Clear();
         UpdateInventoryUI();
         confirmButton.interactable = true;
+        closeButton.interactable = true;
 
         if (hideJeolguUIAfter && jeolguUI) jeolguUI.SetActive(false);
         isMilling = false;
@@ -346,10 +434,17 @@ public class MillManager : MonoBehaviour
 
 
 
-    public void ShowResultEffect(Sprite sprite)
+    public void ShowResultEffect(Sprite sprite, int count)
     {
         ResultEffectImage.sprite = sprite;
         ResultEffectImage.gameObject.SetActive(true);
+
+        if (ResultEffectText != null)
+        {
+            ResultEffectText.text = count > 1 ? $"x{count}" : "";
+            ResultEffectText.gameObject.SetActive(true);
+        }
+
         StartCoroutine(HideResultEffectAfterDelay());
     }
 
@@ -357,17 +452,18 @@ public class MillManager : MonoBehaviour
     {
         yield return new WaitForSeconds(displayDuration);
         ResultEffectImage.gameObject.SetActive(false);
+
+        if (ResultEffectText != null)
+        {
+            ResultEffectText.gameObject.SetActive(false);
+        }
     }
 
     public void CloseMill()
     {
-        if (selectedItem != null)
-        {
-            selectedItem.itemQuantity += 1;
-            selectedSlot.Clear();
-            selectedItem = null;
-            UpdateInventoryUI();
-        }
+        ReturnQueuedToInventory();
+        ClearSelectionUI();
+
         SFXManager.Instance.PlayBbyongSFX();
         MillPanel.SetActive(false);
     }

@@ -7,19 +7,26 @@ using TMPro;
 public class SelectedSlot : MonoBehaviour
 {
     [SerializeField] private Image icon;
+    [SerializeField] private TMP_Text countText;
     /*[SerializeField] private TMP_Text nameText;*/
 
-    public void Set(MillItemData item)
+    public void Set(MillItemData item, int count)
     {
         icon.sprite = item.icon;
         icon.enabled = true;
+        countText.text = count > 1 ? $"{count}" : "";
         /*nameText.text = item.itemName;*/
+    }
+
+    public void UpdateCount(int count)
+    {
+        countText.text = count > 1 ? $"{count}" : "";
     }
 
     public void Clear()
     {
         icon.sprite = null;
         icon.enabled = false;
-        /*nameText.text = "";*/
+        countText.text = "";
     }
 }

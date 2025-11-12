@@ -6,7 +6,7 @@ public class MillDB : MonoBehaviour
 {
     public static Dictionary<string, string> GrindResult = new Dictionary<string, string>
     {
-        { "Redbean", "Grind_Redbean" },
+        { "Rice", "Mepssalgaru" },
         { "Mugwort", "Mugwortgaru" },
         { "Danhobak", "Danhobakgaru" },
         { "Baeknyeoncho", "Baeknyeonchogaru" },
