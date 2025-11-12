@@ -93,6 +93,11 @@ public class CutSceneManager : MonoBehaviour
     [Tooltip("컷신 씬 진입 후 화살표 활성화 딜레이(초)")]
     public float arrowDelaySeconds = 2f;
 
+    [Header("컷신 건너뛰기 버튼")]
+    public GameObject skipButton;
+
+    private bool isSkipping = false;
+
     private void Awake()
     {
         // 컷 패널 비활성화
@@ -104,6 +109,7 @@ public class CutSceneManager : MonoBehaviour
             var c = fadeImage.color; c.a = 1f;
             fadeImage.color = c;
             fadeImage.gameObject.SetActive(true);
+            fadeImage.raycastTarget = false;
         }
 
         if (subtitleContainer != null)
@@ -166,10 +172,14 @@ public class CutSceneManager : MonoBehaviour
         if (nextArrowIndicator != null)
             nextArrowIndicator.SetActive(false);
 
+        //건너뛰기
+        if (skipButton != null)
+            skipButton.SetActive(false);
+
         StartCoroutine(PlayCutAndTransition());
 
         // 일정 시간 후 화살표 표시
-        if (nextArrowIndicator != null)
+        if (nextArrowIndicator != null || skipButton != null)
             StartCoroutine(ShowArrowAfterDelay());
     }
 
@@ -179,6 +189,9 @@ public class CutSceneManager : MonoBehaviour
 
         if (nextArrowIndicator != null)
             nextArrowIndicator.SetActive(true);
+
+        if (skipButton != null)
+            skipButton.SetActive(true);
     }
 
     private IEnumerator PlayCutAndTransition()
@@ -219,6 +232,9 @@ public class CutSceneManager : MonoBehaviour
             {
                 if (nextArrowIndicator != null)
                     nextArrowIndicator.SetActive(false);
+
+                if (skipButton != null)
+                    skipButton.SetActive(false);
 
                 // 자막 전체를 부드럽게 걷어내기
                 if (subtitleGroup != null)
@@ -273,6 +289,11 @@ public class CutSceneManager : MonoBehaviour
 
     private IEnumerator TransitionToVillage()
     {
+        if (fadeImage != null)
+        {
+            yield return Fade(fadeImage.color.a, 1f, fadeSeconds * 0.5f);
+        }
+
         // === 기존 로직 유지 ===
         if (VillageSceneManager.Instance != null)
         {
@@ -537,6 +558,33 @@ public class CutSceneManager : MonoBehaviour
             Destroy(subtitleContainer.GetChild(i).gameObject);
         }
     }
+
+    //=========================건너뛰기 버튼========================
+    public void OnClickSkipButton()
+    {
+        if (isSkipping) return;
+        isSkipping = true;
+
+        // 이 CutSceneManager에서 돌고 있는 모든 코루틴 정지
+        StopAllCoroutines();
+
+        // UI 끄기
+        if (nextArrowIndicator != null)
+            nextArrowIndicator.SetActive(false);
+        if (skipButton != null)
+            skipButton.SetActive(false);
+
+        // 스킵용 전환 코루틴 시작
+        StartCoroutine(SkipCutSceneRoutine());
+    }
+
+    private IEnumerator SkipCutSceneRoutine()
+    {
+       
+        // 마을로 전환
+        yield return TransitionToVillage();
+    }
+
 }
 
 

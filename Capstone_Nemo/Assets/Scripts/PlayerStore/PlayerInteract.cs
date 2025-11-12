@@ -19,6 +19,10 @@ public class PlayerInteract : MonoBehaviour
     private SinkInfo nearbySink;
     private TrashCanInfo nearbyTrash;
 
+    public GameObject storageFullPanel;     // "창고가 가득 찼습니다" 패널
+    public CanvasGroup storageFullGroup;    // 위 패널에 붙은 CanvasGroup
+    private Coroutine storageFullCo;        // 중복 실행 방지
+
     private static readonly HashSet<string> NonDiscardableItems = new HashSet<string>
 {
     "YakgwaMold", // 보호 아이템: 버려지지 않음
@@ -256,6 +260,31 @@ public class PlayerInteract : MonoBehaviour
             {
                 string heldItemName = HeldItemManager.Instance.GetHeldItemName();
 
+                // 시도 후 실패하면 메시지만 출력
+                if (!StorageInventory.Instance.TryAddItem(heldItemName, 1))
+                {
+                    int currentCount = StorageInventory.Instance.GetItemCount(heldItemName);
+                    bool hasThisItem = currentCount > 0;
+
+                    if (hasThisItem && currentCount >= StorageInventory.Instance.maxStackPerItem)
+                    {
+                        ShowStorageFull();
+                        Debug.Log($"[Space] {heldItemName} 스택이 최대치({StorageInventory.Instance.maxStackPerItem})라 더 넣을 수 없습니다.");
+                    }
+                    else if (!hasThisItem && StorageInventory.Instance.FreeSlots <= 0)
+                    {
+                        ShowStorageFull();
+                        Debug.Log("[Space] 상자 슬롯이 가득 차서 더 이상 아이템을 보관할 수 없습니다.");
+                    }
+                    else
+                    {
+                        Debug.Log("[Space] 상자에 아이템을 넣을 수 없습니다. (TryAddItem 실패)");
+                    }
+
+                    SFXManager.Instance.PlayBbyongSFX();
+                    return;
+                }
+
                 StorageInventory.Instance.AddItem(heldItemName, 1);
                 StorageInventory.Instance.SaveStorage();
 
@@ -327,6 +356,40 @@ public class PlayerInteract : MonoBehaviour
         }
     }
 
+    public void ShowStorageFull()
+    {
+        if (storageFullCo != null) StopCoroutine(storageFullCo);
+        storageFullCo = StartCoroutine(StorageFullRoutine());
+    }
+
+    private IEnumerator StorageFullRoutine()
+    {
+        storageFullPanel.SetActive(true);
+
+        float duration = 0.5f;
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            storageFullGroup.alpha = Mathf.Lerp(0f, 1f, t / duration);
+            yield return null;
+        }
+        storageFullGroup.alpha = 1f;
+
+        yield return new WaitForSeconds(1f);
+
+        t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            storageFullGroup.alpha = Mathf.Lerp(1f, 0f, t / duration);
+            yield return null;
+        }
+        storageFullGroup.alpha = 0f;
+
+        storageFullPanel.SetActive(false);
+        storageFullCo = null;
+    }
     //private IEnumerator DelayedCraftingRoutine()
     //{
     //    yield return null; // 1프레임 대기

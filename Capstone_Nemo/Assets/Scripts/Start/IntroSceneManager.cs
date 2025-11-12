@@ -51,6 +51,11 @@ public class IntroSceneManager : MonoBehaviour
     private float moveStartTime;            // 이동 시작 시각
     private int shipSpriteIdx = 0;
 
+    private bool textStarted = false;     // 텍스트 페이드인 시작 여부
+    private bool shipStarted = false;     // 우주선 이동 시작 여부
+    private Coroutine flowCoroutine;      // 메인 시퀀스 코루틴 핸들
+
+
     void Awake()
     {
         // 하단 그라데이션 세팅
@@ -95,17 +100,27 @@ public class IntroSceneManager : MonoBehaviour
         clickTextUI.alpha = 0;
         clickTextUI.gameObject.SetActive(false);
 
-        StartCoroutine(FlowSequence());
+        flowCoroutine = StartCoroutine(FlowSequence());
     }
 
     void Update()
     {
-        if (canClick && !clicked && Input.GetMouseButtonDown(0))
+        // 마우스 왼쪽 클릭 체크
+        if (!clicked && Input.GetMouseButtonDown(0))
         {
-            clicked = true;
-            //if (SFXManager.Instance != null)
-            //    SFXManager.Instance.PlayIntroClickSFX();
-            FadeManager.Instance.FadeToScene("SaveSelectScene");
+            // 아직 텍스트 단계 전이라면 텍스트 바로 등장
+            if (!canClick && !textStarted)
+            {
+                ForceStartTextStage();
+            }
+            // 텍스트가 이미 다 뜬 상태면 다음 씬으로 이동
+            else if (canClick)
+            {
+                clicked = true;
+                //if (SFXManager.Instance != null)
+                //    SFXManager.Instance.PlayIntroClickSFX();
+                FadeManager.Instance.FadeToScene("SaveSelectScene");
+            }
         }
 
         // 우주선
@@ -142,25 +157,63 @@ public class IntroSceneManager : MonoBehaviour
     {
         // 1 로고 등장
         yield return new WaitForSeconds(delayBeforeLogo);
+
+        // 로고 등장과 동시에 우주선 이동 시작
+        StartShipOnce();
+
         yield return StartCoroutine(FadeCanvasGroup(logoUI, 0, 1, logoFadeDuration));
 
         if (gradientGroup != null)
             yield return StartCoroutine(FadeCanvasGroup(gradientGroup, 0, 1, gradientFadeSeconds));
 
-        // 2 텍스트 등장
-        yield return new WaitForSeconds(delayBeforeText);
+        // 2 텍스트 등장 (이미 강제 시작되었는지 확인)
+        if (!textStarted)
+        {
+            yield return new WaitForSeconds(delayBeforeText);
+            yield return StartCoroutine(StartTextStage());
+        }
+    }
+
+    // 텍스트 등장 + 깜빡임 + 클릭 허용까지 한 번에 처리
+    private IEnumerator StartTextStage()
+    {
+        textStarted = true;
+
         clickTextUI.gameObject.SetActive(true);
         yield return StartCoroutine(FadeCanvasGroup(clickTextUI, 0, 1, textFadeDuration));
 
-        // 4 우주선 이동 시작
-        if (startShipAfterText) SetupAndStartSpaceship();
         canClick = true;
 
-        // 3 깜빡임 시작
         blinking = true;
         StartCoroutine(BlinkText());
+    }
 
-        
+    private void StartShipOnce()
+    {
+        if (shipStarted) return;
+        shipStarted = true;
+
+        SetupAndStartSpaceship();   // 내부에서 RestartSpaceshipFromLeft() 호출
+    }
+
+    private void ForceStartTextStage()
+    {
+        if (textStarted) return;   // 이미 시작했으면 무시
+
+        textStarted = true;
+
+        // 메인 흐름 중단
+        if (flowCoroutine != null)
+        {
+            StopCoroutine(flowCoroutine);
+            flowCoroutine = null;
+        }
+
+        // 로고/그라데이션이 아직 진행 중이어도 상관없이 텍스트 바로 시작
+        StartCoroutine(StartTextStage());
+
+        // 우주선도 아직 안 시작됐으면 여기서 한 번 더 보장
+        StartShipOnce();
     }
 
     IEnumerator FadeCanvasGroup(CanvasGroup cg, float from, float to, float duration)
