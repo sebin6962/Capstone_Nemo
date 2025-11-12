@@ -44,6 +44,10 @@ public class TimeManager : MonoBehaviour
     private string PlaytimePath(string server)
         => Path.Combine(Application.persistentDataPath, $"playtime_{server}.json");
 
+    public GameObject dayEndPanel;      // 곧 하루가 끝남 팝업 패널
+    public CanvasGroup dayEndGroup;     
+    private Coroutine dayEndCo;         // 중복 실행 방지용 코루틴
+    private bool dayEndWarningShown = false;  // 오늘 하루에 한 번만 뜨게
 
     void Awake()
     {
@@ -83,6 +87,8 @@ public class TimeManager : MonoBehaviour
             name == "SaveSelectScene" ||
             name == "StatementScene";
         isTimeFlow = !shouldPause;
+
+        WireDayEndPanelInScene();
     }
     void Start()
     {
@@ -93,8 +99,35 @@ public class TimeManager : MonoBehaviour
         if (clockHandImage == null)
             clockHandImage = GameObject.Find("DayPanel_niddle")?.GetComponent<Image>();
 
+        WireDayEndPanelInScene();
+
         UpdateDayUI();
         UpdateClockProgressUI();
+    }
+
+    void WireDayEndPanelInScene()
+    {
+        if (dayEndPanel != null && dayEndGroup != null) return;
+
+        // 비활성 포함해서 전부 스캔
+        var groups = FindObjectsOfType<CanvasGroup>(true);
+        foreach (var cg in groups)
+        {
+            if (cg.gameObject.name == "DayEndWarningPanel")
+            {
+                // 프리팹 에셋이 아닌, 씬에 실제 배치된 객체만 채택
+                if (!cg.gameObject.scene.IsValid()) continue;
+
+                dayEndPanel = cg.gameObject;
+                dayEndGroup = cg;
+
+                // 초기 상태 정리
+                dayEndGroup.alpha = 0f;
+                dayEndPanel.SetActive(false);
+                Debug.Log("[TimeManager] DayEndWarningPanel auto-wired.");
+                break;
+            }
+        }
     }
 
     void Update()
@@ -120,8 +153,71 @@ public class TimeManager : MonoBehaviour
                     StartCoroutine(EndOfDayRoutine());
                 }
             }
+
+            // '하루 종료 1분 전' 체크
+            CheckDayEndWarning();
+
             UpdateClockProgressUI();
         }
+    }
+
+    private void CheckDayEndWarning()
+    {
+        // 하루 동안 지난 시간(분)
+        int minutesPassed = (hour - 9) * 60 + minute;
+
+        int remainingMinutes = totalGameMinutes - minutesPassed;
+
+        // 남은 시간이 1분이고, 아직 경고를 안 띄웠다면
+        if (remainingMinutes == 60 && !dayEndWarningShown)
+        {
+            ShowDayEndWarning();
+            dayEndWarningShown = true;
+        }
+    }
+
+    public void ShowDayEndWarning()
+    {
+        if (dayEndCo != null)
+            StopCoroutine(dayEndCo);
+
+        dayEndCo = StartCoroutine(DayEndWarningRoutine());
+    }
+
+    private IEnumerator DayEndWarningRoutine()
+    {
+        if (dayEndPanel == null || dayEndGroup == null)
+            yield break;
+
+        dayEndPanel.SetActive(true);
+
+        float duration = 0.5f;
+        float t = 0f;
+
+        // 페이드 인
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            dayEndGroup.alpha = Mathf.Lerp(0f, 1f, t / duration);
+            yield return null;
+        }
+        dayEndGroup.alpha = 1f;
+
+        // 화면에 유지
+        yield return new WaitForSeconds(2f);
+
+        // 페이드 아웃
+        t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            dayEndGroup.alpha = Mathf.Lerp(1f, 0f, t / duration);
+            yield return null;
+        }
+        dayEndGroup.alpha = 0f;
+
+        dayEndPanel.SetActive(false);
+        dayEndCo = null;
     }
 
     public void LoadDay()
@@ -147,6 +243,9 @@ public class TimeManager : MonoBehaviour
         }
 
         UpdateDayUI();
+
+        // 하루 로드할 때마다 경고 초기화
+        dayEndWarningShown = false;
     }
 
     void UpdateClockProgressUI()
@@ -174,10 +273,14 @@ public class TimeManager : MonoBehaviour
 
     IEnumerator EndOfDayRoutine()
     {
-        currentDay++;           // 날짜 먼저 증가!
-        hour = 9;           // 날짜 넘길 때 시간 초기화!
+        currentDay++;           // 날짜 먼저 증가
+        hour = 9;           // 날짜 넘길 때 시간 초기화
         minute = 0;
-        SaveDayData();          // 증가한 날짜 저장!
+
+        // 다음 날로 넘어갈 때 플래그 리셋
+        dayEndWarningShown = false;
+
+        SaveDayData();          // 증가한 날짜 저장
 
         OnNewDayStarted?.Invoke();
 
