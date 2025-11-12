@@ -32,10 +32,13 @@ public class SettingsManager : MonoBehaviour
     public float masterVolume = 1f;
     public float bgmVolume = 1f;
     public float sfxVolume = 1f;
+
+    public bool masterMute = false;
+    public bool bgmMute = false;
+    public bool sfxMute = false;
+
     public float UIScale = 1f;
     public float brightness = 1f;
-
-
     public bool isFullScreen = true;
 
     void Awake()
@@ -45,11 +48,17 @@ public class SettingsManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             LoadSettings();
+            ApplyToAudio();
         }
         else
         {
             Destroy(gameObject);
         }
+    }
+
+    void Start()
+    {
+        ApplyToAudio();
     }
 
 
@@ -58,8 +67,14 @@ public class SettingsManager : MonoBehaviour
         PlayerPrefs.SetFloat("MasterVolume", masterVolume);
         PlayerPrefs.SetFloat("BGMVolume", bgmVolume);
         PlayerPrefs.SetFloat("SFXVolume", sfxVolume);
+
+        PlayerPrefs.SetInt("MasterMute", masterMute ? 1 : 0);
+        PlayerPrefs.SetInt("BGMMute", bgmMute ? 1 : 0);
+        PlayerPrefs.SetInt("SFXMute", sfxMute ? 1 : 0);
+
         PlayerPrefs.SetFloat("UIScale", UIScale);
         PlayerPrefs.SetInt("IsFullScreen", isFullScreen ? 1 : 0);
+
         PlayerPrefs.Save();
         Debug.Log($"º≥¡§ ¿˙¿Âµ ");
     }
@@ -69,6 +84,11 @@ public class SettingsManager : MonoBehaviour
         masterVolume = PlayerPrefs.GetFloat("MasterVolume", 1f);
         bgmVolume = PlayerPrefs.GetFloat("BGMVolume", 1f);
         sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+
+        masterMute = PlayerPrefs.GetInt("MasterMute", 0) == 1;
+        bgmMute = PlayerPrefs.GetInt("BGMMute", 0) == 1;
+        sfxMute = PlayerPrefs.GetInt("SFXMute", 0) == 1;
+
         UIScale = PlayerPrefs.GetFloat("UIScale", 1f);
         isFullScreen = PlayerPrefs.GetInt("IsFullScreen", 1) == 1;
 
@@ -78,5 +98,18 @@ public class SettingsManager : MonoBehaviour
             AudioSetting.Instance.SetAudioVolume(EAudioMixerType.BGM, bgmVolume);
             AudioSetting.Instance.SetAudioVolume(EAudioMixerType.SFX, sfxVolume);
         }
+    }
+
+    private void ApplyToAudio()
+    {
+        if (AudioSetting.Instance == null) return;
+
+        AudioSetting.Instance.SetAudioVolume(EAudioMixerType.Master, masterVolume);
+        AudioSetting.Instance.SetAudioVolume(EAudioMixerType.BGM, bgmVolume);
+        AudioSetting.Instance.SetAudioVolume(EAudioMixerType.SFX, sfxVolume);
+
+        AudioSetting.Instance.SetMasterMute(masterMute);
+        AudioSetting.Instance.SetBGMMute(bgmMute);
+        AudioSetting.Instance.SetSFXMute(sfxMute);
     }
 }

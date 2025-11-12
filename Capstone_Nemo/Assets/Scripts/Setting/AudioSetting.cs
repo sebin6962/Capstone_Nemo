@@ -34,7 +34,7 @@ public class AudioSetting : MonoBehaviour
     public void SetAudioVolume(EAudioMixerType audioMixerType, float volume)
     {
         float safeVolume = Mathf.Clamp(volume, 0.001f, 1f);
-        audioMixer.SetFloat(audioMixerType.ToString(), Mathf.Log10(volume) * 20);
+        audioMixer.SetFloat(audioMixerType.ToString(), Mathf.Log10(safeVolume) * 20);
     }
 
 
@@ -84,5 +84,68 @@ public class AudioSetting : MonoBehaviour
     public void ChangeSFXVolume(float volume)
     {
         AudioSetting.Instance.SetAudioVolume(EAudioMixerType.SFX, volume);
+    }
+
+    public void SetMasterMute(bool isOn)
+    {
+        int type = (int)EAudioMixerType.Master;
+        isMute[type] = isOn;
+
+        if (!isOn)
+        {
+            if (audioMixer.GetFloat(EAudioMixerType.Master.ToString(), out float currentDb))
+            {
+                audioVolumes[type] = Mathf.Pow(10f, currentDb / 20f);
+            }
+
+            SetAudioVolume(EAudioMixerType.Master, 0.001f);
+        }
+        else
+        {
+            float restore = audioVolumes[type] > 0 ? audioVolumes[type] : 1f;
+            SetAudioVolume(EAudioMixerType.Master, restore);
+        }
+    }
+
+    public void SetBGMMute(bool isOn)
+    {
+        int type = (int)EAudioMixerType.BGM;
+        isMute[type] = isOn;
+
+        if (!isOn) 
+        {
+            if (audioMixer.GetFloat(EAudioMixerType.BGM.ToString(), out float currentDb))
+            {
+                audioVolumes[type] = Mathf.Pow(10f, currentDb / 20f);
+            }
+
+            SetAudioVolume(EAudioMixerType.BGM, 0.001f); 
+        }
+        else 
+        {
+            float restore = audioVolumes[type] > 0 ? audioVolumes[type] : 1f;
+            SetAudioVolume(EAudioMixerType.BGM, restore);
+        }
+    }
+
+    public void SetSFXMute(bool isOn)
+    {
+        int type = (int)EAudioMixerType.SFX;
+        isMute[type] = isOn;
+
+        if (!isOn)
+        {
+            if (audioMixer.GetFloat(EAudioMixerType.SFX.ToString(), out float currentDb))
+            {
+                audioVolumes[type] = Mathf.Pow(10f, currentDb / 20f);
+            }
+
+            SetAudioVolume(EAudioMixerType.SFX, 0.001f);
+        }
+        else
+        {
+            float restore = audioVolumes[type] > 0 ? audioVolumes[type] : 1f;
+            SetAudioVolume(EAudioMixerType.SFX, restore);
+        }
     }
 }
