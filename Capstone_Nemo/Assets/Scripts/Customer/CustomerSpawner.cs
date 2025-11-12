@@ -9,7 +9,7 @@ public class CustomerSpawner : MonoBehaviour
     public SeatManager seatManager;
     public List<Route> routesPerSeat;
 
-    public float spawnInterval = 5f;
+    public float spawnInterval;
     private float timer;
 
     [SerializeField] private float questCustomerChance = 0.2f;

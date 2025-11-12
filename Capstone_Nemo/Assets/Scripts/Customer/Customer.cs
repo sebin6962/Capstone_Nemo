@@ -261,17 +261,50 @@ public class Customer : MonoBehaviour
 
     IEnumerator MoveDownAndDestroy()
     {
-        Vector3 target = transform.position + Vector3.down * 4f;
+        Vector3 startPos = transform.position;
+        Vector3 target = startPos + Vector3.down * 3f;
+        SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>();
+        CanvasGroup[] canvasGroups = GetComponentsInChildren<CanvasGroup>();
 
-        while (Vector3.Distance(transform.position, target) > 0.1f)
+        //내려가는데걸리는시간
+        float duration = 2.5f;  
+        //언제부터페이드?
+        float fadeDelay = 0.5f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
         {
-            transform.position = Vector3.MoveTowards(transform.position, target, Time.deltaTime * 2f);
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            transform.position = Vector3.Lerp(startPos, target, Mathf.SmoothStep(0f, 1f, t));
+
+            if (t > fadeDelay)
+            {
+                float fadeT = Mathf.InverseLerp(fadeDelay, 1f, t);
+                float alpha = Mathf.Lerp(1f, 0f, fadeT);
+
+                // 손님 스프라이트 페이드
+                foreach (var r in renderers)
+                {
+                    if (r == null) continue;
+                    Color c = r.color;
+                    c.a = alpha;
+                    r.color = c;
+                }
+
+                // 말풍선(CanvasGroup) 페이드
+                foreach (var cg in canvasGroups)
+                {
+                    if (cg == null) continue;
+                    cg.alpha = alpha;
+                }
+            }
+
             yield return null;
         }
 
-        yield return new WaitForSeconds(2f);
-        Destroy(gameObject);
-
+        // 완전히 사라진 후 좌석 비움
         if (seatManager != null)
         {
             seatManager.VacateSeat(seatIndex);
