@@ -1,0 +1,141 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+
+[Serializable]
+public class TableSlotSave
+{
+    public string tableId;
+    public string itemSpriteName;
+}
+
+[Serializable]
+public class TableSaveData
+{
+    public List<TableSlotSave> tables = new List<TableSlotSave>();
+}
+
+public class TableManager : MonoBehaviour
+{
+    string CurrentServer => PlayerPrefs.GetString("SelectedSave", "");
+
+    string TableSavePath
+        => string.IsNullOrEmpty(CurrentServer)
+           ? null
+           : Path.Combine(Application.persistentDataPath, $"ps_tableItem_{CurrentServer}.json");
+
+    void Start()
+    {
+        LoadTableState();
+    }
+
+    void OnDisable()
+    {
+        SaveTableState();
+    }
+
+    void OnApplicationQuit()
+    {
+        SaveTableState();
+    }
+
+    public void SaveTableState()
+    {
+        if (string.IsNullOrEmpty(TableSavePath)) return;
+
+        var tablesInScene = FindObjectsOfType<TableInfo>();
+        if (tablesInScene.Length == 0)
+        {
+            Debug.Log("[Table] 씬에 TableInfo 없음 → 기존 table json 덮어쓰기 생략");
+            return;
+        }
+
+        var data = new TableSaveData();
+
+        foreach (var table in tablesInScene)
+        {
+            if (string.IsNullOrEmpty(table.tableId)) continue;
+
+            // 테이블 위에 아무것도 없으면 저장 안 함 (이 테이블은 비어있는 상태로 간주)
+            if (table.currentPlacedObject == null) continue;
+
+            var sr = table.currentPlacedObject.GetComponent<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) continue;
+
+            var slot = new TableSlotSave
+            {
+                tableId = table.tableId,
+                itemSpriteName = sr.sprite.name
+            };
+
+            data.tables.Add(slot);
+        }
+
+        File.WriteAllText(TableSavePath, JsonUtility.ToJson(data, true));
+        Debug.Log($"[Table] Saved {data.tables.Count} tables → {TableSavePath}");
+    }
+
+    public void LoadTableState()
+    {
+        if (string.IsNullOrEmpty(TableSavePath)) return;
+        if (!File.Exists(TableSavePath)) return;
+
+        var json = File.ReadAllText(TableSavePath);
+        var data = JsonUtility.FromJson<TableSaveData>(json);
+        if (data == null) return;
+
+        var tablesInScene = FindObjectsOfType<TableInfo>();
+        var map = new Dictionary<string, TableInfo>();
+
+        foreach (var t in tablesInScene)
+        {
+            if (!string.IsNullOrEmpty(t.tableId))
+                map[t.tableId] = t;
+        }
+
+        foreach (var saved in data.tables)
+        {
+            if (!map.TryGetValue(saved.tableId, out var table))
+                continue;
+
+            // 기존에 올라가 있던 초기 아이템/이전 상태 제거
+            if (table.currentPlacedObject != null)
+            {
+                Destroy(table.currentPlacedObject);
+                table.currentPlacedObject = null;
+            }
+
+            if (string.IsNullOrEmpty(saved.itemSpriteName))
+                continue;
+
+            // 스프라이트 로드
+            Sprite spr = Resources.Load<Sprite>(table.spriteResourceDir + saved.itemSpriteName);
+            if (spr == null)
+            {
+                Debug.LogWarning($"[Table] 스프라이트 로드 실패: {table.spriteResourceDir}{saved.itemSpriteName}");
+                continue;
+            }
+
+            // 테이블 위에 새 TableItem 생성
+            GameObject go = new GameObject("TableItem");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = spr;
+
+            // PlayerInteract에서 탁자에 올릴 때와 동일하게 맞춤
+            sr.sortingLayerName = "Obj";
+            sr.sortingOrder = 60;  // 항상 위에 보이도록
+
+            go.transform.SetParent(table.itemSpot, worldPositionStays: false);
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localScale = table.initialScale;
+
+            table.currentPlacedObject = go;
+
+            Debug.Log($"[Table] 복원: tableId={saved.tableId}, item={saved.itemSpriteName}");
+        }
+
+        Debug.Log($"[Table] Loaded {data.tables.Count} tables");
+    }
+}

@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class TableInfo : MonoBehaviour
 {
+    [Header("ID")]
+    [Tooltip("세이브/로드용 테이블 고유 ID")]
+    public string tableId;
+
     [Header("필수")]
     public Transform itemSpot;                 // 이미 쓰는 자리
     [HideInInspector] public GameObject currentPlacedObject;
@@ -59,7 +63,8 @@ public class TableInfo : MonoBehaviour
         var sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = spr;
         sr.sortingLayerName = sortingLayerName;
-        sr.sortingOrder = sortingOrder;
+        //sr.sortingOrder = sortingOrder;
+        sr.sortingOrder = 60;
 
         go.transform.SetParent(itemSpot, worldPositionStays: false);
         go.transform.localPosition = Vector3.zero;

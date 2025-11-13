@@ -177,12 +177,24 @@ public class Customer : MonoBehaviour
             orderUI.ShowTimerUI(false);
             Debug.Log($"정답 처리됨: {givenDagwa}");
 
+            // 기본값(대비용)
+            int expAmount = 20;
+            int starAmount = 10;
+
+            // 다과별 보상 테이블에서 가져오기
+            var reward = DagwaRewardManager.Instance?.GetReward(expected);
+            if (reward != null)
+            {
+                expAmount = reward.exp;
+                starAmount = reward.starlight;
+            }
+
             // 경험치 지급
-            PlayerLevelManager.Instance?.AddExp(20);
+            PlayerLevelManager.Instance?.AddExp(expAmount);
 
             // 별빛 지급
             //StarDataManager.Instance?.AddStarlight(10);
-            StarDataManager.Instance?.AddStarlightFromNormal(10);
+            StarDataManager.Instance?.AddStarlightFromNormal(starAmount);
 
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
 

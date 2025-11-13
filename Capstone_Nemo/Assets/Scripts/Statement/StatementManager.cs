@@ -27,6 +27,8 @@ public class StatementManager : MonoBehaviour
 
     Coroutine _reportRoutine;
 
+    private bool _nextDayButtonClicked = false;
+
     void Awake()
     {
         // 혹시 TimeManager 이벤트 순서가 씬 전환 뒤로 밀렸어도 안전하도록
@@ -55,6 +57,13 @@ public class StatementManager : MonoBehaviour
 
     public void OnNextDayButtonClicked()
     {
+        if (_nextDayButtonClicked)
+        {
+            // 이미 눌렀으면 아무 것도 안 하고 바로 리턴
+            return;
+        }
+        _nextDayButtonClicked = true;
+
         if (SFXManager.Instance != null)
             SFXManager.Instance.PlayFileSelectSFX();
 
