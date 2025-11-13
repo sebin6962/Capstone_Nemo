@@ -115,7 +115,7 @@ public class MakerInfo : MonoBehaviour
 
         // 1. 진행바 프리팹 인스턴스 생성 및 위치 지정
         RectTransform progressBar = Instantiate(progressBarPrefab, ProgressworldCanvasParent);
-        Vector3 worldPos = transform.position + new Vector3(0f, 1.2f, 0f);
+        Vector3 worldPos = transform.position + new Vector3(0f, 1.0f, 0f);
         progressBar.position = worldPos;
 
         // 2. Fill 오브젝트 참조 및 초기화
