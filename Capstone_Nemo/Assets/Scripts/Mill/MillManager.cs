@@ -121,15 +121,22 @@ public class MillManager : MonoBehaviour
     {
         if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
         Debug.Log("[MillManager] OnSelectedSlotClicked");
-        //¼±ÅÃÃ¢ ´­·¶À» ¶§ inventory ÆÐ³Î ÄÔ
-        RebuildInventoryGrid();
 
         if (inventoryPanel == null)
         {
             Debug.LogError("[MillManager] inventoryPanel is NULL");
             return;
         }
+        else
+        {
+            ReturnQueuedToInventory();
+            ClearSelectionUI();
+        }
+        //¼±ÅÃÃ¢ ´­·¶À» ¶§ inventory ÆÐ³Î ÄÔ
+        RebuildInventoryGrid();
+
         inventoryPanel.SetActive(true);
+
         Debug.Log(
             $"[MillManager] inventoryPanel activeSelf={inventoryPanel.activeSelf}, " +
             $"activeInHierarchy={inventoryPanel.activeInHierarchy}, " +
