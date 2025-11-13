@@ -10,6 +10,9 @@ public class StorageInventorySlot : MonoBehaviour, IPointerEnterHandler, IPointe
     public Image itemImage;
     public TextMeshProUGUI countText;
 
+    // 수량 텍스트 뒤 배경
+    public GameObject countBackground;
+
     //추가: 아이템 정보 저장용
     public string itemName;
     public Sprite itemSprite;
@@ -33,8 +36,27 @@ public class StorageInventorySlot : MonoBehaviour, IPointerEnterHandler, IPointe
         if (!ItemTooltipDB.TooltipTexts.TryGetValue(itemKey, out tooltipText))
             tooltipText = itemKey; // 혹시 없을 때 대비 예외 처리
 
-        countText.text = (count > 1) ? count.ToString() : "";
-        countText.enabled = true;
+        //원래 수량 처리
+        //countText.text = (count > 1) ? count.ToString() : "";
+        //countText.enabled = true;
+
+        // 여기부터 수량/배경 처리
+        if (count > 1)
+        {
+            countText.text = count.ToString();
+            countText.enabled = true;
+
+            if (countBackground != null)
+                countBackground.SetActive(true);   // 2개 이상일 때만 ON
+        }
+        else
+        {
+            countText.text = "";
+            countText.enabled = false;
+
+            if (countBackground != null)
+                countBackground.SetActive(false);  // 1개 이하일 때 OFF
+        }
     }
 
 
@@ -47,6 +69,9 @@ public class StorageInventorySlot : MonoBehaviour, IPointerEnterHandler, IPointe
         countText.enabled = false;
         itemName = "";
         itemSprite = null;
+
+        if (countBackground != null)
+            countBackground.SetActive(false);   // 비어있을 때는 항상 끄기
     }
 
     public void OnClick()
@@ -131,7 +156,7 @@ public static class ItemTooltipDB
         { "Omija", "오미자" },
         { "Flour", "밀가루" },
         { "Alcohol", "술" },
-        { "FriedRice", "쌀튀밥" },
+        { "FriedRice", "쌀 튀밥" },
         { "malt", "엿기름" },
         {"Apple", "사과" },
         {"Cutting_Apple", "자른 사과" },

@@ -198,7 +198,7 @@ public class PlayerInteract : MonoBehaviour
             {
                 if (nearbyTable.currentPlacedObject != null)
                 {
-                    Debug.Log("탁자 위에 이미 아이템이 있습니다!");
+                    Debug.Log("탁자 위에 이미 아이템이 있음");
                     return;
                 }
 
@@ -212,7 +212,7 @@ public class PlayerInteract : MonoBehaviour
 
                 // Sorting Layer/Order를 탁자보다 높게 설정
                 sr.sortingLayerName = "Obj";   // 원하는 Sorting Layer 이름
-                sr.sortingOrder = 100;              // 탁자 SpriteRenderer보다 더 큰 값
+                sr.sortingOrder = 60;              // 탁자 SpriteRenderer보다 더 큰 값
 
                 // 아이템 크기 조정 (예: 0.6배로 줄이기)
                 tableItemObj.transform.localScale = new Vector3(1f, 1f, 1f);
@@ -221,6 +221,11 @@ public class PlayerInteract : MonoBehaviour
                 tableItemObj.transform.position = nearbyTable.itemSpot.position;
 
                 nearbyTable.currentPlacedObject = tableItemObj;
+
+                // --- 테이블 아이템 상태 저장 ---
+                var tableMgr = FindObjectOfType<TableManager>();
+                if (tableMgr != null)
+                    tableMgr.SaveTableState();
 
                 HeldItemManager.Instance.HideHeldItem();
 
@@ -244,6 +249,11 @@ public class PlayerInteract : MonoBehaviour
 
                         Destroy(nearbyTable.currentPlacedObject);
                         nearbyTable.currentPlacedObject = null;
+
+                        // --- 테이블 아이템 상태 저장 ---
+                        var tableMgr = FindObjectOfType<TableManager>();
+                        if (tableMgr != null)
+                            tableMgr.SaveTableState();
 
                         SFXManager.Instance.PlayBbyongSFX();
                         Debug.Log($"[E] 탁자에서 {tableName}을(를) 집음");
@@ -272,6 +282,14 @@ public class PlayerInteract : MonoBehaviour
             {
                 string heldItemName = HeldItemManager.Instance.GetHeldItemName();
 
+                // 초기 테이블 아이템은 상자에 못 넣게 방어
+                if (TableInitialItemHelper.IsInitialTableItemName(heldItemName))
+                {
+                    Debug.Log($"[Space] 초기 테이블 아이템({heldItemName})은 상자에 넣을 수 없습니다.");
+                    SFXManager.Instance.PlayBbyongSFX();
+                    return;
+                }
+
                 // 시도 후 실패하면 메시지만 출력
                 if (!StorageInventory.Instance.TryAddItem(heldItemName, 1))
                 {
@@ -297,7 +315,7 @@ public class PlayerInteract : MonoBehaviour
                     return;
                 }
 
-                StorageInventory.Instance.AddItem(heldItemName, 1);
+                //StorageInventory.Instance.AddItem(heldItemName, 1);
                 StorageInventory.Instance.SaveStorage();
 
                 HeldItemManager.Instance.HideHeldItem();

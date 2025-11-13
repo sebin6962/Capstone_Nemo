@@ -40,6 +40,19 @@ public class DoGamUIManager : MonoBehaviour
     //마지막으로 본 카테고리 기억용
     private string currentRecipeCategory = "떡";
 
+    [Header("알림 아이콘")]
+    [Tooltip("도감 열기 버튼 위 느낌표 아이콘")]
+    public GameObject dogamAlertIcon;     // 도감 버튼용
+
+    [Tooltip("레시피 페이지 우측 상단 등 'NEW' 아이콘")]
+    public GameObject recipeAlertIcon;    // 현재 페이지용
+
+    // ======= 도감 새 레시피 알림 상태 =======
+    // finishKey 기준 (예: Baekseolgi_finish)
+    private HashSet<string> _seenFinishKeys = new();
+    private HashSet<string> _unseenFinishKeys = new();
+    private string _seenKeyPlayerPrefKey;
+
     // =============== [레시피 탭 레이아웃] ===============
     [Header("Recipe (레시피)")]
     public GameObject recipeRoot;         // 레시피 전용 루트
@@ -242,6 +255,8 @@ public class DoGamUIManager : MonoBehaviour
         if (howToRoot != null) howToRoot.SetActive(false); // 시작 시 비활성
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
         if (makerRoot != null) makerRoot.SetActive(false);
+
+        InitSeenRecipeState();
     }
 
     // ===================== 공통 토글 =====================
@@ -272,7 +287,8 @@ public class DoGamUIManager : MonoBehaviour
     // ===================== 도감 열기/닫기 =====================
     public void OpenDoGam(string itemName)
     {
-        
+        // 새로 해금된 레시피가 있다면 갱신
+        RefreshUnseenFinishKeys();
 
         // 씨앗 박스 인벤토리 열려 있으면 도감 오픈 막기
         if (BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen())
@@ -333,6 +349,9 @@ public class DoGamUIManager : MonoBehaviour
     // 도감 버튼 눌렀을 때 진입 지점
     private void OnOpenButtonClicked()
     {
+        // 새로 해금된 레시피가 있다면 갱신
+        RefreshUnseenFinishKeys();
+
         // 세이브 파일에 기록된 마지막 페이지가 없으면 = 첫 진입
         if (!PlayerPrefs.HasKey("DoGam_LastTab"))
         {
@@ -478,6 +497,102 @@ public void CloseDoGam()
         }
 
         PlayerPrefs.Save();
+    }
+
+    // =============== [알림 상태 유틸] ===============
+
+    private string GetSeenPrefKey()
+    {
+        if (!string.IsNullOrEmpty(_seenKeyPlayerPrefKey))
+            return _seenKeyPlayerPrefKey;
+
+        // 세이브 슬롯별로 분리
+        string server = PlayerPrefs.GetString("SelectedSave", "");
+        _seenKeyPlayerPrefKey = string.IsNullOrEmpty(server)
+            ? "DoGam_SeenRecipes"
+            : server + ":DoGam_SeenRecipes";
+
+        return _seenKeyPlayerPrefKey;
+    }
+
+    private void InitSeenRecipeState()
+    {
+        LoadSeenFinishKeys();
+        RefreshUnseenFinishKeys();
+    }
+
+    private void LoadSeenFinishKeys()
+    {
+        _seenFinishKeys.Clear();
+        string key = GetSeenPrefKey();
+        string raw = PlayerPrefs.GetString(key, "");
+
+        if (string.IsNullOrEmpty(raw)) return;
+
+        foreach (var token in raw.Split(','))
+        {
+            var t = token.Trim();
+            if (!string.IsNullOrEmpty(t))
+                _seenFinishKeys.Add(t);
+        }
+    }
+
+    private void SaveSeenFinishKeys()
+    {
+        string key = GetSeenPrefKey();
+        string raw = string.Join(",", _seenFinishKeys);
+        PlayerPrefs.SetString(key, raw);
+        PlayerPrefs.Save();
+    }
+
+    /// <summary>
+    /// UnlockManager 기준으로 "해금됐지만 도감에서 아직 안 읽은" finishKey들을 채움
+    /// </summary>
+    private void RefreshUnseenFinishKeys()
+    {
+        _unseenFinishKeys.Clear();
+
+        if (allEntries == null || allEntries.Count == 0 || UnlockManager.Instance == null)
+        {
+            if (dogamAlertIcon != null) dogamAlertIcon.SetActive(false);
+            return;
+        }
+
+        foreach (var e in allEntries)
+        {
+            if (!IsEntryUnlocked(e)) continue;          // 아직 잠금이면 패스
+
+            var finishKey = GetFinishKey(e);           // 이미 DoGam 내부에 있는 함수 재사용
+            if (string.IsNullOrEmpty(finishKey)) continue;
+
+            if (!_seenFinishKeys.Contains(finishKey))
+                _unseenFinishKeys.Add(finishKey);
+        }
+
+        // 도감 열기 버튼 느낌표 on/off
+        if (dogamAlertIcon != null)
+            dogamAlertIcon.SetActive(_unseenFinishKeys.Count > 0);
+    }
+
+    /// <summary>
+    /// 현재 DoGamEntry를 "읽음 처리"
+    /// </summary>
+    private void MarkEntrySeen(DoGamEntry entry)
+    {
+        if (entry == null) return;
+
+        var finishKey = GetFinishKey(entry);
+        if (string.IsNullOrEmpty(finishKey)) return;
+
+        if (_seenFinishKeys.Contains(finishKey)) return;  // 이미 처리된 경우
+
+        _seenFinishKeys.Add(finishKey);
+        _unseenFinishKeys.Remove(finishKey);
+        SaveSeenFinishKeys();
+
+        // 더 이상 새 레시피가 없다면 도감 버튼 느낌표도 끈다
+        if (dogamAlertIcon != null && _unseenFinishKeys.Count == 0)
+            dogamAlertIcon.SetActive(false);
     }
 
 
@@ -642,9 +757,16 @@ public void CloseDoGam()
             if (rewardInfoRoot != null) rewardInfoRoot.SetActive(false);
         }
 
-        // ③ 내비게이션 버튼 상태(선택)
+        // 내비게이션 버튼 상태(선택)
         if (prevButton) prevButton.interactable = (_currentIndex > 0);
         if (nextButton) nextButton.interactable = true; // 잠금 페이지에서도 눌러도 더는 넘어가지 않음
+
+        // 잠금 페이지나 해금 0개일 때는 NEW 아이콘 숨김
+        if (recipeAlertIcon != null)
+        {
+            if (onLockedPeek || _unlockedCount == 0)
+                recipeAlertIcon.SetActive(false);
+        }
     }
 
     /// <summary>
@@ -654,12 +776,22 @@ public void CloseDoGam()
     {
         var entry = _unlockedInCat[unlockedIndex];
 
+        // 1) 이 페이지가 새 레시피인지 먼저 체크
+        var finishKey = GetFinishKey(entry);
+        bool isNew = !string.IsNullOrEmpty(finishKey) && _unseenFinishKeys.Contains(finishKey);
+
         // entryList가 해금 전용이면 인덱스 동일, 전체 리스트면 매핑 필요
         int idxInCurrentList = entryList.IndexOf(entry);
         if (idxInCurrentList < 0) idxInCurrentList = 0;
 
         currentIndex = idxInCurrentList; // legacy 인덱스 유지
         ShowEntry(currentIndex);
+
+        MarkEntrySeen(entry);
+
+        // 페이지용 NEW 아이콘 갱신
+        if (recipeAlertIcon != null)
+            recipeAlertIcon.SetActive(isNew);
     }
 
     public void ShowEntry(int index)

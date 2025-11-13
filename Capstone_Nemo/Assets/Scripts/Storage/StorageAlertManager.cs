@@ -7,13 +7,17 @@ public class StorageAlertManager : MonoBehaviour
     public static StorageAlertManager Instance;
 
     public GameObject alertIcon;  // 알림 아이콘 ("!")
-    private bool hasNewItems = false;
+    private static bool hasNewItems = false;
 
-    private HashSet<string> unseenItems = new(); // 아직 창고에서 본 적 없는 수확물
+    private static HashSet<string> unseenItems = new(); // 아직 창고에서 본 적 없는 수확물
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
+
+        // 현재 전역 상태에 맞춰 이 씬의 새 재고 아이콘 표시
+        if (alertIcon != null)
+            alertIcon.SetActive(hasNewItems);
     }
 
     /// <summary>

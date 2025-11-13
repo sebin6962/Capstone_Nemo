@@ -311,6 +311,8 @@ MonoBehaviour:
   lockCoverPanel: {fileID: 412662751}
   tabNormalSprite: {fileID: -87069319, guid: a2013f53fdc2ab540a211b6f076ce9bb, type: 3}
   tabPressedSprite: {fileID: 2142220538, guid: a2013f53fdc2ab540a211b6f076ce9bb, type: 3}
+  dogamAlertIcon: {fileID: 1639131817}
+  recipeAlertIcon: {fileID: 1266029160}
   recipeRoot: {fileID: 1839917419}
   scrollRect: {fileID: 414248053}
   itemImage: {fileID: 1977697023}
@@ -13003,6 +13005,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1266029160 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8230033073366858253, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 4885431749207441011}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1272297454
 GameObject:
   m_ObjectHideFlags: 0
@@ -19288,6 +19295,11 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1639131817 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6864249714155544889, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 4885431749207441011}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1646525306
 GameObject:
   m_ObjectHideFlags: 0
@@ -19879,7 +19891,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -121.0022, y: -40.999878}
+  m_AnchoredPosition: {x: -121.00226, y: -40.999878}
   m_SizeDelta: {x: 918, y: 516}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &1711149058
@@ -20549,7 +20561,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -671.9983, y: 326}
+  m_AnchoredPosition: {x: -671.99835, y: 326}
   m_SizeDelta: {x: -1423.4169, y: -719.6829}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1757436636
@@ -25793,10 +25805,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.00031727552
-    width: 1
-    height: 0.99936545
+    x: 0.00016885996
+    y: 0
+    width: 0.9996623
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -25834,7 +25846,7 @@ Transform:
   m_GameObject: {fileID: 2130387756}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -12.868712, y: 5.71307, z: -10}
+  m_LocalPosition: {x: -12.877735, y: 5.71306, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

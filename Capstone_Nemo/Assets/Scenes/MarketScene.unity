@@ -251,10 +251,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.000061392784
-    y: 0
-    width: 0.9998772
-    height: 1
+    x: 0
+    y: 0.0022321343
+    width: 1
+    height: 0.99553573
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -1589,6 +1589,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 176713236}
   m_CullTransparentMesh: 1
+--- !u!1 &215337221 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5029790169447058359, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
+  m_PrefabInstance: {fileID: 1030323612}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &260202283
 GameObject:
   m_ObjectHideFlags: 0
@@ -2508,6 +2513,16 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 413164645}
   m_CullTransparentMesh: 1
+--- !u!1 &435332633 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6864249714155544889, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 120827710}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &435332634 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8230033073366858253, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 120827710}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &437335672 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 802103546190919585, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
@@ -3948,7 +3963,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &858479959
 Transform:
   m_ObjectHideFlags: 0
@@ -3976,7 +3991,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 644c7b681c2a9b543aa01a1bfbba3df5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  alertIcon: {fileID: 0}
+  alertIcon: {fileID: 215337221}
 --- !u!1 &870066617
 GameObject:
   m_ObjectHideFlags: 0
@@ -7157,6 +7172,8 @@ MonoBehaviour:
   lockCoverPanel: {fileID: 43168122}
   tabNormalSprite: {fileID: 288664982, guid: c5f9803a935031f40a467d2ab6e8f60d, type: 3}
   tabPressedSprite: {fileID: -1386077437, guid: c5f9803a935031f40a467d2ab6e8f60d, type: 3}
+  dogamAlertIcon: {fileID: 435332633}
+  recipeAlertIcon: {fileID: 435332634}
   recipeRoot: {fileID: 43168130}
   scrollRect: {fileID: 120827713}
   itemImage: {fileID: 120827718}
