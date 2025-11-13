@@ -64,6 +64,15 @@ public class TableManager : MonoBehaviour
             var sr = table.currentPlacedObject.GetComponent<SpriteRenderer>();
             if (sr == null || sr.sprite == null) continue;
 
+            // 초기 아이템이면 세이브에서 제외
+            if (table.spawnInitialItemOnStart &&
+                !string.IsNullOrEmpty(table.initialItemSpriteName) &&
+                sr.sprite.name == table.initialItemSpriteName)
+            {
+                // JSON에 안 넣음
+                continue;
+            }
+
             var slot = new TableSlotSave
             {
                 tableId = table.tableId,
@@ -137,5 +146,26 @@ public class TableManager : MonoBehaviour
         }
 
         Debug.Log($"[Table] Loaded {data.tables.Count} tables");
+    }
+}
+
+public static class TableInitialItemHelper
+{
+    // 씬에 있는 TableInfo들을 보고 "초기 아이템 스프라이트 이름" 목록을 만든다.
+    public static bool IsInitialTableItemName(string spriteName)
+    {
+        if (string.IsNullOrEmpty(spriteName)) return false;
+
+        var tables = GameObject.FindObjectsOfType<TableInfo>();
+        foreach (var t in tables)
+        {
+            if (!t.spawnInitialItemOnStart) continue;
+            if (string.IsNullOrEmpty(t.initialItemSpriteName)) continue;
+
+            if (t.initialItemSpriteName == spriteName)
+                return true;
+        }
+
+        return false;
     }
 }

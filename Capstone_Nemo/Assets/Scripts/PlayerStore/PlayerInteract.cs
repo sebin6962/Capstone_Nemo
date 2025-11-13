@@ -282,6 +282,14 @@ public class PlayerInteract : MonoBehaviour
             {
                 string heldItemName = HeldItemManager.Instance.GetHeldItemName();
 
+                // 초기 테이블 아이템은 상자에 못 넣게 방어
+                if (TableInitialItemHelper.IsInitialTableItemName(heldItemName))
+                {
+                    Debug.Log($"[Space] 초기 테이블 아이템({heldItemName})은 상자에 넣을 수 없습니다.");
+                    SFXManager.Instance.PlayBbyongSFX();
+                    return;
+                }
+
                 // 시도 후 실패하면 메시지만 출력
                 if (!StorageInventory.Instance.TryAddItem(heldItemName, 1))
                 {

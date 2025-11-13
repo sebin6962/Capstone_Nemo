@@ -56,22 +56,66 @@ public class EndingCutSceneScroller : MonoBehaviour
     [Tooltip("다음 컷씬 페이드(또는 씬 전환)를 여기 이벤트에 연결")]
     public UnityEvent onNextCutsceneFade;
 
+
+    [Header("씬 시작 연출")]
+    [Tooltip("엔딩씬이 로드되면 검은 화면에서 서서히 밝아지게 할지 여부")]
+    public bool fadeInFromBlackOnStart = true;
+
+    [Tooltip("엔딩씬이 로드된 뒤, 밝아지기 전에 잠깐 유지할 시간(초)")]
+    public float startBlackStaySeconds = 0.5f;
+
+    [Tooltip("검은 화면에서 엔딩씬 화면으로 서서히 밝아지는 시간(초)")]
+    public float startBlackFadeSeconds = 1.5f;
+
+    // 페이드가 끝나야지만 카메라가 움직일 수 있게 하는 플래그
+    private bool canStartScroll = false;
+
     void Start()
     {
         if (targetCamera == null)
             targetCamera = Camera.main;
 
-        // 시작할 때 검은 이미지 알파를 0으로 맞춰 둔다.
         if (blackImage != null)
         {
-            var c = blackImage.color;
-            c.a = 0f;
-            blackImage.color = c;
+            if (fadeInFromBlackOnStart)
+            {
+                // 엔딩씬 시작 시: 화면을 완전히 검게 만든 뒤
+                var c = blackImage.color;
+                c.a = 1f;
+                blackImage.color = c;
+                blackImage.gameObject.SetActive(true);
+
+                canStartScroll = false;
+
+                // 잠깐 유지 후 서서히 밝아지도록 코루틴 실행
+                StartCoroutine(SceneStartFadeInRoutine());
+            }
         }
+    }
+
+    private IEnumerator SceneStartFadeInRoutine()
+    {
+        // 씬 로드 후, 완전히 검은 화면을 잠깐 유지
+        if (startBlackStaySeconds > 0f)
+            yield return new WaitForSeconds(startBlackStaySeconds);
+
+        // 검은 화면(알파 1) → 완전히 투명(알파 0)으로 서서히 페이드
+        if (blackImage != null)
+        {
+            yield return StartCoroutine(FadeBlackImage(1f, 0f, startBlackFadeSeconds));
+            // 다 밝아진 뒤엔 굳이 켜둘 필요 없으면 끄기
+            blackImage.gameObject.SetActive(false);
+        }
+
+        canStartScroll = true;
     }
 
     void Update()
     {
+        // 페이드 중이면 바로 리턴
+        if (!canStartScroll)
+            return;
+
         if (isEnding) return;
         if (targetCamera == null || bottomLimit == null) return;
 
