@@ -143,7 +143,8 @@ public class UnlockManager : MonoBehaviour
                 save.appliedLevels = new HashSet<int>();
 
             // 새 세이브 처음 생성 시: 플레이어 현재 레벨(보통 1)까지 해금
-            int playerLevel = Mathf.Max(1, PlayerLevelManager.Instance ? PlayerLevelManager.Instance.Level : 1);
+            //int playerLevel = Mathf.Max(1, PlayerLevelManager.Instance ? PlayerLevelManager.Instance.Level : 1);
+            int playerLevel = 1;
             SeedAppliedLevelsUpTo(playerLevel);
 
             save.initialized = true;
