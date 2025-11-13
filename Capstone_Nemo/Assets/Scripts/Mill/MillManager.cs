@@ -17,6 +17,9 @@ public class MillManager : MonoBehaviour
     public Button confirmButton;
     public Button closeButton;
 
+    public GraphicRaycaster raycaster;
+
+
     private int queuedCount = 0;
 
     private MillItemData selectedItem = null;
@@ -118,15 +121,22 @@ public class MillManager : MonoBehaviour
     {
         if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
         Debug.Log("[MillManager] OnSelectedSlotClicked");
-        //선택창 눌렀을 때 inventory 패널 켬
-        RebuildInventoryGrid();
 
         if (inventoryPanel == null)
         {
             Debug.LogError("[MillManager] inventoryPanel is NULL");
             return;
         }
+        else
+        {
+            ReturnQueuedToInventory();
+            ClearSelectionUI();
+        }
+        //선택창 눌렀을 때 inventory 패널 켬
+        RebuildInventoryGrid();
+
         inventoryPanel.SetActive(true);
+
         Debug.Log(
             $"[MillManager] inventoryPanel activeSelf={inventoryPanel.activeSelf}, " +
             $"activeInHierarchy={inventoryPanel.activeInHierarchy}, " +
@@ -279,6 +289,8 @@ public class MillManager : MonoBehaviour
         isMilling = true;
         confirmButton.interactable = false;
         closeButton.interactable = false;
+        raycaster.enabled = false;
+        inventoryPanel.SetActive(false);
 
         // 절구 UI 보여주고 애니메이션 재생
         if (jeolguUI) jeolguUI.SetActive(true);
@@ -427,6 +439,7 @@ public class MillManager : MonoBehaviour
         UpdateInventoryUI();
         confirmButton.interactable = true;
         closeButton.interactable = true;
+        raycaster.enabled = true;
 
         if (hideJeolguUIAfter && jeolguUI) jeolguUI.SetActive(false);
         isMilling = false;

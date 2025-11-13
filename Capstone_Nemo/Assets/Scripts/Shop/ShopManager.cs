@@ -233,6 +233,8 @@ public class ShopManager : MonoBehaviour
         UpdateTotalPrice();
 
         StorageInventory.Instance.SaveStorage();
+
+        Reset();
     }
 
     public void Reset()
