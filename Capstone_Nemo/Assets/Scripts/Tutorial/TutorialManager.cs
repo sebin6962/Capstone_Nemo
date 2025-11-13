@@ -7,6 +7,7 @@ using TMPro;
 public class TutorialManager : MonoBehaviour
 {
     [SerializeField] private Button dogamButton;
+    [SerializeField] private Button dogamCloseButton;
     [SerializeField] private ParticleSystem dogamHighlightFX;   // FX¿« ∑Á∆Æ PS
     [SerializeField] private CanvasGroup overlayBlocker;
     [SerializeField] private PlayerManager player;
@@ -45,11 +46,11 @@ public class TutorialManager : MonoBehaviour
             tutorialText.gameObject.SetActive(true);
         }
 
-        if (dogamButton)
+        if (dogamCloseButton)
         {
-            dogamButton.onClick.RemoveListener(OnDogamClicked);
-            dogamButton.onClick.AddListener(OnDogamClicked);
-            dogamButton.interactable = true;
+            dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
+            dogamCloseButton.onClick.AddListener(OnDogamClicked);
+            dogamCloseButton.interactable = true;
         }
 
         //dlvprxm
@@ -83,8 +84,8 @@ public class TutorialManager : MonoBehaviour
         state.tutorialDone = true;
         TutorialState.Save(server, state);
 
-        if (dogamButton != null)
-            dogamButton.onClick.RemoveListener(OnDogamClicked);
+        if (dogamCloseButton != null)
+            dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
     }
 
     void CleanupTutorialVisuals()
