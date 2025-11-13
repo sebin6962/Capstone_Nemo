@@ -37,6 +37,9 @@ public class DoGamUIManager : MonoBehaviour
 
     private Button _activeTabButton = null; // 현재 선택된 탭
 
+    //마지막으로 본 카테고리 기억용
+    private string currentRecipeCategory = "떡";
+
     // =============== [레시피 탭 레이아웃] ===============
     [Header("Recipe (레시피)")]
     public GameObject recipeRoot;         // 레시피 전용 루트
@@ -171,7 +174,9 @@ public class DoGamUIManager : MonoBehaviour
         LoadHowToFromJSON();      // 게임방법
 
         // 열기/닫기
-        openButton.onClick.AddListener(() => OpenDoGam("백설기"));
+        //openButton.onClick.AddListener(() => OpenDoGam("백설기"));
+        //closeButton.onClick.AddListener(CloseDoGam);
+        openButton.onClick.AddListener(OnOpenButtonClicked);
         closeButton.onClick.AddListener(CloseDoGam);
 
         // 레시피 카테고리
@@ -325,6 +330,105 @@ public class DoGamUIManager : MonoBehaviour
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
     }
 
+    // 도감 버튼 눌렀을 때 진입 지점
+    private void OnOpenButtonClicked()
+    {
+        // 세이브 파일에 기록된 마지막 페이지가 없으면 = 첫 진입
+        if (!PlayerPrefs.HasKey("DoGam_LastTab"))
+        {
+            // 게임방법 페이지로 오픈
+            OpenHowToTab();
+        }
+        else
+        {
+            // 저장된 마지막 상태로 오픈
+            OpenDoGamRestoreLastState();
+        }
+    }
+
+    private void OpenDoGamRestoreLastState()
+    {
+        // 인벤토리/상점 등 열려 있으면 도감 막기 (기존 OpenDoGam과 동일 로직 복붙)
+        if (BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen())
+            return;
+        if (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen())
+            return;
+        if (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
+            return;
+        if (MillManager.Instance != null && MillManager.Instance.IsOpen())
+            return;
+        if (ShopManager.Instance != null && ShopManager.Instance.IsOpen())
+            return;
+
+        panel.SetActive(true);
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayDogamOpenSFX();
+
+        openButton.interactable = false;
+        if (lockCoverPanel) lockCoverPanel.SetActive(false);
+
+        int lastTab = PlayerPrefs.GetInt("DoGam_LastTab", 0);
+
+        // 0: 레시피, 1: 게임방법, 2: 제작대
+        if (lastTab == 1)
+        {
+            // 게임방법 탭으로 복원
+            SetRecipeLayout(false);
+            SetMakerLayout(false);
+            SetHowToLayout(true);
+            isHowToOpen = true;
+            SubTitle.SetActive(true);
+            SetActiveTab(howToButton);
+
+            if (howToPages == null || howToPages.Count == 0)
+                LoadHowToFromJSON();
+
+            howToSpreadIndex = PlayerPrefs.GetInt("DoGam_LastHowToSpread", 0);
+            howToSpreadIndex = Mathf.Clamp(howToSpreadIndex, 0,
+                (howToPages != null && howToPages.Count > 0) ? howToPages.Count - 1 : 0);
+
+            RenderHowToSpread();
+        }
+        else if (lastTab == 2)
+        {
+            // 제작대 탭으로 복원
+            SetRecipeLayout(false);
+            SetHowToLayout(false);
+            SubTitle.SetActive(false);
+
+            if (makerItems == null || makerItems.Count == 0)
+                LoadMakerFromJSON();
+
+            SetMakerLayout(true);
+            SetActiveTab(makerButton);
+
+            int spreadCount = Mathf.CeilToInt(
+                (makerItems != null ? (float)makerItems.Count : 0f) / makerItemsPerSpread
+            );
+            makerSpreadIndex = PlayerPrefs.GetInt("DoGam_LastMakerSpread", 0);
+            makerSpreadIndex = Mathf.Clamp(makerSpreadIndex, 0, Mathf.Max(0, spreadCount - 1));
+
+            RenderMakerSpread();
+        }
+        else
+        {
+            // 레시피 탭으로 복원
+            SubTitle.SetActive(false);
+            isHowToOpen = false;
+
+            string cat = PlayerPrefs.GetString("DoGam_LastCategory", "떡");
+            int savedIndex = PlayerPrefs.GetInt("DoGam_LastUnlockedIndex", 0);
+
+            // 카테고리 필터 먼저 적용
+            FilterByCategory(cat);
+
+            // FilterByCategory에서 _currentIndex가 0으로 초기화되므로, 다시 세팅 후 페이지 갱신
+            _currentIndex = savedIndex;
+            UpdatePage();
+        }
+    }
+
+
     public bool IsOpen()
     {
         return panel != null && panel.activeSelf;
@@ -333,6 +437,9 @@ public class DoGamUIManager : MonoBehaviour
 
 public void CloseDoGam()
     {
+        // 현재 보고 있던 페이지 상태 저장
+        SaveLastDoGamState();
+
         SFXManager.Instance.PlayBbyongSFX();
         panel.SetActive(false);
         SubTitle.SetActive(false);
@@ -345,6 +452,34 @@ public void CloseDoGam()
 
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
     }
+
+    private void SaveLastDoGamState()
+    {
+        // 어떤 탭이 열려 있었는지
+        int tab = 0; // 0: 레시피
+        if (howToRoot != null && howToRoot.activeSelf) tab = 1;
+        else if (makerRoot != null && makerRoot.activeSelf) tab = 2;
+
+        PlayerPrefs.SetInt("DoGam_LastTab", tab);
+
+        if (tab == 0)
+        {
+            // 레시피 탭: 카테고리 + 현재 페이지 인덱스
+            PlayerPrefs.SetString("DoGam_LastCategory", currentRecipeCategory);
+            PlayerPrefs.SetInt("DoGam_LastUnlockedIndex", _currentIndex);
+        }
+        else if (tab == 1)
+        {
+            PlayerPrefs.SetInt("DoGam_LastHowToSpread", howToSpreadIndex);
+        }
+        else if (tab == 2)
+        {
+            PlayerPrefs.SetInt("DoGam_LastMakerSpread", makerSpreadIndex);
+        }
+
+        PlayerPrefs.Save();
+    }
+
 
     // ===================== 레시피 탭 =====================
     void LoadDoGamDataFromJSON()
@@ -371,6 +506,9 @@ public void CloseDoGam()
 
     public void FilterByCategory(string category)
     {
+        // 현재 카테고리 기억
+        currentRecipeCategory = category;
+
         // 레시피 탭 활성, 게임방법 비활성
         SetRecipeLayout(true);
         SetHowToLayout(false);

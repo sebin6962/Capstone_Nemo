@@ -25,7 +25,8 @@ public class PlayerInteract : MonoBehaviour
 
     private static readonly HashSet<string> NonDiscardableItems = new HashSet<string>
 {
-    "YakgwaMold", // 보호 아이템: 버려지지 않음
+    "YakgwaMold",
+    "JeolpyeonMold"// 보호 아이템: 버려지지 않음
 };
 
     private void Awake()
@@ -35,7 +36,8 @@ public class PlayerInteract : MonoBehaviour
 
     private static readonly HashSet<string> NonIngredientTools = new HashSet<string>
     {
-        "YakgwaMold", // 약과 틀 이름
+        "YakgwaMold",
+        "JeolpyeonMold"// 틀 이름
     };
 
     private void Update()
@@ -311,7 +313,7 @@ public class PlayerInteract : MonoBehaviour
             {
                 bool isRecipeMatched;
 
-                // (추가) 약과 전용: ShapeMaker에서 Yakgwabanjuk을 만들려면 YakgwaMold를 들고 있어야 함
+                // 약과 전용: ShapeMaker에서 Yakgwabanjuk을 만들려면 YakgwaMold를 들고 있어야 함
                 bool requiresYakgwaMold =
                     currentMaker.makerId == "ShapeMaker"
                     && currentMaker.inputItemNames.Count == 1
@@ -319,6 +321,15 @@ public class PlayerInteract : MonoBehaviour
 
                 bool hasYakgwaMoldInHand = HeldItemManager.Instance.IsHoldingItem()
                                            && HeldItemManager.Instance.GetHeldItemName() == "YakgwaMold";
+
+                // 절편 전용: ShapeMaker에서 Jeolpyeon_finish을 만들려면 JeolpyeonMold를 들고 있어야 함
+                bool requiresJeolpyeonMold =
+                    currentMaker.makerId == "ShapeMaker"
+                    && currentMaker.inputItemNames.Count == 1
+                    && currentMaker.inputItemNames.Contains("Mixing_Mepssal_Hot");
+
+                bool hasJeolpyeonMoldInHand = HeldItemManager.Instance.IsHoldingItem()
+                                           && HeldItemManager.Instance.GetHeldItemName() == "JeolpyeonMold";
 
                 if (requiresYakgwaMold && !hasYakgwaMoldInHand)
                 {
@@ -335,6 +346,24 @@ public class PlayerInteract : MonoBehaviour
                         currentMaker.slotUIManager.ClearSlots();
 
                     Debug.Log("[Space] Yakgwabanjuk 이지만 YakgwaMold 미보유 → 실패 처리");
+                    return;
+                }
+
+                if (requiresJeolpyeonMold && !hasJeolpyeonMoldInHand)
+                {
+                    // 틀 미보유 → 강제 실패 결과 스폰
+                    // (레시피 매칭 대신 실패 스프라이트 로드)
+                    currentMaker.DeactivateSlotUI();
+
+                    Sprite fail = Resources.Load<Sprite>("Sprites/Ingredients/FailRiceCake_finish");
+                    StartCoroutine(currentMaker.ShowProgressAndSpawnItem(fail));
+
+                    currentMaker.inputItemNames.Clear();
+                    currentMaker.inputItemSprites.Clear();
+                    if (currentMaker.slotUIManager != null)
+                        currentMaker.slotUIManager.ClearSlots();
+
+                    Debug.Log("[Space] JeolpyeonMold 미보유 → 실패 처리");
                     return;
                 }
 
