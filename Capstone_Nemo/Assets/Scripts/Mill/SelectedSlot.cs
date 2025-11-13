@@ -7,6 +7,7 @@ using TMPro;
 public class SelectedSlot : MonoBehaviour
 {
     [SerializeField] private Image icon;
+    [SerializeField] private Image countImage;
     [SerializeField] private TMP_Text countText;
     /*[SerializeField] private TMP_Text nameText;*/
 
@@ -14,6 +15,7 @@ public class SelectedSlot : MonoBehaviour
     {
         icon.sprite = item.icon;
         icon.enabled = true;
+        countImage.enabled = (count > 1);
         countText.text = count > 1 ? $"{count}" : "";
         /*nameText.text = item.itemName;*/
     }
@@ -26,6 +28,7 @@ public class SelectedSlot : MonoBehaviour
     public void Clear()
     {
         icon.sprite = null;
+        countImage.enabled = false;
         icon.enabled = false;
         countText.text = "";
     }

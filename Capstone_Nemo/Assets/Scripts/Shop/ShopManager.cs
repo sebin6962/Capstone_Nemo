@@ -18,6 +18,8 @@ public class ShopManager : MonoBehaviour
     public Button closeButton;
     public List<ShopData> ShopItems;
 
+    private HashSet<string> seenItems = new();
+    private string seenPrefsKey;
 
     public Transform itemListParent;
     public Transform basketListParent;
@@ -32,11 +34,11 @@ public class ShopManager : MonoBehaviour
 
     private bool isMillShop = false;
 
-    /*    void Awake()
-        {
-            shopDataPath = Path.Combine(Application.persistentDataPath, "shopData.json");
-            LoadShopData();
-        }*/
+    [System.Serializable]
+    class ShopSeenData
+    {
+        public List<string> seenItems = new();
+    }
 
     private void Awake()
     {
@@ -61,6 +63,39 @@ public class ShopManager : MonoBehaviour
         Debug.Log($"{ShopItems.Count}개 로드됨 ({resourcePath})");
     }
 
+    string GetServerName()
+    {
+        return PlayerPrefs.GetString("SelectedSave", "default");
+    }
+
+    void LoadSeenItems()
+    {
+        string server = GetServerName();
+        seenPrefsKey = $"{server}:ShopSeen";
+
+        seenItems = new HashSet<string>();
+        string json = PlayerPrefs.GetString(seenPrefsKey, "");
+        if (!string.IsNullOrEmpty(json))
+        {
+            var data = JsonUtility.FromJson<ShopSeenData>(json);
+            if (data != null && data.seenItems != null)
+            {
+                foreach (var k in data.seenItems)
+                    seenItems.Add(k);
+            }
+        }
+    }
+
+    void SaveSeenItems()
+    {
+        var data = new ShopSeenData
+        {
+            seenItems = new List<string>(seenItems)
+        };
+        PlayerPrefs.SetString(seenPrefsKey, JsonUtility.ToJson(data));
+        PlayerPrefs.Save();
+    }
+
     public void OpenShop()
     {
         // 도감 패널이 열려 있으면 창고 열기/닫기 막기
@@ -79,6 +114,9 @@ public class ShopManager : MonoBehaviour
         if (itemListParent == null) Debug.LogError("itemListParent가 null입니다.");
         if (ShopItems == null || ShopItems.Count == 0) Debug.LogError("ShopItems가 null이거나 비어있습니다.");*/
 
+        if (seenItems == null || seenItems.Count == 0)
+            LoadSeenItems(); 
+
         foreach (Transform child in itemListParent)
             Destroy(child.gameObject);
 
@@ -95,11 +133,20 @@ public class ShopManager : MonoBehaviour
                 unlocked = UnlockManager.Instance.IsShopItemUnlocked(item.itemName, isMillShop);
             }
 
-            if (!unlocked) continue;
+            if (!unlocked)
+            {
+                continue;
+            }
+
+            string key = item.itemName;
+
+            bool isNew = !seenItems.Contains(key);
 
             var slotObj = Instantiate(itemSlotPrefab, itemListParent);
             var slot = slotObj.GetComponent<ShopItemSlot>();
             slot.Setup(item, this);
+
+            slot.SetAlarmImage(isNew);
 
             slotDict[item] = slot;
             basketDict[item] = new ShopBasketData { item = item, quantity = 0 };
@@ -282,6 +329,17 @@ public class ShopManager : MonoBehaviour
         UpdateTotalPrice();
         foreach (var entry in basketDict.Values)
             buyButton.interactable = (entry.quantity > 0);
+
+        foreach (var item in ShopItems)
+        {
+            if (UnlockManager.Instance != null &&
+                !UnlockManager.Instance.IsShopItemUnlocked(item.itemName, isMillShop))
+                continue;
+
+            string key = item.itemName;
+            seenItems.Add(key);
+        }
+        SaveSeenItems();
     }
 
     public bool IsOpen()

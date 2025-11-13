@@ -26,6 +26,7 @@ public class MillManager : MonoBehaviour
     private List<MillItemData> Inventory;
 
     [SerializeField] private Image ResultEffectImage;
+    [SerializeField] private Image ResultEffectCountImage;
     [SerializeField] private TMP_Text ResultEffectText;
     [SerializeField] private float displayDuration = 0.7f;
 
@@ -456,6 +457,7 @@ public class MillManager : MonoBehaviour
         {
             ResultEffectText.text = count > 1 ? $"x{count}" : "";
             ResultEffectText.gameObject.SetActive(true);
+            ResultEffectCountImage.gameObject.SetActive(true);
         }
 
         StartCoroutine(HideResultEffectAfterDelay());
@@ -469,6 +471,7 @@ public class MillManager : MonoBehaviour
         if (ResultEffectText != null)
         {
             ResultEffectText.gameObject.SetActive(false);
+            ResultEffectCountImage.gameObject.SetActive(false);
         }
     }
 

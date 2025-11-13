@@ -12,7 +12,7 @@ public class ShopItemSlot : MonoBehaviour
     [SerializeField] private Button plusButton;
     [SerializeField] private Button minusButton;
     [SerializeField] private Image itemImage;
-    [SerializeField] private Image alarmImage;
+    [SerializeField] private GameObject alarmImage;
 
     private ShopData item;
     private ShopManager manager;
@@ -46,7 +46,13 @@ public class ShopItemSlot : MonoBehaviour
 
         UpdateDisplay(0);
     }
-    
+
+    public void SetAlarmImage(bool isNew)
+    {
+        if (alarmImage != null)
+            alarmImage.SetActive(isNew);
+    }
+
     void OnPlusButtonClicked()
     {
         manager.AdjustItem(item, +1);
