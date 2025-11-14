@@ -157,7 +157,7 @@ public class Customer : MonoBehaviour
     }
     public virtual void Serve(string givenDagwa)
     {
-        // (1) 다과 제공 효과음 재생!
+        // 다과 제공 효과음 재생!
         SFXManager.Instance.PlayPlateSoundSFX();
 
         if (state != CustomerState.Ordering || isServed) return;
@@ -195,6 +195,7 @@ public class Customer : MonoBehaviour
             // 별빛 지급
             //StarDataManager.Instance?.AddStarlight(10);
             StarDataManager.Instance?.AddStarlightFromNormal(starAmount);
+            SFXManager.Instance.PlayTotalMoneySFX();
 
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
 

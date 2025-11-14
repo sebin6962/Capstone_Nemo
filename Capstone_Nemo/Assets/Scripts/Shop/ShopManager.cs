@@ -214,8 +214,8 @@ public class ShopManager : MonoBehaviour
         // º°ºû µ¥ÀÌÅÍ´Â StarDataManagerÀÇ °ª »ç¿ë
         int playerStar = StarDataManager.Instance.playerData.starlight;
 
-        totalPriceText.text = $"{total} º°ºû";
-        allTotalPriceText.text = $"ÃÑ {total} º°ºû";
+        totalPriceText.text = $"{total}";
+        allTotalPriceText.text = $"{total}";
         buyButton.interactable = (total > 0 && playerStar >= total);
     }
 

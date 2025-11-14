@@ -10,7 +10,7 @@ public class PlayerManager : MonoBehaviour
     public Animator animator;
 
     private Vector2 movement;
-    public Vector2 lastMoveDir; // 기본은 앞모습
+    private Vector2 lastMoveDir; // 기본은 앞모습
 
     private enum AxisLock { None, Horizontal, Vertical }
     private AxisLock axisLock = AxisLock.None;
@@ -18,14 +18,64 @@ public class PlayerManager : MonoBehaviour
     private float prevHx = 0f;
     private float prevVy = 0f;
 
+    // 하루가 끝난 상태인지
+    private bool isDayEnding = false;
+
+    public enum InitialFacing { Up, Down, Left, Right }
+    [SerializeField] private InitialFacing initialFacing = InitialFacing.Down;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
     }
 
+    void Start()
+    { // 초기 바라보는 방향을 enum 기준으로 설정
+        switch (initialFacing)
+        {
+            case InitialFacing.Up:
+                lastMoveDir = Vector2.up;      // (0, 1)
+                break;
+            case InitialFacing.Down:
+                lastMoveDir = Vector2.down;    // (0, -1)
+                break;
+            case InitialFacing.Left:
+                lastMoveDir = Vector2.left;
+                break;
+            case InitialFacing.Right:
+                lastMoveDir = Vector2.right;
+                break;
+        }
+
+        if (animator != null)
+        {
+            animator.SetBool("IsWalking", false);
+            animator.SetFloat("MoveX", lastMoveDir.x);
+            animator.SetFloat("MoveY", lastMoveDir.y);
+        }
+    }
+
     void Update()
     {
+        // 하루가 끝난 상태라면, 계속 걷기 막고 소리도 끔
+        if (isDayEnding)
+        {
+            movement = Vector2.zero;
+
+            if (animator != null)
+            {
+                animator.SetBool("IsWalking", false);
+                animator.SetFloat("MoveX", lastMoveDir.x);
+                animator.SetFloat("MoveY", lastMoveDir.y);
+            }
+
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.StopPlayerWalkLoop();
+
+            return;
+        }
+
         //팝업 활성화 시 플레이어 이동 잠금
         if ((BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen()) ||
     (PopupInventoryUIManager.Instance != null && PopupInventoryUIManager.Instance.IsPopupOpen()) ||
@@ -144,5 +194,37 @@ public class PlayerManager : MonoBehaviour
         rb.MovePosition(rb.position + movement * moveSpeed * Time.fixedDeltaTime);
     }
 
-    
+    void OnEnable()
+    {
+        TimeManager.OnNewDayStarted += HandleNewDayStarted;
+    }
+
+    void OnDisable()
+    {
+        TimeManager.OnNewDayStarted -= HandleNewDayStarted;
+    }
+
+    private void HandleNewDayStarted()
+    {
+        // 하루가 끝났다고 표시
+        isDayEnding = true;
+
+        // 이동/축 잠금 초기화
+        movement = Vector2.zero;
+        axisLock = AxisLock.None;
+        prevHx = 0f;
+        prevVy = 0f;
+
+        // 애니메이션을 Idle로
+        if (animator != null)
+        {
+            animator.SetBool("IsWalking", false);
+            animator.SetFloat("MoveX", lastMoveDir.x);
+            animator.SetFloat("MoveY", lastMoveDir.y);
+        }
+
+        // 걷는 소리 정지
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.StopPlayerWalkLoop();
+    }
 }

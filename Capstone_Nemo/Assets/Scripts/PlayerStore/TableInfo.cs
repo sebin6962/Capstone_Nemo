@@ -41,7 +41,8 @@ public class TableInfo : MonoBehaviour
             return false;
         }
 
-        return PlayerLevelManager.Instance.Level >= requiredLevelForInitialItem;
+        int maxAppliedLevel = UnlockManager.Instance.GetMaxAppliedLevel();
+        return maxAppliedLevel >= requiredLevelForInitialItem;
     }
 
     public bool TrySpawnInitialItem()

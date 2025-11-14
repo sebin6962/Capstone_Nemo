@@ -47,41 +47,41 @@ public class PlayerSpwaner : MonoBehaviour
             Debug.Log($"[Spawner-Fallback] entranceID: {entrance}");
 
             // 방향 지정
-            if (entrance == "FromVillage(Store)") LookUp();
-            else if (entrance == "FromPlayerStore") LookDown();
+            //if (entrance == "FromVillage(Store)") LookUp();
+            //else if (entrance == "FromPlayerStore") LookDown();
 
             // 내가 처리했으니 소모
             info.entranceID = null;
         }
     }
 
-    public void LookDown()
-    {
-        animator.SetFloat("MoveX", 0);
-        animator.SetFloat("MoveY", -1);
-        animator.SetBool("IsWalking", false);
+    //public void LookDown()
+    //{
+    //    animator.SetFloat("MoveX", 0);
+    //    animator.SetFloat("MoveY", -1);
+    //    animator.SetBool("IsWalking", false);
 
-        var pm = GetComponent<PlayerManager>();
-        if (pm != null)
-        {
-            pm.lastMoveDir = Vector2.down;
-            Debug.Log("Spawner LookDown: lastMoveDir=" + pm.lastMoveDir + ", Animator MoveY=" + animator.GetFloat("MoveY"));
-        }
+    //    var pm = GetComponent<PlayerManager>();
+    //    if (pm != null)
+    //    {
+    //        pm.lastMoveDir = Vector2.down;
+    //        Debug.Log("Spawner LookDown: lastMoveDir=" + pm.lastMoveDir + ", Animator MoveY=" + animator.GetFloat("MoveY"));
+    //    }
            
 
-    }
-    public void LookUp()
-    {
-        animator.SetFloat("MoveX", 0);
-        animator.SetFloat("MoveY", 1);
-        animator.SetBool("IsWalking", false);
+    //}
+    //public void LookUp()
+    //{
+    //    animator.SetFloat("MoveX", 0);
+    //    animator.SetFloat("MoveY", 1);
+    //    animator.SetBool("IsWalking", false);
 
-        var pm = GetComponent<PlayerManager>();
-        if (pm != null)
-        {
-            pm.lastMoveDir = Vector2.up;
-            Debug.Log("Spawner LookUp: lastMoveDir=" + pm.lastMoveDir + ", Animator MoveY=" + animator.GetFloat("MoveY"));
-        }
-    }
+    //    var pm = GetComponent<PlayerManager>();
+    //    if (pm != null)
+    //    {
+    //        pm.lastMoveDir = Vector2.up;
+    //        Debug.Log("Spawner LookUp: lastMoveDir=" + pm.lastMoveDir + ", Animator MoveY=" + animator.GetFloat("MoveY"));
+    //    }
+    //}
 
 }

@@ -5537,10 +5537,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.00031727552
-    width: 1
-    height: 0.99936545
+    x: 0.0005611479
+    y: 0
+    width: 0.9988777
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -6754,7 +6754,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 254faa5d2cf5fb54f99f5ceec196efa6, type: 2}
   m_sharedMaterial: {fileID: 3162937654041563834, guid: 254faa5d2cf5fb54f99f5ceec196efa6, type: 2}
@@ -6791,7 +6791,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
-  m_characterSpacing: -9
+  m_characterSpacing: 10
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -8855,8 +8855,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1235.7, y: -2.899994}
-  m_SizeDelta: {x: 81.25, y: 81.25}
+  m_AnchoredPosition: {x: 1187, y: -50}
+  m_SizeDelta: {x: 60, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1086229265
 MonoBehaviour:
@@ -10185,6 +10185,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5447828422208564975, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
+      propertyPath: lastMoveDir.y
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8031702821992038735, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
       propertyPath: m_Name
       value: Player
@@ -11398,7 +11402,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8617978833888462115, guid: 943eb115b37849b4f8a92fd10a5b1904, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 241.5
+      value: 242
       objectReference: {fileID: 0}
     - target: {fileID: 8617978833888462115, guid: 943eb115b37849b4f8a92fd10a5b1904, type: 3}
       propertyPath: m_AnchoredPosition.y

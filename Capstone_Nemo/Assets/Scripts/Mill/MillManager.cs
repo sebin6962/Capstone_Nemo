@@ -33,14 +33,14 @@ public class MillManager : MonoBehaviour
     [Header("애니메이션(추가)")]
     [SerializeField] private GameObject jeolguUI;
     [SerializeField] private Animator jeolguAnimator;
-    [SerializeField] private AnimationClip millClip;   // 절구 재생 클립(길이 측정용)
+    [SerializeField] private AnimationClip millClip;   // 절구 재생 클립
     [SerializeField] private string millTriggerName = "Play"; // Animator 이름
     [SerializeField] private bool useAnimationEvent = false;  // 이벤트로 끝 처리할지
     [SerializeField] private bool hideJeolguUIAfter = true;   // 끝나고 절구 UI 끄기
 
     private bool isMilling = false;
 
-    // 애니 끝에 쓸 캐시(코루틴/이벤트 공용)
+    // 애니 끝에 쓸 캐시
     private string cachedSourceName, cachedResultName;
     private Sprite cachedResultSprite;
 
@@ -100,9 +100,9 @@ public class MillManager : MonoBehaviour
         if (DoGamUIManager.Instance != null && DoGamUIManager.Instance.IsOpen())
             return;
 
-        if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
-
         gameObject.SetActive(true);
+
+        SFXManager.Instance.PlayBbyongSFX();
 
         foreach (Transform child in inventoryPanelParent)
             Destroy(child.gameObject);

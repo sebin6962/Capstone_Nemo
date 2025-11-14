@@ -352,6 +352,9 @@ public class DoGamUIManager : MonoBehaviour
         // 새로 해금된 레시피가 있다면 갱신
         RefreshUnseenFinishKeys();
 
+        // 현재 선택된 세이브 기준 키
+        string lastTabKey = GetDoGamStateKey("DoGam_LastTab");
+
         // 세이브 파일에 기록된 마지막 페이지가 없으면 = 첫 진입
         if (!PlayerPrefs.HasKey("DoGam_LastTab"))
         {
@@ -386,7 +389,7 @@ public class DoGamUIManager : MonoBehaviour
         openButton.interactable = false;
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
 
-        int lastTab = PlayerPrefs.GetInt("DoGam_LastTab", 0);
+        int lastTab = PlayerPrefs.GetInt(GetDoGamStateKey("DoGam_LastTab"), 0);
 
         // 0: 레시피, 1: 게임방법, 2: 제작대
         if (lastTab == 1)
@@ -402,7 +405,7 @@ public class DoGamUIManager : MonoBehaviour
             if (howToPages == null || howToPages.Count == 0)
                 LoadHowToFromJSON();
 
-            howToSpreadIndex = PlayerPrefs.GetInt("DoGam_LastHowToSpread", 0);
+            howToSpreadIndex = PlayerPrefs.GetInt(GetDoGamStateKey("DoGam_LastHowToSpread"), 0);
             howToSpreadIndex = Mathf.Clamp(howToSpreadIndex, 0,
                 (howToPages != null && howToPages.Count > 0) ? howToPages.Count - 1 : 0);
 
@@ -424,7 +427,7 @@ public class DoGamUIManager : MonoBehaviour
             int spreadCount = Mathf.CeilToInt(
                 (makerItems != null ? (float)makerItems.Count : 0f) / makerItemsPerSpread
             );
-            makerSpreadIndex = PlayerPrefs.GetInt("DoGam_LastMakerSpread", 0);
+            makerSpreadIndex = PlayerPrefs.GetInt(GetDoGamStateKey("DoGam_LastMakerSpread"), 0);
             makerSpreadIndex = Mathf.Clamp(makerSpreadIndex, 0, Mathf.Max(0, spreadCount - 1));
 
             RenderMakerSpread();
@@ -435,8 +438,8 @@ public class DoGamUIManager : MonoBehaviour
             SubTitle.SetActive(false);
             isHowToOpen = false;
 
-            string cat = PlayerPrefs.GetString("DoGam_LastCategory", "떡");
-            int savedIndex = PlayerPrefs.GetInt("DoGam_LastUnlockedIndex", 0);
+            string cat = PlayerPrefs.GetString(GetDoGamStateKey("DoGam_LastCategory"), "떡");
+            int savedIndex = PlayerPrefs.GetInt(GetDoGamStateKey("DoGam_LastUnlockedIndex"), 0);
 
             // 카테고리 필터 먼저 적용
             FilterByCategory(cat);
@@ -479,7 +482,8 @@ public void CloseDoGam()
         if (howToRoot != null && howToRoot.activeSelf) tab = 1;
         else if (makerRoot != null && makerRoot.activeSelf) tab = 2;
 
-        PlayerPrefs.SetInt("DoGam_LastTab", tab);
+        // 세이브별로 분리된 키 사용
+        PlayerPrefs.SetInt(GetDoGamStateKey("DoGam_LastTab"), tab);
 
         if (tab == 0)
         {
@@ -593,6 +597,16 @@ public void CloseDoGam()
         // 더 이상 새 레시피가 없다면 도감 버튼 느낌표도 끈다
         if (dogamAlertIcon != null && _unseenFinishKeys.Count == 0)
             dogamAlertIcon.SetActive(false);
+    }
+
+    // 도감 상태용 PlayerPrefs 키를 세이브(서버)별로 분리하는 유틸
+    private string GetDoGamStateKey(string baseKey)
+    {
+        string server = PlayerPrefs.GetString("SelectedSave", "");
+        if (string.IsNullOrEmpty(server))
+            return baseKey;  // 혹시 SelectedSave가 아직 없으면 기존 키 사용(안전장치)
+
+        return server + ":" + baseKey;
     }
 
 
@@ -1148,7 +1162,7 @@ public void CloseDoGam()
     {
         if (makerRoot == null) return;
 
-        // 부모 비우기 (게임방법과 동일 유틸)
+        // 부모 비우기
         ClearChildren(makerLeftPageParent);
         ClearChildren(makerRightPageParent);
 
