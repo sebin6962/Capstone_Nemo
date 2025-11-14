@@ -20,6 +20,11 @@ public class MillNpc : MonoBehaviour
     private void OpenMill()
     {
         MillPanel.SetActive(true);
+
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayBbyongSFX();
+        }
     }
 
     public bool IsMillOpen()

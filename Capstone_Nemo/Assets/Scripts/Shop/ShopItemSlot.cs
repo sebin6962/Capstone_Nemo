@@ -55,11 +55,13 @@ public class ShopItemSlot : MonoBehaviour
 
     void OnPlusButtonClicked()
     {
+        if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
         manager.AdjustItem(item, +1);
     }
 
     void OnMinusButtonClicked()
     {
+        if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
         manager.AdjustItem(item, -1);
     }
 

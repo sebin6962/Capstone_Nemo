@@ -264,10 +264,20 @@ public class ShopManager : MonoBehaviour
             {
                 StorageInventory.Instance.AddItem(entry.item.itemName, entry.quantity);
                 Debug.Log($"{entry.item.itemName} {entry.quantity}개 구매");
+
+                if (StorageAlertManager.Instance != null)
+                {
+                    StorageAlertManager.Instance.NotifyNewHarvestedItem(entry.item.itemName);
+                }
             }
 
         // 별빛 차감은 StarDataManager를 통해
         StarDataManager.Instance.SpendStarlight(total);
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayTotalMoneySFX();
+            SFXManager.Instance.PlayFileSelectSFX();
+        }
 
         Debug.Log($"{StarDataManager.Instance.playerData.starlight}별빛 남음");
 
@@ -301,6 +311,7 @@ public class ShopManager : MonoBehaviour
             kvp.Value.UpdateDisplay(0);
         }
 
+        if (SFXManager.Instance) SFXManager.Instance.PlayFileSelectSFX();
         UpdateTotalPrice();
         foreach (var entry in basketDict.Values)
             buyButton.interactable = (entry.quantity > 0);

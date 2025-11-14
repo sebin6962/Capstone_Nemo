@@ -52,7 +52,8 @@ public class MillManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
     }
-        void Start()
+
+    void Start()
     {
         /*Inventory = new List<MillItemData>
         {
@@ -102,7 +103,7 @@ public class MillManager : MonoBehaviour
 
         gameObject.SetActive(true);
 
-        SFXManager.Instance.PlayBbyongSFX();
+        //SFXManager.Instance.PlayBbyongSFX();
 
         foreach (Transform child in inventoryPanelParent)
             Destroy(child.gameObject);
