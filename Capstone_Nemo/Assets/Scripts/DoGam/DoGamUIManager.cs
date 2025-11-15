@@ -356,7 +356,7 @@ public class DoGamUIManager : MonoBehaviour
         string lastTabKey = GetDoGamStateKey("DoGam_LastTab");
 
         // 세이브 파일에 기록된 마지막 페이지가 없으면 = 첫 진입
-        if (!PlayerPrefs.HasKey("DoGam_LastTab"))
+        if (!PlayerPrefs.HasKey(lastTabKey))
         {
             // 게임방법 페이지로 오픈
             OpenHowToTab();
@@ -488,16 +488,16 @@ public void CloseDoGam()
         if (tab == 0)
         {
             // 레시피 탭: 카테고리 + 현재 페이지 인덱스
-            PlayerPrefs.SetString("DoGam_LastCategory", currentRecipeCategory);
-            PlayerPrefs.SetInt("DoGam_LastUnlockedIndex", _currentIndex);
+            PlayerPrefs.SetString(GetDoGamStateKey("DoGam_LastCategory"), currentRecipeCategory);
+            PlayerPrefs.SetInt(GetDoGamStateKey("DoGam_LastUnlockedIndex"), _currentIndex);
         }
         else if (tab == 1)
         {
-            PlayerPrefs.SetInt("DoGam_LastHowToSpread", howToSpreadIndex);
+            PlayerPrefs.SetInt(GetDoGamStateKey("DoGam_LastHowToSpread"), howToSpreadIndex);
         }
         else if (tab == 2)
         {
-            PlayerPrefs.SetInt("DoGam_LastMakerSpread", makerSpreadIndex);
+            PlayerPrefs.SetInt(GetDoGamStateKey("DoGam_LastMakerSpread"), makerSpreadIndex);
         }
 
         PlayerPrefs.Save();
