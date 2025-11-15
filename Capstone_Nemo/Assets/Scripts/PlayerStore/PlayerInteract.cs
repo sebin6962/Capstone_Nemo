@@ -58,6 +58,13 @@ public class PlayerInteract : MonoBehaviour
             {
                 PlayerStoreBoxInventoryUIManager.Instance.OpenUI(nearbyStorage);
                 Debug.Log("[E] 상자 인벤토리 열기");
+
+                //튜토리얼 진행 트리거 1
+                if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.OpenStorage))
+                {
+                    StoreTutorialManager.Instance.GoToNextStep();
+                }
+
                 return;
             }
 
@@ -138,6 +145,29 @@ public class PlayerInteract : MonoBehaviour
                             var makerMgr = FindObjectOfType<MakerManager>();
                             if (makerMgr != null)
                                 makerMgr.SaveMakerState();
+
+                            //튜토리얼 진행 트리거 3, 4, 5
+                            if (StoreTutorialManager.Instance)
+                            {
+                                var tm = StoreTutorialManager.Instance;
+
+                                if (tm.IsCurrentStep(StoreTutorialStep.SieveFinish) &&
+                                    resultName == "Sieve_Mepssalgaru")
+                                {
+                                    tm.GoToNextStep();
+                                }
+                                else if (tm.IsCurrentStep(StoreTutorialStep.Mixing) &&
+                                         resultName == "Mixing_Mepssal")
+                                {
+                                    tm.GoToNextStep();
+                                }
+                                else if (tm.IsCurrentStep(StoreTutorialStep.Siru) &&
+                                         resultName == "Baekseolgi_finish")
+                                {
+                                    tm.GoToNextStep();
+                                }
+                            }
+
                         }
                     }
                     else
@@ -405,6 +435,21 @@ public class PlayerInteract : MonoBehaviour
 
                 float duration = 3f; // 기존에 쓰던 제작 시간
                 currentMaker.StartCraft(resultSprite, duration);
+
+                //튜토리얼 진행 트리거 2
+                if (StoreTutorialManager.Instance)
+                {
+                    switch (currentMaker.makerId)
+                    {
+                        case "Sieve01":
+                        case "Sieve02":
+                        case "Sieve03":
+                            if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.Sieve))
+                                StoreTutorialManager.Instance.GoToNextStep();
+                            break;
+                    }
+                }
+
 
                 //var makerMgr = FindObjectOfType<MakerManager>();
                 //if (makerMgr != null)

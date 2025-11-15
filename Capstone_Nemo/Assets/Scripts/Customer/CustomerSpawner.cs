@@ -15,8 +15,18 @@ public class CustomerSpawner : MonoBehaviour
     [SerializeField] private float questCustomerChance = 0.2f;
     [SerializeField] private GameObject questCustomerPrefab;
 
+    [SerializeField] private bool tutorialMode = false;
+
+    void Awake()
+    {
+        Debug.Log($"[CustomerSpawner] Awake name={name}, tutorialMode={tutorialMode}");
+    }
+
     void Update()
     {
+        if (tutorialMode)
+            return;
+
         timer += Time.deltaTime;
         if (timer >= spawnInterval)
         {
@@ -39,5 +49,36 @@ public class CustomerSpawner : MonoBehaviour
             customerScript.Initialize(path);
             customerScript.SetSeatInfo(seatIndex, seatManager);
         }
+    }
+
+    public void SpawnTutorialCustomer(string tutorialDagwaId, float delay = 0f)
+    {
+        tutorialMode = true;  // 자동 스폰 막기
+        StartCoroutine(SpawnCustomerDelay(tutorialDagwaId, delay));
+    }
+
+    private IEnumerator SpawnCustomerDelay(string tutorialDawgaId, float delay)
+    {
+        if (delay > 0f)
+            yield return new WaitForSeconds(delay);
+
+        int seatIndex = seatManager.GetAvailableSeatIndex();
+
+        seatManager.OccupySeat(seatIndex);
+
+        GameObject customer = Instantiate(customerPrefab, spawnPoint.position, Quaternion.identity);
+
+        Transform[] path = routesPerSeat[seatIndex].waypoints;
+        Customer customerScript = customer.GetComponent<Customer>();
+
+        customerScript.Initialize(path);
+        customerScript.SetSeatInfo(seatIndex, seatManager);
+        customerScript.SetTutorialCustomer("baekseolgi_finish");
+    }
+
+    public void EndTutorial()
+    {
+        tutorialMode = false;
+        timer = 0f;
     }
 }

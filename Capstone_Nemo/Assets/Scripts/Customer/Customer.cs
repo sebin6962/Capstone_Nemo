@@ -33,6 +33,15 @@ public class Customer : MonoBehaviour
     protected bool isServed = false;
     protected CustomerState state = CustomerState.Walking;
 
+    [SerializeField] private bool isTutorialCustomer = false;
+    [SerializeField] private string tutorialDagwaId;
+
+    public void SetTutorialCustomer(string fixedDagwaId)
+    {
+        isTutorialCustomer = true;
+        tutorialDagwaId = fixedDagwaId;
+    }
+
     public void Initialize(Transform[] path)
     {
         wayPoints = path;
@@ -147,13 +156,37 @@ public class Customer : MonoBehaviour
     {
         state = CustomerState.Ordering;
 
-        orderedDagwa = OrderManager.Instance.GetRandomDagwaList();
+        //튜토리얼구분(다과 종류)
+        if(isTutorialCustomer && !string.IsNullOrEmpty(tutorialDagwaId))
+        {
+            orderedDagwa = tutorialDagwaId;
+        }
+
+        else
+        {
+            orderedDagwa = OrderManager.Instance.GetRandomDagwaList();
+        }
+
         Debug.Log("손님이 주문한 다과:" + orderedDagwa);
 
         orderUI.ShowOrder(orderedDagwa);
 
-        remainingTime = orderTimeLimit;
-        isTimerRunning = true;
+        //튜토리얼구분(시간 제한)
+        if (isTutorialCustomer)
+        {
+            isTimerRunning = false;
+            orderUI.ShowTimerUI(false);
+        }
+
+        else
+        {
+            remainingTime = orderTimeLimit;
+            isTimerRunning = true;
+            orderUI.ShowTimerUI(true);
+        }
+
+       /* remainingTime = orderTimeLimit;
+        isTimerRunning = true;*/
     }
     public virtual void Serve(string givenDagwa)
     {
@@ -201,6 +234,7 @@ public class Customer : MonoBehaviour
 
             // --- 정답 효과음 재생 추가 ---
             SFXManager.Instance.PlayCorrectSFX();
+
         }
         else
         {
@@ -221,6 +255,11 @@ public class Customer : MonoBehaviour
     }
     protected virtual void HandleTimeOver()
     {
+        if (isTutorialCustomer)
+        {
+            return;
+        }
+
         isTimerRunning = false;
         isServed = true;
         state = CustomerState.Displeased;
@@ -322,6 +361,16 @@ public class Customer : MonoBehaviour
         {
             seatManager.VacateSeat(seatIndex);
             Debug.Log($"좌석 {seatIndex} 비움");
+        }
+
+        Debug.Log($"[Tutorial] 손님 퇴장 시점, currentStep={StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.Serve)} / running={StoreTutorialManager.Instance.IsStoreTutorialRunning}");
+
+        //튜토리얼 진행 트리거 6
+        if (isTutorialCustomer && StoreTutorialManager.Instance != null && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.Serve))
+        {
+
+            Debug.Log("[Tutorial] Serve 단계 튜토리얼 손님 퇴장 → Finish 단계로 이동");
+            StoreTutorialManager.Instance.GoToNextStep();
         }
 
         Destroy(gameObject);
