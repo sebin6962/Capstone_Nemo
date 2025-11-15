@@ -62,11 +62,11 @@ public class SaveSelectManager : MonoBehaviour
         TryDelete(Path.Combine(p, $"tutorial_{serverName}.json"));
         TryDelete(System.IO.Path.Combine(p, $"farm_{serverName}.json"));
 
-        // 2) 레거시 해금 파일(섞임의 주범) 더 이상 쓰지 않는다면 지워버리는 걸 권장
+        // 레거시 해금 파일 더 이상 쓰지 않는다면 지워버리는 걸 권장
         var legacy = Path.Combine(p, "unlock_state.json");
         if (File.Exists(legacy)) TryDelete(legacy);
 
-        // 3) 프로필 목록에서 엔트리 제거 (프로필을 쓰고 있다면)
+        // 프로필 목록에서 엔트리 제거
         var profilePath = Path.Combine(p, "profile_myuser.json");
         if (File.Exists(profilePath))
         {
@@ -138,32 +138,7 @@ public class SaveSelectManager : MonoBehaviour
     }
     public void DeleteSave(string serverName)
     {
-        Debug.Log($"세이브 삭제: {serverName}");
-
-        // profile 업데이트
-        string profilePath = Application.persistentDataPath + "/profile_myuser.json";
-        Profile profile = JsonUtility.FromJson<Profile>(File.ReadAllText(profilePath));
-        profile.saves.RemoveAll(x => x.serverName == serverName);
-        File.WriteAllText(profilePath, JsonUtility.ToJson(profile, true));
-
-        // 관련 파일 삭제
-        string[] files = {
-        $"save_myuser_{serverName}.json",
-        $"playerStarData_{serverName}.json",
-        $"player_level_data_{serverName}.json",
-        $"dayData_{serverName}.json",
-        //$"timeData_{serverName}.json",
-        //$"unlock_{serverName}.json",
-        //$"playtime_{serverName}.json",
-        //$"farm_{serverName}.json"
-    };
-        foreach (var file in files)
-        {
-            string path = Application.persistentDataPath + "/" + file;
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-
+        DeleteServerFiles(serverName);
         RefreshSaveSlots();
     }
     public void RefreshSaveSlots()
@@ -238,7 +213,7 @@ public class SaveSelectManager : MonoBehaviour
                 delBtn.onClick.AddListener(() =>
                 {
                     if (SFXManager.Instance != null)
-                        SFXManager.Instance.PlayFileSelectSFX();
+                        SFXManager.Instance.PlayBtnClickSFX();
 
                     ConfirmPopup.Instance.Open($"[{serverName}] 세이브 파일을 삭제할까요?", () =>
                     {

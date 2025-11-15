@@ -505,6 +505,7 @@ public class CutSceneManager : MonoBehaviour
             // 클릭하면 즉시 완성
             if (clickCompletesCurrentLine && Input.GetMouseButtonDown(0))
             {
+                SFXManager.Instance.PlayIntroClickSFX();
                 visible = total;
                 line.maxVisibleCharacters = visible;
                 break;
@@ -562,6 +563,7 @@ public class CutSceneManager : MonoBehaviour
     //=========================건너뛰기 버튼========================
     public void OnClickSkipButton()
     {
+        SFXManager.Instance.PlayBtnClickSFX();
         if (isSkipping) return;
         isSkipping = true;
 

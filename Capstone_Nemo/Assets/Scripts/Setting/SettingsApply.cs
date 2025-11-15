@@ -48,6 +48,7 @@ public class SettingsApply : MonoBehaviour
 
     public void OnApplySettingsPressed()
     {
+        SFXManager.Instance.PlayBtnClickSFX();
         if (sm == null) return;
 
         //UI ¡æ SettingsManager °ª ¹Ý¿µ

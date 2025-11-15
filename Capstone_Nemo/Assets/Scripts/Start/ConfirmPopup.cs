@@ -30,12 +30,14 @@ public class ConfirmPopup : MonoBehaviour
 
         btnYes.onClick.AddListener(() =>
         {
+            SFXManager.Instance.PlayBtnClickSFX();
             onConfirm?.Invoke();
             gameObject.SetActive(false);
         });
 
         btnNo.onClick.AddListener(() =>
         {
+            SFXManager.Instance.PlayBtnClickSFX();
             gameObject.SetActive(false);
         });
     }

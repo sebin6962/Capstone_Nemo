@@ -171,6 +171,7 @@ public class TimeManager : MonoBehaviour
         // 남은 시간이 1분이고, 아직 경고를 안 띄웠다면
         if (remainingMinutes == 60 && !dayEndWarningShown)
         {
+            SFXManager.Instance.PlayDayOffSFX();
             ShowDayEndWarning();
             dayEndWarningShown = true;
         }

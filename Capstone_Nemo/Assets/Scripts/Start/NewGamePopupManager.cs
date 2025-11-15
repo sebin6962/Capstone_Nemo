@@ -85,7 +85,7 @@ public class NewGamePopupManager : MonoBehaviour
         btnCancel.onClick.AddListener(() =>
         {
             if (SFXManager.Instance != null)
-                SFXManager.Instance.PlayFileSelectSFX();
+                SFXManager.Instance.PlayBtnClickSFX();
 
             suppressWarnings = true;
 
@@ -115,7 +115,7 @@ public class NewGamePopupManager : MonoBehaviour
         btnCreate.onClick.AddListener(() =>
         {
             if (SFXManager.Instance != null)
-                SFXManager.Instance.PlayFileSelectSFX();
+                SFXManager.Instance.PlayBtnClickSFX();
 
             string serverName = inputServerName.text.Trim();
             if (string.IsNullOrEmpty(serverName)) return;

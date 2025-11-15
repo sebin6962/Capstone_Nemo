@@ -359,6 +359,11 @@ public class MillManager : MonoBehaviour
             jeolguAnimator.SetTrigger(millTriggerName);
         }
 
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayMillLoop();
+        }
+
         // 애니메이션 이벤트를 쓰지 않으면, 클립 길이만큼 대기 후 마무리
         if (!useAnimationEvent)
         {
@@ -401,6 +406,11 @@ public class MillManager : MonoBehaviour
     // 실제 변환 + UI 갱신 공용 로직
     private void CompleteMilling()
     {
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.StopMillLoop();
+        }
+
         int useCount = queuedCount;
         if (useCount <= 0)
         {
@@ -463,8 +473,21 @@ public class MillManager : MonoBehaviour
 
             if (ResultEffectText != null)
             {
-                ResultEffectText.text = queuedCount > 1 ? $"{queuedCount}" : "";
-                ResultEffectText.gameObject.SetActive(true);
+                if (queuedCount > 1)
+                {
+                    ResultEffectText.text = $"{queuedCount}";
+                    ResultEffectText.gameObject.SetActive(true);
+
+                    if (ResultEffectCountImage != null)
+                        ResultEffectCountImage.gameObject.SetActive(true);
+                }
+                else
+                {
+                    ResultEffectText.gameObject.SetActive(false);
+
+                    if (ResultEffectCountImage != null)
+                        ResultEffectCountImage.gameObject.SetActive(false);
+                }
             }
 
             if (SFXManager.Instance) SFXManager.Instance.PlayCorrectSFX();
@@ -473,6 +496,9 @@ public class MillManager : MonoBehaviour
 
             if (ResultEffectText != null)
                 ResultEffectText.gameObject.SetActive(false);
+
+            if (ResultEffectCountImage != null)
+                ResultEffectCountImage.gameObject.SetActive(false);
         }
 
         // 창고로 날아가는 효과

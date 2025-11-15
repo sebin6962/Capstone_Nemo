@@ -5,16 +5,16 @@ using UnityEngine.UI;
 public class SinkInfo : MonoBehaviour
 {
     [Header("진행바/캔버스")]
-    public RectTransform progressBarPrefab;   // Maker에서 쓰는 것 재사용 가능 (Fill 이미지 포함)
-    public Transform worldCanvasParent;       // 진행바를 붙일 월드 캔버스 (Maker의 ProgressworldCanvasParent와 동일 계열)
+    public RectTransform progressBarPrefab;   
+    public Transform worldCanvasParent;       // 진행바를 붙일 월드 캔버스
 
     [Header("물 아이템")]
-    public Sprite waterSprite;                // 결과 오브젝트에 표시할 ‘물’ 스프라이트
-    public string waterItemName = "water";    // HeldItemManager에 전달될 아이템 이름
-    public GameObject waterResultPrefab;      // 싱크 위에 생성될 물 결과 프리팹(분무기, 물컵 등 스프라이트 렌더러 포함)
+    public Sprite waterSprite;                
+    public string waterItemName = "water";    
+    public GameObject waterResultPrefab;      
 
     [Header("연출")]
-    public float fillDuration = 1.5f;         // 물 긷는 시간
+    public float fillDuration = 1.5f;        
     public Vector3 barOffset = new Vector3(0f, 1.2f, 0f);
     public Vector3 resultOffset = new Vector3(0f, 1.2f, 0f); // 물 결과물 위치 오프셋
 
@@ -31,8 +31,7 @@ public class SinkInfo : MonoBehaviour
         if (isRunning) yield break; // 연타 방지
         isRunning = true;
 
-        // (선택) 제작 진행 SFX 재사용
-        SFXManager.Instance.PlayMakerProgressSFX("sink");
+        SFXManager.Instance.PlayMakerProgressSFX("Sink");
 
         // 진행바 생성
         RectTransform progressBar = Instantiate(progressBarPrefab, worldCanvasParent);

@@ -289,7 +289,7 @@ public class ShopManager : MonoBehaviour
         StarDataManager.Instance.SpendStarlight(total);
         if (SFXManager.Instance != null)
         {
-            SFXManager.Instance.PlayTotalMoneySFX();
+            SFXManager.Instance.PlaySpendMoneySFX();
             SFXManager.Instance.PlayFileSelectSFX();
         }
 

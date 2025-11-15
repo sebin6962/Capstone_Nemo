@@ -57,6 +57,7 @@ public class AudioSetting : MonoBehaviour
 
     public void MuteMaster()
     {
+        SFXManager.Instance.PlayBtnClickSFX();
         AudioSetting.Instance.SetAudioMute(EAudioMixerType.Master);
     }
 
@@ -67,6 +68,7 @@ public class AudioSetting : MonoBehaviour
 
     public void MuteBGM()
     {
+        SFXManager.Instance.PlayBtnClickSFX();
         AudioSetting.Instance.SetAudioMute(EAudioMixerType.BGM);
     }
 
@@ -78,6 +80,7 @@ public class AudioSetting : MonoBehaviour
 
     public void MuteSFX()
     {
+        SFXManager.Instance.PlayBtnClickSFX();
         AudioSetting.Instance.SetAudioMute(EAudioMixerType.SFX);
     }
 

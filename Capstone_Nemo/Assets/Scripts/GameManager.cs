@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
 {
     public void ReturnToStartScene()
     {
+        SFXManager.Instance.PlayBtnClickSFX();
         FadeManager.Instance.FadeToScene("IntroScene"); 
     }
 

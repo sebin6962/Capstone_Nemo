@@ -119,20 +119,38 @@ public class TutorialManager : MonoBehaviour
 
         SetPlayerInput(true);
 
-        if (villageTutorialPanel)
-        {
-            villageTutorialPanel.SetActive(true);
-        }
+        //if (villageTutorialPanel)
+        //{
+        //    SFXManager.Instance.PlayBbyongSFX();
+        //    villageTutorialPanel.SetActive(true);
+        //}
 
-        currentStep = TutorialStep.Village;
-
-        if (dogamCloseButton != null)
-            dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
+        //currentStep = TutorialStep.Village;
 
         //지금 시간만 멈추고 플레이어만 움직이게 할 수 없는듯? 추후 수정 예정
         //우선 시간 흐르게...
         Time.timeScale = 1f;
+
+        if (dogamCloseButton != null)
+            dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
+
+        //효과음 넣으니까 겹쳐서 2초 지연 코루틴으로 뺐습니다!
+        StartCoroutine(ShowVillageTutorialAfterDelay(2f));
     }
+
+    private IEnumerator ShowVillageTutorialAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (villageTutorialPanel)
+        {
+            SFXManager.Instance.PlayTutorialSFX();
+            villageTutorialPanel.SetActive(true);
+        }
+
+        currentStep = TutorialStep.Village;
+    }
+
 
     void ResumeAndComplete()
     {

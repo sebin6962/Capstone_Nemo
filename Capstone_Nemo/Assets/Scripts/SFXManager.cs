@@ -19,7 +19,7 @@ public class SFXManager : MonoBehaviour
     public AudioClip farmSeedClip;
     public AudioClip boxOpenClip;
 
-    // makerId별 효과음 관리용 (Inspector에서 할당)
+    // makerId별 효과음 관리용
     public AudioClip sieveMakerInputClip;
     public AudioClip siruMakerInputClip;
     public AudioClip mixingMakerInputClip;
@@ -30,6 +30,10 @@ public class SFXManager : MonoBehaviour
     public AudioClip decoMakerInputClip;
     public AudioClip teaMakerInputClip;
     public AudioClip fryMakerInputClip;
+    public AudioClip cutMakerInputClip;
+    public AudioClip shapeMakerInputClip;
+
+    public AudioClip sinkWaterClip;
 
     [Header("게임 인트로")]
     public AudioClip introClickClip;
@@ -42,6 +46,7 @@ public class SFXManager : MonoBehaviour
 
     [Header("Scene Change")]
     public AudioClip doorOpenSFX;
+    public AudioClip treeEnterSFX;
 
     [Header("Trash Can Sounds")]
     public AudioClip trashDiscardClip;   // 정상 폐기
@@ -53,6 +58,7 @@ public class SFXManager : MonoBehaviour
     [Header("Statement")]
     public AudioClip moneyCountClip;
     public AudioClip totalMoneyClip;
+    public AudioClip buyItemClip;
 
     [Header("Level UP")]
     public AudioClip levelRevealClip;
@@ -65,7 +71,16 @@ public class SFXManager : MonoBehaviour
     [Header("농사")]
     public AudioClip harvestingClip; // 작물 수확 소리
     public AudioClip harvestItemClip; //수확한 아이템 인벤 들어가는 소리
-   
+
+    [Header("절구(가루 변환)")]
+    public AudioClip millLoopClip;
+
+    [Header("하루 마감 알림")]
+    public AudioClip dayOffClip;
+
+    [Header("튜토리얼")]
+    public AudioClip tutorialRevealClip;
+
     void Awake()
     {
         if (Instance == null)
@@ -98,6 +113,12 @@ public class SFXManager : MonoBehaviour
     {
         if (audioSource && plateSoundClip)
             audioSource.PlayOneShot(plateSoundClip);
+    }
+
+    public void PlayDayOffSFX()
+    {
+        if (audioSource && dayOffClip)
+            audioSource.PlayOneShot(dayOffClip);
     }
 
     public void PlayIntroClickSFX()
@@ -160,10 +181,7 @@ public class SFXManager : MonoBehaviour
             case "Siru02":
                 audioSource.PlayOneShot(siruMakerInputClip);
                 break;
-            case "Mixing01":
-                audioSource.PlayOneShot(mixingMakerInputClip);
-                break;
-            case "Mixing02":
+            case "MIxing01":
                 audioSource.PlayOneShot(mixingMakerInputClip);
                 break;
             case "Grinder":
@@ -174,6 +192,9 @@ public class SFXManager : MonoBehaviour
                 break;
             case "Pot02":
                 audioSource.PlayOneShot(potMakerInputClip);
+                break;
+            case "Cutting":
+                audioSource.PlayOneShot(cutMakerInputClip);
                 break;
             case "ChungMaker":
                 audioSource.PlayOneShot(chungMakerInputClip);
@@ -190,6 +211,12 @@ public class SFXManager : MonoBehaviour
             case "Fryolator":
                 audioSource.PlayOneShot(fryMakerInputClip);
                 break;
+            case "Sink":
+                audioSource.PlayOneShot(sinkWaterClip);
+                break;
+            case "ShapeMaker":
+                audioSource.PlayOneShot(shapeMakerInputClip);
+                break;
         }
 
         if (audioSource && targetClip)
@@ -197,6 +224,26 @@ public class SFXManager : MonoBehaviour
             audioSource.clip = targetClip;
             audioSource.loop = true;
             audioSource.Play();
+        }
+    }
+
+    public void PlayMillLoop()
+    {
+        if (audioSource != null && millLoopClip != null)
+        {
+            audioSource.clip = millLoopClip;
+            audioSource.loop = true;
+            audioSource.Play();
+        }
+    }
+
+    public void StopMillLoop()
+    {
+        if (audioSource != null && audioSource.clip == millLoopClip)
+        {
+            audioSource.loop = false;
+            audioSource.Stop();
+            audioSource.clip = null;
         }
     }
 
@@ -251,6 +298,14 @@ public class SFXManager : MonoBehaviour
         }
     }
 
+    public void PlayTreeEnterSFX()
+    {
+        if (audioSource != null && treeEnterSFX != null)
+        {
+            audioSource.PlayOneShot(treeEnterSFX);
+        }
+    }
+
     public void PlayTrashDiscardSFX()
     {
         if (audioSource != null && trashDiscardClip != null)
@@ -281,10 +336,22 @@ public class SFXManager : MonoBehaviour
             audioSource.PlayOneShot(totalMoneyClip);
     }
 
+    public void PlaySpendMoneySFX()
+    {
+        if (audioSource != null && buyItemClip != null)
+            audioSource.PlayOneShot(buyItemClip);
+    }
+
     public void PlayLevelUpSFX()
     {
         if (audioSource != null && levelRevealClip != null)
             audioSource.PlayOneShot(levelRevealClip);
+    }
+
+    public void PlayTutorialSFX()
+    {
+        if (audioSource != null && tutorialRevealClip != null)
+            audioSource.PlayOneShot(tutorialRevealClip);
     }
 
     public void PlayUnlockSlotSFX()

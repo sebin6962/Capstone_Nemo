@@ -251,10 +251,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.0005611479
-    y: 0
-    width: 0.9988777
-    height: 1
+    x: 0
+    y: 0.00086805224
+    width: 1
+    height: 0.9982639
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -4477,6 +4477,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dc4701dfa3a5a941a2aaf2d33f8622a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerTransform: {fileID: 0}
+  treeTooltipRange: 3
   storageFullPanel: {fileID: 0}
   storageFullGroup: {fileID: 0}
   fieldTilemap: {fileID: 0}
@@ -4502,6 +4504,34 @@ PrefabInstance:
     - target: {fileID: 3968825572727184618, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
       propertyPath: m_Name
       value: OpenStorageBtn
+      objectReference: {fileID: 0}
+    - target: {fileID: 4296745394903959489, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -46
+      objectReference: {fileID: 0}
+    - target: {fileID: 4296745394903959489, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 45.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 5029790169447058359, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5357307055526545700, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 46890f476c899194ab86ce518520c9f8, type: 3}
+    - target: {fileID: 5357307055526545700, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
+      propertyPath: m_Color.b
+      value: 0.9685534
+      objectReference: {fileID: 0}
+    - target: {fileID: 5357307055526545700, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
+      propertyPath: m_Color.g
+      value: 0.9685534
+      objectReference: {fileID: 0}
+    - target: {fileID: 5357307055526545700, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
+      propertyPath: m_Color.r
+      value: 0.9685534
       objectReference: {fileID: 0}
     - target: {fileID: 6476800199685998724, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target

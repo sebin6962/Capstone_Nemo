@@ -57,7 +57,7 @@ public class SaveSelectTabManager : MonoBehaviour
     public void SwitchTab(string tab)
     {
         if (SFXManager.Instance != null)
-            SFXManager.Instance.PlayFileSelectSFX();
+            SFXManager.Instance.PlayBtnClickSFX();
 
         fileSelectPanel.SetActive(tab == "File");
         settingPanel.SetActive(tab == "Setting");

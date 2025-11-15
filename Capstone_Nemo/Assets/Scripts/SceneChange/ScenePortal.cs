@@ -59,7 +59,17 @@ public class ScenePortal : MonoBehaviour
 
         if (SFXManager.Instance != null)
         {
-            SFXManager.Instance.PlayDoorOpenSFX(); 
+            // 현재 씬(출발 씬)
+            string fromScene = SceneManager.GetActiveScene().name;
+
+            if (targetScene == "TreeScene" || fromScene == "TreeScene")
+            {
+                SFXManager.Instance.PlayTreeEnterSFX(); 
+            }
+            else
+            {
+                SFXManager.Instance.PlayDoorOpenSFX();
+            }
         }
 
         // FadeManager가 timescale을 건드려도 안전하게: 실시간 대기

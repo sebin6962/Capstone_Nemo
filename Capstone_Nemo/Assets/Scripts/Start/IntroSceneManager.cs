@@ -109,8 +109,11 @@ public class IntroSceneManager : MonoBehaviour
         // 마우스 왼쪽 클릭 체크
         if (!clicked && Input.GetMouseButtonDown(0))
         {
+            
+
             if (!canClick && !textStarted)
             {
+                SFXManager.Instance.PlayIntroClickSFX();
                 // 로고가 다 뜬 이후에만 텍스트 바로 등장 허용
                 if (allowSkipToText)
                 {
@@ -120,6 +123,7 @@ public class IntroSceneManager : MonoBehaviour
             // 텍스트가 이미 다 뜬 상태면 다음 씬으로 이동
             else if (canClick)
             {
+                SFXManager.Instance.PlayIntroClickSFX();
                 clicked = true;
                 //if (SFXManager.Instance != null)
                 //    SFXManager.Instance.PlayIntroClickSFX();

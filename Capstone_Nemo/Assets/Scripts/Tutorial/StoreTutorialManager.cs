@@ -28,6 +28,8 @@ public class StoreTutorialManager : MonoBehaviour
 
     private StoreTutorialStep currentStep = StoreTutorialStep.Finish;
 
+    private Coroutine showStepPanelRoutine;
+
     public bool IsStoreTutorialRunning
     {
         get;
@@ -72,16 +74,44 @@ public class StoreTutorialManager : MonoBehaviour
 
     void ShowStepPanel(StoreTutorialStep step)
     {
+        //SFXManager.Instance.PlayBbyongSFX();
+        //HideAllPanels();
+
+        //int index = (int)step;
+        //if (stepPanels == null || index < 0 || index >= stepPanels.Length)
+        //    return;
+
+        //if (stepPanels[index])
+        //{
+        //    stepPanels[index].SetActive(true);
+        //}
+
+        // 이전에 돌고 있던 코루틴 있다면 정지
+        if (showStepPanelRoutine != null)
+            StopCoroutine(showStepPanelRoutine);
+
+        // 2초 뒤에 패널 켜는 코루틴으로 빼뒀어요!!
+        showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 2.2f));
+    }
+
+    private IEnumerator ShowStepPanelAfterDelay(StoreTutorialStep step, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        SFXManager.Instance.PlayTutorialSFX();
         HideAllPanels();
 
         int index = (int)step;
         if (stepPanels == null || index < 0 || index >= stepPanels.Length)
-            return;
+            yield break;
 
         if (stepPanels[index])
         {
             stepPanels[index].SetActive(true);
         }
+
+        // 코루틴 끝남
+        showStepPanelRoutine = null;
     }
 
     void HideAllPanels()
