@@ -28,6 +28,9 @@ public class FarmSaveData
 
 public class FarmManager : MonoBehaviour
 {
+    public Transform playerTransform;      // 플레이어 Transform
+    public float treeTooltipRange = 3f;    // 나무 툴팁이 뜨는 최대 거리
+
     public GameObject storageFullPanel;     // "창고가 가득 찼습니다" 패널
     public CanvasGroup storageFullGroup;    // 위 패널에 붙은 CanvasGroup
     private Coroutine storageFullCo;        // 중복 실행 방지
@@ -58,6 +61,8 @@ public class FarmManager : MonoBehaviour
     public float interactRadius = 1.6f; // E키 범위
 
     string CurrentServer => PlayerPrefs.GetString("SelectedSave", "");
+
+    private TreeTooltip currentHoverTree;
 
     string FarmSavePath
         => string.IsNullOrEmpty(CurrentServer)
@@ -118,6 +123,8 @@ public class FarmManager : MonoBehaviour
         }
         HandleTreeLevelWarningByInput();
         HandleRightClickHarvest();
+
+        HandleTreeTooltipHover();
     }
 
     public void SaveFarmState()
@@ -216,7 +223,7 @@ public class FarmManager : MonoBehaviour
                     stage = Mathf.Min(stage + 1, cropData.stages.Count - 1);
                     timer = 0f;
                     watered = false;
-                    break; 
+                    break;
                 }
 
                 if (remain >= need)
@@ -251,13 +258,14 @@ public class FarmManager : MonoBehaviour
             if (cropData.isTree)
             {
                 SetupTreeComponents(overlay);
+                SetupTreeTooltip(overlay, cropData);
             }
 
             var cropInfo = new CropTile(pos, cropData, overlay)
             {
-                currentStage = stage,   
-                timer = timer,          
-                isWatered = watered     
+                currentStage = stage,
+                timer = timer,
+                isWatered = watered
             };
             growingTiles.Add(pos, cropInfo);
         }
@@ -301,6 +309,7 @@ public class FarmManager : MonoBehaviour
         if (treeData.isTree)
         {
             SetupTreeComponents(overlay);
+            SetupTreeTooltip(overlay, treeData);
         }
 
         // growingTiles에 등록
@@ -496,7 +505,7 @@ public class FarmManager : MonoBehaviour
         }
 
         //overlayTilemap.ClearTile(pos);
-        
+
 
         Debug.Log($"작물 {tile.cropData.cropName}이 {tile.currentStage}단계로 성장함");
     }
@@ -617,8 +626,16 @@ public class FarmManager : MonoBehaviour
                 var data = tile.cropData;
                 if (data != null && data.isTree && IsTreeLocked(data)) // IsTreeLocked는 FarmManager에 이미 존재:contentReference[oaicite:4]{index=4}
                 {
-                    ShowLevelTooLowByInput();
-                    return;
+                    if (player == null) return;
+
+                    Vector3 tileCenter = overlayTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0f);
+
+                    // 플레이어와의 거리 체크
+                    if (Vector2.Distance(player.position, tileCenter) <= interactRadius)
+                    {
+                        ShowLevelTooLowByInput();
+                        return;
+                    }
                 }
             }
         }
@@ -733,5 +750,84 @@ public class FarmManager : MonoBehaviour
 
         storageFullPanel.SetActive(false);
         storageFullCo = null;
+    }
+
+    private void SetupTreeTooltip(GameObject overlay, CropData data)
+    {
+        if (overlay == null || data == null) return;
+
+        var tooltip = overlay.GetComponent<TreeTooltip>();
+        if (tooltip == null)
+            tooltip = overlay.AddComponent<TreeTooltip>();
+
+        // 한글 이름은 기존 ItemTooltipDB 재사용
+        string label;
+        if (!ItemTooltipDB.TooltipTexts.TryGetValue(data.harvestItemName, out label))
+            label = data.harvestItemName;
+
+        // 유자 → 유자 나무
+        tooltip.treeName = label + "나무";
+
+        // 필요하면 나무마다 높이 조정도 가능
+        tooltip.worldOffset = new Vector3(0f, 1.8f, 0f);
+    }
+
+    private void HandleTreeTooltipHover()
+    {
+        var cam = Camera.main;
+        if (cam == null) return;
+        if (InventoryTooltipManager.Instance == null) return;
+
+        //  마우스 스크린 좌표 → 월드 좌표
+        Vector3 mouseScreen = Input.mousePosition;
+        mouseScreen.z = -cam.transform.position.z;
+        Vector3 mouseWorld = cam.ScreenToWorldPoint(mouseScreen);
+
+        Vector2 point = new Vector2(mouseWorld.x, mouseWorld.y);
+
+        int mask = LayerMask.GetMask("Interactable", "Default");
+        Collider2D col = Physics2D.OverlapPoint(point, mask);
+
+        if (col != null)
+        {
+            TreeTooltip tt = col.GetComponent<TreeTooltip>();
+            if (tt != null)
+            {
+                // 플레이어와의 거리 체크
+                if (playerTransform != null)
+                {
+                    float sqrDist = (playerTransform.position - tt.transform.position).sqrMagnitude;
+                    if (sqrDist > treeTooltipRange * treeTooltipRange)
+                    {
+                        // 멀어지면 나무 위에 마우스를 올려도 툴팁 숨김
+                        if (currentHoverTree != null)
+                        {
+                            currentHoverTree = null;
+                            InventoryTooltipManager.Instance.HideWorld();
+                        }
+                        return;
+                    }
+                }
+
+                // 여기까지 왔으면: 마우스는 나무 위 + 플레이어도 충분히 가까움
+                if (currentHoverTree != tt)
+                {
+                    currentHoverTree = tt;
+                    InventoryTooltipManager.Instance.ShowWorld(
+                        tt.treeName,
+                        tt.transform.position + tt.worldOffset
+                    );
+                }
+                return;
+            }
+        }
+    
+
+        // 나무 위에 마우스가 없는 상태
+        if (currentHoverTree != null)
+        {
+            currentHoverTree = null;
+            InventoryTooltipManager.Instance.HideWorld();
+        }
     }
 }

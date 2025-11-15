@@ -265,7 +265,46 @@ public class MillManager : MonoBehaviour
         }
     }
 
+    /// sourceName 재료를 useCount만큼 빼고
+    /// resultName 가루를 useCount만큼 넣었을 때
+    /// 스택/슬롯 기준으로 창고에 들어갈 수 있는지 체크 함수 추가
+    private bool CanConvertToPowder(string sourceName, string resultName, int useCount)
+    {
+        var storage = StorageInventory.Instance;
+        if (storage == null) return true; // 안전빵
 
+        if (useCount <= 0) return false;
+
+        int maxStack = storage.maxStackPerItem;
+        int freeSlots = storage.FreeSlots;
+
+        int sourceCnt = storage.GetItemCount(sourceName);
+        int resultCnt = storage.GetItemCount(resultName);
+
+        if (sourceCnt <= 0) return false;
+
+        // 재료를 useCount만큼 빼면 몇개 슬롯이 비는지 계산
+        int srcStacksBefore = Mathf.CeilToInt(sourceCnt / (float)maxStack);
+
+        int srcRemain = Mathf.Max(sourceCnt - useCount, 0);
+        int srcStacksAfter = srcRemain > 0
+            ? Mathf.CeilToInt(srcRemain / (float)maxStack)
+            : 0;
+
+        int freedSlotsBySource = Mathf.Max(0, srcStacksBefore - srcStacksAfter);
+
+        // 재료를 빼서 생기는 슬롯까지 포함한 실제 사용 가능 슬롯 수
+        int effectiveFreeSlots = freeSlots + freedSlotsBySource;
+
+        // 가루 아이템을 useCount만큼 넣으면 필요한 추가 스택(슬롯) 수 계산
+        int resStacksBefore = Mathf.CeilToInt(resultCnt / (float)maxStack);
+        int resStacksAfter = Mathf.CeilToInt((resultCnt + useCount) / (float)maxStack);
+
+        int extraStacksNeeded = Mathf.Max(0, resStacksAfter - resStacksBefore);
+
+        // 필요한 추가 슬롯 == 실제 여유 슬롯이라면 가능
+        return extraStacksNeeded <= effectiveFreeSlots;
+    }
 
     public void Confirm()
     {
@@ -273,10 +312,28 @@ public class MillManager : MonoBehaviour
         if (selectedItem == null)
             return;
 
+        int useCount = queuedCount;
+        if (useCount <= 0)
+            return;
+
         string sourceName = selectedItem.itemName;
         if (!MillDB.GrindResult.TryGetValue(sourceName, out string resultName))
         {
             return;
+        }
+
+        // **** 인벤토리 공간 체크 (재료 -> 가루 변환 고려) *****
+        if (!CanConvertToPowder(sourceName, resultName, useCount))
+        {
+            // 창고 가득 찼을 때 사용하는 알림 패널 재사용
+            if (PlayerInteract.Instance != null)
+                PlayerInteract.Instance.ShowStorageFull();
+
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.PlayBbyongSFX();
+
+            Debug.Log("[MillManager] 인벤토리가 가득 차서 가루 변환을 할 수 없습니다.");
+            return; // 여기서 애니 시작도 안 하고 그냥 종료
         }
 
         // 결과 스프라이트 미리 로드(끝에 표시)

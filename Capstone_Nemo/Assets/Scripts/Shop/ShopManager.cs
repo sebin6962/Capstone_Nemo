@@ -259,6 +259,20 @@ public class ShopManager : MonoBehaviour
         if (playerStar < total)
             return;
 
+        // ** 먼저 창고에 다 들어갈 수 있는지 체크
+        if (!CanStoreAllBasketItems())
+        {
+            // PlayerInteract의 알림 패널 재사용
+            if (PlayerInteract.Instance != null)
+                PlayerInteract.Instance.ShowStorageFull();
+
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.PlayBbyongSFX();
+
+            Debug.Log("[Shop] 창고가 가득 차서 구매할 수 없습니다.");
+            return;
+        }
+
         foreach (var entry in basketDict.Values)
             if (entry.quantity > 0)
             {
@@ -356,6 +370,48 @@ public class ShopManager : MonoBehaviour
     public bool IsOpen()
     {
         return shopPanel != null && shopPanel.activeSelf;
+    }
+
+    /// 현재 basketDict에 담긴 물건들이
+    /// StorageInventory에 모두 들어갈 수 있는지 사전 체크
+
+    bool CanStoreAllBasketItems()
+    {
+        var storage = StorageInventory.Instance;
+        if (storage == null) return true;   // 혹시라도 null이면 그냥 통과
+
+        int freeSlots = storage.FreeSlots;
+        int maxStack = storage.maxStackPerItem;
+
+        // 아이템별로 하나씩 검사
+        foreach (var entry in basketDict.Values)
+        {
+            if (entry.quantity <= 0) continue;
+
+            string itemName = entry.item.itemName;
+            int currentCount = storage.GetItemCount(itemName);
+
+            // 이 아이템을 지금 장바구니 수량만큼 더 넣었을 때
+            // 필요한 슬롯 수 계산
+            int totalAfter = currentCount + entry.quantity;
+
+            int stacksBefore = Mathf.CeilToInt(currentCount / (float)maxStack);
+            int stacksAfter = Mathf.CeilToInt(totalAfter / (float)maxStack);
+            int extraStacksNeeded = stacksAfter - stacksBefore;
+
+            // 새로 필요한 스택(슬롯)이 남은 슬롯보다 많으면 실패
+            if (extraStacksNeeded > freeSlots)
+            {
+                Debug.Log($"[Shop] {itemName}를 {entry.quantity}개 담으면 " +
+                          $"추가 스택 {extraStacksNeeded}개가 필요 " +
+                          $"남은 슬롯은 {freeSlots}개-> 구매 불가");
+                return false;
+            }
+
+            freeSlots -= extraStacksNeeded;
+        }
+
+        return true;
     }
 
 }
