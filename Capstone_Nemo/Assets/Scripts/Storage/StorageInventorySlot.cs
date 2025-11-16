@@ -33,8 +33,16 @@ public class StorageInventorySlot : MonoBehaviour, IPointerEnterHandler, IPointe
         itemImage.enabled = true;
 
         // 한글 툴팁 텍스트 매핑
-        if (!ItemTooltipDB.TooltipTexts.TryGetValue(itemKey, out tooltipText))
-            tooltipText = itemKey; // 혹시 없을 때 대비 예외 처리
+        //if (!ItemTooltipDB.TooltipTexts.TryGetValue(itemKey, out tooltipText))
+        //    tooltipText = itemKey; // 혹시 없을 때 대비 예외 처리
+
+        var key = itemKey.Trim();
+
+        if (!ItemTooltipDB.TooltipTexts.TryGetValue(key, out tooltipText) &&
+            !ItemTooltipDB.TooltipTexts.TryGetValue(key.ToLower(), out tooltipText))
+        {
+            tooltipText = itemKey; // 그래도 없으면 영어 출력
+        }
 
         //원래 수량 처리
         //countText.text = (count > 1) ? count.ToString() : "";
@@ -99,7 +107,7 @@ public class StorageInventorySlot : MonoBehaviour, IPointerEnterHandler, IPointe
 
 public static class ItemTooltipDB
 {
-    public static Dictionary<string, string> TooltipTexts = new Dictionary<string, string>
+    public static Dictionary<string, string> TooltipTexts = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase)
     {
         { "Grind_Redbean", "곱게 간 팥" },
         { "Chapssalgaru", "찹쌀가루" },
@@ -155,7 +163,7 @@ public static class ItemTooltipDB
         { "Jat", "잣" },
         { "Powder", "녹말가루" },
         { "Sugar_white", "설탕" },
-        { "cinnamon", "계피" },
+        { "Cinnamon", "계피" },
         { "Cinamongaru", "계피가루" },
         { "Ginger", "생강" },
         { "Sugar_brown", "흑설탕" },

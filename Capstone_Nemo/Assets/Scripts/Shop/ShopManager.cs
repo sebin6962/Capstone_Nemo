@@ -106,6 +106,10 @@ public class ShopManager : MonoBehaviour
         if (BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen())
             return;
 
+        // 창고 패널 열려 있으면 상점 열기 막기
+        if (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen())
+            return;
+
         if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
         shopPanel.SetActive(true);
         Debug.Log("OpenShop 실행됨");

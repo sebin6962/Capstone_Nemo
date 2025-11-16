@@ -5611,6 +5611,7 @@ MonoBehaviour:
   teaMakerInputClip: {fileID: 0}
   fryMakerInputClip: {fileID: 0}
   cutMakerInputClip: {fileID: 0}
+  shapeMakerInputClip: {fileID: 0}
   sinkWaterClip: {fileID: 0}
   introClickClip: {fileID: 0}
   btnClickSFX: {fileID: 0}
@@ -5633,6 +5634,7 @@ MonoBehaviour:
   harvestItemClip: {fileID: 0}
   millLoopClip: {fileID: 0}
   dayOffClip: {fileID: 0}
+  tutorialRevealClip: {fileID: 0}
 --- !u!4 &318533205 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4626255125801582266, guid: 22b598cfa698ad640b90a46f1177f4b3, type: 3}
@@ -12371,7 +12373,7 @@ MonoBehaviour:
   spawnInitialItemOnStart: 0
   initialItemSpriteName: 
   spriteResourceDir: Sprites/Ingredients/
-  initialScale: {x: 0.6, y: 0.6, z: 1}
+  initialScale: {x: 1, y: 1, z: 1}
   sortingLayerName: Obj
   sortingOrder: 60
   requiredLevelForInitialItem: 10
@@ -12595,7 +12597,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: NaN, y: -448.75195}
+  m_AnchoredPosition: {x: NaN, y: -448.75192}
   m_SizeDelta: {x: -1286.296, y: -964.354}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &793036837
@@ -13622,7 +13624,7 @@ MonoBehaviour:
   spawnInitialItemOnStart: 0
   initialItemSpriteName: 
   spriteResourceDir: Sprites/Ingredients/
-  initialScale: {x: 0.6, y: 0.6, z: 1}
+  initialScale: {x: 1, y: 1, z: 1}
   sortingLayerName: Obj
   sortingOrder: 60
   requiredLevelForInitialItem: 10
@@ -28592,10 +28594,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.00030338764
-    width: 1
-    height: 0.9993932
+    x: 0.00063854456
+    y: 0
+    width: 0.9987229
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60

@@ -24,10 +24,10 @@ public class TableInfo : MonoBehaviour
 
     void Start()
     {
-        if (spawnInitialItemOnStart && !string.IsNullOrEmpty(initialItemSpriteName) && IsLevelEnoughForInitialItem())
-        {
-            TrySpawnInitialItem();
-        }
+        //if (spawnInitialItemOnStart && !string.IsNullOrEmpty(initialItemSpriteName) && IsLevelEnoughForInitialItem())
+        //{
+        //    TrySpawnInitialItem();
+        //}
     }
 
     private bool IsLevelEnoughForInitialItem()

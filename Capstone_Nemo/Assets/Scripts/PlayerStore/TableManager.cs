@@ -28,7 +28,16 @@ public class TableManager : MonoBehaviour
 
     void Start()
     {
-        LoadTableState();
+        bool hasSave =
+        !string.IsNullOrEmpty(TableSavePath) &&
+        File.Exists(TableSavePath);
+
+        if (hasSave)
+        {
+            LoadTableState(); 
+        }
+
+        SpawnInitialItemsUnique();
     }
 
     void OnDisable()
@@ -41,6 +50,39 @@ public class TableManager : MonoBehaviour
         SaveTableState();
     }
 
+    private void SpawnInitialItemsUnique()
+    {
+        var tablesInScene = FindObjectsOfType<TableInfo>();
+
+        var existingSpriteNames = new HashSet<string>();
+        foreach (var t in tablesInScene)
+        {
+            if (t.currentPlacedObject == null) continue;
+
+            var sr = t.currentPlacedObject.GetComponent<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
+            {
+                existingSpriteNames.Add(sr.sprite.name);
+            }
+        }
+
+        foreach (var t in tablesInScene)
+        {
+            if (!t.spawnInitialItemOnStart) continue;
+            if (string.IsNullOrEmpty(t.initialItemSpriteName)) continue;
+
+            if (existingSpriteNames.Contains(t.initialItemSpriteName))
+                continue;
+
+            if (t.currentPlacedObject != null)
+                continue;
+
+            if (t.TrySpawnInitialItem())
+            {
+                existingSpriteNames.Add(t.initialItemSpriteName);
+            }
+        }
+    }
     public void SaveTableState()
     {
         if (string.IsNullOrEmpty(TableSavePath)) return;
