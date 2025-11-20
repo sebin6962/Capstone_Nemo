@@ -17,6 +17,7 @@ public class LevelUpRevealPanel : MonoBehaviour
 
     [Header("Slots")]
     [SerializeField] private Transform slotsParent;
+    [SerializeField] private Transform slotBackgroundParent;
     [SerializeField] private GameObject slotPrefab;
 
     [Header("Sprites")]
@@ -54,10 +55,12 @@ public class LevelUpRevealPanel : MonoBehaviour
     [SerializeField] private float slotsVisibleSeconds = 3f; // 슬롯 보이는 시간
     [SerializeField] private float fadeOutSeconds = 0.35f;
     [SerializeField] private bool crossfadeWithCutscene = true;
+    [SerializeField] private float delayBetweenBgAndSlots = 0.3f;
 
     private static readonly Dictionary<string, Sprite> _cache = new();
     private CanvasGroup _cgPanel;
-    private CanvasGroup _cgSlots; // 추가
+    private CanvasGroup _cgSlots;
+    private CanvasGroup _cgSlotBackground; // 추가
 
     void Awake()
     {
@@ -88,6 +91,15 @@ public class LevelUpRevealPanel : MonoBehaviour
             _cgSlots = go.GetComponent<CanvasGroup>() ?? go.AddComponent<CanvasGroup>();
             _cgSlots.alpha = 0f;
             go.SetActive(false); // 처음엔 안 보이게
+
+        }
+
+        if (slotBackgroundParent != null)
+        {
+            var goBg = slotBackgroundParent.gameObject;
+            _cgSlotBackground = goBg.GetComponent<CanvasGroup>() ?? goBg.AddComponent<CanvasGroup>();
+            _cgSlotBackground.alpha = 0f;
+            goBg.SetActive(false);
         }
 
         //이펙트
@@ -126,12 +138,22 @@ public class LevelUpRevealPanel : MonoBehaviour
         // 2) 슬롯 지연
         yield return new WaitForSecondsRealtime(slotDelaySeconds);
 
+        //슬롯 배경 페이드인
+        if (_cgSlotBackground != null)
+        {
+            _cgSlotBackground.gameObject.SetActive(true);
+            yield return Fade(_cgSlotBackground, 0f, 1f, slotFadeSeconds * 0.5f);
+        }
+
+        yield return new WaitForSecondsRealtime(delayBetweenBgAndSlots);
+
         // 3) 슬롯 활성 + 슬롯 페이드인
         if (_cgSlots != null)
         {
             if (SFXManager.Instance) SFXManager.Instance.PlayUnlockSlotSFX();
             _cgSlots.gameObject.SetActive(true);
             yield return Fade(_cgSlots, 0f, 1f, slotFadeSeconds);
+
         }
 
         // 4) 슬롯 노출 유지
