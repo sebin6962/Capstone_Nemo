@@ -11,6 +11,7 @@ public class CustomerSpawner : MonoBehaviour
 
     public float spawnInterval;
     private float timer;
+    public float firstSpawnDelay;
 
     [SerializeField] private float questCustomerChance = 0.2f;
     [SerializeField] private GameObject questCustomerPrefab;
@@ -20,6 +21,22 @@ public class CustomerSpawner : MonoBehaviour
     void Awake()
     {
         Debug.Log($"[CustomerSpawner] Awake name={name}, tutorialMode={tutorialMode}");
+    }
+
+    void Start()
+    {
+        if (!tutorialMode)
+        {
+            StartCoroutine(FirstCustomerDelay(firstSpawnDelay));
+        }
+    }
+
+    private IEnumerator FirstCustomerDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        TrySpawnCustomer();  
+        timer = 0f;          
     }
 
     void Update()

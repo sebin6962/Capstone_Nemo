@@ -36,6 +36,9 @@ public class Customer : MonoBehaviour
     [SerializeField] private bool isTutorialCustomer = false;
     [SerializeField] private string tutorialDagwaId;
 
+    [SerializeField] private Animator animator;
+    private Vector3 lastPosition;
+
     public void SetTutorialCustomer(string fixedDagwaId)
     {
         isTutorialCustomer = true;
@@ -69,11 +72,17 @@ public class Customer : MonoBehaviour
         }
 
         if (wayPoints == null || currentIndex >= wayPoints.Length)
+        {
+            UpdateAnimation(Vector3.zero);
             return;
+        }
+            
 
         Vector3 targetPos = wayPoints[currentIndex].position;
-        Vector3 moveDir = (targetPos - transform.position).normalized;
+        Vector3 toTarget = targetPos - transform.position;
+        Vector3 moveDir = toTarget.normalized;
         transform.position += moveDir * speed * Time.deltaTime;
+        UpdateAnimation(moveDir);
 
         if (Vector3.Distance(transform.position, targetPos) < 0.1f)
         {
@@ -86,10 +95,34 @@ public class Customer : MonoBehaviour
         }
     }
 
+    private void UpdateAnimation(Vector3 moveDir)
+    {
+        if (animator == null)
+            return;
+
+        bool movingState = (state == CustomerState.Walking || state == CustomerState.Leaving);
+
+        bool hasMove = movingState && moveDir.sqrMagnitude > 0.01f;
+
+        animator.SetBool("IsMoving", hasMove);
+
+        if (hasMove)
+        {
+            animator.speed = 1f;
+            animator.SetFloat("MoveX", moveDir.x);
+            animator.SetFloat("MoveY", moveDir.y);
+        }
+        else
+        {
+            animator.speed = 0f; 
+        }
+    }
+
     void Sit()
     {
         
         state = CustomerState.Sit;
+
         AssignPlate();
         StartOrdering();
     }
@@ -331,6 +364,8 @@ public class Customer : MonoBehaviour
 
             transform.position = Vector3.Lerp(startPos, target, Mathf.SmoothStep(0f, 1f, t));
 
+            UpdateAnimation(Vector3.down);
+
             if (t > fadeDelay)
             {
                 float fadeT = Mathf.InverseLerp(fadeDelay, 1f, t);
@@ -352,7 +387,7 @@ public class Customer : MonoBehaviour
                     cg.alpha = alpha;
                 }
             }
-
+            
             yield return null;
         }
 

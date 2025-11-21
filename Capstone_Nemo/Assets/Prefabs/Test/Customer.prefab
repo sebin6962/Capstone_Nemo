@@ -49,6 +49,7 @@ GameObject:
   - component: {fileID: 6627838006806426916}
   - component: {fileID: 8514389272292328570}
   - component: {fileID: 2170371538293649178}
+  - component: {fileID: 7883149535726479898}
   m_Layer: 0
   m_Name: Customer
   m_TagString: Untagged
@@ -174,6 +175,9 @@ MonoBehaviour:
   speed: 2
   orderUI: {fileID: 7347767403122895733}
   orderTimeLimit: 120
+  isTutorialCustomer: 0
+  tutorialDagwaId: 
+  animator: {fileID: 7883149535726479898}
 --- !u!114 &2170371538293649178
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -186,6 +190,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28de2de6b03b13744aa44f75627a420e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!95 &7883149535726479898
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1228903408139256980}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: fe58671928a43614cbc3938e6d1cbda5, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1343737331203945882
 GameObject:
   m_ObjectHideFlags: 0
