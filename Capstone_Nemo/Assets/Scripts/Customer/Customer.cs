@@ -37,7 +37,7 @@ public class Customer : MonoBehaviour
     [SerializeField] private string tutorialDagwaId;
 
     [SerializeField] private Animator animator;
-    private Vector3 lastPosition;
+    private Vector2 lastMoveDir = Vector2.down;
 
     public void SetTutorialCustomer(string fixedDagwaId)
     {
@@ -76,23 +76,28 @@ public class Customer : MonoBehaviour
             UpdateAnimation(Vector3.zero);
             return;
         }
-            
+
 
         Vector3 targetPos = wayPoints[currentIndex].position;
         Vector3 toTarget = targetPos - transform.position;
-        Vector3 moveDir = toTarget.normalized;
-        transform.position += moveDir * speed * Time.deltaTime;
-        UpdateAnimation(moveDir);
 
-        if (Vector3.Distance(transform.position, targetPos) < 0.1f)
+        if (toTarget.sqrMagnitude < 0.01f)
         {
+            transform.position = targetPos;
             currentIndex++;
             if (currentIndex >= wayPoints.Length)
             {
                 Sit();
                 Debug.Log("¼Õ´Ô Âø¼®");
             }
+            UpdateAnimation(Vector3.zero);
+            return;
         }
+
+        Vector3 moveDir = toTarget.normalized;
+        transform.position += moveDir * speed * Time.deltaTime;
+
+        UpdateAnimation(moveDir);
     }
 
     private void UpdateAnimation(Vector3 moveDir)
@@ -104,18 +109,28 @@ public class Customer : MonoBehaviour
 
         bool hasMove = movingState && moveDir.sqrMagnitude > 0.01f;
 
-        animator.SetBool("IsMoving", hasMove);
-
         if (hasMove)
         {
-            animator.speed = 1f;
-            animator.SetFloat("MoveX", moveDir.x);
-            animator.SetFloat("MoveY", moveDir.y);
+            Vector2 dir = new Vector2(moveDir.x, moveDir.y);
+
+            if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+            {
+                dir.y = 0f;
+                dir.x = Mathf.Sign(dir.x);  
+            }
+            else
+            {
+                dir.x = 0f;
+                dir.y = Mathf.Sign(dir.y);  
+            }
+
+            lastMoveDir = dir; 
         }
-        else
-        {
-            animator.speed = 0f; 
-        }
+
+        animator.SetBool("IsMoving", hasMove);
+
+        animator.SetFloat("MoveX", lastMoveDir.x);
+        animator.SetFloat("MoveY", lastMoveDir.y);
     }
 
     void Sit()

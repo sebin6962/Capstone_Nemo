@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CustomerSpawner : MonoBehaviour
 {
-    public GameObject customerPrefab;
+    public GameObject[] customerPrefab;
     public Transform spawnPoint; 
     public SeatManager seatManager;
     public List<Route> routesPerSeat;
@@ -57,7 +57,7 @@ public class CustomerSpawner : MonoBehaviour
         int seatIndex = seatManager.GetAvailableSeatIndex();
         if (seatIndex >= 0 && seatIndex < routesPerSeat.Count)
         {
-            GameObject prefab = (Random.value < questCustomerChance) ? questCustomerPrefab : customerPrefab;
+            GameObject prefab = customerPrefab[Random.Range(0, customerPrefab.Length)];
             GameObject customer = Instantiate(prefab, spawnPoint.position, Quaternion.identity);
             seatManager.OccupySeat(seatIndex);
 
@@ -83,7 +83,7 @@ public class CustomerSpawner : MonoBehaviour
 
         seatManager.OccupySeat(seatIndex);
 
-        GameObject customer = Instantiate(customerPrefab, spawnPoint.position, Quaternion.identity);
+        GameObject customer = Instantiate(customerPrefab[3], spawnPoint.position, Quaternion.identity);
 
         Transform[] path = routesPerSeat[seatIndex].waypoints;
         Customer customerScript = customer.GetComponent<Customer>();
