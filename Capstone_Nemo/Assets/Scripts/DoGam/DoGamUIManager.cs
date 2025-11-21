@@ -678,7 +678,7 @@ public void CloseDoGam()
         _activeTabButton = b;
         if (_activeTabButton) _activeTabButton.image.sprite = tabPressedSprite;
 
-        // 탭 버튼은 전환 애니메이션 영향 안 받도록(권장)
+        // 탭 버튼은 전환 애니메이션 영향 안 받도록
         if (tteokButton) tteokButton.transition = Selectable.Transition.None;
         if (drinkButton) drinkButton.transition = Selectable.Transition.None;
         if (howToButton) howToButton.transition = Selectable.Transition.None;
@@ -717,7 +717,6 @@ public void CloseDoGam()
         if (rewardExpText != null)
             rewardExpText.text = entry.rewardExp.ToString();
 
-        // 아이콘은 Inspector에서 미리 세팅했다면 여기서 따로 건들 필요 없음
     }
 
 
