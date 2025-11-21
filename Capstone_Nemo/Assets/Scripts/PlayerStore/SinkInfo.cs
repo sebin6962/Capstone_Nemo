@@ -43,7 +43,7 @@ public class SinkInfo : MonoBehaviour
         if (fill == null)
         {
             Debug.LogError("[SinkInfo] 진행바 프리팹에 'Fill' 오브젝트가 없습니다!");
-            SFXManager.Instance.StopMakerProgressSFX();
+            SFXManager.Instance.StopMakerProgressSFX("Sink");
             Destroy(progressBar.gameObject);
             isRunning = false;
             yield break;
@@ -60,7 +60,7 @@ public class SinkInfo : MonoBehaviour
             yield return null;
         }
 
-        SFXManager.Instance.StopMakerProgressSFX();
+        SFXManager.Instance.StopMakerProgressSFX("Sink");
         Destroy(progressBar.gameObject);
 
         // 이미 결과물이 있으면 하나만 유지

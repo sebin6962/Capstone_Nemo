@@ -136,12 +136,12 @@ public class MakerManager : MonoBehaviour
                 if (remain <= 0)
                 {
                     // 이미 제작 끝나 있을 경우 → 거의 0초짜리로 돌려서 바로 완성
-                    maker.StartCraft(resultSprite, 0.01f);
+                    maker.StartCraft(resultSprite, 0.01f, force: true);
                 }
                 else
                 {
                     // 남은 시간만큼만 진행바 재생
-                    maker.StartCraft(resultSprite, remainF);
+                    maker.StartCraft(resultSprite, remainF, force: true);
                 }
             }
             // 진행은 끝났지만, 제작대 위에 결과물이 남아 있는 경우
