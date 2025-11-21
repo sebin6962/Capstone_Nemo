@@ -23,6 +23,8 @@ public class PlayerInteract : MonoBehaviour
     public CanvasGroup storageFullGroup;    // 위 패널에 붙은 CanvasGroup
     private Coroutine storageFullCo;        // 중복 실행 방지
 
+    private readonly List<MakerInfo> nearbyMakers = new List<MakerInfo>();
+
     private static readonly HashSet<string> NonDiscardableItems = new HashSet<string>
 {
     "YakgwaMold",
@@ -42,6 +44,9 @@ public class PlayerInteract : MonoBehaviour
 
     private void Update()
     {
+        if (nearbyMakers.Count > 0)
+            RefreshCurrentMaker();
+
         // E키
         if (Input.GetKeyDown(interactKey))
         {
@@ -359,6 +364,13 @@ public class PlayerInteract : MonoBehaviour
             // 2. 제작기 근처에서 재료가 1개 이상 쌓인 경우에만 제작 시도
             if (isNearMaker && currentMaker != null && currentMaker.inputItemNames.Count > 0)
             {
+                if (currentMaker.isProducing)
+                {
+                    Debug.Log("[Space] 이미 제작 중이라 연속 제작 불가");
+                    //SFXManager.Instance.PlayBbyongSFX();
+                    return;
+                }
+
                 bool isRecipeMatched;
 
                 // 약과 전용: ShapeMaker에서 Yakgwabanjuk을 만들려면 YakgwaMold를 들고 있어야 함
@@ -424,14 +436,11 @@ public class PlayerInteract : MonoBehaviour
 
                 Debug.Log("[Space] 제작 성공, 결과: " + resultSprite.name);
 
-                //// 진행바 + 결과 생성
-                //StartCoroutine(currentMaker.ShowProgressAndSpawnItem(resultSprite));
-
-                //// 인풋 인벤토리, 슬롯 UI 초기화
-                //currentMaker.inputItemNames.Clear();
-                //currentMaker.inputItemSprites.Clear();
-                //if (currentMaker.slotUIManager != null)
-                //    currentMaker.slotUIManager.ClearSlots();
+                // [추가] 제작 시작 순간 재료 즉시 소모(연타 복제 구조 차단)
+                currentMaker.inputItemNames.Clear();
+                currentMaker.inputItemSprites.Clear();
+                if (currentMaker.slotUIManager != null)
+                    currentMaker.slotUIManager.ClearSlots();
 
                 float duration = 3f; // 기존에 쓰던 제작 시간
                 currentMaker.StartCraft(resultSprite, duration);
@@ -550,9 +559,11 @@ public class PlayerInteract : MonoBehaviour
         var maker = other.GetComponent<MakerInfo>();
         if (maker != null)
         {
-            currentMaker = maker;
-            isNearMaker = true;
-            Debug.Log($"접근: {currentMaker.makerId}");
+            if (!nearbyMakers.Contains(maker))
+                nearbyMakers.Add(maker);
+
+            RefreshCurrentMaker();
+            Debug.Log($"접근: {maker.makerId}, 현재 타겟: {currentMaker.makerId}");
         }
 
         if (other.CompareTag("StorageBox")) // 꼭 Tag 설정 필요
@@ -585,11 +596,12 @@ public class PlayerInteract : MonoBehaviour
     private void OnTriggerExit2D(Collider2D other)
     {
         var maker = other.GetComponent<MakerInfo>();
-        if (maker != null && currentMaker == maker)
+        if (maker != null)
         {
-            isNearMaker = false;
-            currentMaker = null;
-            Debug.Log($"이탈: {maker.makerId}");
+            nearbyMakers.Remove(maker);
+            RefreshCurrentMaker();
+
+            Debug.Log($"이탈: {maker.makerId}, 현재 타겟: {(currentMaker ? currentMaker.makerId : "없음")}");
         }
 
         if (other.CompareTag("StorageBox"))
@@ -612,6 +624,33 @@ public class PlayerInteract : MonoBehaviour
             nearbyTrash = null;
             Debug.Log("[PlayerInteract] 쓰레기통 이탈");
         }
+    }
+
+    private MakerInfo GetClosestMaker()
+    {
+        MakerInfo closest = null;
+        float best = float.PositiveInfinity;
+        Vector3 p = transform.position;
+
+        foreach (var m in nearbyMakers)
+        {
+            if (m == null) continue;
+            float d = (m.transform.position - p).sqrMagnitude;
+            if (d < best)
+            {
+                best = d;
+                closest = m;
+            }
+        }
+        return closest;
+    }
+
+    private void RefreshCurrentMaker()
+    {
+        nearbyMakers.RemoveAll(m => m == null);
+
+        currentMaker = GetClosestMaker();
+        isNearMaker = currentMaker != null;
     }
 
 }

@@ -37,8 +37,23 @@ public class MakerInfo : MonoBehaviour
     public double craftEndUtcSeconds;       // 제작 종료 시각(초)
 
     // --- 여기부터 씬 전환 시 진행 상태 관련 ---
-    public void StartCraft(Sprite resultSprite, float duration)
+    public void StartCraft(Sprite resultSprite, float duration, bool force = false)
     {
+        // [추가] 강제 복원이 아니면 제작중/결과물 존재 시 시작 금지
+        if (!force)
+        {
+            if (isProducing)
+            {
+                Debug.LogWarning($"[{makerId}] 이미 제작 중");
+                return;
+            }
+            if (currentResultObject != null)
+            {
+                Debug.LogWarning($"[{makerId}] 결과물이 남아 있음");
+                return;
+            }
+        }
+
         // 진행 상태 기록
         isProducing = true;
         resultItemName = resultSprite.name;
@@ -123,7 +138,7 @@ public class MakerInfo : MonoBehaviour
         if (fill == null)
         {
             Debug.LogError("진행바 프리팹에 'Fill' 오브젝트가 없습니다!");
-            SFXManager.Instance.StopMakerProgressSFX(); // 에러 시에도 멈추기
+            SFXManager.Instance.StopMakerProgressSFX(makerId); // 에러 시에도 멈추기
             yield break;
         }
         Image fillImage = fill.GetComponent<Image>();
@@ -139,7 +154,7 @@ public class MakerInfo : MonoBehaviour
         }
 
         // 진행바 끝났을 때 SFX 멈춤
-        SFXManager.Instance.StopMakerProgressSFX();
+        SFXManager.Instance.StopMakerProgressSFX(makerId);
 
         // 4. 진행바 파괴
         Destroy(progressBar.gameObject);

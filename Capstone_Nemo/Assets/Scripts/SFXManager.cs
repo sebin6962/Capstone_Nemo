@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class SFXManager : MonoBehaviour
 {
+    private Dictionary<string, AudioSource> makerSources = new Dictionary<string, AudioSource>();
+
     public static SFXManager Instance;
     public AudioSource audioSource;
 
@@ -164,68 +166,80 @@ public class SFXManager : MonoBehaviour
        
     }
 
-    public void PlayMakerProgressSFX(string makerId)
+    private AudioClip GetMakerClip(string makerId)
     {
-        AudioClip targetClip = null;
         switch (makerId)
         {
             case "Sieve01":
-                audioSource.PlayOneShot(sieveMakerInputClip);
-                break;
             case "Sieve02":
-                audioSource.PlayOneShot(sieveMakerInputClip);
-                break;
+                return sieveMakerInputClip;
+
             case "Siru01":
-                audioSource.PlayOneShot(siruMakerInputClip);
-                break;
             case "Siru02":
-                audioSource.PlayOneShot(siruMakerInputClip);
-                break;
+                return siruMakerInputClip;
+
             case "MIxing01":
-                audioSource.PlayOneShot(mixingMakerInputClip);
-                break;
+                return mixingMakerInputClip;
+
             case "Grinder":
-                audioSource.PlayOneShot(grinderMakerInputClip);
-                break;
+                return grinderMakerInputClip;
+
             case "Pot01":
-                audioSource.PlayOneShot(potMakerInputClip);
-                break;
             case "Pot02":
-                audioSource.PlayOneShot(potMakerInputClip);
-                break;
+                return potMakerInputClip;
+
             case "Cutting":
-                audioSource.PlayOneShot(cutMakerInputClip);
-                break;
+                return cutMakerInputClip;
+
             case "ChungMaker":
-                audioSource.PlayOneShot(chungMakerInputClip);
-                break;
+                return chungMakerInputClip;
+
             case "Drying":
-                audioSource.PlayOneShot(dryingMakerInputClip);
-                break;
+                return dryingMakerInputClip;
+
             case "TeaMaker":
-                audioSource.PlayOneShot(teaMakerInputClip);
-                break;
+                return teaMakerInputClip;
+
             case "Deco":
-                audioSource.PlayOneShot(decoMakerInputClip);
-                break;
+                return decoMakerInputClip;
+
             case "Fryolator":
-                audioSource.PlayOneShot(fryMakerInputClip);
-                break;
+                return fryMakerInputClip;
+
             case "Sink":
-                audioSource.PlayOneShot(sinkWaterClip);
-                break;
+                return sinkWaterClip;
+
             case "ShapeMaker":
-                audioSource.PlayOneShot(shapeMakerInputClip);
-                break;
+                return shapeMakerInputClip;
         }
 
-        if (audioSource && targetClip)
-        {
-            audioSource.clip = targetClip;
-            audioSource.loop = true;
-            audioSource.Play();
-        }
+        return null;
     }
+
+    public void PlayMakerProgressSFX(string makerId)
+    {
+        var clip = GetMakerClip(makerId);
+        if (clip == null) return;
+
+        // makerId 전용 소스 가져오기/생성
+        if (!makerSources.TryGetValue(makerId, out var src) || src == null)
+        {
+            var go = new GameObject($"MakerSFX_{makerId}");
+            go.transform.SetParent(transform);   // SFXManager 밑에 두기
+            src = go.AddComponent<AudioSource>();
+            src.playOnAwake = false;
+            src.loop = false;    
+            src.spatialBlend = 0f;             
+            makerSources[makerId] = src;
+        }
+
+        // 전용 소스로 재생
+        src.Stop();   
+        src.clip = clip;
+        src.loop = true;     
+        src.Play();
+    }
+
 
     public void PlayMillLoop()
     {
@@ -248,13 +262,14 @@ public class SFXManager : MonoBehaviour
     }
 
     // 진행바 끝나면
-    public void StopMakerProgressSFX()
+
+    public void StopMakerProgressSFX(string makerId)
     {
-        if (audioSource)
+        if (makerSources.TryGetValue(makerId, out var src) && src != null)
         {
-            audioSource.Stop();
-            audioSource.loop = false;
-            audioSource.clip = null;
+            src.Stop();
+            src.loop = false;
+            src.clip = null;
         }
     }
 
