@@ -81,6 +81,9 @@ public class DoGamUIManager : MonoBehaviour
 
     private bool _suppressLockOnce = false;
 
+    private bool _hasLockedPeek = false;  // 잠금 페이지(오버레이) 미리보기 존재 여부
+    private int _maxIndex = 0;            // 이동 가능한 마지막 인덱스
+
     // 추가: 다과 팔았을때 보상 정보 UI
     [Header("Recipe Reward Info")]
     public GameObject rewardInfoRoot;       // 전체 한 줄 루트
@@ -275,13 +278,31 @@ public class DoGamUIManager : MonoBehaviour
     }
     private void SetRecipeNavVisible(bool on)
     {
-        if (prevButton != null) prevButton.gameObject.SetActive(on);
-        if (nextButton != null) nextButton.gameObject.SetActive(on);
+        if (!on)
+        {
+            // 탭 자체를 끌 때는 둘 다 완전히 숨김
+            if (prevButton != null) prevButton.gameObject.SetActive(false);
+            if (nextButton != null) nextButton.gameObject.SetActive(false);
+        }
+        else
+        {
+
+            // 현재 페이지 상태 기준으로 보이기/숨기기 다시 계산
+            UpdatePage();
+        }
     }
     private void SetHowToNavVisible(bool on)
     {
-        if (howToPrevButton != null) howToPrevButton.gameObject.SetActive(on);
-        if (howToNextButton != null) howToNextButton.gameObject.SetActive(on);
+        if (!on)
+        {
+            if (howToPrevButton != null) howToPrevButton.gameObject.SetActive(false);
+            if (howToNextButton != null) howToNextButton.gameObject.SetActive(false);
+        }
+        else
+        {
+            // 켤 때는 현재 스프레드 기준으로 버튼 보이기/숨기기 재계산
+            RenderHowToSpread();
+        }
     }
 
     // ===================== 도감 열기/닫기 =====================
@@ -473,6 +494,8 @@ public void CloseDoGam()
         isHowToOpen = false;
 
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
+
+        SetMakerNavVisible(false);
     }
 
     private void SaveLastDoGamState()
@@ -655,6 +678,10 @@ public void CloseDoGam()
         _unlockedInCat = _allInCat.Where(IsEntryUnlocked).ToList();
         _unlockedCount = _unlockedInCat.Count;
 
+        _hasLockedPeek = (_unlockedCount < _allInCat.Count);
+
+        _maxIndex = _hasLockedPeek ? _unlockedCount : Mathf.Max(0, _unlockedCount - 1);
+
         // entryList는 UI 바인딩용(해금만 또는 전체)
         entryList = hideLockedRecipes ? new List<DoGamEntry>(_unlockedInCat) : new List<DoGamEntry>(_allInCat);
 
@@ -729,7 +756,7 @@ public void CloseDoGam()
         if (_currentIndex < 0) _currentIndex = 0;
         if (_currentIndex > _unlockedCount) _currentIndex = _unlockedCount;
 
-        bool onLockedPeek = (_currentIndex == _unlockedCount);
+        bool onLockedPeek = _hasLockedPeek && (_currentIndex == _unlockedCount);
 
         if (_suppressLockOnce)
         {
@@ -770,9 +797,25 @@ public void CloseDoGam()
             if (rewardInfoRoot != null) rewardInfoRoot.SetActive(false);
         }
 
-        // 내비게이션 버튼 상태(선택)
-        if (prevButton) prevButton.interactable = (_currentIndex > 0);
-        if (nextButton) nextButton.interactable = true; // 잠금 페이지에서도 눌러도 더는 넘어가지 않음
+        // 내비게이션 버튼 상태
+        //if (prevButton) prevButton.interactable = (_currentIndex > 0);
+        //if (nextButton) nextButton.interactable = true; // 잠금 페이지에서도 눌러도 더는 넘어가지 않음
+
+        // 내비게이션 버튼 상태
+        if (prevButton)
+        {
+            bool showPrev = (_currentIndex > 0);
+            prevButton.gameObject.SetActive(showPrev);
+            //prevButton.interactable = showPrev;
+        }
+
+        // 마지막 페이지(= _unlockedCount, 잠금 첫 페이지 포함)면 next 비활성
+        if (nextButton)
+        {
+            bool showNext = (_currentIndex < _maxIndex);
+            nextButton.gameObject.SetActive(showNext);
+            //nextButton.interactable = showNext;
+        }
 
         // 잠금 페이지나 해금 0개일 때는 NEW 아이콘 숨김
         if (recipeAlertIcon != null)
@@ -946,15 +989,10 @@ public void CloseDoGam()
 
     public void NextEntry()
     {
-        // 마지막 해금 페이지에서 한 장 더 → 잠금 첫 페이지로 진입
-        if (_currentIndex < _unlockedCount)
+        if (_currentIndex < _maxIndex)
         {
             _currentIndex++;
             UpdatePage();
-        }
-        else
-        {
-            // 이미 잠금 첫 페이지: 더는 넘어가지 않음(효과음/진동 등 선택)
         }
     }
 
@@ -1079,8 +1117,19 @@ public void CloseDoGam()
         }
 
         // 버튼 상태
-        if (howToPrevButton != null) howToPrevButton.interactable = (howToSpreadIndex > 0);
-        if (howToNextButton != null) howToNextButton.interactable = (howToSpreadIndex < howToPages.Count - 1);
+        bool showPrev = (howToSpreadIndex > 0);
+        bool showNext = (howToSpreadIndex < howToPages.Count - 1);
+
+        if (howToPrevButton != null)
+        {
+            howToPrevButton.gameObject.SetActive(showPrev);
+            howToPrevButton.interactable = showPrev;
+        }
+        if (howToNextButton != null)
+        {
+            howToNextButton.gameObject.SetActive(showNext);
+            howToNextButton.interactable = showNext;
+        }
     }
 
     private void ClearChildren(Transform t)
@@ -1100,8 +1149,16 @@ public void CloseDoGam()
 
     private void SetMakerNavVisible(bool on)
     {
-        if (makerPrevButton != null) makerPrevButton.gameObject.SetActive(on);
-        if (makerNextButton != null) makerNextButton.gameObject.SetActive(on);
+        if (!on)
+        {
+            if (makerPrevButton != null) makerPrevButton.gameObject.SetActive(false);
+            if (makerNextButton != null) makerNextButton.gameObject.SetActive(false);
+        }
+        else
+        {
+            // 켤 때는 현재 스프레드 기준으로 버튼 보이기/숨기기 재계산
+            RenderMakerSpread();
+        }
     }
 
     private void LoadMakerFromJSON()
@@ -1204,8 +1261,19 @@ public void CloseDoGam()
 
         // 내비 버튼 상태
         int spreadCount = Mathf.CeilToInt((float)makerItems.Count / makerItemsPerSpread);
-        makerPrevButton.interactable = (makerSpreadIndex > 0);
-        makerNextButton.interactable = (makerSpreadIndex < spreadCount - 1);
+        bool showPrev = (makerSpreadIndex > 0);
+        bool showNext = (makerSpreadIndex < spreadCount - 1);
+
+        if (makerPrevButton != null)
+        {
+            makerPrevButton.gameObject.SetActive(showPrev);
+            makerPrevButton.interactable = showPrev;
+        }
+        if (makerNextButton != null)
+        {
+            makerNextButton.gameObject.SetActive(showNext);
+            makerNextButton.interactable = showNext;
+        }
 
     }
 

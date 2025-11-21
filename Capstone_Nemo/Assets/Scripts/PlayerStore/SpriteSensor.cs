@@ -10,12 +10,24 @@ public class SpriteSensor : MonoBehaviour
     public SpriteRenderer spriteRenderer;
 
     private readonly HashSet<Collider2D> _inside = new();
+    private PlayerInteract _playerInteract;
 
     void Reset()
     {
         var col = GetComponent<Collider2D>();
         col.isTrigger = true;
         spriteRenderer = GetComponentInParent<SpriteRenderer>();
+    }
+
+    public void SetOutline(bool on)
+    {
+        if (spriteRenderer != null)
+            spriteRenderer.enabled = on;
+    }
+
+    public Vector3 GetTargetPosition()
+    {
+        return spriteRenderer != null ? spriteRenderer.transform.position : transform.position;
     }
 
     bool IsPlayer(Collider2D c)
@@ -28,7 +40,12 @@ public class SpriteSensor : MonoBehaviour
         if (!IsPlayer(other)) return;
         if (_inside.Add(other))
         {
-            spriteRenderer.enabled = true;
+            //spriteRenderer.enabled = true;
+            if (_playerInteract == null)
+                _playerInteract = other.GetComponentInParent<PlayerInteract>();
+
+            if (_playerInteract != null)
+                _playerInteract.RegisterSensor(this);
         }
     }
 
@@ -37,7 +54,9 @@ public class SpriteSensor : MonoBehaviour
         if (!IsPlayer(other)) return;
         if (_inside.Remove(other) && _inside.Count == 0)
         {
-            spriteRenderer.enabled = false;
+            //spriteRenderer.enabled = false;
+            if (_playerInteract != null)
+                _playerInteract.UnregisterSensor(this);
         }
     }
 
@@ -46,7 +65,10 @@ public class SpriteSensor : MonoBehaviour
         if (_inside.Count > 0)
         {
             _inside.Clear();
-            spriteRenderer.enabled = false;
+            //spriteRenderer.enabled = false;
+            if (_playerInteract != null)
+                _playerInteract.UnregisterSensor(this);
         }
+        SetOutline(false);
     }
 }

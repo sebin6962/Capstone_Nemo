@@ -26,36 +26,81 @@ public class NewGamePopupManager : MonoBehaviour
 
         if (inputServerName != null)
         {
-            inputServerName.characterLimit = 6;
+            inputServerName.characterLimit = 0;
+
+            inputServerName.contentType = TMP_InputField.ContentType.Standard;
+            inputServerName.characterValidation = TMP_InputField.CharacterValidation.None;
+            inputServerName.inputType = TMP_InputField.InputType.Standard;
+
+            inputServerName.onValidateInput = null;
 
             // 입력 초기화 (문자/캐럿/선택 모두 리셋)
-            inputServerName.text = "";
+            inputServerName.SetTextWithoutNotify("");
             inputServerName.caretPosition = 0;
             inputServerName.selectionStringAnchorPosition = 0;
             inputServerName.selectionStringFocusPosition = 0;
-            inputServerName.DeactivateInputField();
+            //inputServerName.DeactivateInputField();
 
             // Validate 핸들러 재연결
-            inputServerName.onValidateInput -= ValidateNameChar;
-            inputServerName.onValidateInput += ValidateNameChar;
+            //inputServerName.onValidateInput -= ValidateNameChar;
+            //inputServerName.onValidateInput += ValidateNameChar;
 
         }
 
         // 경고 패널 리셋
-        if (nameTooLongPanel) nameTooLongPanel.SetActive(false);
-        if (nameTooLongGroup) nameTooLongGroup.alpha = 0f;
+        //if (nameTooLongPanel) nameTooLongPanel.SetActive(false);
+        //if (nameTooLongGroup) nameTooLongGroup.alpha = 0f;
 
-        inputServerName.characterLimit = 0; // TMP 내부 제한 비활성화
+        //inputServerName.characterLimit = 0; // TMP 내부 제한 비활성화
 
         inputServerName.onValueChanged.RemoveAllListeners();
         inputServerName.onValueChanged.AddListener(OnNameChanged);
     }
 
+    //private void OnNameChanged(string text)
+    //{
+    //    if (!string.IsNullOrEmpty(Input.compositionString))
+    //        return;
+
+    //    if (text.Length > 6)
+    //    {
+    //        inputServerName.SetTextWithoutNotify(text.Substring(0, 6));
+    //        ShowNameTooLong();
+    //    }
+    //}
+
     private void OnNameChanged(string text)
     {
+        if (inputServerName == null) return;
+
+        string comp = Input.compositionString;
+
+        // 1) 한글 조합 중일 때
+        if (!string.IsNullOrEmpty(comp))
+        {
+            // 조합 문자열은 보통 맨 끝에 붙으므로
+            int committedLen = text.Length - comp.Length;
+
+            // 이미 커밋된 글자가 6글자면 더 못 치게 즉시 원복
+            if (committedLen >= 6)
+            {
+                string clipped = text.Substring(0, 6);
+
+                if (text != clipped)
+                {
+                    inputServerName.SetTextWithoutNotify(clipped);
+                    inputServerName.caretPosition = clipped.Length;
+                    ShowNameTooLong();
+                }
+            }
+            return; // 조합 중엔 여기서 끝
+        }
+
+        // 2) 조합이 끝난(커밋된) 상태에서 6글자 초과면 컷
         if (text.Length > 6)
         {
-            inputServerName.text = text.Substring(0, 6);
+            inputServerName.SetTextWithoutNotify(text.Substring(0, 6));
+            inputServerName.caretPosition = 6;
             ShowNameTooLong();
         }
     }
@@ -78,8 +123,9 @@ public class NewGamePopupManager : MonoBehaviour
         // 6글자 제한
         if (inputServerName != null)
         {
-            inputServerName.characterLimit = 6;
-            inputServerName.onValidateInput += ValidateNameChar;
+            inputServerName.characterLimit = 0;
+            inputServerName.onValidateInput = null;
+            //inputServerName.onValidateInput += ValidateNameChar;
         }
 
         btnCancel.onClick.AddListener(() =>

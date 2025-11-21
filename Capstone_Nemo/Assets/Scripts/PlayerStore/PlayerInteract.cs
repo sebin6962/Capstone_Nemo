@@ -19,11 +19,21 @@ public class PlayerInteract : MonoBehaviour
     private SinkInfo nearbySink;
     private TrashCanInfo nearbyTrash;
 
+    private readonly List<BoxObject> nearbyBoxes = new List<BoxObject>();
+    private readonly List<TableInfo> nearbyTables = new List<TableInfo>();
+    private readonly List<SinkInfo> nearbySinks = new List<SinkInfo>();
+    private readonly List<TrashCanInfo> nearbyTrashes = new List<TrashCanInfo>();
+
+    private Component currentInteractable;
+
     public GameObject storageFullPanel;     // "창고가 가득 찼습니다" 패널
     public CanvasGroup storageFullGroup;    // 위 패널에 붙은 CanvasGroup
     private Coroutine storageFullCo;        // 중복 실행 방지
 
     private readonly List<MakerInfo> nearbyMakers = new List<MakerInfo>();
+
+    private readonly List<SpriteSensor> nearbySensors = new List<SpriteSensor>();
+    private SpriteSensor currentSensor;
 
     private static readonly HashSet<string> NonDiscardableItems = new HashSet<string>
 {
@@ -44,6 +54,20 @@ public class PlayerInteract : MonoBehaviour
 
     private void Update()
     {
+        if (nearbySensors.Count > 0)
+            RefreshCurrentSensor();
+
+        // 근처 상호작용 대상이 하나라도 있으면 가장 가까운 것 갱신
+        if (nearbyMakers.Count + nearbyBoxes.Count + nearbyTables.Count + nearbySinks.Count + nearbyTrashes.Count > 0)
+            RefreshCurrentInteractable();
+        else
+        {
+            currentInteractable = null;
+            currentMaker = null; isNearMaker = false;
+            nearbyBox = null; nearbyTable = null; nearbySink = null; nearbyTrash = null;
+            nearbyStorage = null;
+        }
+
         if (nearbyMakers.Count > 0)
             RefreshCurrentMaker();
 
@@ -51,7 +75,7 @@ public class PlayerInteract : MonoBehaviour
         if (Input.GetKeyDown(interactKey))
         {
             // 1. 상자(창고) 인벤토리가 열려 있고, 플레이어가 상자와 닿아있을 때 E키 → UI 닫기
-            if (nearbyBox != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
+            if (nearbyBoxes.Count > 0 && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
             {
                 PlayerStoreBoxInventoryUIManager.Instance.CloseUI();
                 Debug.Log("[E] 상자 인벤토리 닫힘");
@@ -186,6 +210,13 @@ public class PlayerInteract : MonoBehaviour
                 // (2) 제작기에 결과물이 없고, 플레이어가 아이템을 들고 있다면 → 재료 투입(최대 4개)
                 if (HeldItemManager.Instance.IsHoldingItem())
                 {
+                    if (currentMaker.isProducing)
+                    {
+                        Debug.Log("[E] 제작 중이라 재료 투입 불가");
+                        SFXManager.Instance.PlayBbyongSFX();
+                        return;
+                    }
+
                     if (currentMaker.inputItemNames.Count >= 4)
                     {
                         Debug.Log("제작기 재료 슬롯이 가득 찼습니다! (최대 4개)");
@@ -562,32 +593,46 @@ public class PlayerInteract : MonoBehaviour
             if (!nearbyMakers.Contains(maker))
                 nearbyMakers.Add(maker);
 
-            RefreshCurrentMaker();
+            RefreshCurrentInteractable();
             Debug.Log($"접근: {maker.makerId}, 현재 타겟: {currentMaker.makerId}");
         }
 
         if (other.CompareTag("StorageBox")) // 꼭 Tag 설정 필요
         {
-            nearbyBox = other.GetComponent<BoxObject>();
+            var box = other.GetComponent<BoxObject>();
+            if (box != null && !nearbyBoxes.Contains(box))
+                nearbyBoxes.Add(box);
+
+            RefreshCurrentInteractable();
         }
 
         if (other.CompareTag("Table"))
         {
-            nearbyTable = other.GetComponent<TableInfo>();
-            Debug.Log($"테이블 접근");
+            var table = other.GetComponent<TableInfo>();
+            if (table != null && !nearbyTables.Contains(table))
+                nearbyTables.Add(table);
+
+            RefreshCurrentInteractable();
+            Debug.Log("[PlayerInteract] 탁자 접근");
         }
 
         var sink = other.GetComponent<SinkInfo>();
         if (sink != null)
         {
-            nearbySink = sink;
-            Debug.Log("[PlayerInteract] 싱크 접근");
+            if (!nearbySinks.Contains(sink))
+                nearbySinks.Add(sink);
+
+            RefreshCurrentInteractable();
+            Debug.Log("[PlayerInteract] Sink 접근");
         }
 
         var trash = other.GetComponent<TrashCanInfo>();
         if (trash != null)
         {
-            nearbyTrash = trash;
+            if (!nearbyTrashes.Contains(trash))
+                nearbyTrashes.Add(trash);
+
+            RefreshCurrentInteractable();
             Debug.Log("[PlayerInteract] 쓰레기통 접근");
         }
 
@@ -599,31 +644,29 @@ public class PlayerInteract : MonoBehaviour
         if (maker != null)
         {
             nearbyMakers.Remove(maker);
-            RefreshCurrentMaker();
 
             Debug.Log($"이탈: {maker.makerId}, 현재 타겟: {(currentMaker ? currentMaker.makerId : "없음")}");
         }
 
         if (other.CompareTag("StorageBox"))
         {
-            if (nearbyBox == other.GetComponent<BoxObject>())
-                nearbyBox = null;
+            var box = other.GetComponent<BoxObject>();
+            if (box != null) nearbyBoxes.Remove(box);
         }
 
-        if (other.CompareTag("Table") && other.GetComponent<TableInfo>() == nearbyTable)
-            nearbyTable = null;
-
-        if (other.GetComponent<SinkInfo>() == nearbySink)
+        if (other.CompareTag("Table"))
         {
-            nearbySink = null;
-            Debug.Log("[PlayerInteract] 싱크 이탈");
+            var table = other.GetComponent<TableInfo>();
+            if (table != null) nearbyTables.Remove(table);
         }
 
-        if (other.GetComponent<TrashCanInfo>() == nearbyTrash)
-        {
-            nearbyTrash = null;
-            Debug.Log("[PlayerInteract] 쓰레기통 이탈");
-        }
+        var sink = other.GetComponent<SinkInfo>();
+        if (sink != null) nearbySinks.Remove(sink);
+
+        var trash = other.GetComponent<TrashCanInfo>();
+        if (trash != null) nearbyTrashes.Remove(trash);
+
+        RefreshCurrentInteractable();
     }
 
     private MakerInfo GetClosestMaker()
@@ -651,6 +694,116 @@ public class PlayerInteract : MonoBehaviour
 
         currentMaker = GetClosestMaker();
         isNearMaker = currentMaker != null;
+    }
+
+    private void RefreshCurrentInteractable()
+    {
+        Component closest = null;
+        float best = float.PositiveInfinity;
+        Vector3 p = transform.position;
+
+        void Consider(Component c)
+        {
+            if (c == null) return;
+            float d = (c.transform.position - p).sqrMagnitude;
+            if (d < best)
+            {
+                best = d;
+                closest = c;
+            }
+        }
+
+        // 제작대
+        foreach (var m in nearbyMakers) Consider(m);
+
+        // 나머지
+        foreach (var b in nearbyBoxes) Consider(b);
+        foreach (var t in nearbyTables) Consider(t);
+        foreach (var s in nearbySinks) Consider(s);
+        foreach (var tr in nearbyTrashes) Consider(tr);
+
+        currentInteractable = closest;
+
+        currentMaker = null;
+        isNearMaker = false;
+        nearbyBox = null;
+        nearbyTable = null;
+        nearbySink = null;
+        nearbyTrash = null;
+        nearbyStorage = null;
+
+        if (closest is MakerInfo maker)
+        {
+            currentMaker = maker;
+            isNearMaker = true;
+        }
+        else if (closest is BoxObject box)
+        {
+            nearbyBox = box;
+            nearbyStorage = box.GetComponent<StorageInventory>(); // 혹시 기존에 할당 안 되던 문제도 같이 해결
+        }
+        else if (closest is TableInfo table)
+        {
+            nearbyTable = table;
+        }
+        else if (closest is SinkInfo sink)
+        {
+            nearbySink = sink;
+        }
+        else if (closest is TrashCanInfo trash)
+        {
+            nearbyTrash = trash;
+        }
+    }
+
+    public void RegisterSensor(SpriteSensor s)
+    {
+        if (s == null) return;
+        if (!nearbySensors.Contains(s))
+            nearbySensors.Add(s);
+
+        RefreshCurrentSensor();
+    }
+
+    public void UnregisterSensor(SpriteSensor s)
+    {
+        if (s == null) return;
+        nearbySensors.Remove(s);
+
+        if (currentSensor == s)
+        {
+            currentSensor.SetOutline(false);
+            currentSensor = null;
+        }
+
+        RefreshCurrentSensor();
+    }
+
+    private void RefreshCurrentSensor()
+    {
+        nearbySensors.RemoveAll(x => x == null);
+
+        SpriteSensor closest = null;
+        float best = float.PositiveInfinity;
+        Vector3 p = transform.position;
+
+        foreach (var s in nearbySensors)
+        {
+            float d = (s.GetTargetPosition() - p).sqrMagnitude;
+            if (d < best)
+            {
+                best = d;
+                closest = s;
+            }
+        }
+
+        // 바뀌었으면 이전꺼 끄고 새꺼만 켬
+        if (currentSensor != closest)
+        {
+            if (currentSensor != null) currentSensor.SetOutline(false);
+            currentSensor = closest;
+            if (currentSensor != null) currentSensor.SetOutline(true);
+        }
     }
 
 }
