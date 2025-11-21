@@ -12,6 +12,19 @@ public class SpriteSensor : MonoBehaviour
     private readonly HashSet<Collider2D> _inside = new();
     private PlayerInteract _playerInteract;
 
+    private bool usingCentral = false;
+
+    void Awake()
+    {
+        var col = GetComponent<Collider2D>();
+        col.isTrigger = true;
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponentInParent<SpriteRenderer>();
+
+        SetOutline(false);
+    }
+
     void Reset()
     {
         var col = GetComponent<Collider2D>();
@@ -32,7 +45,12 @@ public class SpriteSensor : MonoBehaviour
 
     bool IsPlayer(Collider2D c)
     {
-        return ((1 << c.gameObject.layer) & playerLayer.value) != 0;
+        if (playerLayer.value != 0)
+        {
+            if (((1 << c.gameObject.layer) & playerLayer.value) != 0)
+                return true;
+        }
+        return c.CompareTag("Player");
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -41,22 +59,39 @@ public class SpriteSensor : MonoBehaviour
         if (_inside.Add(other))
         {
             //spriteRenderer.enabled = true;
-            if (_playerInteract == null)
-                _playerInteract = other.GetComponentInParent<PlayerInteract>();
+            _playerInteract =
+                   other.GetComponent<PlayerInteract>() ??
+                   other.GetComponentInParent<PlayerInteract>() ??
+                   FindFirstObjectByType<PlayerInteract>();
 
-            if (_playerInteract != null)
-                _playerInteract.RegisterSensor(this);
+        }
+        if (_playerInteract != null)
+        {
+            usingCentral = true;
+            SetOutline(false);
+            _playerInteract.RegisterSensor(this);
+        }
+        else
+        {
+            usingCentral = false;
+            SetOutline(true);
         }
     }
 
     void OnTriggerExit2D(Collider2D other)
     {
         if (!IsPlayer(other)) return;
+
         if (_inside.Remove(other) && _inside.Count == 0)
         {
-            //spriteRenderer.enabled = false;
-            if (_playerInteract != null)
+            if (usingCentral && _playerInteract != null)
+            {
                 _playerInteract.UnregisterSensor(this);
+            }
+            else
+            {
+                SetOutline(false);
+            }
         }
     }
 

@@ -46,10 +46,34 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     //해금 이펙트
     public GameObject unlockEffectPrefab;
-
+    public float unlockEffectMinDuration = 2.0f;
     [Header("해금 7단계 맵 스프라이트 교체")]
     public SpriteRenderer mapSpriteRenderer;   // 교체 대상 (씬 배경 SpriteRenderer)
     public Sprite[] mapSpritesByLevel;
+
+    [Header("해금 컷신 연출")]
+    public CanvasGroup unlockUIPanelGroup;   // 나무 해금 UI 전체를 감싸는 CanvasGroup (클릭 차단용)
+    public CanvasGroup cutsceneFadeGroup;    // 화면 전체를 덮는 검정/컷신용 CanvasGroup
+    public float fadeInDuration = 1.0f;
+    public float fadeOutDuration = 1.0f;
+
+    public Camera targetCamera;
+    public Transform cameraStartPoint;
+    public Transform cameraEndPoint;
+    public float cameraPanDuration = 2.5f;
+    public AnimationCurve cameraPanCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+    private bool isPlayingUnlockSequence = false;
+    private Vector3 originalCamPos;
+    private float originalCamOrthoSize;
+
+    [Header("해금 패널 숨김/표시")]
+    public GameObject unlockPanelRoot; // 해금 UI 전체 루트(패널) 오브젝트
+
+    [Header("카메라 투어(복귀 포함)")]
+    public float cameraReturnDuration = 2.5f;
+
+    public MonoBehaviour[] cameraControllersToDisable;
 
     void Awake()
     {
@@ -74,6 +98,13 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     void Start()
     {
+        // 카메라 원위치 저장
+        if (targetCamera != null)
+        {
+            originalCamPos = targetCamera.transform.position;
+            originalCamOrthoSize = targetCamera.orthographicSize;
+        }
+
         // 1) 데이터 로드(경로가 없으면 메모리만)
         LoadUnlockData();
 
@@ -106,6 +137,13 @@ public class TreeLevelUnlocker : MonoBehaviour
                 trigger.triggers.Add(entryExit);
             }
         }
+    }
+
+    private void SetCameraControllersEnabled(bool enable)
+    {
+        if (cameraControllersToDisable == null) return;
+        foreach (var c in cameraControllersToDisable)
+            if (c != null) c.enabled = enable;
     }
 
     public void ApplyPanelSprite()
@@ -217,7 +255,7 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         ApplyMapSprite();
 
-        PlayUnlockEffect(levelIdx);
+        StartCoroutine(UnlockCameraOnlySequence(levelIdx));
 
         //중간발표 대비 비활성화
         //ShowUnlockEffectPanel(currentUnlockedLevel);
@@ -390,5 +428,258 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         Destroy(fx, 5f);
     }
+
+    private IEnumerator UnlockCameraOnlySequence(int levelIdx)
+    {
+        if (isPlayingUnlockSequence) yield break;
+        isPlayingUnlockSequence = true;
+
+        if (targetCamera == null || cameraStartPoint == null || cameraEndPoint == null)
+        {
+            Debug.LogWarning("[TreeLevelUnlocker] Camera refs missing.");
+            isPlayingUnlockSequence = false;
+            yield break;
+        }
+
+        // "해금 버튼 누른 순간" 카메라 상태 저장
+        Vector3 clickCamPos = targetCamera.transform.position;
+        float clickCamSize = targetCamera.orthographicSize;
+
+        // 0) UI 클릭 막기
+        SetUnlockUIInteractable(false);
+
+        // 1) 해금 이펙트 재생 & 끝날 때까지 대기
+        yield return PlayUnlockEffectRoutine(levelIdx);
+
+        // 2) 카메라 컨트롤러 끄기 (Follow/Cinemachine 등)
+        SetCameraControllersEnabled(false);
+
+        // 3) 검은 화면으로 페이드 인
+        yield return FadeSimple(0f, 1f, fadeInDuration);
+
+        // 4) 검은 화면일 때 패널 숨김
+        SetUnlockUIVisible(false);
+
+        // 5) 검은 화면일 때 카메라 startPoint로 순간이동
+        Vector3 startPos = cameraStartPoint.position;
+        startPos.z = clickCamPos.z;
+        targetCamera.transform.position = startPos;
+        targetCamera.orthographicSize = clickCamSize;
+
+        // 6) 다시 밝아지게 페이드 아웃
+        yield return FadeSimple(1f, 0f, fadeOutDuration);
+
+        // 7) 카메라 start → end
+        Vector3 endPos = cameraEndPoint.position;
+        endPos.z = clickCamPos.z;
+        yield return CameraPanTo(endPos, cameraPanDuration);
+
+        // 8) 카메라 end → "해금 버튼 누른 그 순간 위치"로 복귀
+        yield return CameraPanTo(clickCamPos, cameraReturnDuration);
+
+        // 9) 다시 검은 화면 페이드 인
+        yield return FadeSimple(0f, 1f, fadeInDuration);
+
+        // 10) 검은 화면일 때 패널 다시 활성화 + 카메라 원위치 확정
+        targetCamera.transform.position = clickCamPos;
+        targetCamera.orthographicSize = clickCamSize;
+        SetUnlockUIVisible(true);
+
+        // 11) 다시 밝아지게 페이드 아웃
+        yield return FadeSimple(1f, 0f, fadeOutDuration);
+
+        // 12) 카메라 컨트롤러 다시 켜기
+        SetCameraControllersEnabled(true);
+
+        // 13) UI 클릭 복구
+        SetUnlockUIInteractable(true);
+
+        isPlayingUnlockSequence = false;
+    }
+
+
+
+    // 기존 PlayUnlockEffect를 "기다릴 수 있는" 루틴으로 감쌈
+    private IEnumerator PlayUnlockEffectRoutine(int levelIdx)
+    {
+        if (unlockEffectPrefab == null ||
+            levelButtons == null ||
+            levelIdx < 0 || levelIdx >= levelButtons.Length)
+            yield break;
+
+        var btn = levelButtons[levelIdx];
+        if (btn == null) yield break;
+
+        RectTransform btnRect = btn.GetComponent<RectTransform>();
+        if (btnRect == null) yield break;
+
+        GameObject fx = Instantiate(unlockEffectPrefab, btnRect);
+        var fxRect = fx.GetComponent<RectTransform>();
+        if (fxRect != null) fxRect.localScale = Vector3.one;
+
+        // 이펙트 중 클릭 차단은 전체 패널에서 하고 있으니 fx는 Raycast 막지 않음
+        var cg = fx.GetComponent<CanvasGroup>();
+        if (cg == null) cg = fx.AddComponent<CanvasGroup>();
+        cg.blocksRaycasts = false;
+
+        // 이펙트 길이 자동 추정 (Animator > ParticleSystem 순)
+        float waitTime = 1.5f;
+        var anim = fx.GetComponent<Animator>();
+        if (anim != null && anim.runtimeAnimatorController != null)
+        {
+            yield return null;
+            var st = anim.GetCurrentAnimatorStateInfo(0);
+            waitTime = Mathf.Max(waitTime, st.length);
+            //var clips = anim.runtimeAnimatorController.animationClips;
+            //if (clips != null && clips.Length > 0) waitTime = clips[0].length;
+        }
+        else
+        {
+            var ps = fx.GetComponentInChildren<ParticleSystem>();
+            if (ps != null) waitTime = ps.main.duration + ps.main.startLifetime.constantMax;
+        }
+
+        yield return new WaitForSeconds(waitTime);
+
+        Destroy(fx);
+    }
+
+    private void TeleportCameraToStart()
+    {
+        if (targetCamera == null || cameraStartPoint == null) return;
+
+        Vector3 p = cameraStartPoint.position;
+        p.z = targetCamera.transform.position.z; // z는 기존 유지
+        targetCamera.transform.position = p;
+    }
+
+    private void RestoreCamera()
+    {
+        if (targetCamera == null) return;
+
+        targetCamera.transform.position = originalCamPos;
+        targetCamera.orthographicSize = originalCamOrthoSize;
+    }
+
+    private IEnumerator CameraTourRoutine()
+    {
+        if (targetCamera == null || cameraStartPoint == null || cameraEndPoint == null)
+            yield break;
+
+        // (1) start -> end
+        Vector3 start = targetCamera.transform.position;
+        Vector3 end = cameraEndPoint.position;
+        end.z = start.z;
+
+        float t = 0f;
+        while (t < cameraPanDuration)
+        {
+            t += Time.deltaTime;
+            float n = Mathf.Clamp01(t / cameraPanDuration);
+            float c = cameraPanCurve != null ? cameraPanCurve.Evaluate(n) : n;
+            targetCamera.transform.position = Vector3.Lerp(start, end, c);
+            yield return null;
+        }
+        targetCamera.transform.position = end;
+
+        // (2) end -> original
+        Vector3 original = originalCamPos;
+        original.z = end.z;
+
+        t = 0f;
+        while (t < cameraReturnDuration)
+        {
+            t += Time.deltaTime;
+            float n = Mathf.Clamp01(t / cameraReturnDuration);
+            float c = cameraPanCurve != null ? cameraPanCurve.Evaluate(n) : n;
+            targetCamera.transform.position = Vector3.Lerp(end, original, c);
+            yield return null;
+        }
+        targetCamera.transform.position = original;
+    }
+
+    private void SetUnlockUIVisible(bool visible)
+    {
+        if (unlockPanelRoot != null)
+        {
+            unlockPanelRoot.SetActive(visible);
+            return;
+        }
+
+        // unlockPanelRoot 안 넣었을 때 fallback
+        if (unlockUIPanelGroup != null)
+            unlockUIPanelGroup.gameObject.SetActive(visible);
+    }
+
+    private IEnumerator FadeSimple(float from, float to, float duration)
+    {
+        if (cutsceneFadeGroup == null)
+        {
+            yield return new WaitForSeconds(duration);
+            yield break;
+        }
+
+        cutsceneFadeGroup.gameObject.SetActive(true);
+        cutsceneFadeGroup.blocksRaycasts = true;
+
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float n = Mathf.Clamp01(t / duration);
+            cutsceneFadeGroup.alpha = Mathf.Lerp(from, to, n);
+            yield return null;
+        }
+
+        cutsceneFadeGroup.alpha = to;
+
+        if (Mathf.Approximately(to, 0f))
+        {
+            cutsceneFadeGroup.blocksRaycasts = false;
+            cutsceneFadeGroup.gameObject.SetActive(false);
+        }
+    }
+
+    private IEnumerator CameraPanTo(Vector3 worldTarget, float duration)
+    {
+        if (targetCamera == null) yield break;
+
+        Vector3 start = targetCamera.transform.position;
+        Vector3 end = worldTarget;
+        end.z = start.z;
+
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float n = Mathf.Clamp01(t / duration);
+            float c = cameraPanCurve != null ? cameraPanCurve.Evaluate(n) : n;
+
+            targetCamera.transform.position = Vector3.Lerp(start, end, c);
+            yield return null;
+        }
+
+        targetCamera.transform.position = end;
+    }
+
+    private void SetUnlockUIInteractable(bool enable)
+    {
+        if (unlockUIPanelGroup != null)
+        {
+            unlockUIPanelGroup.interactable = enable;
+            unlockUIPanelGroup.blocksRaycasts = enable;
+        }
+
+        if (!enable)
+        {
+            foreach (var b in levelButtons)
+                if (b != null) b.interactable = false;
+        }
+        else
+        {
+            UpdateLevelButtons();
+        }
+    }
+
 }
 
