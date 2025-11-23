@@ -1,0 +1,170 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CustomerSaveManager : MonoBehaviour
+{
+    public static CustomerSaveManager Instance;
+
+    public List<CustomerSave> save = new List<CustomerSave>();
+
+    private float spawnInterval;
+    private int maxSeats;
+    private float spawnTimer;
+    private int prefabCount;
+
+    private bool simulateWhileStoreClosed = false;
+
+    private float[] prefabOrderTimes;
+
+    private void Awake()
+    {
+        if(Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
+    public void ConfigureFromSpawner(CustomerSpawner spawner)
+    {
+        spawnInterval = spawner.spawnInterval;
+        maxSeats = spawner.routesPerSeat.Count;
+        prefabCount = spawner.customerPrefab.Length;
+
+        prefabOrderTimes = new float[prefabCount];
+        for (int i = 0; i < prefabCount; i++)
+        {
+            var customer = spawner.customerPrefab[i].GetComponent<Customer>();
+            if (customer != null)
+                prefabOrderTimes[i] = customer.OrderTimeLimit;
+            else
+                prefabOrderTimes[i] = 20f;
+        }
+    }
+
+    private void Update()
+    {
+        if (!simulateWhileStoreClosed)
+            return;
+
+        float dt = Time.deltaTime;
+
+        //타이머 감소, 타이머 종료
+        for (int i = save.Count - 1; i >= 0; i--)
+        {
+            var s = save[i];
+
+            if (s.state == CustomerState.Waiting || s.state == CustomerState.Ordering)
+            {
+                s.remainingTime -= dt;
+
+                if (s.remainingTime <= 0f)
+                {
+                    s.state = CustomerState.Displeased;
+                    save.RemoveAt(i);
+                }
+            }
+        }
+
+        //새 손님 스폰
+        spawnTimer += dt;
+        if (spawnTimer >= spawnInterval)
+        {
+            spawnTimer = 0f;
+            TrySpawnVirtualCustomer();
+        }
+    }
+
+    private void TrySpawnVirtualCustomer()
+    {
+        int usedCount = save.Count;
+        if (usedCount >= maxSeats)
+            return;
+
+        int seatIndex = GetFreeSeatIndex();
+        if (seatIndex == -1)
+            return;
+
+        int prefabIndex = Random.Range(0, prefabCount);
+
+        float limit = 20f;
+        if (prefabOrderTimes != null &&
+            prefabIndex >= 0 && prefabIndex < prefabOrderTimes.Length)
+        {
+            limit = prefabOrderTimes[prefabIndex];
+        }
+
+        var data = new CustomerSave
+        {
+            seatIndex = seatIndex,
+            state = CustomerState.Walking,
+            isTutorialCustomer = false,
+            tutorialDagwaId = null,
+            orderedDagwa = OrderManager.Instance.GetRandomDagwaList(),
+            orderTimeLimit = limit,
+            remainingTime = limit,
+            currentWaypointIndex = 0,
+            position = Vector3.zero,
+            prefabIndex = prefabIndex,
+            hasScenePosition = false
+        };
+
+        save.Add(data);
+    }
+
+    private int GetFreeSeatIndex()
+    {
+        bool[] used = new bool[maxSeats];
+
+        foreach (var s in save)
+        {
+            if (s.seatIndex >= 0 && s.seatIndex < maxSeats)
+                used[s.seatIndex] = true;
+        }
+
+        for (int i = 0; i < maxSeats; i++)
+        {
+            if (!used[i]) return i;
+        }
+        return -1;
+    }
+
+    public void SaveFromScene()
+    {
+        save.Clear();
+
+        var customers = FindObjectsOfType<Customer>();
+        Debug.Log($"[CustomerSaveManager] SaveFromScene 호출됨, 발견한 Customer 수 = {customers.Length}");
+
+        foreach (var c in customers)
+        {
+            save.Add(c.ToSave());
+        }
+        Debug.Log($"[CustomerSaveManager] 저장 완료, save.Count = {save.Count}");
+
+        simulateWhileStoreClosed = true;
+        spawnTimer = 0f;
+    }
+
+    public void RestoreToScene(CustomerSpawner spawner)
+    {
+        simulateWhileStoreClosed = false;
+
+        //기존 Customer 정리
+        var oldCustomers = FindObjectsOfType<Customer>();
+        foreach (var c in oldCustomers)
+        {
+            Destroy(c.gameObject);
+        }
+
+        //저장된 데이터 스폰
+        foreach (var data in save)
+        {
+            spawner.SpawnFromSave(data);
+        }
+    }
+}

@@ -46,11 +46,10 @@ public class OrderManager : MonoBehaviour
         {
             if (string.IsNullOrEmpty(r.resultSprite)) continue;
 
-            // “완성 레시피”만 후보로: 네이밍이 *_finish 인 것만 사용
+            //네이밍이 *_finish 인 것만 사용
             var finishKey = Path.GetFileNameWithoutExtension(r.resultSprite);
             if (!finishKey.EndsWith("_finish")) continue;
 
-            // 정규화(대소문자/공백/확장자 차이 제거)
             finishKey = finishKey.Trim();
 
             // 후보 추가
@@ -112,7 +111,7 @@ public class OrderManager : MonoBehaviour
             return dagwaList[Random.Range(0, dagwaList.Count)];
         }
 
-        // ④ 최종 랜덤 선택
+        //4. 최종 랜덤 선택
         int index = Random.Range(0, unlocked.Count);
         return unlocked[index];
     }

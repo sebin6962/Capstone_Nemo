@@ -22,6 +22,9 @@ public class FadeManager : MonoBehaviour
 
     [Header("로딩 직후 블랙 유지(초)")]
     [SerializeField] float preRevealHoldSeconds = 0.12f;
+    
+    //손님 저장 씬
+    [SerializeField] private string playerStoreSceneName = "PlayerStoreScene";
 
     private void Awake()
     {
@@ -83,6 +86,15 @@ public class FadeManager : MonoBehaviour
         if (delay > 0f)
             yield return new WaitForSecondsRealtime(delay);
 
+        //손님 데이터 저장
+
+        var activeScene = SceneManager.GetActiveScene();
+        if (CustomerSaveManager.Instance != null &&
+            activeScene.name == playerStoreSceneName)
+        {
+            CustomerSaveManager.Instance.SaveFromScene();
+        }
+        Debug.Log($"[FadeManager] 현재 씬 이름: {activeScene.name}, 저장해야 하는 씬 이름: {playerStoreSceneName}");
         TimeManager.Instance?.SaveDayData();
         SceneManager.LoadScene(sceneName);
         yield return null; // 씬 완전히 로드될 때까지 1프레임 대기

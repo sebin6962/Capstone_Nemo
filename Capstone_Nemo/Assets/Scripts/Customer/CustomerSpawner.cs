@@ -25,6 +25,18 @@ public class CustomerSpawner : MonoBehaviour
 
     void Start()
     {
+        var saveMgr = CustomerSaveManager.Instance;
+        if (saveMgr != null)
+        {
+            saveMgr.ConfigureFromSpawner(this);
+
+            if (saveMgr.save.Count > 0)
+            {
+                saveMgr.RestoreToScene(this);
+                return; 
+            }
+        }
+
         if (!tutorialMode)
         {
             StartCoroutine(FirstCustomerDelay(firstSpawnDelay));
@@ -57,7 +69,9 @@ public class CustomerSpawner : MonoBehaviour
         int seatIndex = seatManager.GetAvailableSeatIndex();
         if (seatIndex >= 0 && seatIndex < routesPerSeat.Count)
         {
-            GameObject prefab = customerPrefab[Random.Range(0, customerPrefab.Length)];
+            int prefabIndex = Random.Range(0, customerPrefab.Length);
+
+            GameObject prefab = customerPrefab[prefabIndex];
             GameObject customer = Instantiate(prefab, spawnPoint.position, Quaternion.identity);
             seatManager.OccupySeat(seatIndex);
 
@@ -65,12 +79,14 @@ public class CustomerSpawner : MonoBehaviour
             Customer customerScript = customer.GetComponent<Customer>();
             customerScript.Initialize(path);
             customerScript.SetSeatInfo(seatIndex, seatManager);
+
+            customerScript.SetPrefabIndex(prefabIndex);
         }
     }
 
     public void SpawnTutorialCustomer(string tutorialDagwaId, float delay = 0f)
     {
-        tutorialMode = true;  // 자동 스폰 막기
+        tutorialMode = true;  
         StartCoroutine(SpawnCustomerDelay(tutorialDagwaId, delay));
     }
 
@@ -97,5 +113,42 @@ public class CustomerSpawner : MonoBehaviour
     {
         tutorialMode = false;
         timer = 0f;
+    }
+
+    public Customer SpawnFromSave(CustomerSave data)
+    {
+        int seatIndex = data.seatIndex;
+
+        if (seatIndex < 0 || seatIndex >= routesPerSeat.Count)
+        {
+            Debug.LogWarning($"[CustomerSpawner] 잘못된 seatIndex: {seatIndex}");
+            return null;
+        }
+
+        int prefabIndex = Mathf.Clamp(data.prefabIndex, 0, customerPrefab.Length - 1);
+        GameObject prefab = customerPrefab[prefabIndex];
+        GameObject obj = Instantiate(prefab, spawnPoint.position, Quaternion.identity);
+
+        seatManager.OccupySeat(seatIndex);
+
+        Transform[] path = routesPerSeat[seatIndex].waypoints;
+        Customer customer = obj.GetComponent<Customer>();
+        customer.Initialize(path);
+        customer.SetSeatInfo(seatIndex, seatManager);
+        customer.SetPrefabIndex(prefabIndex);
+
+        if (data.state == CustomerState.Walking)
+        {
+           //하....
+        }
+        else
+        {
+            Vector3 seatPos = path[path.Length - 1].position;
+            customer.transform.position = seatPos;
+        }
+
+        customer.ApplySave(data);
+
+        return customer;
     }
 }

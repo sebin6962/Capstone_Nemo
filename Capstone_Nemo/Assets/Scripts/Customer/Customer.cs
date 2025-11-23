@@ -39,10 +39,18 @@ public class Customer : MonoBehaviour
     [SerializeField] private Animator animator;
     private Vector2 lastMoveDir = Vector2.down;
 
+    public int prefabIndex;
+    public float OrderTimeLimit => orderTimeLimit;
+
     public void SetTutorialCustomer(string fixedDagwaId)
     {
         isTutorialCustomer = true;
         tutorialDagwaId = fixedDagwaId;
+    }
+
+    public void SetPrefabIndex(int index)
+    {
+        prefabIndex = index;
     }
 
     public void Initialize(Transform[] path)
@@ -386,7 +394,7 @@ public class Customer : MonoBehaviour
                 float fadeT = Mathf.InverseLerp(fadeDelay, 1f, t);
                 float alpha = Mathf.Lerp(1f, 0f, fadeT);
 
-                // 손님 스프라이트 페이드
+                //손님 스프라이트 페이드
                 foreach (var r in renderers)
                 {
                     if (r == null) continue;
@@ -395,7 +403,7 @@ public class Customer : MonoBehaviour
                     r.color = c;
                 }
 
-                // 말풍선(CanvasGroup) 페이드
+                //말풍선(CanvasGroup) 페이드
                 foreach (var cg in canvasGroups)
                 {
                     if (cg == null) continue;
@@ -424,5 +432,79 @@ public class Customer : MonoBehaviour
         }
 
         Destroy(gameObject);
+    }
+
+    public CustomerSave ToSave()
+    {
+        return new CustomerSave
+        {
+            seatIndex = this.seatIndex,
+            state = this.state,
+
+            isTutorialCustomer = this.isTutorialCustomer,
+            tutorialDagwaId = this.tutorialDagwaId,
+
+            orderedDagwa = this.orderedDagwa,
+            orderTimeLimit = this.orderTimeLimit,
+            remainingTime = this.remainingTime,
+
+            currentWaypointIndex = this.currentIndex,
+            position = this.transform.position,
+
+            prefabIndex = this.prefabIndex,
+
+            hasScenePosition = true
+        };
+    }
+
+    public void ApplySave(CustomerSave data)
+    {
+        this.seatIndex = data.seatIndex;
+        this.state = data.state;
+
+        this.isTutorialCustomer = data.isTutorialCustomer;
+        this.tutorialDagwaId = data.tutorialDagwaId;
+
+        this.orderedDagwa = data.orderedDagwa;
+        this.orderTimeLimit = data.orderTimeLimit;
+        this.remainingTime = data.remainingTime;
+
+        //위치, 경로 복원
+        if (data.hasScenePosition)
+        {
+            this.transform.position = data.position;
+            this.currentIndex = data.currentWaypointIndex;
+        }
+
+        this.prefabIndex = data.prefabIndex;
+
+        //타이머 / UI 복원
+        if (orderUI != null)
+        {
+            //주문/대기 상태면 주문 UI + 타이머 UI 복원
+            if (state == CustomerState.Ordering || state == CustomerState.Waiting)
+            {
+                orderUI.ShowOrder(orderedDagwa);
+
+                if (!isTutorialCustomer)
+                {
+                    float ratio = orderTimeLimit > 0f ? (remainingTime / orderTimeLimit) : 0f;
+                    orderUI.ShowTimerUI(true);
+                    orderUI.UpdateTimer(ratio);
+                    isTimerRunning = true;
+                }
+                else
+                {
+                    //튜토리얼
+                    orderUI.ShowTimerUI(false);
+                    isTimerRunning = false;
+                }
+            }
+            else
+            {
+                orderUI.ShowTimerUI(false);
+                isTimerRunning = false;
+            }
+        }
     }
 }
