@@ -1,0 +1,67 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public enum GlobalTutorialStep
+{
+    None = 0,
+
+    DogamIntro,
+    Village_First,
+    PlayerStore_First,
+    Village_Second,
+    Mill,
+    Shop,
+    PlayerStore_Final,
+
+    Done
+}
+
+public class TutorialFlowManager : MonoBehaviour
+{
+    public static TutorialFlowManager Instance;
+
+    public GlobalTutorialStep currentStep = GlobalTutorialStep.None;
+
+    private string server;
+    private TutorialStateData state;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        server = PlayerPrefs.GetString("SelectedSave", "default");
+        state = TutorialState.Load(server);
+
+        if (state.tutorialDone)
+        {
+            currentStep = GlobalTutorialStep.Done;
+        }
+
+        else
+        {
+            currentStep = GlobalTutorialStep.DogamIntro;
+        }
+    }
+
+    public void SetStep(GlobalTutorialStep step)
+    {
+        currentStep = step;
+        //후에 기능 확장.... 안할지도?굳이.., 중간세이브..
+    }
+
+    public void CompleteAllTutorial()
+    {
+        currentStep = GlobalTutorialStep.Done;
+        state.tutorialDone = true;
+        TutorialState.Save(server, state);
+    }
+
+}

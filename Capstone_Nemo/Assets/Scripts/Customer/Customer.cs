@@ -427,7 +427,7 @@ public class Customer : MonoBehaviour
         if (isTutorialCustomer && StoreTutorialManager.Instance != null && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.Serve))
         {
 
-            Debug.Log("[Tutorial] Serve 단계 튜토리얼 손님 퇴장 → Finish 단계로 이동");
+            Debug.Log("[Tutorial] Serve 단계 튜토리얼 손님 퇴장 → NextOrder 단계로 이동");
             StoreTutorialManager.Instance.GoToNextStep();
         }
 

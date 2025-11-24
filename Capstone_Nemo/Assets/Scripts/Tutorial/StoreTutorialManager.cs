@@ -10,7 +10,9 @@ public enum StoreTutorialStep
     Mixing = 3,
     Siru = 4,
     Serve = 5,
-    Finish = 6
+    NextOrder = 6,
+    DogamCheck = 7,
+    StoreFirst_Finish = 8
 }
 
 public class StoreTutorialManager : MonoBehaviour
@@ -23,18 +25,17 @@ public class StoreTutorialManager : MonoBehaviour
     [SerializeField] private CustomerSpawner customerSpawner;
     [SerializeField] private SeatManager seatManager;
 
+    [SerializeField] private GameObject tutorialBlocker;
+
     private TutorialStateData state;
     private string server;
 
-    private StoreTutorialStep currentStep = StoreTutorialStep.Finish;
+    private StoreTutorialStep currentStep = StoreTutorialStep.StoreFirst_Finish;
 
     private Coroutine showStepPanelRoutine;
 
-    public bool IsStoreTutorialRunning
-    {
-        get;
-        private set;
-    }
+
+    public bool IsStoreTutorialRunning;
 
     void Awake()
     {
@@ -51,17 +52,34 @@ public class StoreTutorialManager : MonoBehaviour
         server = PlayerPrefs.GetString("SelectedSave", "default");
         state = TutorialState.Load(server);
 
-        if (!state.tutorialDone)
+        var flow = TutorialFlowManager.Instance;
+
+        if (state.tutorialDone || TutorialFlowManager.Instance.currentStep == GlobalTutorialStep.Done)
         {
-            StartStoreTutorial();
+            HideAllPanels();
+            IsStoreTutorialRunning = false;
+            return;
+        }
+
+        if (flow.currentStep == GlobalTutorialStep.PlayerStore_First)
+        {
+            IsStoreTutorialRunning = true;
+            currentStep = StoreTutorialStep.OpenStorage;
+
+            if (customerSpawner)
+                customerSpawner.SpawnTutorialCustomer("baekseolgi_finish", 15f);
+
+            ShowStepPanel(currentStep);
         }
         else
         {
+            // 그 외 상황에서는 튜토리얼 안 켜고 조용히 있음
             HideAllPanels();
+            IsStoreTutorialRunning = false;
         }
     }
 
-    void StartStoreTutorial()
+    void StartStoreTutorial(GlobalTutorialStep globalStep)
     {
         IsStoreTutorialRunning = true;
         currentStep = StoreTutorialStep.OpenStorage;
@@ -150,9 +168,17 @@ public class StoreTutorialManager : MonoBehaviour
                 break;
             //customer.cs
             case StoreTutorialStep.Serve:
-                currentStep = StoreTutorialStep.Finish;
+                currentStep = StoreTutorialStep.NextOrder;
                 break;
-            case StoreTutorialStep.Finish:
+            //DogamUIManager.cs
+            case StoreTutorialStep.NextOrder:
+                currentStep = StoreTutorialStep.DogamCheck;
+                break;
+            case StoreTutorialStep.DogamCheck:
+                currentStep = StoreTutorialStep.StoreFirst_Finish;
+                tutorialBlocker.SetActive(false);
+                break;
+            case StoreTutorialStep.StoreFirst_Finish:
                 CompleteStoreTutorial();
                 return;
 
@@ -176,9 +202,6 @@ public class StoreTutorialManager : MonoBehaviour
         if (customerSpawner)
             customerSpawner.EndTutorial();
 
-        state.tutorialDone = true;
-        TutorialState.Save(server, state);
-
-        Debug.Log("튜토리얼 종료");
+        TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Village_Second);
     }
 }

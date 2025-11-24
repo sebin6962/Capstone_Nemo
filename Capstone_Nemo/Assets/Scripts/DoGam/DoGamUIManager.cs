@@ -370,6 +370,12 @@ public class DoGamUIManager : MonoBehaviour
     // 도감 버튼 눌렀을 때 진입 지점
     private void OnOpenButtonClicked()
     {
+        //튜토리얼 진행 트리거 7
+        if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.NextOrder))
+        {
+            StoreTutorialManager.Instance.GoToNextStep();
+        }
+
         // 새로 해금된 레시피가 있다면 갱신
         RefreshUnseenFinishKeys();
 
@@ -480,6 +486,12 @@ public class DoGamUIManager : MonoBehaviour
 
 public void CloseDoGam()
     {
+        //튜토리얼 진행 트리거 8
+        if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.DogamCheck))
+        {
+            StoreTutorialManager.Instance.GoToNextStep();
+        }
+
         // 현재 보고 있던 페이지 상태 저장
         SaveLastDoGamState();
 

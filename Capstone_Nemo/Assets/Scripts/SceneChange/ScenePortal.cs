@@ -46,6 +46,16 @@ public class ScenePortal : MonoBehaviour
         PlayerPrefs.SetString("__entranceID", entranceID ?? "");
         PlayerPrefs.Save();
 
+        //DogamIntro -> PlayerStore_first 튜토리얼 스텝 설정
+        var flow = TutorialFlowManager.Instance;
+        if (flow != null && flow.currentStep != GlobalTutorialStep.Done)
+        {
+            if (targetScene == "PlayerStoreScene" && flow.currentStep == GlobalTutorialStep.Village_First)
+            {
+                flow.SetStep(GlobalTutorialStep.PlayerStore_First);
+            }
+        }
+
         // SFX 먼저 재생 → 아주 짧게 대기 → 페이드/전환
         StartCoroutine(PlaySfxThenFade());
 

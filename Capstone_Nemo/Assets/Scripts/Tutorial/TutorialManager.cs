@@ -26,6 +26,8 @@ public class TutorialManager : MonoBehaviour
 
     [SerializeField] private GameObject villageTutorialPanel;
 
+    [SerializeField] private GameObject tutorialBlocker;
+
     private string server;
     private TutorialStateData state;
 
@@ -34,14 +36,32 @@ public class TutorialManager : MonoBehaviour
         server = PlayerPrefs.GetString("SelectedSave", "default");
         state = TutorialState.Load(server);
 
-        if (!state.tutorialDone)
-        {
-            currentStep = TutorialStep.DogamIntro;
-            StartTutorial_DogamIntro();
-        }
-        else
+        if(state.tutorialDone || TutorialFlowManager.Instance.currentStep == GlobalTutorialStep.Done)
         {
             CleanupTutorialVisuals();
+            return;
+        }
+
+        var globalStep = TutorialFlowManager.Instance.currentStep;
+
+        switch (globalStep)
+        {
+            case GlobalTutorialStep.DogamIntro:
+                currentStep = TutorialStep.DogamIntro;
+                StartTutorial_DogamIntro();
+                break;
+
+            case GlobalTutorialStep.Village_First:
+                tutorialBlocker.gameObject.SetActive(true);
+                break;
+
+            case GlobalTutorialStep.Village_Second:
+                break;
+
+            default:
+                CleanupTutorialVisuals();
+                tutorialBlocker.SetActive(false);
+                break;
         }
     }
 
@@ -149,6 +169,8 @@ public class TutorialManager : MonoBehaviour
         }
 
         currentStep = TutorialStep.Village;
+
+        TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Village_First);
     }
 
 
@@ -165,6 +187,7 @@ public class TutorialManager : MonoBehaviour
         if (dogamCloseButton != null)
             dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
     }
+
 
     void CleanupTutorialVisuals()
     {

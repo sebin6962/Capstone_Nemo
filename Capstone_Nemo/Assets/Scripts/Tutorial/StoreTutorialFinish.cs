@@ -10,7 +10,7 @@ public class StoreTutorialFinish : MonoBehaviour
         if (StoreTutorialManager.Instance == null)
             return;
 
-        if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.Finish))
+        if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.StoreFirst_Finish))
         {            
             StoreTutorialManager.Instance.CompleteStoreTutorial();
         }
