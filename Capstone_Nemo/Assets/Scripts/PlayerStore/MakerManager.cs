@@ -32,7 +32,7 @@ public class MakerManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(MakerSavePath)) return;
 
-        // 씬에 MakerInfo가 하나도 없으면 저장 안 함 (기존 파일 보존)
+        // 씬에 MakerInfo가 하나도 없으면 저장 안 함
         var makersInScene = FindObjectsOfType<MakerInfo>();
         if (makersInScene.Length == 0)
         {
@@ -88,11 +88,11 @@ public class MakerManager : MonoBehaviour
         {
             if (!map.TryGetValue(m.makerId, out var maker)) continue;
 
-            // 1) 입력 재료 복원
+            // 입력 재료 복원
             maker.inputItemNames = new List<string>(m.inputItemNames);
             maker.inputItemSprites.Clear();
 
-            // 아이템 이름 → 스프라이트 재로딩(프로젝트에서 쓰는 방식에 맞춰서 수정)
+            // 아이템 이름으로 스프라이트 재로딩
             foreach (var itemName in maker.inputItemNames)
             {
                 Sprite sp = Resources.Load<Sprite>($"Sprites/Ingredients/{itemName}");
@@ -121,7 +121,7 @@ public class MakerManager : MonoBehaviour
                 }
             }
 
-            // 2) 제작 진행 복원
+            // ===================제작 진행 복원===============================
             maker.isProducing = m.isProducing;
             maker.resultItemName = m.resultItemName;
             maker.craftEndUtcSeconds = m.craftEndUtcSeconds;
@@ -135,7 +135,7 @@ public class MakerManager : MonoBehaviour
 
                 if (remain <= 0)
                 {
-                    // 이미 제작 끝나 있을 경우 → 거의 0초짜리로 돌려서 바로 완성
+                    // 이미 제작 끝나 있을 경우 거의 0초로 돌려서 바로 완성
                     maker.StartCraft(resultSprite, 0.01f, force: true);
                 }
                 else
@@ -183,13 +183,13 @@ public class MakerSlotSave
 {
     public string makerId;
 
-    // 슬롯에 들어간 재료들 (아이템 이름)
+    // 슬롯에 들어간 재료들
     public List<string> inputItemNames = new List<string>();
 
     // 제작 진행 상태
     public bool isProducing;
     public string resultItemName;
-    public double craftEndUtcSeconds;   // 제작이 끝나는 절대 시간(초)
+    public double craftEndUtcSeconds; 
 }
 
 [System.Serializable]

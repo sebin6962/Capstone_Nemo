@@ -13918,9 +13918,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.04595849
+    x: 0.0007610321
     y: 0
-    width: 0.908083
+    width: 0.99847794
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
@@ -15167,13 +15167,17 @@ MonoBehaviour:
   fileSelectPanel: {fileID: 1093173994}
   settingPanel: {fileID: 881309951}
   exitPanel: {fileID: 1210769995}
+  aboutPanel: {fileID: 0}
   btnFileSelect: {fileID: 1038929991}
   btnSetting: {fileID: 629892348}
   btnExit: {fileID: 619316807}
+  btnAbout: {fileID: 0}
   saveSelectManager: {fileID: 1688285089}
   btnGameExit: {fileID: 1794640925}
   normalSprite: {fileID: -87069319, guid: a2013f53fdc2ab540a211b6f076ce9bb, type: 3}
   pressedSprite: {fileID: 2142220538, guid: a2013f53fdc2ab540a211b6f076ce9bb, type: 3}
+  aboutNormalSprite: {fileID: 0}
+  aboutPressedSprite: {fileID: 0}
   selectedColor: {r: 1, g: 1, b: 1, a: 1}
   normalColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1693417034
@@ -15456,6 +15460,7 @@ GameObject:
   - component: {fileID: 1728399238}
   - component: {fileID: 1728399237}
   - component: {fileID: 1728399236}
+  - component: {fileID: 1728399239}
   m_Layer: 5
   m_Name: InputField (TMP)
   m_TagString: Untagged
@@ -15619,6 +15624,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1728399234}
   m_CullTransparentMesh: 1
+--- !u!114 &1728399239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1728399234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc33a39070010f94fb1c2dd721c1286d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showHtmlElement: 0
 --- !u!1 &1739385243
 GameObject:
   m_ObjectHideFlags: 0
