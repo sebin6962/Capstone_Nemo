@@ -26,14 +26,15 @@ public class CustomerSpawner : MonoBehaviour
     void Start()
     {
         var saveMgr = CustomerSaveManager.Instance;
-        if (saveMgr != null)
+        
+        if(!tutorialMode && saveMgr != null)
         {
             saveMgr.ConfigureFromSpawner(this);
 
             if (saveMgr.save.Count > 0)
             {
                 saveMgr.RestoreToScene(this);
-                return; 
+                return;
             }
         }
 
@@ -93,13 +94,39 @@ public class CustomerSpawner : MonoBehaviour
     private IEnumerator SpawnCustomerDelay(string tutorialDawgaId, float delay)
     {
         if (delay > 0f)
-            yield return new WaitForSeconds(delay);
+            yield return new WaitForSecondsRealtime(delay);
+
+        //
+        if (seatManager == null)
+        {
+            Debug.LogError("[Tutorial] seatManager가 null 입니다.");
+            yield break;
+        }
+        //
 
         int seatIndex = seatManager.GetAvailableSeatIndex();
 
+        //
+        Debug.Log($"[Tutorial] GetAvailableSeatIndex = {seatIndex}, routesPerSeat.Count = {routesPerSeat.Count}");
+        if (seatIndex < 0 || seatIndex >= routesPerSeat.Count)
+        {
+            Debug.LogError($"[Tutorial] 잘못된 seatIndex={seatIndex}. routesPerSeat.Count={routesPerSeat.Count}");
+            yield break;
+        }
+        //
+
         seatManager.OccupySeat(seatIndex);
 
-        GameObject customer = Instantiate(customerPrefab[3], spawnPoint.position, Quaternion.identity);
+        //
+        var route = routesPerSeat[seatIndex];
+        if (route == null || route.waypoints == null || route.waypoints.Length == 0)
+        {
+            Debug.LogError($"[Tutorial] routesPerSeat[{seatIndex}] 혹은 waypoints가 비어 있습니다.");
+            yield break;
+        }
+        //
+
+        GameObject customer = Instantiate(customerPrefab[2], spawnPoint.position, Quaternion.identity);
 
         Transform[] path = routesPerSeat[seatIndex].waypoints;
         Customer customerScript = customer.GetComponent<Customer>();
