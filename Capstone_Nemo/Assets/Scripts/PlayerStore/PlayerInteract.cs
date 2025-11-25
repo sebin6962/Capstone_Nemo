@@ -27,7 +27,7 @@ public class PlayerInteract : MonoBehaviour
     private Component currentInteractable;
 
     public GameObject storageFullPanel;     // "창고가 가득 찼습니다" 패널
-    public CanvasGroup storageFullGroup;    // 위 패널에 붙은 CanvasGroup
+    public CanvasGroup storageFullGroup;
     private Coroutine storageFullCo;        // 중복 실행 방지
 
     private readonly List<MakerInfo> nearbyMakers = new List<MakerInfo>();
@@ -286,7 +286,7 @@ public class PlayerInteract : MonoBehaviour
                 sr.sortingLayerName = "Obj";   // 원하는 Sorting Layer 이름
                 sr.sortingOrder = 60;              // 탁자 SpriteRenderer보다 더 큰 값
 
-                // 아이템 크기 조정 (예: 0.6배로 줄이기)
+                // 아이템 크기 조정
                 tableItemObj.transform.localScale = new Vector3(1f, 1f, 1f);
 
                 // Spot 위치에 배치

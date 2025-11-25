@@ -2,13 +2,21 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using System.IO;
+
+[System.Serializable]
+public class EndingData
+{
+    public bool hasSeenEnding;
+}
 
 public class EndingCutSceneScroller : MonoBehaviour
 {
-    [Header("스크롤할 카메라 (비워두면 Main Camera 사용)")]
+    [Header("스크롤할 카메라")]
     public Camera targetCamera;
 
-    [Header("컷신 하단 기준점 (배경 맨 아래 위치에 빈 오브젝트 하나 두고 연결)")]
+    [Header("컷신 하단 기준점")]
     public Transform bottomLimit;
 
     [Header("카메라 내려가는 속도")]
@@ -17,10 +25,10 @@ public class EndingCutSceneScroller : MonoBehaviour
     [Header("하단에 도착 후 잠깐 멈추는 시간")]
     public float beforeFadeBlackDelay = 2f;
 
-    [Header("엔딩용 검은 화면 이미지 (UI Image)")]
+    [Header("엔딩용 검은 화면 이미지")]
     public Image blackImage;
 
-    [Tooltip("검은 화면이 완전히 차오르는 시간(초)")]
+    [Tooltip("검은 화면이 완전히 차오르는 시간")]
     public float blackFadeSeconds = 1.5f;
 
     private bool isEnding = false;
@@ -39,7 +47,7 @@ public class EndingCutSceneScroller : MonoBehaviour
         [Tooltip("이전 자막이 켜지고 나서 이 자막이 켜지기까지 대기 시간")]
         public float delayFromPrevious = 1f;
 
-        [Tooltip("이 자막이 서서히 나타나는 시간(초)")]
+        [Tooltip("이 자막이 서서히 나타나는 시간")]
         public float fadeInDuration = 1f;
     }
 
@@ -61,14 +69,32 @@ public class EndingCutSceneScroller : MonoBehaviour
     [Tooltip("엔딩씬이 로드되면 검은 화면에서 서서히 밝아지게 할지 여부")]
     public bool fadeInFromBlackOnStart = true;
 
-    [Tooltip("엔딩씬이 로드된 뒤, 밝아지기 전에 잠깐 유지할 시간(초)")]
+    [Tooltip("엔딩씬이 로드된 뒤, 밝아지기 전에 잠깐 유지할 시간")]
     public float startBlackStaySeconds = 0.5f;
 
-    [Tooltip("검은 화면에서 엔딩씬 화면으로 서서히 밝아지는 시간(초)")]
+    [Tooltip("검은 화면에서 엔딩씬 화면으로 서서히 밝아지는 시간")]
     public float startBlackFadeSeconds = 1.5f;
 
     // 페이드가 끝나야지만 카메라가 움직일 수 있게 하는 플래그
     private bool canStartScroll = false;
+
+    [Header("엔딩 후 돌아갈 씬 이름")]
+    public string nextSceneName = "TreeScene";
+
+    public void LoadNextScene()
+    {
+        // 현재 선택된 서버 이름 가져오기
+        string serverName = PlayerPrefs.GetString("SelectedSave", "");
+
+        if (!string.IsNullOrEmpty(serverName))
+        {
+            string path = Path.Combine(Application.persistentDataPath, $"ending_{serverName}.json");
+            EndingData data = new EndingData { hasSeenEnding = true };
+            File.WriteAllText(path, JsonUtility.ToJson(data, true));
+        }
+
+        FadeManager.Instance.FadeToScene(nextSceneName);
+    }
 
     void Start()
     {
@@ -99,7 +125,7 @@ public class EndingCutSceneScroller : MonoBehaviour
         if (startBlackStaySeconds > 0f)
             yield return new WaitForSeconds(startBlackStaySeconds);
 
-        // 검은 화면(알파 1) → 완전히 투명(알파 0)으로 서서히 페이드
+        // 알파1에서 0으로 서서히 페이드
         if (blackImage != null)
         {
             yield return StartCoroutine(FadeBlackImage(1f, 0f, startBlackFadeSeconds));
@@ -211,7 +237,7 @@ public class EndingCutSceneScroller : MonoBehaviour
         if (delayBeforeFirstSubtitle > 0f)
             yield return new WaitForSeconds(delayBeforeFirstSubtitle);
 
-        // 자막들 순서대로 켜기 (페이드 인)
+        // 자막들 순서대로 켜기
         for (int i = 0; i < subtitles.Length; i++)
         {
             var entry = subtitles[i];
@@ -242,7 +268,7 @@ public class EndingCutSceneScroller : MonoBehaviour
         if (delayBeforeNextCutsceneFade > 0f)
             yield return new WaitForSeconds(delayBeforeNextCutsceneFade);
 
-        // 다음 컷씬 페이드(또는 씬 전환) 호출
+        // 다음 컷씬 페이드 또는 씬 전환 호출(현재 TreeScene으로 씬 전환 필요)
         if (onNextCutsceneFade != null)
             onNextCutsceneFade.Invoke();
     }
