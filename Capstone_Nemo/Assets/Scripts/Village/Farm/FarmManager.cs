@@ -421,6 +421,13 @@ public class FarmManager : MonoBehaviour
             overlayTilemap.SetTile(cellPos, wetSoilTile);  // 젖은 흙 연출
             wateredTiles.Add(cellPos);
             tileInfo.isWatered = true;                     // 성장 타이머가 돌도록
+
+            //village2 튜토리얼 진행 트리거 7
+            if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.Water))
+            {
+                TutorialManager.Instance.GoToNextVillageSecondStep();
+            }
+
             return;
         }
 
@@ -486,6 +493,12 @@ public class FarmManager : MonoBehaviour
         }
 
         growingTiles.Add(cellPos, cropInfo);
+
+        //village2 튜토리얼 진행 트리거 4
+        if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.PlantSeed))
+        {
+            TutorialManager.Instance.GoToNextVillageSecondStep();
+        }
     }
 
     //작물 성장
@@ -508,6 +521,12 @@ public class FarmManager : MonoBehaviour
 
 
         Debug.Log($"작물 {tile.cropData.cropName}이 {tile.currentStage}단계로 성장함");
+
+        //village2 튜토리얼 진행 트리거 8
+        if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.CropGrowing) && tile.currentStage == tile.cropData.stages.Count - 1)
+        {
+            TutorialManager.Instance.GoToNextVillageSecondStep();
+        }
     }
 
     //수확 처리 함수
@@ -611,6 +630,11 @@ public class FarmManager : MonoBehaviour
 
         Debug.Log($"작물 {cropName} 수확됨 → 창고로 이동");
 
+        //village2 튜토리얼 진행 트리거 10
+        if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.HarvestCrop))
+        {
+            TutorialManager.Instance.GoToNextVillageSecondStep();
+        }
     }
 
     private void HandleTreeLevelWarningByInput()

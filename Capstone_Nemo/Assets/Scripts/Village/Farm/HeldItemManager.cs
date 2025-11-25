@@ -32,6 +32,24 @@ public class HeldItemManager : MonoBehaviour
             Vector3 offset = new Vector3(0, 1.5f, 0);
             // 월드 스페이스 캔버스니까 그냥 월드 좌표를 씀
             heldItemImage.rectTransform.position = player.position + offset;
+
+            //village2 튜토리얼 진행 트리거 3
+            var tm = FindObjectOfType<TutorialManager>();
+            if (tm != null &&
+                tm.IsCurrentStep(VillageSecondStep.PickUpSeed) &&  
+                HeldItemManager.Instance.GetHeldItemName() == "Danhobak_seedBag")
+            {
+                tm.GoToNextVillageSecondStep(); 
+            }
+
+/*            //village2 튜토리얼 진행 트리거 6
+            if (tm != null &&
+                tm.IsCurrentStep(VillageSecondStep.PickUp_WateringCan) &&
+                HeldItemManager.Instance.GetHeldItemName() == "village_object_wateringcan")
+            {
+                tm.GoToNextVillageSecondStep();
+            }*/
+
         }
     }
 
@@ -85,9 +103,20 @@ public class HeldItemManager : MonoBehaviour
 
     public void HideHeldItem()
     {
+        //혹시 모르니까
+        string prevItemName = heldItemName;
+
         heldItemImage.enabled = false;
         currentHeldSprite = null;
         heldItemName = null;
+
+        //village2 튜토리얼 진행 트리거 5
+        var tm = TutorialManager.Instance;
+        if (tm != null &&
+            tm.IsCurrentStep(VillageSecondStep.RestoreSeed) && prevItemName == "Danhobak_seedBag")
+        {
+            tm.GoToNextVillageSecondStep();
+        }
     }
 
     public bool IsHoldingItem()

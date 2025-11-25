@@ -33,6 +33,12 @@ public class BoxInventoryManager : MonoBehaviour
         {
             ToggleInventory();
             SFXManager.Instance.PlayBoxOpenSFX();
+
+            //village2 튜토리얼 진행 트리거 2
+                if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.OpenStorage))
+                {
+                    TutorialManager.Instance.GoToNextVillageSecondStep();
+                }
         }
     }
 

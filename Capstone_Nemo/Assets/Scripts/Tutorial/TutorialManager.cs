@@ -12,9 +12,28 @@ public enum TutorialStep
     Shop
 }
 
+public enum VillageSecondStep
+{
+    GoToField = 0,
+    OpenStorage = 1,
+    PickUpSeed = 2,
+    PlantSeed = 3,
+    RestoreSeed = 4,
+    PickUp_WateringCan = 5,
+    Water = 6,
+    CropGrowing = 7,
+    Restore_WateringCan = 8,
+    HarvestCrop = 9,
+    GoToMill = 10,
+    VillageSecond_Finish = 11
+}
+
 public class TutorialManager : MonoBehaviour
 {
+    public static TutorialManager Instance;
+
     public TutorialStep currentStep = TutorialStep.None;
+    private VillageSecondStep villageSecondStep = VillageSecondStep.GoToField;
 
     [SerializeField] private Button dogamButton;
     [SerializeField] private Button dogamCloseButton;
@@ -28,34 +47,52 @@ public class TutorialManager : MonoBehaviour
 
     [SerializeField] private GameObject tutorialBlocker;
 
+    [SerializeField] private GameObject[] stepPanels;
+
     private string server;
     private TutorialStateData state;
+
+    public bool IsVillageSecondTutorialRunning;
+
+    private Coroutine showStepPanelRoutine;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
         server = PlayerPrefs.GetString("SelectedSave", "default");
         state = TutorialState.Load(server);
 
-        if(state.tutorialDone || TutorialFlowManager.Instance.currentStep == GlobalTutorialStep.Done)
+        var flow = TutorialFlowManager.Instance;
+
+        if (state.tutorialDone || flow == null || flow.currentStep == GlobalTutorialStep.Done)
         {
             CleanupTutorialVisuals();
+            if (tutorialBlocker) tutorialBlocker.SetActive(false);
             return;
         }
 
         var globalStep = TutorialFlowManager.Instance.currentStep;
 
+        Debug.Log($"[TutorialManager] Start in Village, flowStep={flow?.currentStep}, tutorialDone={state.tutorialDone}");
+
+
         switch (globalStep)
         {
             case GlobalTutorialStep.DogamIntro:
                 currentStep = TutorialStep.DogamIntro;
+                tutorialBlocker.gameObject.SetActive(true);
                 StartTutorial_DogamIntro();
                 break;
 
             case GlobalTutorialStep.Village_First:
-                tutorialBlocker.gameObject.SetActive(true);
                 break;
 
             case GlobalTutorialStep.Village_Second:
+                StartTutorial_VillageSecond();
                 break;
 
             default:
@@ -106,6 +143,129 @@ public class TutorialManager : MonoBehaviour
                 ps.Play(true);
             }
         }
+    }
+
+    void StartTutorial_VillageSecond()
+    {
+        CleanupTutorialVisuals();
+        IsVillageSecondTutorialRunning = true;
+        villageSecondStep = VillageSecondStep.GoToField;
+        ShowStepPanel(villageSecondStep);
+    }
+
+    public void GoToNextVillageSecondStep()
+    {
+
+        switch (villageSecondStep)
+        {
+            //TutorialTriggerArea.cs
+            case VillageSecondStep.GoToField:
+                villageSecondStep = VillageSecondStep.OpenStorage;    
+                break;
+            //BoxInventoryManager.cs
+            case VillageSecondStep.OpenStorage:
+                villageSecondStep = VillageSecondStep.PickUpSeed;
+                break;
+            //HeldItemManager.cs
+            case VillageSecondStep.PickUpSeed:
+                villageSecondStep = VillageSecondStep.PlantSeed;
+                break;
+            //FarmManager.cs
+            case VillageSecondStep.PlantSeed:
+                villageSecondStep = VillageSecondStep.RestoreSeed;
+                break;
+            //HeldItemManager.cs
+            case VillageSecondStep.RestoreSeed:
+                villageSecondStep = VillageSecondStep.PickUp_WateringCan;
+                break;
+            //WateringCanAnchor.cs
+            case VillageSecondStep.PickUp_WateringCan:
+                villageSecondStep = VillageSecondStep.Water;
+                break;
+            //FarmManager.cs
+            case VillageSecondStep.Water:
+                villageSecondStep = VillageSecondStep.CropGrowing;
+                break;
+            //FarmManager.cs
+            case VillageSecondStep.CropGrowing:
+                villageSecondStep = VillageSecondStep.Restore_WateringCan;
+                break;
+            //WateringCanAnchor.cs
+            case VillageSecondStep.Restore_WateringCan:
+                villageSecondStep = VillageSecondStep.HarvestCrop;
+                break;
+            //FarmManager.cs
+            case VillageSecondStep.HarvestCrop:
+                villageSecondStep = VillageSecondStep.GoToMill;
+                break;
+            case VillageSecondStep.GoToMill:
+                villageSecondStep = VillageSecondStep.VillageSecond_Finish;
+                break;
+            case VillageSecondStep.VillageSecond_Finish:
+                CompleteVillageSecondTutorial();
+                return;
+
+            default:
+                return;
+        }
+
+        ShowStepPanel(villageSecondStep);
+    }
+
+    public void CompleteVillageSecondTutorial()
+    {
+        if (!IsVillageSecondTutorialRunning)
+            return;
+
+        IsVillageSecondTutorialRunning = false;
+        {
+            HideAllPanels();
+        }
+
+        TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Mill);
+    }
+
+    void ShowStepPanel(VillageSecondStep step)
+    {
+        if (showStepPanelRoutine != null)
+            StopCoroutine(showStepPanelRoutine);
+
+        // 2초 뒤에 패널 켜는 코루틴으로 빼뒀어요!!
+        showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 1.0f));
+    }
+
+    private IEnumerator ShowStepPanelAfterDelay(VillageSecondStep step, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        SFXManager.Instance.PlayTutorialSFX();
+        HideAllPanels();
+
+        int index = (int)step;
+        if (stepPanels == null || index < 0 || index >= stepPanels.Length)
+            yield break;
+
+        if (stepPanels[index])
+        {
+            stepPanels[index].SetActive(true);
+        }
+
+        // 코루틴 끝남
+        showStepPanelRoutine = null;
+    }
+
+    void HideAllPanels()
+    {
+        if (stepPanels == null) return;
+        foreach (var panel in stepPanels)
+        {
+            if (panel) panel.SetActive(false);
+        }
+    }
+
+    public bool IsCurrentStep(VillageSecondStep step)
+    { 
+        return IsVillageSecondTutorialRunning && villageSecondStep == step;
     }
 
     void OnDogamClicked()
@@ -217,5 +377,15 @@ public class TutorialManager : MonoBehaviour
     void SetPlayerInput(bool enable)
     {
         if (player != null) player.enabled = enable;
+    }
+
+    public void FinishAllTutorial()
+    {
+        CompleteVillageSecondTutorial();
+
+        state.tutorialDone = true;
+        TutorialState.Save(server, state);
+
+        Debug.Log("튜토리얼 완전히 종료");
     }
 }

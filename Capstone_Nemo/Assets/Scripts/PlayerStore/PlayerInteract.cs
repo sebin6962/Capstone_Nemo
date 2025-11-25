@@ -94,6 +94,12 @@ public class PlayerInteract : MonoBehaviour
                     StoreTutorialManager.Instance.GoToNextStep();
                 }
 
+                /*//village2 튜토리얼 진행 트리거 2
+                else if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.OpenStorage))
+                {
+                    TutorialManager.Instance.GoToNextVillageSecondStep();
+                }*/
+
                 return;
             }
 
@@ -173,7 +179,7 @@ public class PlayerInteract : MonoBehaviour
 
                             var makerMgr = FindObjectOfType<MakerManager>();
                             if (makerMgr != null)
-                                makerMgr.SaveMakerState();
+                                makerMgr.SaveMakerState();  
 
                             //튜토리얼 진행 트리거 3, 4, 5
                             if (StoreTutorialManager.Instance)

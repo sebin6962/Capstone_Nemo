@@ -84,7 +84,15 @@ public class WateringCanAnchor : MonoBehaviour
                 Debug.Log("물뿌리개를 들었습니다.");
 
                 SFXManager.Instance.PlayBbyongSFX();
+
+                //village2 튜토리얼 진행 트리거 6
+                if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.PickUp_WateringCan))
+                {
+                    TutorialManager.Instance.GoToNextVillageSecondStep();
+                }
+
                 return; // << 반드시 return해서 아래 상호작용 중복 방지!
+
             }
             // 2. 물뿌리개를 들고 있으면 -> 내려놓기
             else if (BoxInventoryManager.Instance.IsHoldingWateringCan())
@@ -94,6 +102,13 @@ public class WateringCanAnchor : MonoBehaviour
                 Debug.Log("물뿌리개를 다시 놓았습니다.");
 
                 SFXManager.Instance.PlayBbyongSFX();
+
+                //village2 튜토리얼 진행 트리거 9
+                if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.Restore_WateringCan))
+                {
+                    TutorialManager.Instance.GoToNextVillageSecondStep();
+                }
+
                 return; // << 반드시 return!
             }
             // 3. 그 외(다른 아이템 들고 있을 때)

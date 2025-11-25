@@ -30,7 +30,7 @@ public class StoreTutorialManager : MonoBehaviour
     private TutorialStateData state;
     private string server;
 
-    private StoreTutorialStep currentStep = StoreTutorialStep.StoreFirst_Finish;
+    public StoreTutorialStep currentStep = StoreTutorialStep.OpenStorage;
 
     private Coroutine showStepPanelRoutine;
 
@@ -73,7 +73,6 @@ public class StoreTutorialManager : MonoBehaviour
         }
         else
         {
-            // 그 외 상황에서는 튜토리얼 안 켜고 조용히 있음
             HideAllPanels();
             IsStoreTutorialRunning = false;
         }
@@ -109,7 +108,7 @@ public class StoreTutorialManager : MonoBehaviour
             StopCoroutine(showStepPanelRoutine);
 
         // 2초 뒤에 패널 켜는 코루틴으로 빼뒀어요!!
-        showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 2.2f));
+        showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 1.0f));
     }
 
     private IEnumerator ShowStepPanelAfterDelay(StoreTutorialStep step, float delay)
@@ -192,16 +191,18 @@ public class StoreTutorialManager : MonoBehaviour
     public void CompleteStoreTutorial()
     {
         if (!IsStoreTutorialRunning)
+        {
+            Debug.Log("[StoreTutorial] CompleteStoreTutorial called but not running");
             return;
+        }
 
         IsStoreTutorialRunning = false;
-        {
-            HideAllPanels();
-        }
+        HideAllPanels();
 
         if (customerSpawner)
             customerSpawner.EndTutorial();
 
         TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Village_Second);
+        Debug.Log($"[StoreTutorial] Complete -> Flow step NOW = {TutorialFlowManager.Instance.currentStep}");
     }
 }

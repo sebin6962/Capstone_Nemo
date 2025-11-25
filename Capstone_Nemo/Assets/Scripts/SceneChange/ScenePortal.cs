@@ -32,6 +32,27 @@ public class ScenePortal : MonoBehaviour
         if (!isInTrigger) return;
         if (!Input.GetKeyDown(KeyCode.E)) return;
 
+        string currentScene = SceneManager.GetActiveScene().name;
+
+        //PlayerStoreScene에서 나갈 때 Store튜토리얼 종료 처리
+        if (currentScene == "PlayerStoreScene")
+        {
+            var flow = TutorialFlowManager.Instance;
+            var storeTut = StoreTutorialManager.Instance;
+
+            if (flow != null && storeTut != null)
+            {
+                Debug.Log($"[Portal] E pressed in PlayerStoreScene, " +
+                          $"flowStep={flow.currentStep}, storeRunning={storeTut.IsStoreTutorialRunning}, step={storeTut.currentStep}");
+
+                if (flow.currentStep == GlobalTutorialStep.PlayerStore_First &&
+                    storeTut.IsStoreTutorialRunning)
+                {
+                    storeTut.CompleteStoreTutorial();
+                }
+            }
+        }
+
         // 1 전역 전환 정보
         if (SceneTransitionInfo.Instance != null)
         {
@@ -47,12 +68,12 @@ public class ScenePortal : MonoBehaviour
         PlayerPrefs.Save();
 
         //DogamIntro -> PlayerStore_first 튜토리얼 스텝 설정
-        var flow = TutorialFlowManager.Instance;
-        if (flow != null && flow.currentStep != GlobalTutorialStep.Done)
+        var flow2 = TutorialFlowManager.Instance;
+        if (flow2 != null && flow2.currentStep != GlobalTutorialStep.Done)
         {
-            if (targetScene == "PlayerStoreScene" && flow.currentStep == GlobalTutorialStep.Village_First)
+            if (targetScene == "PlayerStoreScene" && flow2.currentStep == GlobalTutorialStep.Village_First)
             {
-                flow.SetStep(GlobalTutorialStep.PlayerStore_First);
+                flow2.SetStep(GlobalTutorialStep.PlayerStore_First);
             }
         }
 
