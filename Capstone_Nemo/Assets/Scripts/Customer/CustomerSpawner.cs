@@ -176,6 +176,12 @@ public class CustomerSpawner : MonoBehaviour
 
         customer.ApplySave(data);
 
+        if (data.state != CustomerState.Walking)
+        {
+            customer.AssignPlate();
+        }
+
+
         return customer;
     }
 }

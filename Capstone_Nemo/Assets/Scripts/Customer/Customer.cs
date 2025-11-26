@@ -150,7 +150,7 @@ public class Customer : MonoBehaviour
         StartOrdering();
     }
 
-    private void AssignPlate()
+    public void AssignPlate()
     {
         var plates = GameObject.FindGameObjectsWithTag("Plate");
         Debug.Log($"[AssignPlate] 발견된 Plate 개수: {plates.Length}");
@@ -244,6 +244,8 @@ public class Customer : MonoBehaviour
        /* remainingTime = orderTimeLimit;
         isTimerRunning = true;*/
     }
+
+
     public virtual void Serve(string givenDagwa)
     {
         // 다과 제공 효과음 재생!
@@ -366,6 +368,7 @@ public class Customer : MonoBehaviour
             Debug.LogWarning("접시 근처에 다과가 없음");
         }
     }
+
 
     IEnumerator MoveDownAndDestroy()
     {
