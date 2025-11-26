@@ -164,21 +164,28 @@ public class CustomerSpawner : MonoBehaviour
         customer.SetSeatInfo(seatIndex, seatManager);
         customer.SetPrefabIndex(prefabIndex);
 
+        Vector3 seatPos = path[path.Length - 1].position;
+
         if (data.state == CustomerState.Walking)
         {
            //го....
         }
         else
         {
-            Vector3 seatPos = path[path.Length - 1].position;
             customer.transform.position = seatPos;
         }
 
         customer.ApplySave(data);
 
-        if (data.state != CustomerState.Walking)
+        if (data.state == CustomerState.Ordering || data.state == CustomerState.Waiting)
         {
-            customer.AssignPlate();
+            customer.AssignPlate(); 
+        }
+        else if (data.state == CustomerState.Served ||
+                 data.state == CustomerState.Displeased ||
+                 data.state == CustomerState.Leaving)
+        {
+            customer.ForceLeaveFromSave();
         }
 
 

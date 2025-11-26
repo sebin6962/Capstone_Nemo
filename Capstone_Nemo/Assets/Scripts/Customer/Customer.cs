@@ -79,6 +79,12 @@ public class Customer : MonoBehaviour
             }
         }
 
+        if (state != CustomerState.Walking)
+        {
+            UpdateAnimation(Vector3.zero);
+            return;
+        }
+
         if (wayPoints == null || currentIndex >= wayPoints.Length)
         {
             UpdateAnimation(Vector3.zero);
@@ -336,6 +342,12 @@ public class Customer : MonoBehaviour
         StartCoroutine(MoveDownAndDestroy());
     }
 
+    public void ForceLeaveFromSave()
+    {
+        state = CustomerState.Leaving;
+        StartCoroutine(MoveDownAndDestroy());
+    }
+
     protected void RemoveDagwaOnPlate()
     {
         if (assignedPlate == null)
@@ -475,10 +487,10 @@ public class Customer : MonoBehaviour
         this.remainingTime = data.remainingTime;
 
         //위치, 경로 복원
-        if (data.hasScenePosition)
+        if (data.hasScenePosition && (data.state == CustomerState.Walking || data.state == CustomerState.Sit))
         {
-            this.transform.position = data.position;
-            this.currentIndex = data.currentWaypointIndex;
+            transform.position = data.position;
+            currentIndex = data.currentWaypointIndex;
         }
 
         this.prefabIndex = data.prefabIndex;
