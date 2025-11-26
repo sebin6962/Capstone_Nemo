@@ -60,9 +60,10 @@ public class SaveSelectManager : MonoBehaviour
         TryDelete(Path.Combine(p, $"storage_{serverName}.json"));
         TryDelete(Path.Combine(p, $"treeUnlock_{serverName}.json"));
         TryDelete(Path.Combine(p, $"tutorial_{serverName}.json"));
+        TryDelete(Path.Combine(p, $"ps_tableItem_{serverName}.json"));
         TryDelete(System.IO.Path.Combine(p, $"farm_{serverName}.json"));
 
-        // 레거시 해금 파일 더 이상 쓰지 않는다면 지워버리는 걸 권장
+        // 레거시 해금 파일 더 이상 쓰지 않는다면 지우기
         var legacy = Path.Combine(p, "unlock_state.json");
         if (File.Exists(legacy)) TryDelete(legacy);
 

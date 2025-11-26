@@ -19,6 +19,13 @@ public class TreeInteract : MonoBehaviour
     {
         if (isPlayerNear && Input.GetKeyDown(KeyCode.E))
         {
+            //해금 컷신 진행중이라면 입력 무시
+            if (TreeLevelUnlocker.Instance != null &&
+           TreeLevelUnlocker.Instance.IsPlayingUnlockSequence)
+            {
+                return; 
+            }
+
             TogglePopup();
         }
     }

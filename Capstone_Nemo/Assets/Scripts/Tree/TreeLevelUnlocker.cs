@@ -75,6 +75,11 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     public MonoBehaviour[] cameraControllersToDisable;
 
+    public bool IsPlayingUnlockSequence
+    {
+        get { return isPlayingUnlockSequence; }
+    }
+
     void Awake()
     {
         Instance = this;
