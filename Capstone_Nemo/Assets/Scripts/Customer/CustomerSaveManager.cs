@@ -101,7 +101,7 @@ public class CustomerSaveManager : MonoBehaviour
         var data = new CustomerSave
         {
             seatIndex = seatIndex,
-            state = CustomerState.Walking,
+            state = CustomerState.Ordering,
             isTutorialCustomer = false,
             tutorialDagwaId = null,
             orderedDagwa = OrderManager.Instance.GetRandomDagwaList(),
