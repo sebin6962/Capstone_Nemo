@@ -424,14 +424,16 @@ public class Customer : MonoBehaviour
             Debug.Log($"좌석 {seatIndex} 비움");
         }
 
-        Debug.Log($"[Tutorial] 손님 퇴장 시점, currentStep={StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.Serve)} / running={StoreTutorialManager.Instance.IsStoreTutorialRunning}");
+        var tutorMgr = StoreTutorialManager.Instance;
 
-        //튜토리얼 진행 트리거 6
-        if (isTutorialCustomer && StoreTutorialManager.Instance != null && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.Serve))
+        if (tutorMgr != null)
         {
-
-            Debug.Log("[Tutorial] Serve 단계 튜토리얼 손님 퇴장 → NextOrder 단계로 이동");
-            StoreTutorialManager.Instance.GoToNextStep();
+            // 튜토리얼 진행 트리거 6
+            if (isTutorialCustomer && tutorMgr.IsCurrentStep(StoreTutorialStep.Serve))
+            {
+                Debug.Log("[Tutorial] Serve 단계 튜토리얼 손님 퇴장 → NextOrder 단계로 이동");
+                tutorMgr.GoToNextStep();
+            }
         }
 
         Destroy(gameObject);
