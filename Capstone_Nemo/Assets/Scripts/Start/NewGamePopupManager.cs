@@ -196,6 +196,8 @@ public class NewGamePopupManager : MonoBehaviour
             PlayerPrefs.SetString("SelectedSave", serverName);
             PlayerPrefs.Save();
 
+            TutorialFlowManager.ForceResetInstance();
+
             if (UnlockManager.Instance != null)
             {
                 UnlockManager.Instance.SwitchToServer(serverName);

@@ -198,6 +198,8 @@ public class SaveSelectManager : MonoBehaviour
                     PlayerPrefs.SetString("SelectedSave", serverName);
                     PlayerPrefs.Save();
 
+                    TutorialFlowManager.ForceResetInstance();
+
                     // 해금 매니저에 이 서버로 전환하라고 알려줌
                     if (UnlockManager.Instance != null)
                     {

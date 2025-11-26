@@ -28,6 +28,16 @@ public class TutorialFlowManager : MonoBehaviour
 
     private int timePauseRequestCount = 0;
 
+    public static void ForceResetInstance()
+    {
+        if (Instance != null)
+        {
+            Debug.Log("[TutorialFlow] ForceResetInstance: 예전 인스턴스 파괴");
+            Destroy(Instance.gameObject);
+            Instance = null;
+        }
+    }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -39,19 +49,42 @@ public class TutorialFlowManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
+        //server = PlayerPrefs.GetString("SelectedSave", "default");
+        //state = TutorialState.Load(server);
+
+        //if (state.tutorialDone)
+        //{
+        //    currentStep = GlobalTutorialStep.Done;
+        //}
+
+        //else
+        //{
+        //    currentStep = GlobalTutorialStep.DogamIntro;
+        //}
+
+        InitializeForCurrentSave();
+    }
+
+    public void InitializeForCurrentSave()
+    {
         server = PlayerPrefs.GetString("SelectedSave", "default");
         state = TutorialState.Load(server);
+
+        timePauseRequestCount = 0;
+        UpdateTimeFlow();
 
         if (state.tutorialDone)
         {
             currentStep = GlobalTutorialStep.Done;
         }
-
         else
         {
             currentStep = GlobalTutorialStep.DogamIntro;
         }
+
+        Debug.Log($"[TutorialFlow] InitializeForCurrentSave : server={server}, tutorialDone={state.tutorialDone}, step={currentStep}");
     }
+
 
     public void RequestTutorialTimePause()
     {
