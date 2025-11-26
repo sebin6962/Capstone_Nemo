@@ -7,6 +7,10 @@ public class GameManager : MonoBehaviour
 {
     public void ReturnToStartScene()
     {
+        //손님 저장 데이터 초기화(Exit)
+        if (CustomerSaveManager.Instance != null)
+            CustomerSaveManager.Instance.ClearForExit();
+
         SFXManager.Instance.PlayBtnClickSFX();
         FadeManager.Instance.FadeToScene("IntroScene"); 
     }

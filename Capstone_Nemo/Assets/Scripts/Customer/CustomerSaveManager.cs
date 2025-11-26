@@ -17,6 +17,9 @@ public class CustomerSaveManager : MonoBehaviour
 
     private float[] prefabOrderTimes;
 
+    private bool ignoreSaveFromScene = false;
+
+
     private void Awake()
     {
         if(Instance != null && Instance != this)
@@ -31,6 +34,8 @@ public class CustomerSaveManager : MonoBehaviour
 
     public void ConfigureFromSpawner(CustomerSpawner spawner)
     {
+        ignoreSaveFromScene = false;
+
         spawnInterval = spawner.spawnInterval;
         maxSeats = spawner.routesPerSeat.Count;
         prefabCount = spawner.customerPrefab.Length;
@@ -135,6 +140,11 @@ public class CustomerSaveManager : MonoBehaviour
 
     public void SaveFromScene()
     {
+        if (ignoreSaveFromScene)
+        {
+            return;
+        }
+
         save.Clear();
 
         var customers = FindObjectsOfType<Customer>();
@@ -152,7 +162,21 @@ public class CustomerSaveManager : MonoBehaviour
 
     public void ClearForNewDay()
     {
-        Debug.Log("[CustomerSaveManager] 손님 저장 데이터 초기화");
+        Debug.Log("[CustomerSaveManager] 손님 저장 데이터 초기화(Day)");
+
+        ignoreSaveFromScene = true;
+
+        save.Clear();
+
+        simulateWhileStoreClosed = false;
+        spawnTimer = 0f;
+    }
+
+    public void ClearForExit()
+    {
+        Debug.Log("[CustomerSaveManager] 손님 저장 데이터 초기화(Exit)");
+
+        ignoreSaveFromScene = true;
 
         save.Clear();
 
