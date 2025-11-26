@@ -26,6 +26,8 @@ public class TutorialFlowManager : MonoBehaviour
     private string server;
     private TutorialStateData state;
 
+    private int timePauseRequestCount = 0;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -48,6 +50,31 @@ public class TutorialFlowManager : MonoBehaviour
         else
         {
             currentStep = GlobalTutorialStep.DogamIntro;
+        }
+    }
+
+    public void RequestTutorialTimePause()
+    {
+        timePauseRequestCount++;
+        UpdateTimeFlow();
+    }
+
+    public void ReleaseTutorialTimePause()
+    {
+        timePauseRequestCount--;
+        if (timePauseRequestCount < 0)
+            timePauseRequestCount = 0;
+
+        UpdateTimeFlow();
+    }
+
+    private void UpdateTimeFlow()
+    {
+        bool shouldFlow = (timePauseRequestCount == 0);
+
+        if (TimeManager.Instance != null)
+        {
+            TimeManager.Instance.SetTimeFlow(shouldFlow);
         }
     }
 

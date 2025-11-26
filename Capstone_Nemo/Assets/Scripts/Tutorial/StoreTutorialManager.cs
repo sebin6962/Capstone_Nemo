@@ -63,13 +63,15 @@ public class StoreTutorialManager : MonoBehaviour
 
         if (flow.currentStep == GlobalTutorialStep.PlayerStore_First)
         {
-            IsStoreTutorialRunning = true;
+            /*IsStoreTutorialRunning = true;
             currentStep = StoreTutorialStep.OpenStorage;
 
             if (customerSpawner)
                 customerSpawner.SpawnTutorialCustomer("baekseolgi_finish", 15f);
 
-            ShowStepPanel(currentStep);
+            ShowStepPanel(currentStep);*/
+
+            StartStoreTutorial(flow.currentStep);
         }
         else
         {
@@ -82,6 +84,10 @@ public class StoreTutorialManager : MonoBehaviour
     {
         IsStoreTutorialRunning = true;
         currentStep = StoreTutorialStep.OpenStorage;
+
+        //시간 정지
+        if (TutorialFlowManager.Instance != null)
+            TutorialFlowManager.Instance.RequestTutorialTimePause();
 
         if (customerSpawner)
             customerSpawner.SpawnTutorialCustomer("baekseolgi_finish", 15f);
@@ -201,6 +207,10 @@ public class StoreTutorialManager : MonoBehaviour
 
         if (customerSpawner)
             customerSpawner.EndTutorial();
+
+        //시간 정지 해제
+        if (TutorialFlowManager.Instance != null)
+            TutorialFlowManager.Instance.ReleaseTutorialTimePause();
 
         TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Village_Second);
         Debug.Log($"[StoreTutorial] Complete -> Flow step NOW = {TutorialFlowManager.Instance.currentStep}");

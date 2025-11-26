@@ -278,6 +278,12 @@ public class TimeManager : MonoBehaviour
         hour = 9;           // 날짜 넘길 때 시간 초기화
         minute = 0;
 
+        //날 넘어갈때 손님도 초기화
+        if (CustomerSaveManager.Instance != null)
+        {
+            CustomerSaveManager.Instance.ClearForNewDay();
+        }
+
         // 다음 날로 넘어갈 때 플래그 리셋
         dayEndWarningShown = false;
 

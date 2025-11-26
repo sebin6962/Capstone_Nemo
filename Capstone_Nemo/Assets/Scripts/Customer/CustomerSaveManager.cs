@@ -150,6 +150,16 @@ public class CustomerSaveManager : MonoBehaviour
         spawnTimer = 0f;
     }
 
+    public void ClearForNewDay()
+    {
+        Debug.Log("[CustomerSaveManager] 손님 저장 데이터 초기화");
+
+        save.Clear();
+
+        simulateWhileStoreClosed = false;
+        spawnTimer = 0f;
+    }
+
     public void RestoreToScene(CustomerSpawner spawner)
     {
         simulateWhileStoreClosed = false;

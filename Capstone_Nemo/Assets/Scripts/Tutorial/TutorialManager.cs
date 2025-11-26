@@ -106,7 +106,11 @@ public class TutorialManager : MonoBehaviour
     {
         //시간 정지, 이동X
         SetPlayerInput(false);
-        Time.timeScale = 0f;
+
+        if (TutorialFlowManager.Instance != null)
+            TutorialFlowManager.Instance.RequestTutorialTimePause();
+
+        //Time.timeScale = 0f;
 
         //클릭X
         if (overlayBlocker)
@@ -147,6 +151,10 @@ public class TutorialManager : MonoBehaviour
 
     void StartTutorial_VillageSecond()
     {
+        //시간 정지
+        if (TutorialFlowManager.Instance != null)
+            TutorialFlowManager.Instance.RequestTutorialTimePause();
+
         CleanupTutorialVisuals();
         IsVillageSecondTutorialRunning = true;
         villageSecondStep = VillageSecondStep.GoToField;
@@ -309,7 +317,7 @@ public class TutorialManager : MonoBehaviour
 
         //지금 시간만 멈추고 플레이어만 움직이게 할 수 없는듯? 추후 수정 예정
         //우선 시간 흐르게...
-        Time.timeScale = 1f;
+        //Time.timeScale = 1f;
 
         if (dogamCloseButton != null)
             dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
@@ -385,6 +393,10 @@ public class TutorialManager : MonoBehaviour
 
         state.tutorialDone = true;
         TutorialState.Save(server, state);
+
+        //시간 정지 해제
+        if (TutorialFlowManager.Instance != null)
+            TutorialFlowManager.Instance.ReleaseTutorialTimePause();
 
         Debug.Log("튜토리얼 완전히 종료");
     }
