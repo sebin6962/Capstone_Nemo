@@ -9,10 +9,22 @@ public class TutorialTriggerArea : MonoBehaviour
 
     private bool triggered = false;
 
+    public VillageSecondStep TargetStep => targetStep;
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!other.CompareTag("Player"))
             return;
+
+        var flow = TutorialFlowManager.Instance;
+        if (flow != null)
+        {
+            if (flow.currentStep == GlobalTutorialStep.Mill ||
+                flow.currentStep == GlobalTutorialStep.Done)
+            {
+                return;
+            }
+        }
 
         if (onlyOnce && triggered)
             return;

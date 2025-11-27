@@ -218,6 +218,19 @@ public class TutorialManager : MonoBehaviour
         }
 
         ShowStepPanel(villageSecondStep);
+
+        UpdateTriggerAreas();
+    }
+
+    public void UpdateTriggerAreas()
+    {
+        var areas = FindObjectsOfType<TutorialTriggerArea>(true);
+
+        foreach (var area in areas)
+        {
+            bool shouldBeActive = IsCurrentStep(area.TargetStep);
+            area.gameObject.SetActive(shouldBeActive);
+        }
     }
 
     public void CompleteVillageSecondTutorial()
