@@ -8,7 +8,7 @@ using System.IO;
 public class CropTileSave
 {
     public int x, y;                 // 타일 좌표
-    public string harvestItemName;          // CropData.cropName (또는 ID)
+    public string harvestItemName;          // CropData.cropName 
     public int currentStage;         // 현재 단계
     public float timer;              // 현 단계 진행 타이머
     public bool isWatered;           // 물 유무
@@ -37,12 +37,12 @@ public class FarmManager : MonoBehaviour
 
     public Tilemap fieldTilemap; // 밭이 칠해진 Tilemap
     public Tilemap overlayTilemap; //상태 변화 시 겹쳐질 Tilemap
-    public TileBase farmTile;  // 밭으로 간주할 타일 (FarmSoilTile.asset) // 마른 흙 타일
+    public TileBase farmTile;  // 밭으로 간주할 타일 // 마른 흙 타일
     public TileBase wetSoilTile; // 젖은 흙 타일
     public Tilemap seedOverlayTilemap;   // 씨앗 타일 전용
-    public TileBase seedTile;           // 씨앗 스프라이트 타일 (ex: seedTile.asset)
+    public TileBase seedTile;           // 씨앗 스프라이트 타일
 
-    public GameObject cropOverlayPrefab; // 스프라이트용 오브젝트 (SpriteRenderer 포함)
+    public GameObject cropOverlayPrefab; // 스프라이트용 오브젝트
     public CropData testCropData; // 테스트용 작물 데이터
 
     private Dictionary<Vector3Int, CropTile> growingTiles = new Dictionary<Vector3Int, CropTile>();
@@ -198,12 +198,12 @@ public class FarmManager : MonoBehaviour
         foreach (var c in data.crops)
         {
             var pos = new Vector3Int(c.x, c.y, 0);
-            // 밭 영역만 복원(혹시 밭 확장이 바뀐 경우 대비)
+            // 밭 영역만 복원
             //if (!farmPositions.Contains(pos)) continue;
             bool isFarm = farmPositions.Contains(pos);
             if (!isFarm && !c.isTree) continue;
 
-            // CropData 찾기 (프로젝트 매니저에 맞게)
+            // CropData 찾기
             var cropData = CropDataManager.Instance.GetCropDataByItemName(c.harvestItemName);
             if (cropData == null || cropData.stages.Count == 0) continue;
 
@@ -233,8 +233,6 @@ public class FarmManager : MonoBehaviour
                     stage += 1;
                     timer = 0f;
 
-                    // 다음 단계로 넘어오면 다시 "물"이 필요하다면 여기서 watered=false로 바꾸세요.
-                    // (현재 시스템이 '단계마다 물 한 번 필요'라면 아래 줄 활성화)
                     watered = false;
                 }
                 else
@@ -446,33 +444,6 @@ public class FarmManager : MonoBehaviour
         }
     }
 
-    //씨앗 뿌렸을 때 변화
-    //public void PlantSeed(Vector3 worldPos)
-    //{
-    //    Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
-
-    //    if (!IsFarmTile(worldPos) || growingTiles.ContainsKey(cellPos))
-    //        return;
-
-    //    // 젖은 흙 여부도 검사하려면 여기 추가
-
-    //    // 덮을 스프라이트 생성 (기존 seedOverlayTilemap 쓰려면 TileBase 스프라이트 처리 필요)
-    //    Vector3 overlayWorldPos = overlayTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0f);
-    //    GameObject overlay = Instantiate(cropOverlayPrefab, overlayWorldPos, Quaternion.identity, transform);
-    //    overlay.GetComponent<SpriteRenderer>().sprite = testCropData.stages[0].sprite;
-
-    //    var cropInfo = new CropTile(cellPos, testCropData, overlay);
-
-    //    // 이미 물 준 곳이면 바로 성장 시작
-    //    if (wateredTiles.Contains(cellPos))
-    //    {
-    //        cropInfo.isWatered = true;
-    //        Debug.Log($"씨앗이 심어진 타일 {cellPos}은 이미 물이 있음 → 즉시 성장 시작");
-    //    }
-
-    //    growingTiles.Add(cellPos, cropInfo);
-    //}
-
     public void PlantSeed(Vector3 worldPos, CropData cropData)
     {
         SFXManager.Instance.PlayFarmSeedSFX();
@@ -543,6 +514,21 @@ public class FarmManager : MonoBehaviour
 
                 if (isFullyGrown)
                 {
+                    //HarvestCrop(cellPos, tile.cropData.cropName);
+
+                    if (player != null)
+                    {
+                        Vector3 tileCenter = fieldTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0f);
+
+                        float dist = Vector2.Distance(player.position, tileCenter);
+                        if (dist > interactRadius)
+                        {
+                            Debug.Log($"수확 범위 밖입니다. 거리: {dist}, 허용 거리: {interactRadius}");
+                            return;
+                        }
+                    }
+
+                    // 범위 안이면 수확 진행
                     HarvestCrop(cellPos, tile.cropData.cropName);
                 }
             }
