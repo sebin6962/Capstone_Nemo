@@ -311,6 +311,8 @@ public class Customer : MonoBehaviour
             orderUI.ShowTimerUI(false);
             Debug.Log($"오답 처리됨: {givenDagwa}");
 
+            Invoke(nameof(RemoveDagwaOnPlate), 2f);
+
             // --- 오답 효과음 재생 추가 ---
             SFXManager.Instance.PlayWrongSFX();
         }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlateCheck : MonoBehaviour
 {
-    private Customer targetCustomer;
+    public Customer targetCustomer;
 
     public void SetTargetCustomer(Customer customer)
     {

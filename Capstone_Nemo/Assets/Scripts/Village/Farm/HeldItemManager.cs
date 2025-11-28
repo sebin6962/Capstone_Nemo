@@ -42,13 +42,20 @@ public class HeldItemManager : MonoBehaviour
                 tm.GoToNextVillageSecondStep(); 
             }
 
-/*            //village2 튜토리얼 진행 트리거 6
-            if (tm != null &&
-                tm.IsCurrentStep(VillageSecondStep.PickUp_WateringCan) &&
-                HeldItemManager.Instance.GetHeldItemName() == "village_object_wateringcan")
+            var st = StoreTutorialManager.Instance;
+            if (st != null &&
+                st.IsCurrentStep(StoreTutorialStep.OpenStorage) && HeldItemManager.Instance.GetHeldItemName() == "Mepssalgaru")
             {
-                tm.GoToNextVillageSecondStep();
-            }*/
+                st.GoToNextStep();
+            }
+
+            /*            //village2 튜토리얼 진행 트리거 6
+                        if (tm != null &&
+                            tm.IsCurrentStep(VillageSecondStep.PickUp_WateringCan) &&
+                            HeldItemManager.Instance.GetHeldItemName() == "village_object_wateringcan")
+                        {
+                            tm.GoToNextVillageSecondStep();
+                        }*/
 
         }
     }

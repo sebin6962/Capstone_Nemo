@@ -353,7 +353,7 @@ public class TutorialManager : MonoBehaviour
             dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
 
         //효과음 넣으니까 겹쳐서 2초 지연 코루틴으로 뺐습니다!
-        StartCoroutine(ShowVillageTutorialAfterDelay(2f));
+        StartCoroutine(ShowVillageTutorialAfterDelay(1.2f));
     }
 
     private IEnumerator ShowVillageTutorialAfterDelay(float delay)

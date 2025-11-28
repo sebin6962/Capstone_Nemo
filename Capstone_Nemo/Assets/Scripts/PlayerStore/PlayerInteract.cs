@@ -88,12 +88,6 @@ public class PlayerInteract : MonoBehaviour
                 PlayerStoreBoxInventoryUIManager.Instance.OpenUI(nearbyStorage);
                 Debug.Log("[E] 상자 인벤토리 열기");
 
-                //튜토리얼 진행 트리거 1
-                if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.OpenStorage))
-                {
-                    StoreTutorialManager.Instance.GoToNextStep();
-                }
-
                 /*//village2 튜토리얼 진행 트리거 2
                 else if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.OpenStorage))
                 {

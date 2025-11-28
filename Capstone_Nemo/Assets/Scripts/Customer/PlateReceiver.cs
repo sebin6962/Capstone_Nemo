@@ -11,6 +11,7 @@ public class PlateReceiver : MonoBehaviour
     public Transform worldCanvas;   
     public Transform plateAnchor;
 
+
     private void OnTriggerStay2D(Collider2D other)
     {
         if (Input.GetKey(KeyCode.E) && !hasPlacedThisPress && HeldItemManager.Instance.IsHoldingItem())
@@ -18,6 +19,11 @@ public class PlateReceiver : MonoBehaviour
             if (plateAnchor != null && plateAnchor.childCount > 0)
             {
                 Debug.Log("식탁 위에 이미 다과가 있습니다");
+                return;
+            }
+            PlateCheck plateCheck = GetComponent<PlateCheck>();
+            if (plateCheck.targetCustomer == null)
+            {
                 return;
             }
 
@@ -41,7 +47,7 @@ public class PlateReceiver : MonoBehaviour
                 uiComp.Initialize(sprite, itemName);
             }
 
-            PlateCheck plateCheck = GetComponent<PlateCheck>();
+            
             if (plateCheck != null)
             {
                 plateCheck.TryServeDagwa();  //비교 
