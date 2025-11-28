@@ -4,13 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public enum TutorialStep
+/*public enum TutorialStep
 {
     None,
     DogamIntro,
     Village,
     Shop
-}
+}*/
 
 public enum VillageSecondStep
 {
@@ -32,7 +32,7 @@ public class TutorialManager : MonoBehaviour
 {
     public static TutorialManager Instance;
 
-    public TutorialStep currentStep = TutorialStep.None;
+    //public TutorialStep currentStep = TutorialStep.None;
     private VillageSecondStep villageSecondStep = VillageSecondStep.GoToField;
 
     [SerializeField] private Button dogamButton;
@@ -46,6 +46,7 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private GameObject villageTutorialPanel;
 
     [SerializeField] private GameObject tutorialBlocker;
+    //[SerializeField] private GameObject secondTutorialBlocker;
 
     [SerializeField] private GameObject[] stepPanels;
 
@@ -72,6 +73,7 @@ public class TutorialManager : MonoBehaviour
         {
             CleanupTutorialVisuals();
             if (tutorialBlocker) tutorialBlocker.SetActive(false);
+            //if (secondTutorialBlocker) secondTutorialBlocker.SetActive(false);
             return;
         }
 
@@ -83,8 +85,9 @@ public class TutorialManager : MonoBehaviour
         switch (globalStep)
         {
             case GlobalTutorialStep.DogamIntro:
-                currentStep = TutorialStep.DogamIntro;
+                //currentStep = TutorialStep.DogamIntro;
                 tutorialBlocker.gameObject.SetActive(true);
+               // secondTutorialBlocker.gameObject.SetActive(false);
                 StartTutorial_DogamIntro();
                 break;
 
@@ -153,9 +156,19 @@ public class TutorialManager : MonoBehaviour
     {
         //시간 정지
         if (TutorialFlowManager.Instance != null)
+        {
             TutorialFlowManager.Instance.RequestTutorialTimePause();
+            TutorialFlowManager.Instance.LockScenePortal();
+        }
 
         CleanupTutorialVisuals();
+
+        if (tutorialBlocker)
+            tutorialBlocker.SetActive(false);
+
+        /*if (secondTutorialBlocker)
+            secondTutorialBlocker.SetActive(false);*/
+
         IsVillageSecondTutorialRunning = true;
         villageSecondStep = VillageSecondStep.GoToField;
         ShowStepPanel(villageSecondStep);
@@ -168,6 +181,7 @@ public class TutorialManager : MonoBehaviour
         {
             //TutorialTriggerArea.cs
             case VillageSecondStep.GoToField:
+                //secondTutorialBlocker.gameObject.SetActive(true);
                 villageSecondStep = VillageSecondStep.OpenStorage;    
                 break;
             //BoxInventoryManager.cs
@@ -204,6 +218,8 @@ public class TutorialManager : MonoBehaviour
                 break;
             //FarmManager.cs
             case VillageSecondStep.HarvestCrop:
+                if (TutorialFlowManager.Instance != null)
+                    TutorialFlowManager.Instance.UnlockScenePortal();
                 villageSecondStep = VillageSecondStep.GoToMill;
                 break;
             case VillageSecondStep.GoToMill:
@@ -214,6 +230,7 @@ public class TutorialManager : MonoBehaviour
                 return;
 
             default:
+                //secondTutorialBlocker.gameObject.SetActive(false);
                 return;
         }
 
@@ -291,7 +308,7 @@ public class TutorialManager : MonoBehaviour
 
     void OnDogamClicked()
     {
-        if (currentStep != TutorialStep.DogamIntro)
+        if (TutorialFlowManager.Instance.currentStep != GlobalTutorialStep.DogamIntro)
         {
             return;
         }
@@ -349,13 +366,13 @@ public class TutorialManager : MonoBehaviour
             villageTutorialPanel.SetActive(true);
         }
 
-        currentStep = TutorialStep.Village;
+        //currentStep = TutorialStep.Village;
 
         TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Village_First);
     }
 
 
-    void ResumeAndComplete()
+    /*void ResumeAndComplete()
     {
         SetPlayerInput(true);
         Time.timeScale = 1f;
@@ -367,7 +384,7 @@ public class TutorialManager : MonoBehaviour
 
         if (dogamCloseButton != null)
             dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
-    }
+    }*/
 
 
     void CleanupTutorialVisuals()
@@ -400,7 +417,7 @@ public class TutorialManager : MonoBehaviour
         if (player != null) player.enabled = enable;
     }
 
-    public void FinishAllTutorial()
+    /*public void FinishAllTutorial()
     {
         CompleteVillageSecondTutorial();
 
@@ -412,5 +429,5 @@ public class TutorialManager : MonoBehaviour
             TutorialFlowManager.Instance.ReleaseTutorialTimePause();
 
         Debug.Log("튜토리얼 완전히 종료");
-    }
+    }*/
 }

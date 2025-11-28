@@ -114,6 +114,12 @@ public class ShopManager : MonoBehaviour
         shopPanel.SetActive(true);
         Debug.Log("OpenShop 실행됨");
 
+        //Mill 튜토리얼 진행 트리거 5
+        if (MillTutorialManager.Instance && MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.OpenStore))
+        {
+            MillTutorialManager.Instance.GoToNextMillStep();
+        }
+
         /*if (itemSlotPrefab == null) Debug.LogError("itemSlotPrefab이 null입니다.");
         if (itemListParent == null) Debug.LogError("itemListParent가 null입니다.");
         if (ShopItems == null || ShopItems.Count == 0) Debug.LogError("ShopItems가 null이거나 비어있습니다.");*/
@@ -339,6 +345,12 @@ public class ShopManager : MonoBehaviour
     {
         SFXManager.Instance.PlayBbyongSFX();
         shopPanel.SetActive(false);
+
+        //Mill 튜토리얼 진행 트리거 6
+        if (MillTutorialManager.Instance && MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.QuitStore))
+        {
+            MillTutorialManager.Instance.GoToNextMillStep();
+        }
 
         foreach (var entry in basketDict.Values)
         {

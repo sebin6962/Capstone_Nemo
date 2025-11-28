@@ -11,8 +11,7 @@ public enum GlobalTutorialStep
     PlayerStore_First,
     Village_Second,
     Mill,
-    Shop,
-    PlayerStore_Final,
+    PlayerStore_Second,
 
     Done
 }
@@ -20,6 +19,8 @@ public enum GlobalTutorialStep
 public class TutorialFlowManager : MonoBehaviour
 {
     public static TutorialFlowManager Instance;
+
+    public bool IsScenePortalLocked { get; private set; } = false;
 
     public GlobalTutorialStep currentStep = GlobalTutorialStep.None;
 
@@ -85,6 +86,15 @@ public class TutorialFlowManager : MonoBehaviour
         Debug.Log($"[TutorialFlow] InitializeForCurrentSave : server={server}, tutorialDone={state.tutorialDone}, step={currentStep}");
     }
 
+    public void LockScenePortal()
+    {
+        IsScenePortalLocked = true;
+    }
+
+    public void UnlockScenePortal()
+    {
+        IsScenePortalLocked = false;
+    }
 
     public void RequestTutorialTimePause()
     {

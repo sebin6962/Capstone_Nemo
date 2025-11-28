@@ -6,6 +6,6 @@ public class AllTutorialFinishButton : MonoBehaviour
 {
     public void OnClickFinish()
     {
-        TutorialManager.Instance.FinishAllTutorial();
+        MillTutorialManager.Instance.FinishAllTutorial();
     }
 }

@@ -156,6 +156,13 @@ public class MillManager : MonoBehaviour
     public void SelectItem(MillItemData item)
     {
         if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
+
+        //Mill 튜토리얼 진행 트리거 2
+        if (MillTutorialManager.Instance && MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.SelectCrop))
+        {
+            MillTutorialManager.Instance.GoToNextMillStep();
+        }
+
         //기존 하나씩만 변환되는 코드
         /*if (ReferenceEquals(selectedItem, item))
         {
@@ -265,9 +272,7 @@ public class MillManager : MonoBehaviour
         }
     }
 
-    /// sourceName 재료를 useCount만큼 빼고
-    /// resultName 가루를 useCount만큼 넣었을 때
-    /// 스택/슬롯 기준으로 창고에 들어갈 수 있는지 체크 함수 추가
+
     private bool CanConvertToPowder(string sourceName, string resultName, int useCount)
     {
         var storage = StorageInventory.Instance;
@@ -311,6 +316,12 @@ public class MillManager : MonoBehaviour
         if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
         if (selectedItem == null)
             return;
+
+        //Mill 튜토리얼 진행 트리거 3
+        if (MillTutorialManager.Instance && MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.Grind))
+        {
+            MillTutorialManager.Instance.GoToNextMillStep();
+        }
 
         int useCount = queuedCount;
         if (useCount <= 0)
@@ -566,6 +577,12 @@ public class MillManager : MonoBehaviour
 
         SFXManager.Instance.PlayBbyongSFX();
         MillPanel.SetActive(false);
+
+        //Mill 튜토리얼 진행 트리거 4
+        if (MillTutorialManager.Instance && MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.GrindQuit))
+        {
+            MillTutorialManager.Instance.GoToNextMillStep();
+        }
     }
 
     public bool IsOpen()

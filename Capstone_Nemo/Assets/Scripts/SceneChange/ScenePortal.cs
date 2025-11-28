@@ -32,12 +32,30 @@ public class ScenePortal : MonoBehaviour
         if (!isInTrigger) return;
         if (!Input.GetKeyDown(KeyCode.E)) return;
 
+        var flow = TutorialFlowManager.Instance;
+
         string currentScene = SceneManager.GetActiveScene().name;
 
-        //PlayerStoreScene에서 나갈 때 Store튜토리얼 종료 처리
-        if (currentScene == "PlayerStoreScene")
+        //village_second -> Mill
+        if (currentScene == "VillageScene" && targetScene == "MillScene")
         {
-            var flow = TutorialFlowManager.Instance;
+            var tutMgr = TutorialManager.Instance;
+
+            if (flow != null &&
+                tutMgr != null &&
+                flow.currentStep == GlobalTutorialStep.Village_Second &&           
+                tutMgr.IsVillageSecondTutorialRunning &&                           
+                tutMgr.IsCurrentStep(VillageSecondStep.GoToMill))                 
+            {
+                Debug.Log("VillageSecond 튜토리얼 완료");
+                tutMgr.CompleteVillageSecondTutorial();
+            }
+        }
+
+        //PlayerStoreScene에서 나갈 때 Store튜토리얼 종료 처리
+        if (currentScene == "PlayerStoreScene" && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.StoreFirst_Finish))
+        {
+            //var flow = TutorialFlowManager.Instance;
             var storeTut = StoreTutorialManager.Instance;
 
             if (flow != null && storeTut != null)
@@ -52,6 +70,11 @@ public class ScenePortal : MonoBehaviour
                 }
             }
         }
+
+
+        //튜토리얼 진행중일때 scene이동 막기
+        if (flow != null && flow.IsScenePortalLocked)
+            return;
 
         // 1 전역 전환 정보
         if (SceneTransitionInfo.Instance != null)

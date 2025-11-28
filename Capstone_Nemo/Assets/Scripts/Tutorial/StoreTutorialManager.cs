@@ -85,9 +85,13 @@ public class StoreTutorialManager : MonoBehaviour
         IsStoreTutorialRunning = true;
         currentStep = StoreTutorialStep.OpenStorage;
 
-        //시간 정지
+        //시간 정지, 씬 이동X
         if (TutorialFlowManager.Instance != null)
+        {
             TutorialFlowManager.Instance.RequestTutorialTimePause();
+            TutorialFlowManager.Instance.LockScenePortal();
+
+        }
 
         if (customerSpawner)
             customerSpawner.SpawnTutorialCustomer("baekseolgi_finish", 15f);
@@ -181,6 +185,8 @@ public class StoreTutorialManager : MonoBehaviour
                 break;
             case StoreTutorialStep.DogamCheck:
                 currentStep = StoreTutorialStep.StoreFirst_Finish;
+                if (TutorialFlowManager.Instance != null)
+                    TutorialFlowManager.Instance.UnlockScenePortal();
                 tutorialBlocker.SetActive(false);
                 break;
             case StoreTutorialStep.StoreFirst_Finish:
