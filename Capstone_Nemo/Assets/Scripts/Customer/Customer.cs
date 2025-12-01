@@ -243,8 +243,8 @@ public class Customer : MonoBehaviour
         else
         {
             remainingTime = orderTimeLimit;
-            isTimerRunning = true;
-            orderUI.ShowTimerUI(true);
+            isTimerRunning = false;
+            orderUI.ShowTimerUI(false);
         }
 
        /* remainingTime = orderTimeLimit;
