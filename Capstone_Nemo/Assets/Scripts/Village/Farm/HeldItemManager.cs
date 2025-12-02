@@ -13,9 +13,22 @@ public class HeldItemManager : MonoBehaviour
     private Sprite currentHeldSprite;
     private string heldItemName;
 
+    private Vector2 baseSize;
+    private bool baseSizeInitialized = false;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
+
+        if (heldItemImage != null)
+        {
+            RectTransform rt = heldItemImage.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                baseSize = rt.sizeDelta;     // 처음 에디터에서 세팅한 크기를 기준으로 저장
+                baseSizeInitialized = true;
+            }
+        }
     }
 
     private void LateUpdate()
@@ -86,24 +99,18 @@ public class HeldItemManager : MonoBehaviour
 
         // 스프라이트 비율 유지하도록 이미지 크기 조정
         RectTransform rt = heldItemImage.GetComponent<RectTransform>();
-        if (rt != null && sprite != null)
+        if (rt != null)
         {
-            float spriteRatio = (float)sprite.rect.width / sprite.rect.height;
-            float imageRatio = rt.rect.width / rt.rect.height;
+            if (!baseSizeInitialized)
+            {
+                baseSize = rt.sizeDelta;
+                baseSizeInitialized = true;
+            }
 
-            if (spriteRatio > imageRatio)
-            {
-                // 스프라이트가 더 가로로 긴 경우: 가로를 기준으로 높이 조정
-                float newHeight = rt.rect.width / spriteRatio;
-                rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newHeight);
-            }
-            else
-            {
-                // 스프라이트가 더 세로로 긴 경우: 세로를 기준으로 가로 조정
-                float newWidth = rt.rect.height * spriteRatio;
-                rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, newWidth);
-            }
+            rt.sizeDelta = baseSize;
         }
+
+        heldItemImage.preserveAspect = true;
 
         Debug.Log("ShowHeldItem: 아이템 표시됨 - " + sprite.name);
     }
