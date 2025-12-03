@@ -8,10 +8,12 @@ public class OrderManager : MonoBehaviour
 {
     public static OrderManager Instance;
 
-    // 결과 키(완성 스프라이트명) 목록
+    [SerializeField] private string blockedKey = "Rainbowseolgi_finish";
+
+    //결과 키(완성 스프라이트명) 목록
     private List<string> dagwaList = new();
 
-    // 완성키 -> 제작기 매핑(이 레시피는 어떤 제작기로 만드는지)
+    //완성키 -> 제작기 매핑(이 레시피는 어떤 제작기로 만드는지)
     private Dictionary<string, string> finishKeyToMaker = new();
 
     void Awake()
@@ -20,18 +22,17 @@ public class OrderManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            BuildCandidatesFromRecipeJson();   // 주문 후보/매핑 준비
+            BuildCandidatesFromRecipeJson();   //주문 후보/매핑 준비
         }
         else Destroy(gameObject);
     }
 
-    // CraftingRecipe.json을 읽어 완성 레시피만 후보로 만들기
+    //CraftingRecipe.json
     private void BuildCandidatesFromRecipeJson()
     {
         dagwaList.Clear();
         finishKeyToMaker.Clear();
 
-        // CraftingRecipe.json 을 쓰는 구조라면
         var txt = Resources.Load<TextAsset>("Data/CraftingRecipe");
         if (txt == null)
         {
@@ -46,22 +47,22 @@ public class OrderManager : MonoBehaviour
         {
             if (string.IsNullOrEmpty(r.resultSprite)) continue;
 
-            //네이밍이 *_finish 인 것만 사용
+            //_finish 로 끝나는 다과만 주문
             var finishKey = Path.GetFileNameWithoutExtension(r.resultSprite);
             if (!finishKey.EndsWith("_finish")) continue;
 
             finishKey = finishKey.Trim();
 
-            // 후보 추가
+            //후보 추가
             if (!dagwaList.Contains(finishKey))
                 dagwaList.Add(finishKey);
 
-            // 제작기 매핑
+            //제작기 매핑
             var makerId = (r.makerId ?? "").Trim();
             finishKeyToMaker[finishKey] = makerId;
         }
 
-        // 중복/대소문자 차이 정리
+        //중복/대소문자 차이 정리
         dagwaList = dagwaList
             .Select(k => k.Trim())
             .Distinct()
@@ -78,14 +79,20 @@ public class OrderManager : MonoBehaviour
             return null;
         }
 
-        // 1. 현재 해금 상태에서 실제 만들 수 있는 후보만 필터
+        //현재 해금 상태에서 실제 만들 수 있는 후보만 필터
         var unlocked = new List<string>();
         foreach (var key in dagwaList)
         {
-            // 레시피 해금
+            //무지개떡X
+            if (!string.IsNullOrEmpty(blockedKey) && key.Equals(blockedKey, System.StringComparison.OrdinalIgnoreCase))
+            {
+                continue; 
+            }
+
+            //레시피 해금
             bool recipeOk = UnlockManager.Instance == null || UnlockManager.Instance.IsRecipeUnlocked(key);
 
-            // 제작기 해금(매핑 있으면 체크, 없으면 통과)
+            //제작기 해금(매핑 있으면 체크, 없으면 통과)
             bool makerOk = true;
             if (finishKeyToMaker.TryGetValue(key, out var makerId) && !string.IsNullOrEmpty(makerId))
             {
@@ -96,27 +103,35 @@ public class OrderManager : MonoBehaviour
                 unlocked.Add(key);
         }
 
-        // 2. 비정상 상황(아무것도 없으면) 대비: 레시피 해금만 통과한 후보로 백업
+        //아무것도 없으면 레시피 해금만 통과한 후보로 백업
         if (unlocked.Count == 0)
         {
             foreach (var key in dagwaList)
+            {
+                //무지개떡X
+                if (!string.IsNullOrEmpty(blockedKey) && key.Equals(blockedKey, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 if (UnlockManager.Instance == null || UnlockManager.Instance.IsRecipeUnlocked(key))
                     unlocked.Add(key);
+            }
         }
 
-        // 3. 그래도 없으면 원본에서 선택(초기 테스트/데이터 꼬임 방어)
+        //그래도 없으면 원본에서
         if (unlocked.Count == 0)
         {
             Debug.LogWarning("[Order] 해금된 주문 후보가 없어 원본에서 선택");
             return dagwaList[Random.Range(0, dagwaList.Count)];
         }
 
-        //4. 최종 랜덤 선택
+        //최종 랜덤 선택
         int index = Random.Range(0, unlocked.Count);
         return unlocked[index];
     }
 
-    // (디버그용) 현재 주문 가능한 후보 리스트 보기
+    //(디버그용) 현재 주문 가능한 후보 리스트 보기
     public List<string> GetUnlockedOrderCandidates()
     {
         var list = new List<string>();

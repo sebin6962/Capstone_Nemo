@@ -508,9 +508,9 @@ public class Customer : MonoBehaviour
                 if (!isTutorialCustomer)
                 {
                     float ratio = orderTimeLimit > 0f ? (remainingTime / orderTimeLimit) : 0f;
-                    orderUI.ShowTimerUI(true);
+                    orderUI.ShowTimerUI(false);
                     orderUI.UpdateTimer(ratio);
-                    isTimerRunning = true;
+                    isTimerRunning = false;
                 }
                 else
                 {
