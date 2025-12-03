@@ -81,6 +81,9 @@ public class EndingCutSceneScroller : MonoBehaviour
     [Header("엔딩 후 돌아갈 씬 이름")]
     public string nextSceneName = "TreeScene";
 
+    [Header("엔딩 컷신 파티클들")]
+    public ParticleSystem[] cutsceneParticles;
+
     public void LoadNextScene()
     {
         // 현재 선택된 서버 이름 가져오기
@@ -119,6 +122,30 @@ public class EndingCutSceneScroller : MonoBehaviour
         }
     }
 
+    private void PlayCutsceneParticles()
+    {
+        if (cutsceneParticles == null) return;
+
+        foreach (var ps in cutsceneParticles)
+        {
+            if (ps == null) continue;
+
+            ps.Clear();  // 이전 잔상 제거
+            ps.Play();
+        }
+    }
+
+    private void StopCutsceneParticles()
+    {
+        if (cutsceneParticles == null) return;
+
+        foreach (var ps in cutsceneParticles)
+        {
+            if (ps == null) continue;
+            ps.Stop();
+        }
+    }
+
     private IEnumerator SceneStartFadeInRoutine()
     {
         // 씬 로드 후, 완전히 검은 화면을 잠깐 유지
@@ -132,6 +159,8 @@ public class EndingCutSceneScroller : MonoBehaviour
             // 다 밝아진 뒤엔 굳이 켜둘 필요 없으면 끄기
             blackImage.gameObject.SetActive(false);
         }
+
+        PlayCutsceneParticles();
 
         canStartScroll = true;
     }
@@ -171,6 +200,8 @@ public class EndingCutSceneScroller : MonoBehaviour
         if (beforeFadeBlackDelay > 0f)
             yield return new WaitForSeconds(beforeFadeBlackDelay);
 
+        StopCutsceneParticles();
+
         // 검은 이미지 페이드
         if (blackImage != null)
         {
@@ -180,7 +211,8 @@ public class EndingCutSceneScroller : MonoBehaviour
             yield return StartCoroutine(FadeBlackImage(0f, 1f, blackFadeSeconds));
         }
 
-        // 검은 화면이 다 찬 후 자막 / 다음 컷씬 시퀀스 실행
+        
+
         yield return StartCoroutine(SubtitleSequenceRoutine());
     }
 

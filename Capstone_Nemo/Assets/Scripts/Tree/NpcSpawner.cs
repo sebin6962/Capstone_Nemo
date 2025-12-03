@@ -7,6 +7,8 @@ public class NpcSpawner : MonoBehaviour
 {
     public GameObject[] npcObjects;
 
+    public ParticleSystem[] treeParticles;
+
     void Start()
     {
         string serverName = PlayerPrefs.GetString("SelectedSave", "");
@@ -26,6 +28,27 @@ public class NpcSpawner : MonoBehaviour
         {
             if (npc == null) continue;
             npc.SetActive(hasSeenEnding); // 엔딩 본 세이브에서만 등장
+        }
+
+        if (treeParticles != null)
+        {
+            foreach (var ps in treeParticles)
+            {
+                if (ps == null) continue;
+
+                // 게임오브젝트 활성/비활성
+                ps.gameObject.SetActive(hasSeenEnding);
+
+                if (hasSeenEnding)
+                {
+                    ps.Clear();
+                    ps.Play();
+                }
+                else
+                {
+                    ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                }
+            }
         }
     }
 }
