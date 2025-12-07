@@ -8,6 +8,8 @@ using System.IO;
 
 public class RecipeQuickViewUI : MonoBehaviour
 {
+    public static RecipeQuickViewUI Instance;
+
     [Header("UI")]
     public ScrollRect miniScrollRect;
     public Transform miniContentParent;
@@ -47,6 +49,11 @@ public class RecipeQuickViewUI : MonoBehaviour
     public bool startVisible = true;
     public Button miniToggleButton;
 
+    private void Awake()
+    {
+        Instance = this;
+    }
+
     void Start()
     {
         // 시작 카테고리
@@ -85,6 +92,17 @@ public class RecipeQuickViewUI : MonoBehaviour
             miniRoot.SetActive(startVisible);
 
         UpdateMiniToggleVisual();
+    }
+
+    public void ForceCloseMiniPanel()
+    {
+        if (miniRoot == null) return;
+
+        if (miniRoot.activeSelf)
+        {
+            miniRoot.SetActive(false);
+            UpdateMiniToggleVisual();
+        }
     }
 
     // 미니도감 전용
@@ -224,6 +242,18 @@ public class RecipeQuickViewUI : MonoBehaviour
     public void ToggleMiniPanel()
     {
         if (miniRoot == null) return;
+
+        var dogam = DoGamUIManager.Instance;
+        if (dogam != null && dogam.IsOpen())
+        {
+            // 혹시 켜져 있다면 강제로 OFF
+            if (miniRoot.activeSelf)
+            {
+                miniRoot.SetActive(false);
+                UpdateMiniToggleVisual();
+            }
+            return;
+        }
 
         bool newActive = !miniRoot.activeSelf;
         miniRoot.SetActive(newActive);

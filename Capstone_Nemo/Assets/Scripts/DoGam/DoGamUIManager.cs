@@ -195,6 +195,13 @@ public class DoGamUIManager : MonoBehaviour
         openButton.onClick.AddListener(OnOpenButtonClicked);
         closeButton.onClick.AddListener(CloseDoGam);
 
+        if (openButton != null)
+        {
+            var nav = openButton.navigation;
+            nav.mode = Navigation.Mode.None;
+            openButton.navigation = nav;
+        }
+
         // 레시피 카테고리
         //tteokButton.onClick.AddListener(() => FilterByCategory("떡"));
         //drinkButton.onClick.AddListener(() => FilterByCategory("음료"));
@@ -350,6 +357,9 @@ public class DoGamUIManager : MonoBehaviour
         var entry = doGamDict[itemName];
         panel.SetActive(true);
 
+        if (RecipeQuickViewUI.Instance != null)
+            RecipeQuickViewUI.Instance.ForceCloseMiniPanel();
+
         // 레이아웃: 레시피 탭 On / 게임방법 탭 Off
         SetRecipeLayout(true);
         SetHowToLayout(false);
@@ -370,6 +380,13 @@ public class DoGamUIManager : MonoBehaviour
     // 도감 버튼 눌렀을 때 진입 지점
     private void OnOpenButtonClicked()
     {
+        if (Input.GetKey(KeyCode.Space) ||
+        Input.GetKey(KeyCode.Return) ||
+        Input.GetKey(KeyCode.KeypadEnter))
+        {
+            return;
+        }
+
         //튜토리얼 진행 트리거 7
         if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.NextOrder))
         {
@@ -410,6 +427,9 @@ public class DoGamUIManager : MonoBehaviour
             return;
 
         panel.SetActive(true);
+        if (RecipeQuickViewUI.Instance != null)
+            RecipeQuickViewUI.Instance.ForceCloseMiniPanel();
+
         if (SFXManager.Instance != null)
             SFXManager.Instance.PlayDogamOpenSFX();
 
@@ -508,6 +528,12 @@ public void CloseDoGam()
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
 
         SetMakerNavVisible(false);
+
+        if (EventSystem.current != null &&
+        EventSystem.current.currentSelectedGameObject == openButton.gameObject)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+        }
     }
 
     private void SaveLastDoGamState()
@@ -1053,6 +1079,10 @@ public void CloseDoGam()
     public void OpenHowToTab()
     {
         panel.SetActive(true);
+
+        if (RecipeQuickViewUI.Instance != null)
+            RecipeQuickViewUI.Instance.ForceCloseMiniPanel();
+
         SubTitle.SetActive(true);
         openButton.interactable = false;
 
@@ -1199,6 +1229,10 @@ public void CloseDoGam()
     public void OpenMakerTab()
     {
         panel.SetActive(true);
+
+        if (RecipeQuickViewUI.Instance != null)
+            RecipeQuickViewUI.Instance.ForceCloseMiniPanel();
+
         SubTitle.SetActive(false);
         openButton.interactable = false;
 

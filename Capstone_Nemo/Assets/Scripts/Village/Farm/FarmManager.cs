@@ -503,7 +503,7 @@ public class FarmManager : MonoBehaviour
     //수확 처리 함수
     private void HandleRightClickHarvest()
     {
-        if (Input.GetMouseButtonDown(1)) // 우클릭
+        if (Input.GetMouseButtonDown(0)) // 좌클릭
         {
             Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
