@@ -39,6 +39,13 @@ public class RecipeQuickViewUI : MonoBehaviour
 
     private Sprite _tteokNormalSprite;
     private Sprite _drinkNormalSprite;
+    private Sprite _miniToggleNormalSprite;
+    private Sprite _miniToggleOnSprite;
+
+    [Header("Mini Panel Toggle")]
+    public GameObject miniRoot;         
+    public bool startVisible = true;
+    public Button miniToggleButton;
 
     void Start()
     {
@@ -54,6 +61,15 @@ public class RecipeQuickViewUI : MonoBehaviour
 
         if (prevButton != null) prevButton.onClick.AddListener(() => ChangeIndex(-1));
         if (nextButton != null) nextButton.onClick.AddListener(() => ChangeIndex(+1));
+        
+        if (miniToggleButton != null && miniToggleButton.image != null)
+        {
+            _miniToggleNormalSprite = miniToggleButton.image.sprite;
+
+            // Button 컴포넌트에 설정해둔 Selected Sprite를 on 상태 스프라이트로 기억
+            var state = miniToggleButton.spriteState;
+            _miniToggleOnSprite = state.selectedSprite;
+        }
 
         // 미니 탭용 떡/음료 버튼
         if (tteokTabButton != null)
@@ -64,6 +80,11 @@ public class RecipeQuickViewUI : MonoBehaviour
 
         ReloadList();
         UpdateCategoryTabVisual();
+
+        if (miniRoot != null)
+            miniRoot.SetActive(startVisible);
+
+        UpdateMiniToggleVisual();
     }
 
     // 미니도감 전용
@@ -80,7 +101,6 @@ public class RecipeQuickViewUI : MonoBehaviour
         var dogam = DoGamUIManager.Instance;
         if (dogam == null) return;
 
-        // 아이콘 프리팹: 미니가 지정되어 있으면 그걸, 아니면 도감 기본 아이콘 프리팹 사용
         GameObject iconPrefab = miniRecipeImagePrefab != null ? miniRecipeImagePrefab : dogam.recipeImagePrefab;
 
         int recipeCount = entry.recipe != null ? entry.recipe.Count : 0;
@@ -201,6 +221,22 @@ public class RecipeQuickViewUI : MonoBehaviour
             miniScrollRect.verticalNormalizedPosition = 1f;
     }
 
+    public void ToggleMiniPanel()
+    {
+        if (miniRoot == null) return;
+
+        bool newActive = !miniRoot.activeSelf;
+        miniRoot.SetActive(newActive);
+
+        if (newActive)
+        {
+            ReloadList();
+            UpdateCategoryTabVisual();
+        }
+
+        UpdateMiniToggleVisual();
+    }
+
     private void UpdateTopItemUI(DoGamEntry entry)
     {
         // 이미지
@@ -270,6 +306,41 @@ public class RecipeQuickViewUI : MonoBehaviour
         }
     }
 
+    private void UpdateMiniToggleVisual()
+    {
+        if (miniToggleButton == null || miniToggleButton.image == null)
+            return;
+
+        bool isOn = (miniRoot != null && miniRoot.activeSelf);
+        var state = miniToggleButton.spriteState;
+
+        if (isOn)
+        {
+            // on 스프라이트로 통일
+            if (_miniToggleOnSprite != null)
+            {
+                miniToggleButton.image.sprite = _miniToggleOnSprite;
+
+                state.selectedSprite = _miniToggleOnSprite;
+                state.highlightedSprite = _miniToggleOnSprite;
+                state.pressedSprite = _miniToggleOnSprite;
+            }
+        }
+        else
+        {
+            // 기본 스프라이트로 통일
+            if (_miniToggleNormalSprite != null)
+            {
+                miniToggleButton.image.sprite = _miniToggleNormalSprite;
+
+                state.selectedSprite = _miniToggleNormalSprite;
+                state.highlightedSprite = _miniToggleNormalSprite;
+                state.pressedSprite = _miniToggleNormalSprite;
+            }
+        }
+
+        miniToggleButton.spriteState = state;
+    }
 
 
     public void ReloadList()
