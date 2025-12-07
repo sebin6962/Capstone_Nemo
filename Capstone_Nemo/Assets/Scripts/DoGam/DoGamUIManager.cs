@@ -2,10 +2,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
+using System.Linq;
 using UnityEngine.EventSystems;
 using Newtonsoft.Json;
 using System.IO;
-using System.Linq;
 
 public class DoGamUIManager : MonoBehaviour
 {
@@ -878,125 +878,127 @@ public void CloseDoGam()
 
         UpdateRewardInfo(entry);
 
-        // 3) 기존 라인 정리
-        if (recipeContentParent != null)
-        {
-            for (int c = recipeContentParent.childCount - 1; c >= 0; c--)
-                Destroy(recipeContentParent.GetChild(c).gameObject);
-        }
+        //// 3) 기존 라인 정리
+        //if (recipeContentParent != null)
+        //{
+        //    for (int c = recipeContentParent.childCount - 1; c >= 0; c--)
+        //        Destroy(recipeContentParent.GetChild(c).gameObject);
+        //}
 
-        // 안전한 수 계산
-        int recipeCount = entry.recipe != null ? entry.recipe.Count : 0;
-        int bundleCount = (entry.recipeImageBundle != null) ? entry.recipeImageBundle.Count : 0;
-        int linesWithImages = Mathf.Min(recipeCount, bundleCount);
+        //// 안전한 수 계산
+        //int recipeCount = entry.recipe != null ? entry.recipe.Count : 0;
+        //int bundleCount = (entry.recipeImageBundle != null) ? entry.recipeImageBundle.Count : 0;
+        //int linesWithImages = Mathf.Min(recipeCount, bundleCount);
 
-        // 4) 이미지 포함 라인 렌더 (0 .. linesWithImages-1)
-        for (int i = 0; i < linesWithImages; i++)
-        {
-            var bundle = entry.recipeImageBundle[i];
-            int ingredientCount = Mathf.Clamp(bundle?.ingredients != null ? bundle.ingredients.Count : 0, 1, 4);
-            string bgPrefabName = $"RecipeLineBG_{ingredientCount}";
-            var prefab = Resources.Load<GameObject>($"RecipeLine/{bgPrefabName}");
+        //// 4) 이미지 포함 라인 렌더 (0 .. linesWithImages-1)
+        //for (int i = 0; i < linesWithImages; i++)
+        //{
+        //    var bundle = entry.recipeImageBundle[i];
+        //    int ingredientCount = Mathf.Clamp(bundle?.ingredients != null ? bundle.ingredients.Count : 0, 1, 4);
+        //    string bgPrefabName = $"RecipeLineBG_{ingredientCount}";
+        //    var prefab = Resources.Load<GameObject>($"RecipeLine/{bgPrefabName}");
 
-            if (prefab == null)
-            {
-                Debug.LogWarning($"[DoGam] 배경 프리팹 {bgPrefabName} 을 찾을 수 없습니다. i={i}");
-                continue;
-            }
+        //    if (prefab == null)
+        //    {
+        //        Debug.LogWarning($"[DoGam] 배경 프리팹 {bgPrefabName} 을 찾을 수 없습니다. i={i}");
+        //        continue;
+        //    }
 
-            var lineGO = Instantiate(prefab, recipeContentParent);
+        //    var lineGO = Instantiate(prefab, recipeContentParent);
 
-            // 텍스트
-            var text = lineGO.GetComponentInChildren<TextMeshProUGUI>();
-            if (text != null && i < recipeCount) text.text = entry.recipe[i];
+        //    // 텍스트
+        //    var text = lineGO.GetComponentInChildren<TextMeshProUGUI>();
+        //    if (text != null && i < recipeCount) text.text = entry.recipe[i];
 
-            // 슬롯들
-            var toolSlot = lineGO.transform.Find("ToolSlot");
-            var resultSlot = lineGO.transform.Find("ResultSlot");
-            var ingSlots = new List<Transform>
-            {
-                lineGO.transform.Find("IngredientSlot1"),
-                lineGO.transform.Find("IngredientSlot2"),
-                lineGO.transform.Find("IngredientSlot3"),
-                lineGO.transform.Find("IngredientSlot4")
-            };
+        //    // 슬롯들
+        //    var toolSlot = lineGO.transform.Find("ToolSlot");
+        //    var resultSlot = lineGO.transform.Find("ResultSlot");
+        //    var ingSlots = new List<Transform>
+        //    {
+        //        lineGO.transform.Find("IngredientSlot1"),
+        //        lineGO.transform.Find("IngredientSlot2"),
+        //        lineGO.transform.Find("IngredientSlot3"),
+        //        lineGO.transform.Find("IngredientSlot4")
+        //    };
 
-            // 제작기
-            if (!string.IsNullOrEmpty(bundle.tool) && toolSlot != null)
-            {
-                var go = Instantiate(recipeImagePrefab, toolSlot);
-                go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
-                var img = go.GetComponent<Image>();
-                string toolName = System.IO.Path.GetFileNameWithoutExtension(bundle.tool);
-                var sprite = Resources.Load<Sprite>($"Sprites/restaurant/{toolName}");
-                if (img != null)
-                {
-                    img.sprite = sprite;
-                    img.enabled = sprite != null;
-                    if (sprite != null) img.preserveAspect = true;
-                }
-            }
+        //    // 제작기
+        //    if (!string.IsNullOrEmpty(bundle.tool) && toolSlot != null)
+        //    {
+        //        var go = Instantiate(recipeImagePrefab, toolSlot);
+        //        go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
+        //        var img = go.GetComponent<Image>();
+        //        string toolName = System.IO.Path.GetFileNameWithoutExtension(bundle.tool);
+        //        var sprite = Resources.Load<Sprite>($"Sprites/restaurant/{toolName}");
+        //        if (img != null)
+        //        {
+        //            img.sprite = sprite;
+        //            img.enabled = sprite != null;
+        //            if (sprite != null) img.preserveAspect = true;
+        //        }
+        //    }
 
-            // 재료
-            if (bundle.ingredients != null)
-            {
-                for (int j = 0; j < bundle.ingredients.Count && j < ingSlots.Count; j++)
-                {
-                    if (ingSlots[j] != null)
-                    {
-                        var go = Instantiate(recipeImagePrefab, ingSlots[j]);
-                        go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
-                        var img = go.GetComponent<Image>();
-                        string ingName = System.IO.Path.GetFileNameWithoutExtension(bundle.ingredients[j]);
-                        var sprite = Resources.Load<Sprite>($"Sprites/Ingredients/{ingName}");
-                        if (img != null)
-                        {
-                            img.sprite = sprite;
-                            img.enabled = sprite != null;
-                            if (sprite != null) img.preserveAspect = true;
-                        }
-                    }
-                }
-            }
+        //    // 재료
+        //    if (bundle.ingredients != null)
+        //    {
+        //        for (int j = 0; j < bundle.ingredients.Count && j < ingSlots.Count; j++)
+        //        {
+        //            if (ingSlots[j] != null)
+        //            {
+        //                var go = Instantiate(recipeImagePrefab, ingSlots[j]);
+        //                go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
+        //                var img = go.GetComponent<Image>();
+        //                string ingName = System.IO.Path.GetFileNameWithoutExtension(bundle.ingredients[j]);
+        //                var sprite = Resources.Load<Sprite>($"Sprites/Ingredients/{ingName}");
+        //                if (img != null)
+        //                {
+        //                    img.sprite = sprite;
+        //                    img.enabled = sprite != null;
+        //                    if (sprite != null) img.preserveAspect = true;
+        //                }
+        //            }
+        //        }
+        //    }
 
-            // 결과물
-            if (!string.IsNullOrEmpty(bundle.result) && resultSlot != null)
-            {
-                var go = Instantiate(recipeImagePrefab, resultSlot);
-                go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
-                var img = go.GetComponent<Image>();
-                string resultName = System.IO.Path.GetFileNameWithoutExtension(bundle.result);
-                var sprite = Resources.Load<Sprite>($"Sprites/Ingredients/{resultName}");
-                if (img != null)
-                {
-                    img.sprite = sprite;
-                    img.enabled = sprite != null;
-                    if (sprite != null) img.preserveAspect = true;
-                }
-            }
-        }
+        //    // 결과물
+        //    if (!string.IsNullOrEmpty(bundle.result) && resultSlot != null)
+        //    {
+        //        var go = Instantiate(recipeImagePrefab, resultSlot);
+        //        go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
+        //        var img = go.GetComponent<Image>();
+        //        string resultName = System.IO.Path.GetFileNameWithoutExtension(bundle.result);
+        //        var sprite = Resources.Load<Sprite>($"Sprites/Ingredients/{resultName}");
+        //        if (img != null)
+        //        {
+        //            img.sprite = sprite;
+        //            img.enabled = sprite != null;
+        //            if (sprite != null) img.preserveAspect = true;
+        //        }
+        //    }
+        //}
 
-        // 5) 텍스트만 있는 라인 렌더 (linesWithImages .. recipeCount-1)
-        for (int i = linesWithImages; i < recipeCount; i++)
-        {
-            // 이미지 번들이 없으므로 1칸 BG로 텍스트만 표기
-            var prefab = Resources.Load<GameObject>("RecipeLine/RecipeLineBG_1");
-            if (prefab == null)
-            {
-                Debug.LogWarning($"[DoGam] 기본 배경 프리팹 RecipeLineBG_1 을 찾을 수 없습니다. i={i}");
-                continue;
-            }
+        //// 5) 텍스트만 있는 라인 렌더 (linesWithImages .. recipeCount-1)
+        //for (int i = linesWithImages; i < recipeCount; i++)
+        //{
+        //    // 이미지 번들이 없으므로 1칸 BG로 텍스트만 표기
+        //    var prefab = Resources.Load<GameObject>("RecipeLine/RecipeLineBG_1");
+        //    if (prefab == null)
+        //    {
+        //        Debug.LogWarning($"[DoGam] 기본 배경 프리팹 RecipeLineBG_1 을 찾을 수 없습니다. i={i}");
+        //        continue;
+        //    }
 
-            var lineGO = Instantiate(prefab, recipeContentParent);
+        //    var lineGO = Instantiate(prefab, recipeContentParent);
 
-            var text = lineGO.GetComponentInChildren<TextMeshProUGUI>();
-            if (text != null) text.text = entry.recipe[i];
+        //    var text = lineGO.GetComponentInChildren<TextMeshProUGUI>();
+        //    if (text != null) text.text = entry.recipe[i];
 
-            // 슬롯을 찾아도 아이콘은 생성하지 않음(텍스트-only)
-        }
+        //    // 슬롯을 찾아도 아이콘은 생성하지 않음(텍스트-only)
+        //}
 
-        // 6) 스크롤 맨 위로
-        if (scrollRect != null) scrollRect.verticalNormalizedPosition = 1f;
+        //// 6) 스크롤 맨 위로
+        //if (scrollRect != null) scrollRect.verticalNormalizedPosition = 1f;
+
+        BuildRecipeLinesForEntry(entry, recipeContentParent, scrollRect);
     }
 
     public void NextEntry()
@@ -1322,6 +1324,153 @@ public void CloseDoGam()
         if (string.IsNullOrWhiteSpace(finishKey)) return false; // 보수적으로 잠금
 
         return um.IsRecipeUnlocked(finishKey);
+    }
+
+    // 미니버전에서도 재사용 가능한 레시피 라인 빌더
+    public void BuildRecipeLinesForEntry(DoGamEntry entry, Transform targetContentParent, ScrollRect targetScrollRect = null)
+    {
+        if (targetContentParent == null) return;
+
+        // entry가 null이면 그냥 비우기만
+        for (int c = targetContentParent.childCount - 1; c >= 0; c--)
+            Destroy(targetContentParent.GetChild(c).gameObject);
+        if (entry == null) return;
+
+        int recipeCount = entry.recipe != null ? entry.recipe.Count : 0;
+        int bundleCount = (entry.recipeImageBundle != null) ? entry.recipeImageBundle.Count : 0;
+        int linesWithImages = Mathf.Min(recipeCount, bundleCount);
+
+        for (int i = 0; i < linesWithImages; i++)
+        {
+            var bundle = entry.recipeImageBundle[i];
+            int ingredientCount = Mathf.Clamp(bundle?.ingredients != null ? bundle.ingredients.Count : 0, 1, 4);
+            string bgPrefabName = $"RecipeLineBG_{ingredientCount}";
+            var prefab = Resources.Load<GameObject>($"RecipeLine/{bgPrefabName}");
+
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[DoGam] 배경 프리팹 {bgPrefabName} 을 찾을 수 없습니다. i={i}");
+                continue;
+            }
+
+            var lineGO = Instantiate(prefab, targetContentParent);
+
+            // 텍스트
+            var text = lineGO.GetComponentInChildren<TextMeshProUGUI>();
+            if (text != null && i < recipeCount) text.text = entry.recipe[i];
+
+            // 슬롯들
+            var toolSlot = lineGO.transform.Find("ToolSlot");
+            var resultSlot = lineGO.transform.Find("ResultSlot");
+            var ingSlots = new List<Transform>
+        {
+            lineGO.transform.Find("IngredientSlot1"),
+            lineGO.transform.Find("IngredientSlot2"),
+            lineGO.transform.Find("IngredientSlot3"),
+            lineGO.transform.Find("IngredientSlot4")
+        };
+
+            // 제작기
+            if (!string.IsNullOrEmpty(bundle.tool) && toolSlot != null)
+            {
+                var go = Instantiate(recipeImagePrefab, toolSlot);
+                go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
+                var img = go.GetComponent<Image>();
+                string toolName = System.IO.Path.GetFileNameWithoutExtension(bundle.tool);
+                var sprite = Resources.Load<Sprite>($"Sprites/restaurant/{toolName}");
+                if (img != null)
+                {
+                    img.sprite = sprite;
+                    img.enabled = sprite != null;
+                    if (sprite != null) img.preserveAspect = true;
+                }
+            }
+
+            // 재료
+            if (bundle.ingredients != null)
+            {
+                for (int j = 0; j < bundle.ingredients.Count && j < ingSlots.Count; j++)
+                {
+                    if (ingSlots[j] != null)
+                    {
+                        var go = Instantiate(recipeImagePrefab, ingSlots[j]);
+                        go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
+                        var img = go.GetComponent<Image>();
+                        string ingName = System.IO.Path.GetFileNameWithoutExtension(bundle.ingredients[j]);
+                        var sprite = Resources.Load<Sprite>($"Sprites/Ingredients/{ingName}");
+                        if (img != null)
+                        {
+                            img.sprite = sprite;
+                            img.enabled = sprite != null;
+                            if (sprite != null) img.preserveAspect = true;
+                        }
+                    }
+                }
+            }
+
+            // 결과물
+            if (!string.IsNullOrEmpty(bundle.result) && resultSlot != null)
+            {
+                var go = Instantiate(recipeImagePrefab, resultSlot);
+                go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
+                var img = go.GetComponent<Image>();
+                string resultName = System.IO.Path.GetFileNameWithoutExtension(bundle.result);
+                var sprite = Resources.Load<Sprite>($"Sprites/Ingredients/{resultName}");
+                if (img != null)
+                {
+                    img.sprite = sprite;
+                    img.enabled = sprite != null;
+                    if (sprite != null) img.preserveAspect = true;
+                }
+            }
+        }
+
+        // 2) 텍스트만 있는 라인 렌더 (linesWithImages .. recipeCount-1)
+        for (int i = linesWithImages; i < recipeCount; i++)
+        {
+            var prefab = Resources.Load<GameObject>("RecipeLine/RecipeLineBG_1");
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[DoGam] 기본 배경 프리팹 RecipeLineBG_1 을 찾을 수 없습니다. i={i}");
+                continue;
+            }
+
+            var lineGO = Instantiate(prefab, targetContentParent);
+
+            var text = lineGO.GetComponentInChildren<TextMeshProUGUI>();
+            if (text != null) text.text = entry.recipe[i];
+        }
+
+        // 3) 스크롤 맨 위로
+        if (targetScrollRect != null)
+            targetScrollRect.verticalNormalizedPosition = 1f;
+    }
+
+    public IReadOnlyList<DoGamEntry> GetUnlockedEntriesByCategory(string category)
+    {
+        if (allEntries == null) return System.Array.Empty<DoGamEntry>();
+
+        var list = new List<DoGamEntry>();
+        foreach (var e in allEntries)
+        {
+            if (e.category != category) continue; // 카테고리 필터
+            if (!IsEntryUnlocked(e)) continue;    // 잠긴 레시피 제외
+            list.Add(e);
+        }
+        return list;
+    }
+
+    public int GetTotalEntriesByCategory(string category)
+    {
+        if (allEntries == null) return 0;
+
+        int count = 0;
+        foreach (var e in allEntries)
+        {
+            if (e.category == category)
+                count++;
+        }
+        return count;
     }
 }
 
