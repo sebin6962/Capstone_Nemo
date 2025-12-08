@@ -253,6 +253,30 @@ public class MakerInfo : MonoBehaviour
         if (ps != null)
             ps.Play();
     }
+
+    public void TakeResultAndClear()
+    {
+        // 테이블 위 결과 오브젝트 제거
+        if (currentResultObject != null)
+        {
+            Destroy(currentResultObject);
+            currentResultObject = null;
+        }
+
+        resultItemName = null;
+        craftEndUtcSeconds = 0;
+        isProducing = false;
+
+        inputItemNames.Clear();
+        inputItemSprites.Clear();
+        if (slotUIManager != null)
+            slotUIManager.ClearSlots();
+
+        var makerMgr = FindObjectOfType<MakerManager>();
+        if (makerMgr != null)
+            makerMgr.SaveMakerState();
+    }
+
 }
 
 

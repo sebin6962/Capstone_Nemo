@@ -256,4 +256,10 @@ public class NPCPatrolRoute : MonoBehaviour
             PrepareMoveToCurrentWaypoint();
         }
     }
+
+    public void ForceSetProgress(int index)
+    {
+        currentIndex = Mathf.Clamp(index, 0, waypoints.Length - 1);
+        PrepareMoveToCurrentWaypoint();   // 내부에서 currentTarget 갱신하는 함수
+    }
 }

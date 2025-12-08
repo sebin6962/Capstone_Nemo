@@ -72,10 +72,22 @@ public class FarmManager : MonoBehaviour
     private bool IsTreeLocked(CropData data)
     {
         if (data == null || !data.isTree) return false;
-        var lvMgr = PlayerLevelManager.Instance; // null-safe
-        int playerLv = (lvMgr != null) ? lvMgr.Level : 1;
+        //var lvMgr = PlayerLevelManager.Instance; // null-safe
+        //int playerLv = (lvMgr != null) ? lvMgr.Level : 1;
         int needLv = Mathf.Max(1, data.minLevelToInteract); // 기본 7로 세팅됨
-        return playerLv < needLv;
+        int effectiveLevel = 1;
+        if (UnlockManager.Instance != null)
+        {
+            effectiveLevel = UnlockManager.Instance.GetMaxAppliedLevel();
+        }
+        else
+        {
+            var lvMgr = PlayerLevelManager.Instance;
+            if (lvMgr != null)
+                effectiveLevel = lvMgr.Level;
+        }
+        return effectiveLevel < needLv;
+        //return playerLv < needLv;
     }
 
     void Start()

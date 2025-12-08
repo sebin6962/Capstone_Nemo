@@ -162,8 +162,9 @@ public class PlayerInteract : MonoBehaviour
                             Sprite resultSprite = sr.sprite;
                             string resultName = resultSprite.name;
                             HeldItemManager.Instance.ShowHeldItem(resultSprite, resultName);
-                            Destroy(currentMaker.currentResultObject);
-                            currentMaker.currentResultObject = null;
+                            //Destroy(currentMaker.currentResultObject);
+                            currentMaker.TakeResultAndClear();
+                            //currentMaker.currentResultObject = null;
                             Debug.Log($"[E] 결과물 {resultName} 소지 시작");
 
                             SFXManager.Instance.PlayBbyongSFX();
@@ -171,9 +172,9 @@ public class PlayerInteract : MonoBehaviour
                             //제작완료이펙트삭제
                             currentMaker.KillActiveEffect(0.5f);
 
-                            var makerMgr = FindObjectOfType<MakerManager>();
-                            if (makerMgr != null)
-                                makerMgr.SaveMakerState();  
+                            //var makerMgr = FindObjectOfType<MakerManager>();
+                            //if (makerMgr != null)
+                            //    makerMgr.SaveMakerState();  
 
                             //튜토리얼 진행 트리거 3, 4, 5
                             if (StoreTutorialManager.Instance)
