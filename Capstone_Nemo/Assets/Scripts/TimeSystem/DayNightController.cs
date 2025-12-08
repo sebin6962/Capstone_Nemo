@@ -26,6 +26,9 @@ public class DayNightController : MonoBehaviour
         if (nightOverlay == null || timeManager == null)
             return;
 
+        if (!timeManager.isTimeFlow)
+            return;
+
         int minutesPassed = (timeManager.hour - 9) * 60 + timeManager.minute;
         int startMinutes = (nightStartHour - 9) * 60;
         int endMinutes = (nightEndHour - 9) * 60;

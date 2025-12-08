@@ -274,6 +274,10 @@ public class TimeManager : MonoBehaviour
 
     IEnumerator EndOfDayRoutine()
     {
+        isTimeFlow = false;
+
+        yield return null;
+
         currentDay++;           // 날짜 먼저 증가
         hour = 9;           // 날짜 넘길 때 시간 초기화
         minute = 0;
