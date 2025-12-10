@@ -40,7 +40,8 @@ public class LevelUpRevealPanel : MonoBehaviour
 
     //레벨업 숫자
     [Header("Level Number")]
-    [SerializeField] private Image levelNumberImage;
+    [SerializeField] private Image levelNumberImage1;
+    [SerializeField] private Image levelNumberImage10;
     [SerializeField] private Sprite[] levelNumberSprites;
 
     //이펙트
@@ -267,7 +268,7 @@ public class LevelUpRevealPanel : MonoBehaviour
         }
 
         //레벨
-        if (levelNumberImage != null && levelNumberSprites != null)
+        /*if (levelNumberImage != null && levelNumberSprites != null)
         {
             int idx = Mathf.Clamp(level - 1, 0, levelNumberSprites.Length - 1);
             var numSprite = levelNumberSprites[idx];
@@ -280,6 +281,36 @@ public class LevelUpRevealPanel : MonoBehaviour
             else
             {
                 levelNumberImage.enabled = false; // 스프라이트 없으면 숨김
+            }
+        }*/
+        SetLevelNumber(level);
+    }
+
+    public void SetLevelNumber(int level)
+    {
+        if (levelNumberSprites == null || levelNumberSprites.Length < 10)
+            return;
+
+        int ones = level % 10;       
+        int tens = (level / 10) % 10;   
+
+        if (levelNumberImage1 != null)
+        {
+            levelNumberImage1.sprite = levelNumberSprites[ones];
+            levelNumberImage1.enabled = true;
+        }
+
+        if (levelNumberImage10 != null)
+        {
+            if (level >= 10)
+            {
+                levelNumberImage10.sprite = levelNumberSprites[tens];
+                levelNumberImage10.enabled = true; 
+            }
+            else
+            {
+                levelNumberImage10.gameObject.SetActive(false);
+                levelNumberImage10.enabled = false; 
             }
         }
     }

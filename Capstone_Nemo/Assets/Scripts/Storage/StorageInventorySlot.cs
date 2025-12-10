@@ -183,7 +183,8 @@ public static class ItemTooltipDB
         {"Mogwa", "모과" },
         {"Cutting_Mogwa", "자른 모과" },
         {"FlowerBouquet_finish", "달꽃 부케" },
-        {"FailRiceCake_finish", "다과..?" }
+        {"FailRiceCake_finish", "다과..?" },
+        {"Manggaeleaf", "망개잎" }
         // 필요한 만큼 추가
     };
 }
