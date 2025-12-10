@@ -124,6 +124,13 @@ public class PlayerInteract : MonoBehaviour
                 if (nearbySink.HasWaterResult && !HeldItemManager.Instance.IsHoldingItem())
                 {
                     nearbySink.PickupWaterResult();
+
+                    //튜토리얼 진행 트리거
+                    if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.Water))
+                    {
+                        StoreTutorialManager.Instance.GoToNextStep();
+                    }
+
                     return;
                 }
 
@@ -250,6 +257,24 @@ public class PlayerInteract : MonoBehaviour
                     HeldItemManager.Instance.HideHeldItem();
                     Debug.Log($"[E] {heldItemName} 제작기에 투입, 총 {currentMaker.inputItemNames.Count}/4");
                     SFXManager.Instance.PlayBbyongSFX();
+
+                    //튜토리얼 진행 트리거
+                    if (StoreTutorialManager.Instance &&
+                        StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.MixingInsert) &&
+                        currentMaker.makerId == "MIxing01" &&          
+                        heldItemName == "Sieve_Mepssalgaru")
+                    {
+                        Debug.Log("[Tutorial] MixingInsert 조건 만족 → 다음 스텝으로 진행");
+                        StoreTutorialManager.Instance.GoToNextStep();
+                    }
+
+                    if (StoreTutorialManager.Instance &&
+                        StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.WaterInsert) &&
+                        currentMaker.makerId == "MIxing01" &&
+                        heldItemName == "Water")
+                    {
+                        StoreTutorialManager.Instance.GoToNextStep();
+                    }
 
                     // 투입 직후 저장
                     var makerMgr = FindObjectOfType<MakerManager>();
@@ -490,6 +515,8 @@ public class PlayerInteract : MonoBehaviour
                             break;
                     }
                 }
+
+
 
 
                 //var makerMgr = FindObjectOfType<MakerManager>();
