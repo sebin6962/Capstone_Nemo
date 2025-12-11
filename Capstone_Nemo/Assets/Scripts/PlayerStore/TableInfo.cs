@@ -22,8 +22,42 @@ public class TableInfo : MonoBehaviour
     [Tooltip("이 레벨 이상일 때만 초기 아이템을 테이블 위에 올림")]
     public int requiredLevelForInitialItem = 10;
 
+    [Header("잠금 상태(틀 생성 테이블)")]
+    [Tooltip("레벨에 따라 테이블 상호작용 잠금 사용 여부")]
+    public bool lockByLevel = false;
+
+    public Color unlockedColor = Color.white;
+    public Color lockedColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+
+    private bool _isLocked;
+    public bool IsLocked() => _isLocked;
+
+    public void ApplyLockState(bool locked)
+    {
+        _isLocked = locked;
+
+        var srs = GetComponentsInChildren<SpriteRenderer>(includeInactive: true);
+        foreach (var sr in srs)
+        {
+            sr.color = locked ? lockedColor : unlockedColor;
+        }
+
+        var cols = GetComponentsInChildren<Collider2D>(includeInactive: true);
+        foreach (var c in cols)
+        {
+            if (!c.isTrigger) continue;
+            c.enabled = !locked;
+        }
+    }
+
     void Start()
     {
+        if (lockByLevel)
+        {
+            bool levelEnough = IsLevelEnoughForInitialItem(); // requiredLevelForInitialItem 기준
+            ApplyLockState(!levelEnough);  // 레벨 부족이면 locked = true
+        }
+
         //if (spawnInitialItemOnStart && !string.IsNullOrEmpty(initialItemSpriteName) && IsLevelEnoughForInitialItem())
         //{
         //    TrySpawnInitialItem();
