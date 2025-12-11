@@ -17,6 +17,10 @@ public class NextDayCutscene : MonoBehaviour
     [Header("시작 방식")]
     [SerializeField] private bool playOnStart = false;
 
+    [SerializeField] private Image gradientOverlay;          // 하단 그라디언트 이미지
+    [SerializeField] private float gradientFadeSeconds = 0.3f;
+    private CanvasGroup gradientGroup;
+
     private CanvasGroup cutCanvasGroup;
 
     private void Awake()
@@ -38,6 +42,17 @@ public class NextDayCutscene : MonoBehaviour
             fadeImage.color = c;
             fadeImage.raycastTarget = false;
             fadeImage.gameObject.SetActive(false);
+        }
+
+        if (gradientOverlay != null)
+        {
+            gradientGroup = gradientOverlay.GetComponent<CanvasGroup>();
+            if (gradientGroup == null)
+                gradientGroup = gradientOverlay.gameObject.AddComponent<CanvasGroup>();
+
+            gradientOverlay.gameObject.SetActive(false);
+            gradientGroup.alpha = 0f;
+            gradientOverlay.raycastTarget = false;
         }
     }
 
@@ -64,13 +79,23 @@ public class NextDayCutscene : MonoBehaviour
         cutPanel.SetActive(true);
         cutCanvasGroup.alpha = 0f;
 
-        // 컷 패널을 페이드 인 (0 → 1)
+        if (gradientOverlay != null && gradientGroup != null)
+        {
+            gradientOverlay.gameObject.SetActive(true);
+            gradientGroup.alpha = 0f;
+            StartCoroutine(FadeCanvasGroup(gradientGroup, 0f, 1f, gradientFadeSeconds));
+        }
+
         yield return FadeCanvasGroup(cutCanvasGroup, 0f, 1f, fadeSeconds);
 
-        // 컷 유지
         yield return new WaitForSecondsRealtime(holdSeconds);
 
-        // 전역 씬 전환 실행
+        if (gradientOverlay != null && gradientGroup != null)
+        {
+            yield return FadeCanvasGroup(gradientGroup, gradientGroup.alpha, 0f, gradientFadeSeconds);
+            gradientOverlay.gameObject.SetActive(false);
+        }
+
         yield return TransitionToVillage();
     }
 
