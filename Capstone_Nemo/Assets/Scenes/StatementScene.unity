@@ -147,12 +147,12 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 60486504}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 747344559}
+  m_Father: {fileID: 383050076}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -727,9 +727,10 @@ RectTransform:
   - {fileID: 1177908388}
   - {fileID: 2032829516}
   - {fileID: 747344559}
+  - {fileID: 1728079694}
+  - {fileID: 60486505}
   - {fileID: 1970356557}
   - {fileID: 933314245}
-  - {fileID: 1728079694}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1138,8 +1139,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 60486505}
+  m_Children: []
   m_Father: {fileID: 383050076}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1650,11 +1650,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cutPanel: {fileID: 747344558}
   fadeImage: {fileID: 1970356558}
-  holdSeconds: 3
+  holdSeconds: 4
   fadeSeconds: 2
   playOnStart: 0
   gradientOverlay: {fileID: 1728079695}
+  gradientHeight: 320
+  bottomAlpha: 0.65
+  topAlpha: 0
   gradientFadeSeconds: 0.3
+  overlayFadeOutSeconds: 0.35
+  subtitleTextObject: {fileID: 60486504}
+  textShowDelayAfterGradient: 0.1
 --- !u!1 &933314244
 GameObject:
   m_ObjectHideFlags: 0
@@ -4159,9 +4165,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.0003581643
+    y: 0.0005387962
     width: 1
-    height: 0.9992837
+    height: 0.9989224
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
