@@ -32,10 +32,21 @@ public class SpriteSensor : MonoBehaviour
         spriteRenderer = GetComponentInParent<SpriteRenderer>();
     }
 
-    public void SetOutline(bool on)
+    public void SetOutline(bool isOn)
     {
-        if (spriteRenderer != null)
-            spriteRenderer.enabled = on;
+        /* if (spriteRenderer != null)
+             spriteRenderer.enabled = on;*/
+
+        if (spriteRenderer == null)
+            return;
+
+        if (!enabled)
+        {
+            spriteRenderer.enabled = false;
+            return;
+        }
+
+        spriteRenderer.enabled = isOn;
     }
 
     public Vector3 GetTargetPosition()

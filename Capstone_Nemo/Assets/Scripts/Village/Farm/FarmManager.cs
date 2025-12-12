@@ -265,6 +265,9 @@ public class FarmManager : MonoBehaviour
             GameObject overlay = Instantiate(cropOverlayPrefab, overlayWorldPos, Quaternion.identity, transform);
             overlay.GetComponent<SpriteRenderer>().sprite = cropData.stages[Mathf.Clamp(stage, 0, cropData.stages.Count - 1)].sprite;
 
+            //아웃라인
+            SetupCropSensor(overlay, cropData);
+
             if (cropData.isTree)
             {
                 SetupTreeComponents(overlay);
@@ -278,6 +281,9 @@ public class FarmManager : MonoBehaviour
                 isWatered = watered
             };
             growingTiles.Add(pos, cropInfo);
+
+            //아웃라인
+            UpdateCropOutlineState(cropInfo);
         }
 
         foreach (var pos in wateredTiles)
@@ -468,6 +474,9 @@ public class FarmManager : MonoBehaviour
         GameObject overlay = Instantiate(cropOverlayPrefab, overlayWorldPos, Quaternion.identity, transform);
         overlay.GetComponent<SpriteRenderer>().sprite = cropData.stages[0].sprite;
 
+        //아웃라인
+        SetupCropSensor(overlay, cropData);
+
         var cropInfo = new CropTile(cellPos, cropData, overlay);
 
         if (wateredTiles.Contains(cellPos))
@@ -504,6 +513,9 @@ public class FarmManager : MonoBehaviour
 
 
         Debug.Log($"작물 {tile.cropData.cropName}이 {tile.currentStage}단계로 성장함");
+
+        //아웃라인
+        UpdateCropOutlineState(tile);
 
         //village2 튜토리얼 진행 트리거 8
         if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.CropGrowing) && tile.currentStage == tile.cropData.stages.Count - 1)
@@ -851,5 +863,52 @@ public class FarmManager : MonoBehaviour
             currentHoverTree = null;
             InventoryTooltipManager.Instance.HideWorld();
         }
+    }
+
+    //아웃라인
+    private void SetupCropSensor(GameObject overlay, CropData data)
+    {
+        if (data != null && data.isTree) return;
+        if (overlay == null) return;
+
+        Transform sensorTr = overlay.transform.Find("Sensor");
+        Transform outlineTr = overlay.transform.Find("OutLineSprite");
+        if (sensorTr == null || outlineTr == null) return;
+
+        var outlineSR = outlineTr.GetComponent<SpriteRenderer>();
+        if (outlineSR != null)
+        {
+            outlineSR.sprite = data != null ? data.outlineSprite : null; 
+            outlineSR.enabled = false;                                 
+        }
+
+        var sensor = sensorTr.GetComponent<SpriteSensor>();
+        if (sensor == null) sensor = sensorTr.gameObject.AddComponent<SpriteSensor>();
+
+        sensor.spriteRenderer = outlineSR;
+        sensor.playerLayer = LayerMask.GetMask("Player");
+        sensor.enabled = false;            
+        sensor.SetOutline(false);
+    }
+
+    //최종 단계일 때만 활성화
+    private void UpdateCropOutlineState(CropTile tile)
+    {
+        if (tile == null || tile.cropOverlayObject == null || tile.cropData == null) return;
+
+        if (tile.cropData.isTree) return;
+
+        var sensor = tile.cropOverlayObject.GetComponentInChildren<SpriteSensor>(true);
+        if (sensor == null) return;
+
+        bool isFinalStage = tile.currentStage >= tile.cropData.stages.Count - 1;
+
+        sensor.enabled = isFinalStage;
+
+        if (!isFinalStage)
+        {
+            sensor.SetOutline(false);
+        }
+        Debug.Log($"[Outline] {tile.cropData.cropName} stage={tile.currentStage}/{tile.cropData.stages.Count - 1} final={isFinalStage} sensorEnabled={sensor.enabled}");
     }
 }

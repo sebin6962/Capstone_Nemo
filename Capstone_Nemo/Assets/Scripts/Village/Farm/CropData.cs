@@ -16,6 +16,8 @@ public class CropData : ScriptableObject
     public string harvestItemName;  // 수확물 이름 (예: Rice)
     public List<CropStage> stages;
 
+    public Sprite outlineSprite;
+
     // 나무 전용 플래그/옵션
     public bool isTree = false;          // 나무면 true
     public int harvestResetStage = 1;    // 수확 후 되돌릴 단계
