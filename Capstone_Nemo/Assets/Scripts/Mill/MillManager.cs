@@ -152,8 +152,8 @@ public class MillManager : MonoBehaviour
         return itemName == "Rice" || itemName == "Danhobak" || itemName == "Baeknyeoncho" || itemName == "Mugwort" || itemName == "cinnamon";
     }
 
-
-    public void SelectItem(MillItemData item)
+    //누를때마다 한개씩
+    /*public void SelectItem(MillItemData item)
     {
         if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
 
@@ -164,7 +164,7 @@ public class MillManager : MonoBehaviour
         }
 
         //기존 하나씩만 변환되는 코드
-        /*if (ReferenceEquals(selectedItem, item))
+        *//*if (ReferenceEquals(selectedItem, item))
         {
             item.itemQuantity += 1;
             selectedItem = null;
@@ -187,7 +187,7 @@ public class MillManager : MonoBehaviour
         UpdateInventoryUI();
         confirmButton.interactable = true;
 
-        inventoryPanel.SetActive(false);*/
+        inventoryPanel.SetActive(false);*//*
         if (item.itemQuantity <= 0 && (selectedItem == null || selectedItem.itemName != item.itemName))
         {
             return;
@@ -230,6 +230,41 @@ public class MillManager : MonoBehaviour
         UpdateInventoryUI();
         confirmButton.interactable = true;
 
+    }*/
+
+    //누르면 전부 들어가도록
+    public void SelectItem(MillItemData item)
+    {
+        if (SFXManager.Instance) SFXManager.Instance.PlayBtnClickSFX();
+
+        // Mill 튜토리얼 진행 트리거 2
+        if (MillTutorialManager.Instance && MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.SelectCrop))
+        {
+            MillTutorialManager.Instance.GoToNextMillStep();
+        }
+
+        if (selectedItem != null && selectedItem.itemName == item.itemName)
+        {
+            ReturnQueuedToInventory(); 
+            ClearSelectionUI();         
+            return;
+        }
+
+        if (selectedItem != null)
+        {
+            ReturnQueuedToInventory();
+            ClearSelectionUI(); 
+        }
+
+        if (item.itemQuantity <= 0) return;
+
+        selectedItem = item;
+        queuedCount = item.itemQuantity;   
+        item.itemQuantity = 0;            
+
+        selectedSlot.Set(item, queuedCount);
+        UpdateInventoryUI();
+        confirmButton.interactable = (queuedCount > 0);
     }
 
     private void ReturnQueuedToInventory()
