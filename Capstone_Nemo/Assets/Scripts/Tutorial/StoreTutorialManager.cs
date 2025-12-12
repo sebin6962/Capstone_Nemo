@@ -5,17 +5,21 @@ using UnityEngine;
 public enum StoreTutorialStep
 {
     OpenStorage = 0,
-    Sieve = 1,
-    SieveFinish = 2,
-    MixingInsert = 3,
-    Water = 4,
-    WaterInsert = 5,
-    Mixing = 6,
-    Siru = 7,
-    Serve = 8,
-    NextOrder = 9,
-    DogamCheck = 10,
-    StoreFirst_Finish = 11
+    SieveInsert = 1,
+    SieveSpace = 2, 
+    SieveFinish = 3,
+    MixingInsert = 4,
+    Water = 5,
+    WaterInsert = 6,
+    MixingSpace = 7,
+    MixingFinish = 8,
+    SiruInsert = 9,
+    SiruSpace = 10,
+    SiruFinish = 11,
+    Serve = 12,
+    NextOrder = 13,
+    DogamCheck = 14,
+    StoreFirst_Finish = 15
 }
 
 public class StoreTutorialManager : MonoBehaviour
@@ -36,7 +40,6 @@ public class StoreTutorialManager : MonoBehaviour
     public StoreTutorialStep currentStep = StoreTutorialStep.OpenStorage;
 
     private Coroutine showStepPanelRoutine;
-
 
     public bool IsStoreTutorialRunning;
 
@@ -164,9 +167,12 @@ public class StoreTutorialManager : MonoBehaviour
         {
             //PlayerInteract.cs
             case StoreTutorialStep.OpenStorage:
-                currentStep = StoreTutorialStep.Sieve;
+                currentStep = StoreTutorialStep.SieveInsert;
                 break;
-            case StoreTutorialStep.Sieve:
+            case StoreTutorialStep.SieveInsert:
+                currentStep = StoreTutorialStep.SieveSpace;
+                break;
+            case StoreTutorialStep.SieveSpace:
                 currentStep = StoreTutorialStep.SieveFinish;
                 break;
             case StoreTutorialStep.SieveFinish:
@@ -179,12 +185,21 @@ public class StoreTutorialManager : MonoBehaviour
                 currentStep = StoreTutorialStep.WaterInsert;
                 break;
             case StoreTutorialStep.WaterInsert:
-                currentStep = StoreTutorialStep.Mixing;
+                currentStep = StoreTutorialStep.MixingSpace;
                 break;
-            case StoreTutorialStep.Mixing:
-                currentStep = StoreTutorialStep.Siru;
+            case StoreTutorialStep.MixingSpace:
+                currentStep = StoreTutorialStep.MixingFinish;
                 break;
-            case StoreTutorialStep.Siru:
+            case StoreTutorialStep.MixingFinish:
+                currentStep = StoreTutorialStep.SiruInsert;
+                break;
+            case StoreTutorialStep.SiruInsert:
+                currentStep = StoreTutorialStep.SiruSpace;
+                break;
+            case StoreTutorialStep.SiruSpace:
+                currentStep = StoreTutorialStep.SiruFinish;
+                break;
+            case StoreTutorialStep.SiruFinish:
                 currentStep = StoreTutorialStep.Serve;
                 break;
             //customer.cs

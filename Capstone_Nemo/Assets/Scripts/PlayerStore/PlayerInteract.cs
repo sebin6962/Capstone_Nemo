@@ -193,12 +193,12 @@ public class PlayerInteract : MonoBehaviour
                                 {
                                     tm.GoToNextStep();
                                 }
-                                else if (tm.IsCurrentStep(StoreTutorialStep.Mixing) &&
+                                else if (tm.IsCurrentStep(StoreTutorialStep.MixingFinish) &&
                                          resultName == "Mixing_Mepssal")
                                 {
                                     tm.GoToNextStep();
                                 }
-                                else if (tm.IsCurrentStep(StoreTutorialStep.Siru) &&
+                                else if (tm.IsCurrentStep(StoreTutorialStep.SiruFinish) &&
                                          resultName == "Baekseolgi_finish")
                                 {
                                     tm.GoToNextStep();
@@ -264,7 +264,6 @@ public class PlayerInteract : MonoBehaviour
                         currentMaker.makerId == "MIxing01" &&          
                         heldItemName == "Sieve_Mepssalgaru")
                     {
-                        Debug.Log("[Tutorial] MixingInsert 조건 만족 → 다음 스텝으로 진행");
                         StoreTutorialManager.Instance.GoToNextStep();
                     }
 
@@ -272,6 +271,22 @@ public class PlayerInteract : MonoBehaviour
                         StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.WaterInsert) &&
                         currentMaker.makerId == "MIxing01" &&
                         heldItemName == "Water")
+                    {
+                        StoreTutorialManager.Instance.GoToNextStep();
+                    }
+
+                    if (StoreTutorialManager.Instance &&
+                        StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.SieveInsert) &&
+                        (currentMaker.makerId == "Sieve01" || currentMaker.makerId == "Sieve02") &&
+                        heldItemName == "Mepssalgaru")
+                    {
+                        StoreTutorialManager.Instance.GoToNextStep();
+                    }
+
+                    if (StoreTutorialManager.Instance &&
+                        StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.SiruInsert) &&
+                        (currentMaker.makerId == "Siru01" || currentMaker.makerId == "Siru02") &&
+                        heldItemName == "Mixing_Mepssal")
                     {
                         StoreTutorialManager.Instance.GoToNextStep();
                     }
@@ -510,7 +525,30 @@ public class PlayerInteract : MonoBehaviour
                         case "Sieve01":
                         case "Sieve02":
                         case "Sieve03":
-                            if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.Sieve))
+                            if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.SieveSpace))
+                                StoreTutorialManager.Instance.GoToNextStep();
+                            break;
+                    }
+                }
+
+                if (StoreTutorialManager.Instance)
+                {
+                    switch (currentMaker.makerId)
+                    {
+                        case "MIxing01":
+                            if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.MixingSpace))
+                                StoreTutorialManager.Instance.GoToNextStep();
+                            break;
+                    }
+                }
+
+                if (StoreTutorialManager.Instance)
+                {
+                    switch (currentMaker.makerId)
+                    {
+                        case "Siru01":
+                        case "Siru02":
+                            if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.SiruSpace))
                                 StoreTutorialManager.Instance.GoToNextStep();
                             break;
                     }
