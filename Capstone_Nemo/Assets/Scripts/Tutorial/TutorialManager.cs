@@ -18,14 +18,15 @@ public enum VillageSecondStep
     OpenStorage = 1,
     PickUpSeed = 2,
     PlantSeed = 3,
-    RestoreSeed = 4,
-    PickUp_WateringCan = 5,
-    Water = 6,
-    CropGrowing = 7,
-    Restore_WateringCan = 8,
-    HarvestCrop = 9,
-    GoToMill = 10,
-    VillageSecond_Finish = 11
+    OpenStorage2 = 4,
+    RestoreSeed = 5,
+    PickUp_WateringCan = 6,
+    Water = 7,
+    CropGrowing = 8,
+    Restore_WateringCan = 9,
+    HarvestCrop = 10,
+    GoToMill = 11,
+    VillageSecond_Finish = 12
 }
 
 public class TutorialManager : MonoBehaviour
@@ -49,6 +50,7 @@ public class TutorialManager : MonoBehaviour
     //[SerializeField] private GameObject secondTutorialBlocker;
 
     [SerializeField] private GameObject[] stepPanels;
+    [SerializeField] private GameObject[] fixedStepPanels;
 
     private string server;
     private TutorialStateData state;
@@ -192,8 +194,11 @@ public class TutorialManager : MonoBehaviour
             case VillageSecondStep.PickUpSeed:
                 villageSecondStep = VillageSecondStep.PlantSeed;
                 break;
-            //FarmManager.cs
             case VillageSecondStep.PlantSeed:
+                villageSecondStep = VillageSecondStep.OpenStorage2;
+                break;
+            //FarmManager.cs
+            case VillageSecondStep.OpenStorage2:
                 villageSecondStep = VillageSecondStep.RestoreSeed;
                 break;
             //HeldItemManager.cs
@@ -288,6 +293,10 @@ public class TutorialManager : MonoBehaviour
             stepPanels[index].SetActive(true);
         }
 
+        if (fixedStepPanels != null && index >= 0 && index < fixedStepPanels.Length && fixedStepPanels[index])
+            fixedStepPanels[index].SetActive(true);
+
+
         // 코루틴 끝남
         showStepPanelRoutine = null;
     }
@@ -298,6 +307,12 @@ public class TutorialManager : MonoBehaviour
         foreach (var panel in stepPanels)
         {
             if (panel) panel.SetActive(false);
+        }
+
+        if (fixedStepPanels != null)
+        {
+            foreach (var panel in fixedStepPanels)
+                if (panel) panel.SetActive(false);
         }
     }
 

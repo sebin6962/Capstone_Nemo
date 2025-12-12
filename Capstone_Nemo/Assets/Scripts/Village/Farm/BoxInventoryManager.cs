@@ -39,6 +39,11 @@ public class BoxInventoryManager : MonoBehaviour
                 {
                     TutorialManager.Instance.GoToNextVillageSecondStep();
                 }
+
+                if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.OpenStorage2))
+                {
+                    TutorialManager.Instance.GoToNextVillageSecondStep();
+                }
         }
     }
 
