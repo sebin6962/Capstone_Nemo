@@ -270,11 +270,21 @@ public class TutorialManager : MonoBehaviour
 
     void ShowStepPanel(VillageSecondStep step)
     {
+        /*        if (showStepPanelRoutine != null)
+                    StopCoroutine(showStepPanelRoutine);
+
+                // 2초 뒤에 패널 켜는 코루틴으로 빼뒀어요!!
+                showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 1.5f));*/
+
         if (showStepPanelRoutine != null)
             StopCoroutine(showStepPanelRoutine);
 
-        // 2초 뒤에 패널 켜는 코루틴으로 빼뒀어요!!
-        showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 1.0f));
+        float delay = 1.5f; 
+
+        if (step == VillageSecondStep.GoToMill)
+            delay = 3.5f;
+
+        showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, delay));
     }
 
     private IEnumerator ShowStepPanelAfterDelay(VillageSecondStep step, float delay)

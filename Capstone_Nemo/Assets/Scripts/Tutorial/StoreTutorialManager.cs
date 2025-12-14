@@ -125,7 +125,7 @@ public class StoreTutorialManager : MonoBehaviour
             StopCoroutine(showStepPanelRoutine);
 
         // 2초 뒤에 패널 켜는 코루틴으로 빼뒀어요!!
-        showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 1.0f));
+        showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 1.5f));
     }
 
     private IEnumerator ShowStepPanelAfterDelay(StoreTutorialStep step, float delay)
