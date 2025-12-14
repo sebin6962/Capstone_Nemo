@@ -51,6 +51,7 @@ public class TutorialManager : MonoBehaviour
 
     [SerializeField] private GameObject[] stepPanels;
     [SerializeField] private GameObject[] fixedStepPanels;
+    [SerializeField] private GameObject fixedVillageTutorialPanels;
 
     private string server;
     private TutorialStateData state;
@@ -389,6 +390,7 @@ public class TutorialManager : MonoBehaviour
         {
             SFXManager.Instance.PlayTutorialSFX();
             villageTutorialPanel.SetActive(true);
+            fixedVillageTutorialPanels.SetActive(true);
         }
 
         //currentStep = TutorialStep.Village;
