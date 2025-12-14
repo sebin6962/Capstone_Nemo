@@ -80,6 +80,7 @@ public class MakerInfo : MonoBehaviour
         var makerMgr = FindObjectOfType<MakerManager>();
         if (makerMgr != null)
             makerMgr.SaveMakerState();
+
     }
 
 
@@ -187,6 +188,43 @@ public class MakerInfo : MonoBehaviour
         Debug.Log($"[제작기] 결과물 {resultSprite.name} 생성");
 
         OnCraftFinished();
+
+        //튜토리얼 진행 트리거 
+        if (StoreTutorialManager.Instance)
+        {
+            switch (makerId)
+            {
+                case "Sieve01":
+                case "Sieve02":
+                case "Sieve03":
+                    if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.SieveSpace))
+                        StoreTutorialManager.Instance.GoToNextStep();
+                    break;
+            }
+        }
+
+        if (StoreTutorialManager.Instance)
+        {
+            switch (makerId)
+            {
+                case "MIxing01":
+                    if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.MixingSpace))
+                        StoreTutorialManager.Instance.GoToNextStep();
+                    break;
+            }
+        }
+
+        if (StoreTutorialManager.Instance)
+        {
+            switch (makerId)
+            {
+                case "Siru01":
+                case "Siru02":
+                    if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.SiruSpace))
+                        StoreTutorialManager.Instance.GoToNextStep();
+                    break;
+            }
+        }
     }
 
     // 잠금 상태 조회 (PlayerInteract에서 참고)

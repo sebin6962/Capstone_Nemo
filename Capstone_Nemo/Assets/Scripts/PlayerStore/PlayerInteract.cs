@@ -126,7 +126,7 @@ public class PlayerInteract : MonoBehaviour
                     nearbySink.PickupWaterResult();
 
                     //튜토리얼 진행 트리거
-                    if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.Water))
+                    if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.WaterFinish))
                     {
                         StoreTutorialManager.Instance.GoToNextStep();
                     }
@@ -140,6 +140,14 @@ public class PlayerInteract : MonoBehaviour
                     !nearbySink.HasWaterResult)
                 {
                     StartCoroutine(nearbySink.FillAndGiveWater());
+
+                    //튜토리얼 진행 트리거
+                    if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.WaterOn))
+                    {
+                        StoreTutorialManager.Instance.GoToNextStep();
+                    }
+
+                    return;
                     return;
                 }
 
@@ -517,7 +525,7 @@ public class PlayerInteract : MonoBehaviour
                 float duration = 3f; // 기존에 쓰던 제작 시간
                 currentMaker.StartCraft(resultSprite, duration);
 
-                //튜토리얼 진행 트리거 2
+                /*//튜토리얼 진행 트리거 2
                 if (StoreTutorialManager.Instance)
                 {
                     switch (currentMaker.makerId)
@@ -552,7 +560,7 @@ public class PlayerInteract : MonoBehaviour
                                 StoreTutorialManager.Instance.GoToNextStep();
                             break;
                     }
-                }
+                }*/
 
 
 

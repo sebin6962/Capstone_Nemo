@@ -9,17 +9,18 @@ public enum StoreTutorialStep
     SieveSpace = 2, 
     SieveFinish = 3,
     MixingInsert = 4,
-    Water = 5,
-    WaterInsert = 6,
-    MixingSpace = 7,
-    MixingFinish = 8,
-    SiruInsert = 9,
-    SiruSpace = 10,
-    SiruFinish = 11,
-    Serve = 12,
-    NextOrder = 13,
-    DogamCheck = 14,
-    StoreFirst_Finish = 15
+    WaterOn = 5,
+    WaterFinish = 6,
+    WaterInsert = 7,
+    MixingSpace = 8,
+    MixingFinish = 9,
+    SiruInsert = 10,
+    SiruSpace = 11,
+    SiruFinish = 12,
+    Serve = 13,
+    NextOrder = 14,
+    DogamCheck = 15,
+    StoreFirst_Finish = 16
 }
 
 public class StoreTutorialManager : MonoBehaviour
@@ -179,9 +180,12 @@ public class StoreTutorialManager : MonoBehaviour
                 currentStep = StoreTutorialStep.MixingInsert;
                 break;
             case StoreTutorialStep.MixingInsert:
-                currentStep = StoreTutorialStep.Water;
+                currentStep = StoreTutorialStep.WaterOn;
                 break;
-            case StoreTutorialStep.Water:
+            case StoreTutorialStep.WaterOn:
+                currentStep = StoreTutorialStep.WaterFinish;
+                break;
+            case StoreTutorialStep.WaterFinish:
                 currentStep = StoreTutorialStep.WaterInsert;
                 break;
             case StoreTutorialStep.WaterInsert:
