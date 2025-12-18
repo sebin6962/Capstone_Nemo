@@ -168,7 +168,7 @@ public class CustomerSpawner : MonoBehaviour
 
         if (data.state == CustomerState.Walking)
         {
-           //го....
+           
         }
         else
         {
