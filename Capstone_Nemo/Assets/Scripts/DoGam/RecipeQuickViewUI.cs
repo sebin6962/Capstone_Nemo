@@ -10,6 +10,8 @@ public class RecipeQuickViewUI : MonoBehaviour
 {
     public static RecipeQuickViewUI Instance;
 
+    public GameObject infoText;
+
     [Header("UI")]
     public ScrollRect miniScrollRect;
     public Transform miniContentParent;
@@ -85,6 +87,15 @@ public class RecipeQuickViewUI : MonoBehaviour
         if (drinkTabButton != null)
             drinkTabButton.onClick.AddListener(() => OnClickCategory("À½·á"));
 
+        if (infoText != null)
+        {
+            bool tutorialDone =
+                (TutorialFlowManager.Instance != null) &&
+                (TutorialFlowManager.Instance.currentStep == GlobalTutorialStep.Done);
+
+            infoText.SetActive(tutorialDone);
+        }
+
         ReloadList();
         UpdateCategoryTabVisual();
 
@@ -101,6 +112,7 @@ public class RecipeQuickViewUI : MonoBehaviour
         if (miniRoot.activeSelf)
         {
             miniRoot.SetActive(false);
+            infoText.SetActive(false);
             UpdateMiniToggleVisual();
         }
     }
@@ -257,6 +269,7 @@ public class RecipeQuickViewUI : MonoBehaviour
 
         bool newActive = !miniRoot.activeSelf;
         miniRoot.SetActive(newActive);
+        infoText.SetActive(false);
 
         if (newActive)
         {

@@ -132,6 +132,11 @@ public class TutorialFlowManager : MonoBehaviour
         currentStep = GlobalTutorialStep.Done;
         state.tutorialDone = true;
         TutorialState.Save(server, state);
+
+        if (RecipeQuickViewUI.Instance != null && RecipeQuickViewUI.Instance.infoText != null)
+        {
+            RecipeQuickViewUI.Instance.infoText.SetActive(true);
+        }
     }
 
 }
