@@ -79,6 +79,13 @@ public class PlayerInteract : MonoBehaviour
             {
                 PlayerStoreBoxInventoryUIManager.Instance.CloseUI();
                 Debug.Log("[E] »óÀÚ ÀÎº¥Åä¸® ´ÝÈû");
+
+                //Æ©Åä¸®¾ó
+                if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.CloseStorage))
+                {
+                    StoreTutorialManager.Instance.GoToNextStep();
+                }
+
                 return;
             }
 
@@ -93,6 +100,7 @@ public class PlayerInteract : MonoBehaviour
                 {
                     TutorialManager.Instance.GoToNextVillageSecondStep();
                 }*/
+                
 
                 return;
             }

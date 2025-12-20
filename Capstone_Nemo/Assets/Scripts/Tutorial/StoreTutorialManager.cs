@@ -5,22 +5,23 @@ using UnityEngine;
 public enum StoreTutorialStep
 {
     OpenStorage = 0,
-    SieveInsert = 1,
-    SieveSpace = 2, 
-    SieveFinish = 3,
-    MixingInsert = 4,
-    WaterOn = 5,
-    WaterFinish = 6,
-    WaterInsert = 7,
-    MixingSpace = 8,
-    MixingFinish = 9,
-    SiruInsert = 10,
-    SiruSpace = 11,
-    SiruFinish = 12,
-    Serve = 13,
-    NextOrder = 14,
-    DogamCheck = 15,
-    StoreFirst_Finish = 16
+    CloseStorage = 1,
+    SieveInsert = 2,
+    SieveSpace = 3, 
+    SieveFinish = 4,
+    MixingInsert = 5,
+    WaterOn = 6,
+    WaterFinish = 7,
+    WaterInsert = 8,
+    MixingSpace = 9,
+    MixingFinish = 10,
+    SiruInsert = 11,
+    SiruSpace = 12,
+    SiruFinish = 13,
+    Serve = 14,
+    NextOrder = 15,
+    DogamCheck = 16,
+    StoreFirst_Finish = 17
 }
 
 public class StoreTutorialManager : MonoBehaviour
@@ -166,8 +167,12 @@ public class StoreTutorialManager : MonoBehaviour
     {
         switch (currentStep)
         {
-            //PlayerInteract.cs
+            //HeldItemManager.cs
             case StoreTutorialStep.OpenStorage:
+                currentStep = StoreTutorialStep.CloseStorage;
+                break;
+            //PlayerInteract.cs
+            case StoreTutorialStep.CloseStorage:
                 currentStep = StoreTutorialStep.SieveInsert;
                 break;
             case StoreTutorialStep.SieveInsert:
