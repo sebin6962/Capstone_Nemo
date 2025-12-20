@@ -90,6 +90,24 @@ public class FarmManager : MonoBehaviour
         //return playerLv < needLv;
     }
 
+    private const string WATERING_CAN_ITEM = "village_object_wateringcan";
+
+    private bool IsHoldingWateringCan()
+    {
+        if (HeldItemManager.Instance == null) return false;
+        if (!HeldItemManager.Instance.IsHoldingItem()) return false;
+
+        var name = HeldItemManager.Instance.GetHeldItemName();
+        if (!string.IsNullOrEmpty(name) && name.Trim() == WATERING_CAN_ITEM)
+            return true;
+
+        var sp = HeldItemManager.Instance.GetHeldItemSprite();
+        if (sp != null && sp.name == WATERING_CAN_ITEM)
+            return true;
+
+        return false;
+    }
+
     void Start()
     {
         RegisterFarmTiles();
@@ -527,8 +545,13 @@ public class FarmManager : MonoBehaviour
     //수확 처리 함수
     private void HandleRightClickHarvest()
     {
+
         if (Input.GetMouseButtonDown(0)) // 좌클릭
         {
+            // 물뿌리개 들고 있으면 수확 금지
+            if (IsHoldingWateringCan())
+                return;
+
             Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
 
@@ -561,6 +584,9 @@ public class FarmManager : MonoBehaviour
 
     private void HarvestCrop(Vector3Int pos, string cropName)
     {
+        if (IsHoldingWateringCan())
+            return;
+
         //var cropData = growingTiles[pos].cropData;
         if (!growingTiles.TryGetValue(pos, out var tile)) return;
         var data = tile.cropData;
