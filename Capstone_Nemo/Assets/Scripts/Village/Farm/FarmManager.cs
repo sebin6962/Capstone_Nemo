@@ -575,6 +575,12 @@ public class FarmManager : MonoBehaviour
                         }
                     }
 
+                    //튜토리얼 작물 키우기 단계에서 수확 못하게
+                    if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.CropGrowing))
+                    {
+                        return;
+                    }
+
                     // 범위 안이면 수확 진행
                     HarvestCrop(cellPos, tile.cropData.cropName);
                 }
