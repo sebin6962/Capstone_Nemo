@@ -36477,6 +36477,64 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1867488317}
   m_CullTransparentMesh: 1
+--- !u!1 &1870222424
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1870222426}
+  - component: {fileID: 1870222425}
+  m_Layer: 0
+  m_Name: SkinManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1870222425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1870222424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 714e23c0213b72e46be8bba0d798bd1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  skins:
+  - id: skin00
+    price: 0
+    preview: {fileID: 4191862989263929990, guid: d275b12cec5c1dc4eba5f03bdb0cf334, type: 3}
+    libraryAsset: {fileID: 7108339969198208228, guid: f48843d25b0bc6b4ba6856d88d0bf344, type: 3}
+  - id: skin01
+    price: 200
+    preview: {fileID: 8682035, guid: d847942e965c4a04f881ba2ac66cc3bc, type: 3}
+    libraryAsset: {fileID: 7108339969198208228, guid: be927a63cf3d4524a830f17559a4fe30, type: 3}
+  - id: skin02
+    price: 1000
+    preview: {fileID: 1083638928, guid: 4cab469fae63f7b4eb3562d9992ab26c, type: 3}
+    libraryAsset: {fileID: 7108339969198208228, guid: d58340e1ded113b4e820ca5eef875cb8, type: 3}
+  targetLibrary: {fileID: 0}
+--- !u!4 &1870222426
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1870222424}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -14.58708, y: -5.934287, z: 1719.2692}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1873549266
 GameObject:
   m_ObjectHideFlags: 0
@@ -40941,9 +40999,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.0010901093
+    y: 0.027901769
     width: 1
-    height: 0.9978198
+    height: 0.94419646
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -43436,6 +43494,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5294976474593876520, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
+      propertyPath: m_SpriteLibraryAsset
+      value: 
+      objectReference: {fileID: 7108339969198208228, guid: f48843d25b0bc6b4ba6856d88d0bf344, type: 3}
     - target: {fileID: 5447828422208564975, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
       propertyPath: farmManager
       value: 
@@ -43481,6 +43543,7 @@ SceneRoots:
   - {fileID: 2002994372}
   - {fileID: 1087139303}
   - {fileID: 1486271912}
+  - {fileID: 1870222426}
   - {fileID: 270124273}
   - {fileID: 518466202}
   - {fileID: 1715223419}

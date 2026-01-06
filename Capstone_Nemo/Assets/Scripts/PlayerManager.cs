@@ -183,7 +183,7 @@ public class PlayerManager : MonoBehaviour
 
     void FixedUpdate()
     {
-        if ((BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen()) ||
+        if (((SkinShopUIManager.Instance != null && SkinShopUIManager.Instance.IsOpen()) || BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen()) ||
     (PopupInventoryUIManager.Instance != null && PopupInventoryUIManager.Instance.IsPopupOpen())||
     (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen()) ||
     (DoGamUIManager.Instance != null && DoGamUIManager.Instance.IsOpen()) ||

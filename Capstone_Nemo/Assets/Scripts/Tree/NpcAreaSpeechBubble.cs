@@ -58,4 +58,17 @@ public class NpcAreaSpeechBubble : MonoBehaviour
         HideAllBubbles();
         isPlaying = false;
     }
+
+    public void ShowBubbleOnce()
+    {
+        if (isPlaying) return;
+        StartCoroutine(ShowBubbleRoutine());
+    }
+
+    public void StopBubble()
+    {
+        StopAllCoroutines();
+        HideAllBubbles();
+        isPlaying = false;
+    }
 }
