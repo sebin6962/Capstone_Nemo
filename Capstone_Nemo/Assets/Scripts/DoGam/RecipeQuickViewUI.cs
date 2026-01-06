@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using System.Linq;
 using TMPro;
 using System.IO;
+using UnityEngine.EventSystems;
 
 public class RecipeQuickViewUI : MonoBehaviour
 {
@@ -51,6 +52,23 @@ public class RecipeQuickViewUI : MonoBehaviour
     public bool startVisible = true;
     public Button miniToggleButton;
 
+    private void ClearUISelection()
+    {
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(null);
+    }
+
+    private void DisableButtonNavigation(Button b)
+    {
+        if (b == null) return;
+        var nav = b.navigation;
+        nav.mode = Navigation.Mode.None;
+        b.navigation = nav;
+
+        // 클릭 후에도 선택이 남지 않게
+        b.onClick.AddListener(ClearUISelection);
+    }
+
     private void Awake()
     {
         Instance = this;
@@ -70,7 +88,15 @@ public class RecipeQuickViewUI : MonoBehaviour
 
         if (prevButton != null) prevButton.onClick.AddListener(() => ChangeIndex(-1));
         if (nextButton != null) nextButton.onClick.AddListener(() => ChangeIndex(+1));
-        
+
+        DisableButtonNavigation(prevButton);
+        DisableButtonNavigation(nextButton);
+        DisableButtonNavigation(tteokTabButton);
+        DisableButtonNavigation(drinkTabButton);
+        DisableButtonNavigation(miniToggleButton);
+
+        ClearUISelection();
+
         if (miniToggleButton != null && miniToggleButton.image != null)
         {
             _miniToggleNormalSprite = miniToggleButton.image.sprite;
@@ -253,6 +279,8 @@ public class RecipeQuickViewUI : MonoBehaviour
 
     public void ToggleMiniPanel()
     {
+        ClearUISelection();
+
         if (miniRoot == null) return;
 
         var dogam = DoGamUIManager.Instance;
@@ -263,6 +291,8 @@ public class RecipeQuickViewUI : MonoBehaviour
             {
                 miniRoot.SetActive(false);
                 UpdateMiniToggleVisual();
+
+                ClearUISelection();
             }
             return;
         }

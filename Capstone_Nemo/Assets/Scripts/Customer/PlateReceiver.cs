@@ -11,58 +11,126 @@ public class PlateReceiver : MonoBehaviour
     public Transform worldCanvas;   
     public Transform plateAnchor;
 
+    private bool playerInRange;
 
-    private void OnTriggerStay2D(Collider2D other)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        if (Input.GetKey(KeyCode.E) && !hasPlacedThisPress && HeldItemManager.Instance.IsHoldingItem())
+        // 자식 콜라이더가 들어와도 root(혹은 parent) 기준으로 Player 판정
+        if (other.CompareTag("Player") || other.transform.root.CompareTag("Player"))
+            playerInRange = true;
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Player") || other.transform.root.CompareTag("Player"))
+            playerInRange = false;
+    }
+
+    private void Update()
+    {
+        if (!playerInRange) return;
+        if (!Input.GetKeyDown(KeyCode.E)) return;
+
+        if (HeldItemManager.Instance == null || !HeldItemManager.Instance.IsHoldingItem())
+            return;
+
+        PlateCheck plateCheck = GetComponent<PlateCheck>();
+        if (plateCheck == null || plateCheck.targetCustomer == null)
         {
-            if (plateAnchor != null && plateAnchor.childCount > 0)
-            {
-                Debug.Log("식탁 위에 이미 다과가 있습니다");
-                return;
-            }
-            PlateCheck plateCheck = GetComponent<PlateCheck>();
-            if (plateCheck.targetCustomer == null)
-            {
-                return;
-            }
+            Debug.Log("[PlateReceiver] 접시에 손님이 아직 연동되지 않음");
+            return;
+        }
 
-            Sprite sprite = HeldItemManager.Instance.GetHeldItemSprite();
-            string itemName = HeldItemManager.Instance.GetHeldItemName();
+        if (plateAnchor != null && plateAnchor.childCount > 0)
+        {
+            Debug.Log("식탁 위에 이미 다과가 있습니다");
+            return;
+        }
 
-            if (!itemName.EndsWith("finish") || string.IsNullOrEmpty(itemName)) 
-                return;
+        Sprite sprite = HeldItemManager.Instance.GetHeldItemSprite();
+        string itemName = HeldItemManager.Instance.GetHeldItemName();
 
+        if (string.IsNullOrEmpty(itemName) && sprite != null)
+            itemName = sprite.name;
+
+        if (string.IsNullOrEmpty(itemName) || !itemName.EndsWith("finish"))
+            return;
+
+        // UI 표시(원하면 유지 / 싫으면 생략 가능)
+        if (resultUIPrefab != null)
+        {
             GameObject uiItem = Instantiate(resultUIPrefab);
             uiItem.transform.localScale = Vector3.one * 0.02f;
-            uiItem.transform.SetParent(worldCanvas.transform, false); 
+
             Vector3 basePos = plateAnchor != null ? plateAnchor.position : transform.position;
-            uiItem.transform.position = basePos + new Vector3(0, 0.3f, 0.01f); 
-            uiItem.transform.forward = Camera.main.transform.forward;
+            uiItem.transform.position = basePos + new Vector3(0, 0.3f, 0.01f);
 
+            if (plateAnchor != null) uiItem.transform.SetParent(plateAnchor, true);
+            else if (worldCanvas != null) uiItem.transform.SetParent(worldCanvas, true);
 
-            ResultItemUI uiComp = uiItem.GetComponent<ResultItemUI>();
-            if (uiComp != null)
-            {
-                uiComp.Initialize(sprite, itemName);
-            }
+            var uiComp = uiItem.GetComponent<ResultItemUI>();
+            if (uiComp != null) uiComp.Initialize(sprite, itemName);
 
-            
-            if (plateCheck != null)
-            {
-                plateCheck.TryServeDagwa();  //비교 
-            }
-
-            HeldItemManager.Instance.HideHeldItem();
-            hasPlacedThisPress = true;
-            Debug.Log($"{ itemName}을 식탁에 배치");
+            Destroy(uiItem, 2.0f);
         }
 
-        if (!Input.GetKey(KeyCode.E))
-        {
-            hasPlacedThisPress = false;
-        }
+        plateCheck.SendDagwaToCustomer(itemName);
+        HeldItemManager.Instance.HideHeldItem();
+
+        Debug.Log($"{itemName} 제공 시도 완료");
     }
+
+    //private void OnTriggerStay2D(Collider2D other)
+    //{
+    //    if (Input.GetKey(KeyCode.E) && !hasPlacedThisPress && HeldItemManager.Instance.IsHoldingItem())
+    //    {
+    //        if (plateAnchor != null && plateAnchor.childCount > 0)
+    //        {
+    //            Debug.Log("식탁 위에 이미 다과가 있습니다");
+    //            return;
+    //        }
+    //        PlateCheck plateCheck = GetComponent<PlateCheck>();
+    //        if (plateCheck.targetCustomer == null)
+    //        {
+    //            return;
+    //        }
+
+    //        Sprite sprite = HeldItemManager.Instance.GetHeldItemSprite();
+    //        string itemName = HeldItemManager.Instance.GetHeldItemName();
+
+    //        if (!itemName.EndsWith("finish") || string.IsNullOrEmpty(itemName)) 
+    //            return;
+
+    //        GameObject uiItem = Instantiate(resultUIPrefab);
+    //        uiItem.transform.localScale = Vector3.one * 0.02f;
+    //        uiItem.transform.SetParent(worldCanvas.transform, false); 
+    //        Vector3 basePos = plateAnchor != null ? plateAnchor.position : transform.position;
+    //        uiItem.transform.position = basePos + new Vector3(0, 0.3f, 0.01f); 
+    //        uiItem.transform.forward = Camera.main.transform.forward;
+
+
+    //        ResultItemUI uiComp = uiItem.GetComponent<ResultItemUI>();
+    //        if (uiComp != null)
+    //        {
+    //            uiComp.Initialize(sprite, itemName);
+    //        }
+
+
+    //        if (plateCheck != null)
+    //        {
+    //            plateCheck.TryServeDagwa();  //비교 
+    //        }
+
+    //        HeldItemManager.Instance.HideHeldItem();
+    //        hasPlacedThisPress = true;
+    //        Debug.Log($"{ itemName}을 식탁에 배치");
+    //    }
+
+    //    if (!Input.GetKey(KeyCode.E))
+    //    {
+    //        hasPlacedThisPress = false;
+    //    }
+    //}
 }
         /* if (other.CompareTag("HeldDagwa"))
          {
