@@ -30106,6 +30106,62 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.07404423, y: 0.73283625}
   m_EdgeRadius: 0
+--- !u!1 &1245228294
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1245228295}
+  - component: {fileID: 1245228297}
+  m_Layer: 5
+  m_Name: RewardPopupRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1245228295
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1245228294}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1.0000135, y: 1.0000135, z: 1.0000135}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1475976718}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -773, y: -443}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1245228297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1245228294}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 847dfdbe15a413f4e9da33d41d7a0525, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  container: {fileID: 1245228295}
+  panelPrefab: {fileID: 2452295624519405472, guid: 3c1af18d629bfdc4c856f3518f9da3f4, type: 3}
+  maxPanels: 3
+  yOffset: 110
+  basePos: {x: 0, y: 0}
+  moveDuration: 0.18
+  fadeOutDuration: 0.25
+  popInDuration: 0.18
 --- !u!1 &1248879770
 GameObject:
   m_ObjectHideFlags: 0
@@ -35943,6 +35999,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1245228295}
   - {fileID: 793036836}
   - {fileID: 1888613670}
   - {fileID: 1177686802}
@@ -46795,10 +46852,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.05586788
-    y: 0
-    width: 0.88826424
-    height: 1
+    x: 0
+    y: 0.0071163476
+    width: 1
+    height: 0.9857673
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60

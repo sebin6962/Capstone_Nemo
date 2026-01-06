@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -294,6 +295,11 @@ public class Customer : MonoBehaviour
             StarDataManager.Instance?.AddStarlightFromNormal(starAmount);
             SFXManager.Instance.PlayTotalMoneySFX();
 
+            string koName;
+            if (!ItemTooltipDB.TooltipTexts.TryGetValue(givenDagwa, out koName))
+                koName = givenDagwa;
+            RewardPopupStacker.Instance?.Show(expAmount, starAmount, koName);
+            
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
 
             // --- 정답 효과음 재생 추가 ---
