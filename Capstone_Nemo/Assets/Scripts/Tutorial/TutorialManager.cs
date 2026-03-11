@@ -139,7 +139,7 @@ public class TutorialManager : MonoBehaviour
             dogamCloseButton.interactable = true;
         }
 
-        //dlvprxm
+        //¿Ã∆Â∆Æ
         if (dogamHighlightFX)
         {
             dogamHighlightFX.gameObject.SetActive(true);
