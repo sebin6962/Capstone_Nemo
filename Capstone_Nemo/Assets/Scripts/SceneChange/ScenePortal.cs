@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class ScenePortal : MonoBehaviour
 {
@@ -11,6 +12,9 @@ public class ScenePortal : MonoBehaviour
     [Header("도착 씬의 스폰 지점 이름")]
     public string entranceID;
 
+    [Header("상호작용 UI")]
+    [SerializeField] private GameObject interactionUI;
+
     private bool isInTrigger = false;
 
     [SerializeField] private float sfxLead = 0.06f;
@@ -19,12 +23,23 @@ public class ScenePortal : MonoBehaviour
     {
         if (other.CompareTag("Player"))
             isInTrigger = true;
+
+        //UI
+
+        if (interactionUI != null)
+            interactionUI.SetActive(true);
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
+        {
             isInTrigger = false;
+
+            //UI
+            if (interactionUI != null)
+                interactionUI.SetActive(false);
+        }
     }
 
     private void Update()

@@ -139,7 +139,7 @@ public class TutorialManager : MonoBehaviour
             dogamCloseButton.interactable = true;
         }
 
-        //dlvprxm
+        //ÀÌÆåÆ®
         if (dogamHighlightFX)
         {
             dogamHighlightFX.gameObject.SetActive(true);
@@ -190,6 +190,7 @@ public class TutorialManager : MonoBehaviour
             //BoxInventoryManager.cs
             case VillageSecondStep.OpenStorage:
                 villageSecondStep = VillageSecondStep.PickUpSeed;
+                SetSeedForTutorial("Danhobak_seedBag");
                 break;
             //HeldItemManager.cs
             case VillageSecondStep.PickUpSeed:
@@ -204,6 +205,8 @@ public class TutorialManager : MonoBehaviour
                 break;
             //HeldItemManager.cs
             case VillageSecondStep.RestoreSeed:
+                Debug.Log("¾¾¾ÑÀá±ÝÇØÁ¦");
+                ClearSeedLock();
                 villageSecondStep = VillageSecondStep.PickUp_WateringCan;
                 break;
             //WateringCanAnchor.cs
@@ -280,7 +283,7 @@ public class TutorialManager : MonoBehaviour
         if (showStepPanelRoutine != null)
             StopCoroutine(showStepPanelRoutine);
 
-        float delay = 1.5f; 
+        float delay = 0f; 
 
         if (step == VillageSecondStep.GoToMill)
             delay = 3.5f;
@@ -398,6 +401,38 @@ public class TutorialManager : MonoBehaviour
         TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Village_First);
     }
 
+    //Æ©Åä¸®¾ó¾¾¾ÑÀá±Ý
+    public void SetSeedForTutorial(string allowedSeed)
+    {
+        foreach (var slot in BoxInventoryManager.Instance.slots)
+        {
+            if (slot == null)
+                continue;
+            if (!slot.IsInfiniteSeedSlot())
+                continue;
+            if (!slot.HasItem())
+                continue;
+
+            string itemName = slot.GetItemName();
+
+            bool isAllowed = slot.GetItemName() == allowedSeed;
+            slot.SetTutorialLocked(!isAllowed);
+        }
+    }
+
+    //Æ©Åä¸®¾ó¾¾¾ÑÀá±ÝÇØÁ¦
+    public void ClearSeedLock()
+    {
+        foreach (var slot in BoxInventoryManager.Instance.slots)
+        {
+            if (slot == null)
+                continue;
+            if (!slot.IsInfiniteSeedSlot())
+                continue;
+
+            slot.SetTutorialLocked(false);
+        }
+    }
 
     /*void ResumeAndComplete()
     {

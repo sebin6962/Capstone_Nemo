@@ -21,7 +21,9 @@ public enum StoreTutorialStep
     Serve = 14,
     NextOrder = 15,
     DogamCheck = 16,
-    StoreFirst_Finish = 17
+    DogamCheck2 = 17,
+    DogamClose = 18,
+    StoreFirst_Finish = 19
 }
 
 public class StoreTutorialManager : MonoBehaviour
@@ -126,7 +128,7 @@ public class StoreTutorialManager : MonoBehaviour
             StopCoroutine(showStepPanelRoutine);
 
         // 2초 뒤에 패널 켜는 코루틴으로 빼뒀어요!!
-        showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 1.5f));
+        showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 0.3f));
     }
 
     private IEnumerator ShowStepPanelAfterDelay(StoreTutorialStep step, float delay)
@@ -220,6 +222,12 @@ public class StoreTutorialManager : MonoBehaviour
                 currentStep = StoreTutorialStep.DogamCheck;
                 break;
             case StoreTutorialStep.DogamCheck:
+                currentStep = StoreTutorialStep.DogamCheck2;
+                break;
+            case StoreTutorialStep.DogamCheck2:
+                currentStep = StoreTutorialStep.DogamClose;
+                break;
+            case StoreTutorialStep.DogamClose:
                 currentStep = StoreTutorialStep.StoreFirst_Finish;
                 if (TutorialFlowManager.Instance != null)
                     TutorialFlowManager.Instance.UnlockScenePortal();
