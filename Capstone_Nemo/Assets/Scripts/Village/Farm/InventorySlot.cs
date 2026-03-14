@@ -17,6 +17,9 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     private bool isTakenOut = false;
 
+    //튜토리얼잠금용
+    private bool isTutorialLocked = false;
+
     void Update()
     {
         // 스페이스바로 돌려놓기
@@ -38,6 +41,10 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnClick()
     {
+        //튜토리얼 잠금용
+        if (isTutorialLocked)
+            return;
+
         bool isHolding = HeldItemManager.Instance.IsHoldingItem();
         string heldName = HeldItemManager.Instance.GetHeldItemName();
 
@@ -124,6 +131,25 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             }
         }
     }
+
+    //튜토리얼잠금용
+    public void SetTutorialLocked(bool locked)
+    {
+        isTutorialLocked = locked;
+
+        if (itemImage == null)
+            return;
+
+        if (locked)
+        {
+            itemImage.color = Color.gray;
+        }
+        else
+        {
+            itemImage.color = Color.white;
+        }
+    }
+
 
     public void SetItem(Sprite sprite, string name = "", int count = 1)
     {

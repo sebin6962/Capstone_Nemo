@@ -208,7 +208,13 @@ public class DoGamUIManager : MonoBehaviour
         //guestButton.onClick.AddListener(() => FilterByCategory("손님"));
         tteokButton.onClick.AddListener(() => {
             if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
-            FilterByCategory("떡"); });
+            FilterByCategory("떡");
+            //튜토리얼트리거
+            if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.DogamCheck))
+            {
+                StoreTutorialManager.Instance.GoToNextStep();
+            }
+        });
         drinkButton.onClick.AddListener(() => {
             if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
             FilterByCategory("음료"); });
@@ -217,6 +223,11 @@ public class DoGamUIManager : MonoBehaviour
         nextButton.onClick.AddListener(() => {
             if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
             NextEntry();
+            //튜토리얼트리거
+            if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.DogamCheck2))
+            {
+                StoreTutorialManager.Instance.GoToNextStep();
+            }
         });
 
         prevButton.onClick.AddListener(() => {
@@ -507,7 +518,7 @@ public class DoGamUIManager : MonoBehaviour
 public void CloseDoGam()
     {
         //튜토리얼 진행 트리거 8
-        if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.DogamCheck))
+        if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.DogamClose))
         {
             StoreTutorialManager.Instance.GoToNextStep();
         }
