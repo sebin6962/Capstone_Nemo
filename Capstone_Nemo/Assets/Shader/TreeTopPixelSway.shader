@@ -181,7 +181,8 @@ Shader "Unlit/TreeTopPixelSway"
             fixed4 frag(v2f IN) : SV_Target
             {
                 fixed4 c = tex2D(_MainTex, IN.uv) * IN.color;
-                return c;
+c.rgb *= c.a;
+return c;
             }
             ENDCG
         }
