@@ -13,32 +13,29 @@
     },
     {
       "level": 2,
-      "makers": [ "Grinder" ],
+      "makers": [ "Grinder", "Deco" ],
       "recipes": [
-        "Mixing_Baeknyeoncho",
-        "Mixing_Mugwort",
-        "Rainbowseolgi_finish",
-        "Grind_Redbean",
-        "Redbeansiru_finish"
-      ],
-      "shopItems": [ "shop:RedBean" ]
-    },
-    {
-      "level": 3,
-      "makers": [ "Deco", "Pot01", "Pot02" ],
-      "recipes": [
-        "Sieve_Chapssalgaru",
-        "Mixing_Chapssal",
-        "Siru_Chapssal",
         "Injeolmibanjuk",
         "Injeolmi_finish",
         "Mixing_Mugwort",
         "Siru_Mugwort",
         "MugwortInjeolmibanjuk",
-        "MugwortInjeolmi_finish",
-        "Sikhye_finish"
+        "MugwortInjeolmi_finish"
       ],
-      "shopItems": [ "mill:Chapssalgaru", "shop:Sugar_white", "mill:Konggaru", "mill:malt" ]
+      "shopItems": [ "mill:Chapssalgaru",  "mill:Konggaru" ]
+    },
+    {
+      "level": 3,
+      "makers": [ "Pot01", "Pot02" ],
+      "recipes": [
+        "Sieve_Chapssalgaru",
+        "Mixing_Chapssal",
+        "Siru_Chapssal",
+        "Sikhye_finish",
+        "Grind_Redbean",
+        "Redbeansiru_finish"
+      ],
+      "shopItems": [ "shop:RedBean", "shop:Sugar_white", "mill:malt" ]
     },
     {
       "level": 4,
@@ -47,8 +44,6 @@
         "HotWater",
         "Mixing_Chapssal_Hot",
         "Mixing_Kkuulkkaeso",
-        "Kkultteokbanjuk",
-        "Kkultteok_finish",
         "Mixing_Mepssal_Hot",
         "Baramtteokbanjuk",
         "Baramtteok_finish",
@@ -60,6 +55,18 @@
     },
     {
       "level": 5,
+      "makers": [],
+      "recipes": [
+        "Kkultteokbanjuk",
+        "Kkultteok_finish",
+        "Chapssal_banjuk",
+        "Chapssaltteokbanjuk",
+        "Chapssaltteok_finish"
+      ],
+      "shopItems": [ "mill:Powder" ]
+    },
+    {
+      "level": 6,
       "makers": [ "ChungMaker", "TeaMaker", "Cutting" ],
       "recipes": [
         "Cutting_Yuja",
@@ -67,27 +74,22 @@
         "Yujacha_finish",
         "Cutting_Mogwa",
         "Chung_Mogwa",
-        "Mogwacha_finish",
-        "Chung_Omija",
-        "Omijacha",
-        "Omijacha_finish"
+        "Mogwacha_finish"
       ],
-      "shopItems": [ "mill:Jat" ]
-    },
-    {
-      "level": 6,
-      "makers": [],
-      "recipes": [
-        "Chapssal_banjuk",
-        "Chapssaltteokbanjuk",
-        "Chapssaltteok_finish",
-        "Jeolpyeonbanjuk",
-        "Jeolpyeon_finish"
-      ],
-      "shopItems": [ "mill:Powder" ]
+      "shopItems": [  ]
     },
     {
       "level": 7,
+      "makers": [],
+      "recipes": [
+        "Jeolpyeonbanjuk",
+        "Jeolpyeon_finish",
+        "Mixing_Baeknyeoncho",
+        "Rainbowseolgi_finish"
+      ]
+    },
+    {
+      "level": 8,
       "makers": [ "Drying" ],
       "recipes": [
         "Cutting_Apple",
@@ -96,41 +98,46 @@
         "Jeonggwa_Apple_finish",
         "Cutting_Geumgyul",
         "Pot_Geumgyul",
-        "Jeonggwa_Geumgyul_finish"
-      ]
-    },
-    {
-      "level": 8,
-      "makers": [],
-      "recipes": [
-        "Gyeongdanbanjuk",
-        "Pot_Gyeongdanbanjuk",
-        "Gyeongdan_finish"
+        "Jeonggwa_Geumgyul_finish"  
       ]
     },
     {
       "level": 9,
       "makers": [],
       "recipes": [
-        "Manggaetteok_finish",
-        "Sujeonggwa",
-        "Sujeonggwa_finish"
+        "Gyeongdanbanjuk",
+        "Pot_Gyeongdanbanjuk",
+        "Gyeongdan_finish",
+        "Chung_Omija",
+        "Omijacha",
+        "Omijacha_finish"
+
       ],
-      "shopItems": [ "shop:Manggaeleaf", "shop:cinnamon", "shop:ginger", "shop:sugar_brown", "shop:gotgam" ]
+      "shopItems": [ "mill:Jat" ]
     },
     {
       "level": 10,
+      "makers": [  ],
+      "recipes": [
+        "Manggaetteok_finish"
+      ],
+      "shopItems": [ "shop:Manggaeleaf"  ]
+    },
+    {
+      "level": 11,
       "makers": [ "Fryolator" ],
       "recipes": [
+        "Sujeonggwa",
+        "Sujeonggwa_finish",
         "Yakgwabanjuk",
         "ShapeMake_Yakgwabanjuk",
         "Frying_Yakgwabanjuk",
         "Yakgwa_finish"
       ],
-      "shopItems": [ "shop:Flour", "shop:Chamgireum" ]
+      "shopItems": [ "shop:Flour", "shop:Chamgireum", "shop:cinnamon", "shop:ginger", "shop:sugar_brown", "shop:gotgam" ]
     },
     {
-      "level": 11,
+      "level": 12,
       "makers": [],
       "recipes": [
         "Gaesungjuakbanjuk",
@@ -141,7 +148,7 @@
       "shopItems": [ "shop:Alcohol" ]
     },
     {
-      "level": 12,
+      "level": 13,
       "makers": [],
       "recipes": [
         "Sanjabanjuk",
