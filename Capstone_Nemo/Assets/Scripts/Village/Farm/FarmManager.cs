@@ -645,6 +645,12 @@ public class FarmManager : MonoBehaviour
 
         if (data.isTree)
         {
+            // 흔들기 먼저 실행
+            if (tile.cropOverlayObject != null)
+            {
+                StartCoroutine(PlayTreeHarvestShake(tile.cropOverlayObject.transform));
+            }
+
             // 나무: 제거하지 않고 1단계로 되감기
             tile.currentStage = Mathf.Clamp(data.harvestResetStage, 0, data.stages.Count - 1);
             tile.timer = 0f;
@@ -677,6 +683,53 @@ public class FarmManager : MonoBehaviour
         {
             TutorialManager.Instance.GoToNextVillageSecondStep();
         }
+    }
+
+    private readonly HashSet<Transform> shakingTrees = new HashSet<Transform>();
+
+    private IEnumerator PlayTreeHarvestShake(Transform target)
+    {
+        if (target == null) yield break;
+
+        //  중복 실행 방지
+        if (shakingTrees.Contains(target))
+            yield break;
+
+        shakingTrees.Add(target);
+
+        Vector3 originalPos = target.localPosition;
+        Quaternion originalRot = target.localRotation;
+
+        float duration = 0.22f;      // 전체 흔들리는 시간
+        float maxAngle = 7f;         // 좌우 회전 각도
+        float maxOffset = 0.03f;     // 좌우 이동량
+        float frequency = 24f;       // 흔들림 속도
+
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+
+            // 점점 약해지도록
+            float damping = 1f - t;
+
+            float wave = Mathf.Sin(time * frequency);
+
+            float angle = wave * maxAngle * damping;
+            float offsetX = wave * maxOffset * damping;
+
+            target.localRotation = Quaternion.Euler(0f, 0f, angle);
+            target.localPosition = originalPos + new Vector3(offsetX, 0f, 0f);
+
+            yield return null;
+        }
+
+        target.localPosition = originalPos;
+        target.localRotation = originalRot;
+
+        shakingTrees.Remove(target);
     }
 
     private void HandleTreeLevelWarningByInput()
