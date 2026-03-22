@@ -15,10 +15,10 @@ public class SkinShopUIManager : MonoBehaviour
     public class SkinSlot
     {
         public Toggle toggle;          // SkinSlot0/1/2 Toggle
-        public Image previewImage;     // 썸네일 Image
-        public TMP_Text priceText;     // 가격 표시(선택)
-        public GameObject ownedBadge;  // 보유 표시(선택)
-        public GameObject lockBadge;   // 잠금 표시(선택)
+        public Image previewImage;     // 썸네일
+        public TMP_Text priceText;     // 가격 표시
+        public GameObject ownedBadge;  // 보유 표시
+        public GameObject lockBadge;   // 잠금 표시
     }
 
     [Header("3개 슬롯(0,1,2)")]
@@ -103,7 +103,15 @@ public class SkinShopUIManager : MonoBehaviour
                 bool owned = skinMgr.IsOwned(idx);
                 int price = skinMgr.GetPrice(idx);
 
-                if (s.priceText) s.priceText.text = (idx == 0) ? "기본" : $"{price}";
+                if (s.priceText)
+                {
+                    if (idx == 0)
+                        s.priceText.text = "기본";
+                    else if (owned)
+                        s.priceText.text = "구매완료";
+                    else
+                        s.priceText.text = $"{price}";
+                }
                 if (s.ownedBadge) s.ownedBadge.SetActive(owned);
                 if (s.lockBadge) s.lockBadge.SetActive(!owned);
             }

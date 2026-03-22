@@ -80,6 +80,24 @@ public class TreeLevelUnlocker : MonoBehaviour
         get { return isPlayingUnlockSequence; }
     }
 
+    [Header("계수나무 오로라 연출")]
+    public Transform treeEffectAnchor;          // 계수나무 중심 위치
+    public GameObject auroraEffectPrefab;       // 오로라 프리팹
+    public float auroraHoldDuration = 1.2f;     // 도착 후 잠깐 멈춰있는 시간
+    public float auroraFadeInDuration = 0.8f;   // 서서히 밝아짐
+    public float auroraStayDuration = 1.6f;     // 은은하게 유지
+    public float auroraFadeOutDuration = 0.9f;
+
+    [Header("계수나무 스프라이트 페이드")]
+    public float treeSpriteFadeDuration = 0.8f;
+    public bool changeSpriteAtAuroraStart = true;
+
+    [Header("Tree Shader Time Sync")]
+    [SerializeField] private string motionTimeProperty = "_MotionTime";
+
+    private float sharedTreeMotionTime = 0f;
+    private MaterialPropertyBlock treeMotionBlock;
+
     void Awake()
     {
         Instance = this;
@@ -142,6 +160,100 @@ public class TreeLevelUnlocker : MonoBehaviour
                 trigger.triggers.Add(entryExit);
             }
         }
+    }
+
+    private void Update()
+    {
+        sharedTreeMotionTime += Time.deltaTime;
+
+        ApplySharedMotionTime(mapSpriteRenderer);
+    }
+
+    private void ApplySharedMotionTime(SpriteRenderer sr)
+    {
+        if (sr == null) return;
+
+        if (treeMotionBlock == null)
+            treeMotionBlock = new MaterialPropertyBlock();
+
+        sr.GetPropertyBlock(treeMotionBlock);
+        treeMotionBlock.SetFloat(motionTimeProperty, sharedTreeMotionTime);
+        sr.SetPropertyBlock(treeMotionBlock);
+    }
+
+    private IEnumerator FadeToCurrentMapSprite()
+    {
+        if (mapSpriteRenderer == null)
+        {
+            Debug.LogWarning("[TreeLevelUnlocker] mapSpriteRenderer가 연결되지 않았습니다.");
+            yield break;
+        }
+
+        if (currentUnlockedLevel <= 0) yield break;
+        if (mapSpritesByLevel == null || mapSpritesByLevel.Length == 0) yield break;
+
+        int idx = Mathf.Clamp(currentUnlockedLevel - 1, 0, mapSpritesByLevel.Length - 1);
+        Sprite nextSprite = mapSpritesByLevel[idx];
+        if (nextSprite == null) yield break;
+
+        Sprite oldSprite = mapSpriteRenderer.sprite;
+        if (oldSprite == nextSprite) yield break;
+
+        Color baseColor = mapSpriteRenderer.color;
+        float originalAlpha = baseColor.a;
+
+        // 기존 스프라이트 복제용 오브젝트 생성
+        GameObject oldSpriteObj = new GameObject("TreeOldSprite_Fade");
+        oldSpriteObj.transform.SetParent(mapSpriteRenderer.transform.parent);
+        oldSpriteObj.transform.position = mapSpriteRenderer.transform.position;
+        oldSpriteObj.transform.rotation = mapSpriteRenderer.transform.rotation;
+        oldSpriteObj.transform.localScale = mapSpriteRenderer.transform.localScale;
+
+        SpriteRenderer oldRenderer = oldSpriteObj.AddComponent<SpriteRenderer>();
+        oldRenderer.sprite = oldSprite;
+        oldRenderer.color = new Color(baseColor.r, baseColor.g, baseColor.b, originalAlpha);
+        oldRenderer.sortingLayerID = mapSpriteRenderer.sortingLayerID;
+        oldRenderer.sortingOrder = mapSpriteRenderer.sortingOrder + 1;
+
+        // 중요: 기존 나무와 같은 셰이더/머티리얼 공유
+        oldRenderer.sharedMaterial = mapSpriteRenderer.sharedMaterial;
+        oldRenderer.flipX = mapSpriteRenderer.flipX;
+        oldRenderer.flipY = mapSpriteRenderer.flipY;
+        oldRenderer.maskInteraction = mapSpriteRenderer.maskInteraction;
+        oldRenderer.drawMode = mapSpriteRenderer.drawMode;
+
+        // 새 스프라이트를 본체 렌더러에 미리 넣고 알파 0부터 시작
+        mapSpriteRenderer.sprite = nextSprite;
+        mapSpriteRenderer.color = new Color(baseColor.r, baseColor.g, baseColor.b, 0f);
+
+        ApplySharedMotionTime(oldRenderer);
+        ApplySharedMotionTime(mapSpriteRenderer);
+
+        float t = 0f;
+        while (t < treeSpriteFadeDuration)
+        {
+            t += Time.deltaTime;
+            float n = Mathf.Clamp01(t / treeSpriteFadeDuration);
+            n = Mathf.SmoothStep(0f, 1f, n);
+
+            ApplySharedMotionTime(oldRenderer);
+            ApplySharedMotionTime(mapSpriteRenderer);
+
+            Color oldColor = oldRenderer.color;
+            oldColor.a = Mathf.Lerp(originalAlpha, 0f, n);
+            oldRenderer.color = oldColor;
+
+            Color newColor = mapSpriteRenderer.color;
+            newColor.a = Mathf.Lerp(0f, originalAlpha, n);
+            mapSpriteRenderer.color = newColor;
+
+            yield return null;
+        }
+
+        mapSpriteRenderer.color = new Color(baseColor.r, baseColor.g, baseColor.b, originalAlpha);
+
+        if (oldSpriteObj != null)
+            Destroy(oldSpriteObj);
     }
 
     private void SetCameraControllersEnabled(bool enable)
@@ -258,7 +370,7 @@ public class TreeLevelUnlocker : MonoBehaviour
         UpdateLevelButtons();
         ApplyPanelSprite();
 
-        ApplyMapSprite();
+        //ApplyMapSprite();
 
         StartCoroutine(UnlockCameraOnlySequence(levelIdx));
 
@@ -403,7 +515,7 @@ public class TreeLevelUnlocker : MonoBehaviour
         SaveUnlockData();
         UpdateLevelButtons();
         ApplyPanelSprite();
-        ApplyMapSprite();
+        //ApplyMapSprite();
     }
 
     //해금 이펙트
@@ -479,6 +591,9 @@ public class TreeLevelUnlocker : MonoBehaviour
         endPos.z = clickCamPos.z;
         yield return CameraPanTo(endPos, cameraPanDuration);
 
+        // 7.5) 도착 후 잠시 멈춤 + 오로라 연출
+        yield return PlayTreeAuroraSequence();
+
         // 8) 카메라 end → "해금 버튼 누른 그 순간 위치"로 복귀
         yield return CameraPanTo(clickCamPos, cameraReturnDuration);
 
@@ -502,7 +617,72 @@ public class TreeLevelUnlocker : MonoBehaviour
         isPlayingUnlockSequence = false;
     }
 
+    private IEnumerator PlayTreeAuroraSequence()
+    {
+        if (treeEffectAnchor == null)
+        {
+            yield return new WaitForSeconds(auroraHoldDuration);
+            yield break;
+        }
 
+        // 카메라가 도착한 뒤 잠깐 멈춤
+        if (auroraHoldDuration > 0f)
+            yield return new WaitForSeconds(auroraHoldDuration);
+
+        if (auroraEffectPrefab == null)
+        {
+            yield return new WaitForSeconds(auroraFadeInDuration + auroraStayDuration + auroraFadeOutDuration);
+            yield return FadeToCurrentMapSprite();
+            yield break;
+        }
+
+        // 카메라가 도착한 뒤 잠깐 멈춤
+        if (auroraHoldDuration > 0f)
+            yield return new WaitForSeconds(auroraHoldDuration);
+
+        GameObject fx = null;
+        TreeAuroraEffect aura = null;
+
+        if (auroraEffectPrefab != null)
+        {
+            fx = Instantiate(auroraEffectPrefab, treeEffectAnchor.position, Quaternion.identity);
+            aura = fx.GetComponent<TreeAuroraEffect>();
+        }
+
+        if (changeSpriteAtAuroraStart)
+        {
+            // 오로라와 스프라이트 페이드를 동시에 진행
+            Coroutine fadeRoutine = StartCoroutine(FadeToCurrentMapSprite());
+
+            if (aura != null)
+            {
+                yield return aura.PlayRoutine(auroraFadeInDuration, auroraStayDuration, auroraFadeOutDuration);
+            }
+            else
+            {
+                yield return new WaitForSeconds(auroraFadeInDuration + auroraStayDuration + auroraFadeOutDuration);
+            }
+
+            yield return fadeRoutine;
+        }
+        else
+        {
+            // 먼저 스프라이트 바꾸고 그 다음 오로라
+            yield return FadeToCurrentMapSprite();
+
+            if (aura != null)
+            {
+                yield return aura.PlayRoutine(auroraFadeInDuration, auroraStayDuration, auroraFadeOutDuration);
+            }
+            else
+            {
+                yield return new WaitForSeconds(auroraFadeInDuration + auroraStayDuration + auroraFadeOutDuration);
+            }
+        }
+
+        if (fx != null)
+            Destroy(fx);
+    }
 
     // 기존 PlayUnlockEffect를 "기다릴 수 있는" 루틴으로 감쌈
     private IEnumerator PlayUnlockEffectRoutine(int levelIdx)

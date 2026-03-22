@@ -51,6 +51,7 @@ Shader "Unlit/TreeTopPixelSway"
 
         _ShimmerStrength ("Shimmer Strength", Range(0, 0.3)) = 0.02
         _ShimmerSpeed ("Shimmer Speed", Range(0, 10)) = 0.7
+        _MotionTime ("Motion Time", Float) = 0
     }
 
     SubShader
@@ -139,6 +140,8 @@ Shader "Unlit/TreeTopPixelSway"
             float _ShimmerStrength;
             float _ShimmerSpeed;
 
+            float _MotionTime;
+
             v2f vert(appdata_t IN)
             {
                 v2f OUT;
@@ -175,7 +178,8 @@ Shader "Unlit/TreeTopPixelSway"
                     centerMask * (1.0 + _CenterLift * 0.15) +
                     rightMask * (1.0 + _RegionVerticalBoost);
 
-                float t = _Time.y * _Speed + _PhaseOffset;
+                // float t = _Time.y * _Speed + _PhaseOffset;
+                float t = _MotionTime * _Speed + _PhaseOffset;
 
                 float phase = t + top01 * _HeightPhaseShift + regionPhaseOffset;
 
@@ -242,7 +246,7 @@ Shader "Unlit/TreeTopPixelSway"
                     discard;
 
                 float2 uv = IN.uv;
-                float t = _Time.y * _AuroraSpeed;
+                float t = _MotionTime * _AuroraSpeed;
 
                 // 오로라처럼 부드럽게 흐르는 왜곡
                 float wave1 = sin((uv.y * 1.7 + uv.x * 0.6) * _AuroraScale + t * 1.0);
@@ -279,7 +283,7 @@ Shader "Unlit/TreeTopPixelSway"
 
                 auroraColor = lerp(auroraColor, _HighlightColor.rgb, highlightMask * _HighlightAmount);
 
-                float shimmer = sin((uv.x * 7.0 + uv.y * 5.0) + _Time.y * _ShimmerSpeed) * 0.5 + 0.5;
+                float shimmer = sin((uv.x * 7.0 + uv.y * 5.0) + _MotionTime * _ShimmerSpeed) * 0.5 + 0.5;
                 shimmer *= _ShimmerStrength;
 
                 fixed3 tinted = c.rgb * auroraColor * _AuroraBrightness;
