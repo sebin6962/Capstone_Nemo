@@ -29,9 +29,41 @@ public class CutSceneManager : MonoBehaviour
         public string content; // 멀티라인 입력 가능, "||"로 라인(블록) 분할
     }
 
+    [System.Serializable]
+    public class CutImagePanEntry
+    {
+        [Tooltip("이 컷에서 이동시킬 UI 이미지(RectTransform)")]
+        public RectTransform targetImage;
+
+        [Tooltip("이동 기능 사용 여부")]
+        public bool useImagePan = false;
+
+        [Tooltip("시작 anchoredPosition")]
+        public Vector2 startAnchoredPos;
+
+        [Tooltip("끝 anchoredPosition")]
+        public Vector2 endAnchoredPos;
+
+        [Tooltip("줌 기능 사용 여부")]
+        public bool useZoom = false;
+
+        [Tooltip("시작 스케일")]
+        public Vector3 startScale = Vector3.one;
+
+        [Tooltip("끝 스케일")]
+        public Vector3 endScale = Vector3.one;
+
+        [Tooltip("이동 시간")]
+        public float moveDuration = 3f;
+    }
+
     [Header("자막(스택 방식)")]
     [Tooltip("컷 패널과 동일한 길이. content 내 '||'로 라인(블록) 분할")]
     public List<SubtitleEntry> subtitles = new List<SubtitleEntry>();
+
+    [Header("컷 내부 이미지 이동")]
+    [Tooltip("cutPanels와 같은 길이로 맞추기")]
+    public List<CutImagePanEntry> cutImagePans = new List<CutImagePanEntry>();
 
     [Tooltip("자막 줄들을 담는 컨테이너 (VerticalLayoutGroup + ContentSizeFitter 권장)")]
     public RectTransform subtitleContainer;
@@ -95,8 +127,12 @@ public class CutSceneManager : MonoBehaviour
 
     [Header("컷신 건너뛰기 버튼")]
     public GameObject skipButton;
+    public float skipButtonFadeSeconds = 0.4f;
 
+    private CanvasGroup skipButtonGroup;
     private bool isSkipping = false;
+
+    private Coroutine currentImagePanCoroutine;
 
     private void Awake()
     {
@@ -139,29 +175,62 @@ public class CutSceneManager : MonoBehaviour
             ClearSubtitleContainer();
         }
         // 하단 그라데이션 배치 (없으면 NRE 방지)
+        //if (gradientOverlay != null)
+        //{
+        //    var grt = gradientOverlay.rectTransform;
+        //    grt.anchorMin = new Vector2(0f, 0f);
+        //    grt.anchorMax = new Vector2(1f, 0f);
+        //    grt.pivot = new Vector2(0.5f, 0f);
+        //    grt.sizeDelta = new Vector2(grt.sizeDelta.x, gradientHeight); // 높이만 관리
+        //}
+        //// 캔버스 그룹(페이드용)
+        //gradientGroup = gradientOverlay.GetComponent<CanvasGroup>();
+        //if (!gradientGroup) gradientGroup = gradientOverlay.gameObject.AddComponent<CanvasGroup>();
+        //gradientGroup.alpha = 0f;
+        //gradientOverlay.raycastTarget = false;
+
+        //// 스프라이트가 없으면 런타임 생성
+        //if (gradientOverlay.sprite == null)
+        //{
+        //    gradientOverlay.sprite = MakeVerticalGradientSprite(
+        //        4, Mathf.RoundToInt(gradientHeight),
+        //        new Color(0f, 0f, 0f, topAlpha),     // 위(투명)
+        //        new Color(0f, 0f, 0f, bottomAlpha)   // 아래(진한)
+        //    );
+        //    gradientOverlay.type = Image.Type.Simple;
+        //}
         if (gradientOverlay != null)
         {
             var grt = gradientOverlay.rectTransform;
             grt.anchorMin = new Vector2(0f, 0f);
             grt.anchorMax = new Vector2(1f, 0f);
             grt.pivot = new Vector2(0.5f, 0f);
-            grt.sizeDelta = new Vector2(grt.sizeDelta.x, gradientHeight); // 높이만 관리
-        }
-        // 캔버스 그룹(페이드용)
-        gradientGroup = gradientOverlay.GetComponent<CanvasGroup>();
-        if (!gradientGroup) gradientGroup = gradientOverlay.gameObject.AddComponent<CanvasGroup>();
-        gradientGroup.alpha = 0f;
-        gradientOverlay.raycastTarget = false;
+            grt.sizeDelta = new Vector2(grt.sizeDelta.x, gradientHeight);
 
-        // 스프라이트가 없으면 런타임 생성
-        if (gradientOverlay.sprite == null)
+            gradientGroup = gradientOverlay.GetComponent<CanvasGroup>();
+            if (!gradientGroup) gradientGroup = gradientOverlay.gameObject.AddComponent<CanvasGroup>();
+            gradientGroup.alpha = 0f;
+            gradientOverlay.raycastTarget = false;
+
+            if (gradientOverlay.sprite == null)
+            {
+                gradientOverlay.sprite = MakeVerticalGradientSprite(
+                    4, Mathf.RoundToInt(gradientHeight),
+                    new Color(0f, 0f, 0f, topAlpha),
+                    new Color(0f, 0f, 0f, bottomAlpha)
+                );
+                gradientOverlay.type = Image.Type.Simple;
+            }
+        }
+
+        if (skipButton != null)
         {
-            gradientOverlay.sprite = MakeVerticalGradientSprite(
-                4, Mathf.RoundToInt(gradientHeight),
-                new Color(0f, 0f, 0f, topAlpha),     // 위(투명)
-                new Color(0f, 0f, 0f, bottomAlpha)   // 아래(진한)
-            );
-            gradientOverlay.type = Image.Type.Simple;
+            skipButtonGroup = skipButton.GetComponent<CanvasGroup>();
+            if (skipButtonGroup == null)
+                skipButtonGroup = skipButton.AddComponent<CanvasGroup>();
+
+            skipButtonGroup.alpha = 0f;
+            skipButton.SetActive(false);
         }
     }
 
@@ -174,7 +243,11 @@ public class CutSceneManager : MonoBehaviour
 
         //건너뛰기
         if (skipButton != null)
+        {
             skipButton.SetActive(false);
+            if (skipButtonGroup != null)
+                skipButtonGroup.alpha = 0f;
+        }
 
         StartCoroutine(PlayCutAndTransition());
 
@@ -191,7 +264,15 @@ public class CutSceneManager : MonoBehaviour
             nextArrowIndicator.SetActive(true);
 
         if (skipButton != null)
+        {
             skipButton.SetActive(true);
+
+            if (skipButtonGroup != null)
+            {
+                skipButtonGroup.alpha = 0f;
+                yield return FadeCanvasGroup(skipButtonGroup, 0f, 1f, skipButtonFadeSeconds);
+            }
+        }
     }
 
     private IEnumerator PlayCutAndTransition()
@@ -205,6 +286,12 @@ public class CutSceneManager : MonoBehaviour
         for (int i = 0; i < cutPanels.Count; i++)
         {
             cutPanels[i].SetActive(true);
+
+            // 컷 내부 이미지 시작 위치 세팅
+            SetupCutImagePan(i);
+
+            // 이미지 이동 시작
+            StartCutImagePan(i);
 
             // [검은 화면] 1 -> 0 (컷 보이기)
             yield return Fade(1f, 0f, fadeSeconds);
@@ -256,6 +343,12 @@ public class CutSceneManager : MonoBehaviour
                 StartCoroutine(FadeCanvasGroup(subtitleGroup, subtitleGroup.alpha, 0f, 0.35f));
 
             yield return Fade(0f, 1f, fadeSeconds); // 화면 어둡게
+
+            if (currentImagePanCoroutine != null)
+            {
+                StopCoroutine(currentImagePanCoroutine);
+                currentImagePanCoroutine = null;
+            }
 
             // 현재 컷 정리
             cutPanels[i].SetActive(false);
@@ -551,6 +644,88 @@ public class CutSceneManager : MonoBehaviour
         grp.alpha = to;
     }
 
+    private void SetupCutImagePan(int index)
+    {
+        if (cutImagePans == null || index >= cutImagePans.Count) return;
+
+        var panData = cutImagePans[index];
+        if (panData == null || panData.targetImage == null) return;
+
+        if (panData.useImagePan)
+            panData.targetImage.anchoredPosition = panData.startAnchoredPos;
+
+        if (panData.useZoom)
+            panData.targetImage.localScale = panData.startScale;
+    }
+
+    private void StartCutImagePan(int index)
+    {
+        if (cutImagePans == null || index >= cutImagePans.Count) return;
+
+        var panData = cutImagePans[index];
+        if (panData == null || panData.targetImage == null) return;
+
+        if (!panData.useImagePan && !panData.useZoom) return;
+
+        if (currentImagePanCoroutine != null)
+            StopCoroutine(currentImagePanCoroutine);
+
+        currentImagePanCoroutine = StartCoroutine(
+            AnimateCutImagePan(
+                panData.targetImage,
+                panData.useImagePan,
+                panData.startAnchoredPos,
+                panData.endAnchoredPos,
+                panData.useZoom,
+                panData.startScale,
+                panData.endScale,
+                panData.moveDuration
+            )
+        );
+    }
+
+    private IEnumerator AnimateCutImagePan(
+    RectTransform target,
+    bool usePan,
+    Vector2 startPos,
+    Vector2 endPos,
+    bool useZoom,
+    Vector3 startScale,
+    Vector3 endScale,
+    float duration)
+    {
+        if (target == null) yield break;
+
+        float t = 0f;
+        duration = Mathf.Max(0.01f, duration);
+
+        if (usePan)
+            target.anchoredPosition = startPos;
+
+        if (useZoom)
+            target.localScale = startScale;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float lerp = Mathf.SmoothStep(0f, 1f, t / duration);
+
+            if (usePan)
+                target.anchoredPosition = Vector2.Lerp(startPos, endPos, lerp);
+
+            if (useZoom)
+                target.localScale = Vector3.Lerp(startScale, endScale, lerp);
+
+            yield return null;
+        }
+
+        if (usePan)
+            target.anchoredPosition = endPos;
+
+        if (useZoom)
+            target.localScale = endScale;
+    }
+
     private void ClearSubtitleContainer()
     {
         if (subtitleContainer == null) return;
@@ -569,6 +744,7 @@ public class CutSceneManager : MonoBehaviour
 
         // 이 CutSceneManager에서 돌고 있는 모든 코루틴 정지
         StopAllCoroutines();
+        currentImagePanCoroutine = null;
 
         // UI 끄기
         if (nextArrowIndicator != null)

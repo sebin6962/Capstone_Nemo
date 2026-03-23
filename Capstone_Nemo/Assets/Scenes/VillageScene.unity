@@ -8114,8 +8114,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: 0.45, y: 0}
+  m_SizeDelta: {x: 168.28, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &452482320
 MonoBehaviour:
@@ -8164,8 +8164,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -22550,7 +22550,7 @@ RectTransform:
   m_GameObject: {fileID: 1186137318}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.9, y: 0.9, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 452482319}
@@ -34246,7 +34246,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -121.006714, y: -41.000977}
+  m_AnchoredPosition: {x: -121.00659, y: -41.000977}
   m_SizeDelta: {x: 918, y: 516}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1706858485
@@ -35321,7 +35321,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -672.0016, y: 326}
+  m_AnchoredPosition: {x: -672.00134, y: 326}
   m_SizeDelta: {x: -1423.4169, y: -719.6829}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1757436636
@@ -44010,6 +44010,7 @@ MonoBehaviour:
   levelTooLowGroup: {fileID: 544731457}
   player: {fileID: 1577133727}
   interactRadius: 1.6
+  farmSfxCooldown: 0.15
 --- !u!1 &1900854993
 GameObject:
   m_ObjectHideFlags: 0
@@ -45838,7 +45839,7 @@ MonoBehaviour:
   m_Follow: {fileID: 1577133727}
   m_Lens:
     FieldOfView: 60
-    OrthographicSize: 8
+    OrthographicSize: 8.1
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -48014,7 +48015,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 8
+  orthographic size: 8.1
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -48511,6 +48512,34 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 785070786723797767, guid: 5e40778d7618fd94fb45c0eb01d1e9ad, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 785070786723797767, guid: 5e40778d7618fd94fb45c0eb01d1e9ad, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4255544075682551870, guid: 5e40778d7618fd94fb45c0eb01d1e9ad, type: 3}
+      propertyPath: Player.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
+    - target: {fileID: 4255544075682551870, guid: 5e40778d7618fd94fb45c0eb01d1e9ad, type: 3}
+      propertyPath: frontCheckWidth
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4255544075682551870, guid: 5e40778d7618fd94fb45c0eb01d1e9ad, type: 3}
+      propertyPath: waitTimeAtPoint
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4255544075682551870, guid: 5e40778d7618fd94fb45c0eb01d1e9ad, type: 3}
+      propertyPath: blockCheckDistance
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4255544075682551870, guid: 5e40778d7618fd94fb45c0eb01d1e9ad, type: 3}
+      propertyPath: playerLayer.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
     - target: {fileID: 4255544075682551870, guid: 5e40778d7618fd94fb45c0eb01d1e9ad, type: 3}
       propertyPath: waypoints.Array.data[0]
       value: 
@@ -48639,6 +48668,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Npc2
       objectReference: {fileID: 0}
+    - target: {fileID: 7491980835258098131, guid: 5e40778d7618fd94fb45c0eb01d1e9ad, type: 3}
+      propertyPath: m_Layer
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 7495185163618926248, guid: 5e40778d7618fd94fb45c0eb01d1e9ad, type: 3}
+      propertyPath: m_Layer
+      value: 13
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -48652,6 +48689,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 507801192900154351, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
+      propertyPath: m_Layer
+      value: 13
+      objectReference: {fileID: 0}
     - target: {fileID: 974206332173076862, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
       propertyPath: slots.Array.data[0].waypoints.Array.data[0]
       value: 
@@ -48791,6 +48832,38 @@ PrefabInstance:
     - target: {fileID: 1265699167806293448, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
       propertyPath: m_Name
       value: Npc3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1265699167806293448, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
+      propertyPath: m_Layer
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 3322087657232271409, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3322087657232271409, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4869063729275652478, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
+      propertyPath: Player.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
+    - target: {fileID: 4869063729275652478, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
+      propertyPath: frontCheckWidth
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4869063729275652478, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
+      propertyPath: waitTimeAtPoint
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4869063729275652478, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
+      propertyPath: blockCheckDistance
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4869063729275652478, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
+      propertyPath: playerLayer.m_Bits
+      value: 256
       objectReference: {fileID: 0}
     - target: {fileID: 4869063729275652478, guid: 3adf552d0b705a648b65e6a9462c78e8, type: 3}
       propertyPath: waypoints.Array.data[0]
@@ -48949,9 +49022,25 @@ PrefabInstance:
       propertyPath: slots.Array.data[1].waypoints.Array.data[3]
       value: 
       objectReference: {fileID: 741838009}
+    - target: {fileID: 608234138406777182, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
+      propertyPath: m_Layer
+      value: 13
+      objectReference: {fileID: 0}
     - target: {fileID: 2472663993336910016, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
       propertyPath: m_Name
       value: Npc1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2472663993336910016, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
+      propertyPath: m_Layer
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 2900574119872469598, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2900574119872469598, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3594218519915025748, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -48992,6 +49081,26 @@ PrefabInstance:
     - target: {fileID: 3594218519915025748, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732907081790168728, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
+      propertyPath: Player.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732907081790168728, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
+      propertyPath: frontCheckWidth
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732907081790168728, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
+      propertyPath: waitTimeAtPoint
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732907081790168728, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
+      propertyPath: blockCheckDistance
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732907081790168728, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
+      propertyPath: playerLayer.m_Bits
+      value: 256
       objectReference: {fileID: 0}
     - target: {fileID: 7732907081790168728, guid: 64f96e320d603f94b983ee37f385580a, type: 3}
       propertyPath: waypoints.Array.data[0]
@@ -49042,6 +49151,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 491966168634735218, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+      propertyPath: m_Layer
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561373350557429846, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+      propertyPath: Player.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561373350557429846, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+      propertyPath: frontCheckWidth
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561373350557429846, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+      propertyPath: waitTimeAtPoint
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561373350557429846, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+      propertyPath: blockCheckDistance
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561373350557429846, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+      propertyPath: playerLayer.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
     - target: {fileID: 2561373350557429846, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
       propertyPath: waypoints.Array.data[0]
       value: 
@@ -49110,9 +49243,21 @@ PrefabInstance:
       propertyPath: waypoints.Array.data[16]
       value: 
       objectReference: {fileID: 1795543692}
+    - target: {fileID: 6648573260608307189, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6648573260608307189, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6806807927186775286, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
       propertyPath: m_Name
       value: Npc4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6806807927186775286, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+      propertyPath: m_Layer
+      value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 7020227434956588791, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
       propertyPath: m_LocalPosition.x
@@ -49167,6 +49312,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 656463399}
     m_Modifications:
+    - target: {fileID: 218160807565751602, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+      propertyPath: targetCanvas
+      value: 
+      objectReference: {fileID: 656463398}
     - target: {fileID: 534731945229072812, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
       propertyPath: m_RaycastTarget
       value: 1

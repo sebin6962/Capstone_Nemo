@@ -15,6 +15,14 @@ public class NPCPatrolRoute : MonoBehaviour
     public Animator animator;            // NPC의 Animator
     // Animator에 isMoving(bool), moveX(float), moveY(float) 파라미터가 있다고 가정
 
+    [Header("플레이어 차단 감지")]
+    public LayerMask Player;
+    public float skinWidth = 0.02f;     // 앞면에서 살짝 띄우기
+    //public float frontCheckWidth = 0.6f; // 앞면 검사 폭 비율 (0~1)
+    public float blockCheckDistance = 0.25f;
+    private Collider2D col;
+
+
     private int currentIndex = 0;
     private bool isWaiting = false;
     private float waitTimer = 0f;
@@ -27,9 +35,10 @@ public class NPCPatrolRoute : MonoBehaviour
 
     private void Start()
     {
+        col = GetComponent<Collider2D>();
+
         if (waypoints != null && waypoints.Length > 0)
         {
-            // 첫 번째 웨이포인트로 가는 경로 준비
             PrepareMoveToCurrentWaypoint();
         }
     }
@@ -108,7 +117,15 @@ public class NPCPatrolRoute : MonoBehaviour
             if (Mathf.Abs(dx) > stopDistance)
             {
                 float step = Mathf.Sign(dx) * moveSpeed * Time.deltaTime;
-                if (Mathf.Abs(step) > Mathf.Abs(dx)) step = dx; // 오버슈팅 방지
+                if (Mathf.Abs(step) > Mathf.Abs(dx)) step = dx;
+
+                Vector2 dir = new Vector2(Mathf.Sign(dx), 0f);
+
+                if (IsPlayerBlocking(dir))
+                {
+                    transform.position = pos;
+                    return Vector3.zero;
+                }
 
                 pos.x += step;
                 moveDir = new Vector3(Mathf.Sign(dx), 0f, 0f);
@@ -131,8 +148,15 @@ public class NPCPatrolRoute : MonoBehaviour
                 float step = Mathf.Sign(dy) * moveSpeed * Time.deltaTime;
                 if (Mathf.Abs(step) > Mathf.Abs(dy)) step = dy;
 
+                Vector2 dir = new Vector2(0f, Mathf.Sign(dy));
+
+                if (IsPlayerBlocking(dir))
+                {
+                    transform.position = pos;
+                    return Vector3.zero;
+                }
+
                 pos.y += step;
-                // 수직 이동일 때만 moveDir 설정 (수평 축에서 이미 도착했다면)
                 moveDir = new Vector3(0f, Mathf.Sign(dy), 0f);
             }
             else
@@ -261,5 +285,37 @@ public class NPCPatrolRoute : MonoBehaviour
     {
         currentIndex = Mathf.Clamp(index, 0, waypoints.Length - 1);
         PrepareMoveToCurrentWaypoint();   // 내부에서 currentTarget 갱신하는 함수
+    }
+
+    private bool IsPlayerBlocking(Vector2 direction)
+    {
+        if (direction == Vector2.zero || col == null) return false;
+
+        direction.Normalize();
+        Bounds b = col.bounds;
+
+        float checkDistance = blockCheckDistance;
+        Vector2 boxSize;
+        Vector2 boxCenter;
+
+        if (Mathf.Abs(direction.x) > 0.01f)
+        {
+            boxSize = new Vector2(checkDistance, b.size.y * 0.6f);
+            boxCenter = new Vector2(
+                direction.x > 0 ? b.max.x + checkDistance * 0.5f : b.min.x - checkDistance * 0.5f,
+                b.center.y
+            );
+        }
+        else
+        {
+            boxSize = new Vector2(b.size.x * 0.6f, checkDistance);
+            boxCenter = new Vector2(
+                b.center.x,
+                direction.y > 0 ? b.max.y + checkDistance * 0.5f : b.min.y - checkDistance * 0.5f
+            );
+        }
+
+        Collider2D hit = Physics2D.OverlapBox(boxCenter, boxSize, 0f, Player);
+        return hit != null;
     }
 }

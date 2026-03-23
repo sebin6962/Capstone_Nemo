@@ -108,6 +108,26 @@ public class FarmManager : MonoBehaviour
         return false;
     }
 
+    [Header("농사 효과음 중복 방지")]
+    [SerializeField] private float farmSfxCooldown = 0.15f;
+
+    private float lastWaterSfxTime = -999f;
+    private float lastSeedSfxTime = -999f;
+
+    private void PlayWaterSfxOnce()
+    {
+        if (Time.time - lastWaterSfxTime < farmSfxCooldown) return;
+        lastWaterSfxTime = Time.time;
+        SFXManager.Instance.PlayFarmWaterSFX();
+    }
+
+    private void PlaySeedSfxOnce()
+    {
+        if (Time.time - lastSeedSfxTime < farmSfxCooldown) return;
+        lastSeedSfxTime = Time.time;
+        SFXManager.Instance.PlayFarmSeedSFX();
+    }
+
     void Start()
     {
         RegisterFarmTiles();
@@ -428,7 +448,7 @@ public class FarmManager : MonoBehaviour
     //밭에 물 뿌렸을 때 변화
     public void WaterSoil(Vector3 worldPos)
     {
-        SFXManager.Instance.PlayFarmWaterSFX();
+        //SFXManager.Instance.PlayFarmWaterSFX();
         Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
 
         //if (IsFarmTile(worldPos))
@@ -452,9 +472,15 @@ public class FarmManager : MonoBehaviour
                 return; // 젖은 흙도 깔지 않음
             }
 
+            // 이미 물 준 상태면 효과음/처리 중복 방지
+            if (tileInfo.isWatered && wateredTiles.Contains(cellPos))
+                return;
+
             overlayTilemap.SetTile(cellPos, wetSoilTile);  // 젖은 흙 연출
             wateredTiles.Add(cellPos);
             tileInfo.isWatered = true;                     // 성장 타이머가 돌도록
+
+            PlayWaterSfxOnce();
 
             //village2 튜토리얼 진행 트리거 7
             if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.Water))
@@ -463,13 +489,20 @@ public class FarmManager : MonoBehaviour
             }
 
             return;
+
+
         }
 
         // 2) 심어진 게 없고 '밭'이면 기존처럼 젖은 흙만 표시 (씨앗 심을 준비)
         if (IsFarmTile(worldPos))
         {
+            if (wateredTiles.Contains(cellPos) && overlayTilemap.GetTile(cellPos) == wetSoilTile)
+                return;
+
             overlayTilemap.SetTile(cellPos, wetSoilTile);
             wateredTiles.Add(cellPos);
+
+            PlayWaterSfxOnce();
         }
 
         bool IsFarmTile(Vector3 worldPos)
@@ -482,7 +515,6 @@ public class FarmManager : MonoBehaviour
 
     public void PlantSeed(Vector3 worldPos, CropData cropData)
     {
-        SFXManager.Instance.PlayFarmSeedSFX();
         Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
 
         if (!IsFarmTile(worldPos) || growingTiles.ContainsKey(cellPos))
@@ -492,7 +524,6 @@ public class FarmManager : MonoBehaviour
         GameObject overlay = Instantiate(cropOverlayPrefab, overlayWorldPos, Quaternion.identity, transform);
         overlay.GetComponent<SpriteRenderer>().sprite = cropData.stages[0].sprite;
 
-        //아웃라인
         SetupCropSensor(overlay, cropData);
 
         var cropInfo = new CropTile(cellPos, cropData, overlay);
@@ -504,7 +535,8 @@ public class FarmManager : MonoBehaviour
 
         growingTiles.Add(cellPos, cropInfo);
 
-        //village2 튜토리얼 진행 트리거 4
+        PlaySeedSfxOnce();
+
         if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.PlantSeed))
         {
             TutorialManager.Instance.GoToNextVillageSecondStep();

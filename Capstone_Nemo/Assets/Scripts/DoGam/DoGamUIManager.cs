@@ -1064,6 +1064,32 @@ public void CloseDoGam()
             Destroy(recipeContentParent.GetChild(i).gameObject);
     }
 
+    //레시피 라인 프리팹 아이템 슬롯 툴팁
+    private void CreateRecipeIconWithTooltip(Transform parent, Sprite sprite, string itemKey)
+    {
+        if (parent == null || recipeImagePrefab == null) return;
+
+        var go = Instantiate(recipeImagePrefab, parent);
+
+        var rect = go.GetComponent<RectTransform>();
+        if (rect != null)
+            rect.sizeDelta = new Vector2(50, 50);
+
+        var img = go.GetComponent<Image>();
+        if (img != null)
+        {
+            img.sprite = sprite;
+            img.enabled = sprite != null;
+            if (sprite != null) img.preserveAspect = true;
+        }
+
+        var tooltipSlot = go.GetComponent<RecipeItemTooltipSlot>();
+        if (tooltipSlot == null)
+            tooltipSlot = go.AddComponent<RecipeItemTooltipSlot>();
+
+        tooltipSlot.SetTooltip(itemKey);
+    }
+
     // ===================== 게임방법 탭 =====================
     private void LoadHowToFromJSON()
     {
@@ -1416,57 +1442,81 @@ public void CloseDoGam()
         };
 
             // 제작기
+            //if (!string.IsNullOrEmpty(bundle.tool) && toolSlot != null)
+            //{
+            //    var go = Instantiate(recipeImagePrefab, toolSlot);
+            //    go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
+            //    var img = go.GetComponent<Image>();
+            //    string toolName = System.IO.Path.GetFileNameWithoutExtension(bundle.tool);
+            //    var sprite = Resources.Load<Sprite>($"Sprites/restaurant/{toolName}");
+            //    if (img != null)
+            //    {
+            //        img.sprite = sprite;
+            //        img.enabled = sprite != null;
+            //        if (sprite != null) img.preserveAspect = true;
+            //    }
+            //}
             if (!string.IsNullOrEmpty(bundle.tool) && toolSlot != null)
             {
-                var go = Instantiate(recipeImagePrefab, toolSlot);
-                go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
-                var img = go.GetComponent<Image>();
                 string toolName = System.IO.Path.GetFileNameWithoutExtension(bundle.tool);
                 var sprite = Resources.Load<Sprite>($"Sprites/restaurant/{toolName}");
-                if (img != null)
-                {
-                    img.sprite = sprite;
-                    img.enabled = sprite != null;
-                    if (sprite != null) img.preserveAspect = true;
-                }
+                CreateRecipeIconWithTooltip(toolSlot, sprite, toolName);
             }
 
             // 재료
+            //if (bundle.ingredients != null)
+            //{
+            //    for (int j = 0; j < bundle.ingredients.Count && j < ingSlots.Count; j++)
+            //    {
+            //        if (ingSlots[j] != null)
+            //        {
+            //            var go = Instantiate(recipeImagePrefab, ingSlots[j]);
+            //            go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
+            //            var img = go.GetComponent<Image>();
+            //            string ingName = System.IO.Path.GetFileNameWithoutExtension(bundle.ingredients[j]);
+            //            var sprite = Resources.Load<Sprite>($"Sprites/Ingredients/{ingName}");
+            //            if (img != null)
+            //            {
+            //                img.sprite = sprite;
+            //                img.enabled = sprite != null;
+            //                if (sprite != null) img.preserveAspect = true;
+            //            }
+            //        }
+            //    }
+            //}
             if (bundle.ingredients != null)
             {
                 for (int j = 0; j < bundle.ingredients.Count && j < ingSlots.Count; j++)
                 {
                     if (ingSlots[j] != null)
                     {
-                        var go = Instantiate(recipeImagePrefab, ingSlots[j]);
-                        go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
-                        var img = go.GetComponent<Image>();
                         string ingName = System.IO.Path.GetFileNameWithoutExtension(bundle.ingredients[j]);
                         var sprite = Resources.Load<Sprite>($"Sprites/Ingredients/{ingName}");
-                        if (img != null)
-                        {
-                            img.sprite = sprite;
-                            img.enabled = sprite != null;
-                            if (sprite != null) img.preserveAspect = true;
-                        }
+                        CreateRecipeIconWithTooltip(ingSlots[j], sprite, ingName);
                     }
                 }
             }
 
             // 결과물
+            //if (!string.IsNullOrEmpty(bundle.result) && resultSlot != null)
+            //{
+            //    var go = Instantiate(recipeImagePrefab, resultSlot);
+            //    go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
+            //    var img = go.GetComponent<Image>();
+            //    string resultName = System.IO.Path.GetFileNameWithoutExtension(bundle.result);
+            //    var sprite = Resources.Load<Sprite>($"Sprites/Ingredients/{resultName}");
+            //    if (img != null)
+            //    {
+            //        img.sprite = sprite;
+            //        img.enabled = sprite != null;
+            //        if (sprite != null) img.preserveAspect = true;
+            //    }
+            //}
             if (!string.IsNullOrEmpty(bundle.result) && resultSlot != null)
             {
-                var go = Instantiate(recipeImagePrefab, resultSlot);
-                go.GetComponent<RectTransform>().sizeDelta = new Vector2(50, 50);
-                var img = go.GetComponent<Image>();
                 string resultName = System.IO.Path.GetFileNameWithoutExtension(bundle.result);
                 var sprite = Resources.Load<Sprite>($"Sprites/Ingredients/{resultName}");
-                if (img != null)
-                {
-                    img.sprite = sprite;
-                    img.enabled = sprite != null;
-                    if (sprite != null) img.preserveAspect = true;
-                }
+                CreateRecipeIconWithTooltip(resultSlot, sprite, resultName);
             }
         }
 
