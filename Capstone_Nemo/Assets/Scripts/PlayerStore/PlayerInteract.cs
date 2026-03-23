@@ -86,6 +86,11 @@ public class PlayerInteract : MonoBehaviour
                     StoreTutorialManager.Instance.GoToNextStep();
                 }
 
+                if (SecondStoreTutorialManager.Instance && SecondStoreTutorialManager.Instance.IsCurrentStep(SecondStoreTutorialStep.CloseStorage))
+                {
+                    SecondStoreTutorialManager.Instance.GoToNextStep();
+                }
+
                 return;
             }
 
@@ -139,6 +144,11 @@ public class PlayerInteract : MonoBehaviour
                         StoreTutorialManager.Instance.GoToNextStep();
                     }
 
+                    if (SecondStoreTutorialManager.Instance && SecondStoreTutorialManager.Instance.IsCurrentStep(SecondStoreTutorialStep.WaterFinish))
+                    {
+                        SecondStoreTutorialManager.Instance.GoToNextStep();
+                    }
+
                     return;
                 }
 
@@ -155,8 +165,13 @@ public class PlayerInteract : MonoBehaviour
                         StoreTutorialManager.Instance.GoToNextStep();
                     }
 
+                    if (SecondStoreTutorialManager.Instance && SecondStoreTutorialManager.Instance.IsCurrentStep(SecondStoreTutorialStep.WaterOn))
+                    {
+                        SecondStoreTutorialManager.Instance.GoToNextStep();
+                    }
+
                     return;
-                    return;
+                    
                 }
 
                 // 3) 그 외 (이미 뭔가 들고 있거나, 진행 중이거나, 결과물이 있는데 손에 뭔가 들고 있을 때)는 무시
@@ -218,6 +233,22 @@ public class PlayerInteract : MonoBehaviour
                                          resultName == "Baekseolgi_finish")
                                 {
                                     tm.GoToNextStep();
+                                }
+                            }
+
+                            if (SecondStoreTutorialManager.Instance)
+                            {
+                                var ss = SecondStoreTutorialManager.Instance;
+
+                                if (ss.IsCurrentStep(SecondStoreTutorialStep.MixingFinish) &&
+                                         resultName == "Mixing_Danhobak")
+                                {
+                                    ss.GoToNextStep();
+                                }
+                                else if (ss.IsCurrentStep(SecondStoreTutorialStep.SiruFinish) &&
+                                         resultName == "Danhobakseolgi_finish")
+                                {
+                                    ss.GoToNextStep();
                                 }
                             }
 
@@ -283,12 +314,28 @@ public class PlayerInteract : MonoBehaviour
                         StoreTutorialManager.Instance.GoToNextStep();
                     }
 
+                    if (SecondStoreTutorialManager.Instance &&
+                        SecondStoreTutorialManager.Instance.IsCurrentStep(SecondStoreTutorialStep.MixingInsert) &&
+                        currentMaker.makerId == "MIxing01" &&
+                        heldItemName == "Danhobakgaru")
+                    {
+                        SecondStoreTutorialManager.Instance.GoToNextStep();
+                    }
+
                     if (StoreTutorialManager.Instance &&
                         StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.WaterInsert) &&
                         currentMaker.makerId == "MIxing01" &&
                         heldItemName == "Water")
                     {
                         StoreTutorialManager.Instance.GoToNextStep();
+                    }
+
+                    if (SecondStoreTutorialManager.Instance &&
+                        SecondStoreTutorialManager.Instance.IsCurrentStep(SecondStoreTutorialStep.WaterInsert) &&
+                        currentMaker.makerId == "MIxing01" &&
+                        heldItemName == "Water")
+                    {
+                        SecondStoreTutorialManager.Instance.GoToNextStep();
                     }
 
                     if (StoreTutorialManager.Instance &&
@@ -305,6 +352,14 @@ public class PlayerInteract : MonoBehaviour
                         heldItemName == "Mixing_Mepssal")
                     {
                         StoreTutorialManager.Instance.GoToNextStep();
+                    }
+
+                    if (SecondStoreTutorialManager.Instance &&
+                        SecondStoreTutorialManager.Instance.IsCurrentStep(SecondStoreTutorialStep.SiruInsert) &&
+                        (currentMaker.makerId == "Siru01" || currentMaker.makerId == "Siru02") &&
+                        heldItemName == "Mixing_Danhobak")
+                    {
+                        SecondStoreTutorialManager.Instance.GoToNextStep();
                     }
 
                     // 투입 직후 저장

@@ -127,11 +127,16 @@ public class TutorialFlowManager : MonoBehaviour
         //후에 기능 확장.... 안할지도?굳이.., 중간세이브..
     }
 
-    public void CompleteAllTutorial()
+    public void FinishAllTutorial()
     {
         currentStep = GlobalTutorialStep.Done;
         state.tutorialDone = true;
         TutorialState.Save(server, state);
+
+        while (timePauseRequestCount > 0)
+        {
+            ReleaseTutorialTimePause();
+        }
 
         if (RecipeQuickViewUI.Instance != null && RecipeQuickViewUI.Instance.infoText != null)
         {

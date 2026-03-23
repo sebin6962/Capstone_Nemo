@@ -214,6 +214,17 @@ public class MakerInfo : MonoBehaviour
             }
         }
 
+        if (SecondStoreTutorialManager.Instance)
+        {
+            switch (makerId)
+            {
+                case "MIxing01":
+                    if (SecondStoreTutorialManager.Instance.IsCurrentStep(SecondStoreTutorialStep.MixingSpace))
+                        SecondStoreTutorialManager.Instance.GoToNextStep();
+                    break;
+            }
+        }
+
         if (StoreTutorialManager.Instance)
         {
             switch (makerId)
@@ -222,6 +233,18 @@ public class MakerInfo : MonoBehaviour
                 case "Siru02":
                     if (StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.SiruSpace))
                         StoreTutorialManager.Instance.GoToNextStep();
+                    break;
+            }
+        }
+
+        if (SecondStoreTutorialManager.Instance)
+        {
+            switch (makerId)
+            {
+                case "Siru01":
+                case "Siru02":
+                    if (SecondStoreTutorialManager.Instance.IsCurrentStep(SecondStoreTutorialStep.SiruSpace))
+                        SecondStoreTutorialManager.Instance.GoToNextStep();
                     break;
             }
         }

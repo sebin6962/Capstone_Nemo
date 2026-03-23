@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public enum MillTutorialStep
 {
@@ -180,7 +181,7 @@ public class MillTutorialManager : MonoBehaviour
                 currentStep = MillTutorialStep.Mill_Finish;
                 break;
             case MillTutorialStep.Mill_Finish:
-                FinishAllTutorial();
+                FinishMillTutorial();
                 return;
                 
 
@@ -191,7 +192,7 @@ public class MillTutorialManager : MonoBehaviour
         ShowStepPanel(currentStep);
     }
 
-    public void CompleteMillTutorial()
+    public void FinishMillTutorial()
     {
 
         IsMillTutorialRunning = false;
@@ -201,13 +202,19 @@ public class MillTutorialManager : MonoBehaviour
             customerSpawner.EndTutorial();*/
 
 
-        TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Done);
+        if (TutorialFlowManager.Instance != null)
+        {
+            TutorialFlowManager.Instance.UnlockScenePortal();
+            TutorialFlowManager.Instance.ReleaseTutorialTimePause();
+            TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.PlayerStore_Second);
+        }
 
+        SceneManager.LoadScene("PlayerStoreScene");
     }
 
     public void FinishAllTutorial()
     {
-        CompleteMillTutorial();
+        FinishMillTutorial();
 
         state.tutorialDone = true;
         TutorialState.Save(server, state);

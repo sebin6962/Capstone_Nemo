@@ -85,55 +85,56 @@ public class CustomerSpawner : MonoBehaviour
         }
     }
 
-    public void SpawnTutorialCustomer(string tutorialDagwaId, float delay = 0f)
+    public void SpawnTutorialCustomer(int prefabIndex, string tutorialDagwaId, float delay = 0f)
     {
-        tutorialMode = true;  
-        StartCoroutine(SpawnCustomerDelay(tutorialDagwaId, delay));
+        tutorialMode = true;
+        StartCoroutine(SpawnCustomerDelay(prefabIndex, tutorialDagwaId, delay));
     }
 
-    private IEnumerator SpawnCustomerDelay(string tutorialDawgaId, float delay)
+    private IEnumerator SpawnCustomerDelay(int prefabIndex, string tutorialDagwaId, float delay)
     {
         if (delay > 0f)
             yield return new WaitForSecondsRealtime(delay);
 
-        //
         if (seatManager == null)
         {
             Debug.LogError("[Tutorial] seatManager가 null 입니다.");
             yield break;
         }
-        //
 
         int seatIndex = seatManager.GetAvailableSeatIndex();
 
-        //
         Debug.Log($"[Tutorial] GetAvailableSeatIndex = {seatIndex}, routesPerSeat.Count = {routesPerSeat.Count}");
         if (seatIndex < 0 || seatIndex >= routesPerSeat.Count)
         {
             Debug.LogError($"[Tutorial] 잘못된 seatIndex={seatIndex}. routesPerSeat.Count={routesPerSeat.Count}");
             yield break;
         }
-        //
+
+        if (prefabIndex < 0 || prefabIndex >= customerPrefab.Length)
+        {
+            Debug.LogError($"[Tutorial] 잘못된 prefabIndex={prefabIndex}. customerPrefab.Length={customerPrefab.Length}");
+            yield break;
+        }
 
         seatManager.OccupySeat(seatIndex);
 
-        //
         var route = routesPerSeat[seatIndex];
         if (route == null || route.waypoints == null || route.waypoints.Length == 0)
         {
             Debug.LogError($"[Tutorial] routesPerSeat[{seatIndex}] 혹은 waypoints가 비어 있습니다.");
             yield break;
         }
-        //
 
-        GameObject customer = Instantiate(customerPrefab[2], spawnPoint.position, Quaternion.identity);
+        GameObject customer = Instantiate(customerPrefab[prefabIndex], spawnPoint.position, Quaternion.identity);
 
         Transform[] path = routesPerSeat[seatIndex].waypoints;
         Customer customerScript = customer.GetComponent<Customer>();
 
         customerScript.Initialize(path);
         customerScript.SetSeatInfo(seatIndex, seatManager);
-        customerScript.SetTutorialCustomer("baekseolgi_finish");
+        customerScript.SetTutorialCustomer(tutorialDagwaId);
+        customerScript.SetPrefabIndex(prefabIndex);
     }
 
     public void EndTutorial()

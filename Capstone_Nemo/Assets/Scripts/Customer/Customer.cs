@@ -456,6 +456,18 @@ public class Customer : MonoBehaviour
             }
         }
 
+        var stutorMgr = SecondStoreTutorialManager.Instance;
+
+        if (stutorMgr != null)
+        {
+            // 튜토리얼 진행 트리거 6
+            if (isTutorialCustomer && stutorMgr.IsCurrentStep(SecondStoreTutorialStep.Serve))
+            {
+                Debug.Log("[Tutorial] Serve 단계 튜토리얼 손님 퇴장 → NextOrder 단계로 이동");
+                stutorMgr.GoToNextStep();
+            }
+        }
+
         Destroy(gameObject);
     }
 

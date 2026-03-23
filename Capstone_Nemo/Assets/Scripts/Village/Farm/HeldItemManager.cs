@@ -62,6 +62,13 @@ public class HeldItemManager : MonoBehaviour
                 st.GoToNextStep();
             }
 
+            var ss = SecondStoreTutorialManager.Instance;
+            if (ss != null &&
+                ss.IsCurrentStep(SecondStoreTutorialStep.OpenStorage) && HeldItemManager.Instance.GetHeldItemName() == "Danhobakgaru")
+            {
+                ss.GoToNextStep();
+            }
+
             /*            //village2 튜토리얼 진행 트리거 6
                         if (tm != null &&
                             tm.IsCurrentStep(VillageSecondStep.PickUp_WateringCan) &&

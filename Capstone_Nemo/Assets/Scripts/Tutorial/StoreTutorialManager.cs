@@ -104,7 +104,7 @@ public class StoreTutorialManager : MonoBehaviour
         }
 
         if (customerSpawner)
-            customerSpawner.SpawnTutorialCustomer("baekseolgi_finish", 15f);
+            customerSpawner.SpawnTutorialCustomer(2, "baekseolgi_finish", 15f);
 
         ShowStepPanel(currentStep);
     }
@@ -198,18 +198,22 @@ public class StoreTutorialManager : MonoBehaviour
             case StoreTutorialStep.WaterInsert:
                 currentStep = StoreTutorialStep.MixingSpace;
                 break;
+                //MakerInfo.cs
             case StoreTutorialStep.MixingSpace:
                 currentStep = StoreTutorialStep.MixingFinish;
                 break;
+            //PlayerInteract.cs
             case StoreTutorialStep.MixingFinish:
                 currentStep = StoreTutorialStep.SiruInsert;
                 break;
             case StoreTutorialStep.SiruInsert:
                 currentStep = StoreTutorialStep.SiruSpace;
                 break;
+            //MakerInfo.cs
             case StoreTutorialStep.SiruSpace:
                 currentStep = StoreTutorialStep.SiruFinish;
                 break;
+            //MakerInfo.cs
             case StoreTutorialStep.SiruFinish:
                 currentStep = StoreTutorialStep.Serve;
                 break;
