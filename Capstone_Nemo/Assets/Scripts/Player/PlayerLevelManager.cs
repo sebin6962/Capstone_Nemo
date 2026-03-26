@@ -9,7 +9,7 @@ public class PlayerLevelManager : MonoBehaviour
 
     public int Level { get; private set; } = 1;
     public int Exp { get; private set; } = 0;
-    public int ExpToNextLevel => 100 + (Level - 1) * 50;
+    public int ExpToNextLevel => (100 + (Level - 1) * 50) *2;
 
     private string savePath;
 

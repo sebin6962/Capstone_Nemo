@@ -148,6 +148,7 @@ public static class ItemTooltipDB
         { "Gaesungjuakbanjuk", "°³¼ºÁÖ¾Ç ¹ÝÁ×" },
         { "Frying_Gaesungjuakbanjuk", "Æ¢±ä °³¼ºÁÖ¾Ç ¹ÝÁ×" },
         { "Frying_Sanjabanjuk", "Æ¢±ä »êÀÚ ¹ÝÁ×" },
+        { "Yakgwabanjuk", "¾à°ú ¹ÝÁ×" },
         { "Frying_Yakgwabanjuk", "Æ¢±ä ¾à°ú ¹ÝÁ×" },
         { "Mugwort", "¾¦" },
         { "Rice", "½Ò" },

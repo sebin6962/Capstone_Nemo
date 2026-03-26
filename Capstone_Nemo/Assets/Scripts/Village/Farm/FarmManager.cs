@@ -636,7 +636,8 @@ public class FarmManager : MonoBehaviour
         }
 
         // 1) 수확 예정 수량 계산
-        int amount = TreeLevelUnlocker.CurrentLevel >= 1 ? 2 : 1;
+        //int amount = TreeLevelUnlocker.CurrentLevel >= 1 ? 2 : 1;
+        int amount = 5;
 
         // 2) 수확물 키
         string itemKey = data.harvestItemName;
