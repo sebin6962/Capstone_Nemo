@@ -9,15 +9,17 @@ public class ShopItemSlot : MonoBehaviour
     [SerializeField] private TMP_Text itemNameText;
     [SerializeField] private TMP_Text priceText;
     [SerializeField] private TMP_Text quantityText;
+    [SerializeField] private TMP_Text ownedText;
     [SerializeField] private Button plusButton;
     [SerializeField] private Button minusButton;
     [SerializeField] private Image itemImage;
     [SerializeField] private GameObject alarmImage;
+    
 
     private ShopData item;
     private ShopManager manager;
 
-    public void Setup(ShopData newItem, ShopManager shopManager)
+    public void Setup(ShopData newItem, ShopManager shopManager, int ownedCount)
     {
         item = newItem;
         manager = shopManager;
@@ -45,6 +47,7 @@ public class ShopItemSlot : MonoBehaviour
         minusButton.onClick.AddListener(OnMinusButtonClicked);
 
         UpdateDisplay(0);
+        UpdateOwnedDisplay(ownedCount);
     }
 
     public void SetAlarmImage(bool isNew)
@@ -68,5 +71,11 @@ public class ShopItemSlot : MonoBehaviour
     public void UpdateDisplay(int quantity)
     {
         quantityText.text = $"{quantity}";
+    }
+
+    public void UpdateOwnedDisplay(int ownedCount)
+    {
+        if (ownedText != null)
+            ownedText.text = $"º¸À¯ {ownedCount}";
     }
 }

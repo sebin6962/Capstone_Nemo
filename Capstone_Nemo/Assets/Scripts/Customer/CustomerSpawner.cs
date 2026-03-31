@@ -18,6 +18,8 @@ public class CustomerSpawner : MonoBehaviour
 
     [SerializeField] private bool tutorialMode = false;
 
+    [SerializeField] private bool allowNewCustomers = true;
+
     void Awake()
     {
         Debug.Log($"[CustomerSpawner] Awake name={name}, tutorialMode={tutorialMode}");
@@ -48,13 +50,17 @@ public class CustomerSpawner : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
-        TrySpawnCustomer();  
-        timer = 0f;          
+        if (allowNewCustomers)
+        {
+            TrySpawnCustomer();
+        }
+
+        timer = 0f;
     }
 
     void Update()
     {
-        if (tutorialMode)
+        if (tutorialMode || !allowNewCustomers)
             return;
 
         timer += Time.deltaTime;
@@ -83,6 +89,11 @@ public class CustomerSpawner : MonoBehaviour
 
             customerScript.SetPrefabIndex(prefabIndex);
         }
+    }
+
+    public void SetAllowNewCustomers(bool allow)
+    {
+        allowNewCustomers = allow;
     }
 
     public void SpawnTutorialCustomer(int prefabIndex, string tutorialDagwaId, float delay = 0f)

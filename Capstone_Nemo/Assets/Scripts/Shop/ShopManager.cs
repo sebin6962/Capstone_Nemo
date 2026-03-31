@@ -154,7 +154,14 @@ public class ShopManager : MonoBehaviour
 
             var slotObj = Instantiate(itemSlotPrefab, itemListParent);
             var slot = slotObj.GetComponent<ShopItemSlot>();
-            slot.Setup(item, this);
+
+            int ownedCount = 0;
+            if (StorageInventory.Instance != null)
+            {
+                ownedCount = StorageInventory.Instance.GetItemCount(item.itemName);
+            }
+
+            slot.Setup(item, this, ownedCount);
 
             slot.SetAlarmImage(isNew);
 
@@ -227,6 +234,23 @@ public class ShopManager : MonoBehaviour
         totalPriceText.text = $"{total}";
         allTotalPriceText.text = $"{total}";
         buyButton.interactable = (total > 0 && playerStar >= total);
+    }
+
+    void RefreshOwnedCounts()
+    {
+        foreach (var kvp in slotDict)
+        {
+            ShopData item = kvp.Key;
+            ShopItemSlot slot = kvp.Value;
+
+            int ownedCount = 0;
+            if (StorageInventory.Instance != null)
+            {
+                ownedCount = StorageInventory.Instance.GetItemCount(item.itemName);
+            }
+
+            slot.UpdateOwnedDisplay(ownedCount);
+        }
     }
 
 
@@ -314,6 +338,8 @@ public class ShopManager : MonoBehaviour
         UpdateTotalPrice();
 
         StorageInventory.Instance.SaveStorage();
+
+        RefreshOwnedCounts();
 
         Reset();
     }

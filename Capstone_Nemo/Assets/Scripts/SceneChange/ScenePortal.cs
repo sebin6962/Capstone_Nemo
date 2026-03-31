@@ -115,6 +115,11 @@ public class ScenePortal : MonoBehaviour
             }
         }
 
+        if (currentScene == "PlayerStoreScene")
+        {
+            FindObjectOfType<CustomerSpawner>()?.SetAllowNewCustomers(false);
+        }
+
         // SFX 먼저 재생 → 아주 짧게 대기 → 페이드/전환
         StartCoroutine(PlaySfxThenFade());
 

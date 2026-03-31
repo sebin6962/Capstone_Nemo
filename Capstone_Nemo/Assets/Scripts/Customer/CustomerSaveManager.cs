@@ -76,12 +76,12 @@ public class CustomerSaveManager : MonoBehaviour
         }
 
         //»õ ¼Õ´Ô ½ºÆù
-        spawnTimer += dt;
+     /*   spawnTimer += dt;
         if (spawnTimer >= spawnInterval)
         {
             spawnTimer = 0f;
             TrySpawnVirtualCustomer();
-        }
+        }*/
     }
 
     private void TrySpawnVirtualCustomer()
