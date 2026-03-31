@@ -260,10 +260,11 @@ public class TimeManager : MonoBehaviour
 
         int minutesPassed = (hour - 9) * 60 + minute;
         float progress = Mathf.Clamp01((float)minutesPassed / totalGameMinutes);
-        float angle = Mathf.Lerp(0, 360, progress);
+        //float angle = Mathf.Lerp(0, 360, progress);
+        float zAngle = Mathf.Lerp(-90f, 0f, progress);
 
         // 시계방향 회전(원하면 -angle)
-        clockHandImage.rectTransform.localEulerAngles = new Vector3(0, 0, -angle);
+        clockHandImage.rectTransform.localEulerAngles = new Vector3(0, 0, -zAngle);
     }
 
     void UpdateDayUI()
@@ -415,6 +416,23 @@ public class TimeManager : MonoBehaviour
     {
         EndAndPersistSession();               // 종료 직전 세션 저장
         SaveDayData();
+    }
+
+    public string GetCurrentTimeTooltipText()
+    {
+        int displayHour = hour;
+
+        // 24, 25시는 다음날 오전 0시, 1시처럼 보이도록 처리
+        if (displayHour >= 24)
+            displayHour -= 24;
+
+        string period = displayHour < 12 ? "오전" : "오후";
+
+        int hour12 = displayHour % 12;
+        if (hour12 == 0)
+            hour12 = 12;
+
+        return $"{period} {hour12}시";
     }
 }
 

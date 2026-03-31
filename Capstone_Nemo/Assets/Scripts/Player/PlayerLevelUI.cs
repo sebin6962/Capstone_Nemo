@@ -14,4 +14,15 @@ public class PlayerLevelUI : MonoBehaviour
         levelText.text = $"Lv {PlayerLevelManager.Instance.Level}";
         expBar.value = (float)PlayerLevelManager.Instance.Exp / PlayerLevelManager.Instance.ExpToNextLevel;
     }
+
+    public string GetExpTooltipText()
+    {
+        if (PlayerLevelManager.Instance == null)
+            return "";
+
+        int currentExp = PlayerLevelManager.Instance.Exp;
+        int nextExp = PlayerLevelManager.Instance.ExpToNextLevel;
+
+        return $"{currentExp} / {nextExp}";
+    }
 }
