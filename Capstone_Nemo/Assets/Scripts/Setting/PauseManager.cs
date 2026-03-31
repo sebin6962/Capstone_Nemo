@@ -8,7 +8,8 @@ public class PauseManager : MonoBehaviour
     public static PauseManager Instance { get; private set; }
 
     [Header("UI")]
-    [SerializeField] private GameObject currentSettingsPanel;
+    [SerializeField] private GameObject pauseMenuPanel;
+    [SerializeField] private GameObject settingsPanel;
 
     [SerializeField] private bool isPaused = false;
 
@@ -49,30 +50,47 @@ public class PauseManager : MonoBehaviour
         if (!CanUsePause())
             return;
 
-        if (isPaused)
+        //설정창 열려 있으면 설정창 닫고 메뉴로 돌아감
+        if (settingsPanel != null && settingsPanel.activeSelf)
+        {
+            CloseSettingsAndBackToMenu();
+            return;
+        }
+
+        //메뉴가 열려 있으면 닫고 게임 재개
+        if (pauseMenuPanel != null && pauseMenuPanel.activeSelf)
+        {
             ResumeGame();
-        else
-            PauseGame();
+            return;
+        }
+
+        //둘 다 안 열려 있으면 메뉴 열기
+        PauseGame();
     }
 
     private bool CanUsePause()
     {
+        //필요하면 나중에 추가
         return true;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        currentSettingsPanel = null;
-
+        pauseMenuPanel = null;
+        settingsPanel = null;
         ForceResumeWithoutPanel();
     }
 
-    public void RegisterSettingsPanel(GameObject panel)
+    public void RegisterPauseUI(GameObject menuPanel, GameObject settingPanel)
     {
-        currentSettingsPanel = panel;
+        pauseMenuPanel = menuPanel;
+        settingsPanel = settingPanel;
 
-        if (currentSettingsPanel != null)
-            currentSettingsPanel.SetActive(false);
+        if (pauseMenuPanel != null)
+            pauseMenuPanel.SetActive(false);
+
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
     }
 
     public void PauseGame()
@@ -83,12 +101,16 @@ public class PauseManager : MonoBehaviour
         isPaused = true;
         Time.timeScale = 0f;
 
-        if (currentSettingsPanel != null)
+        if (pauseMenuPanel != null)
         {
-            currentSettingsPanel.SetActive(true);
-            currentSettingsPanel.transform.SetAsLastSibling();
+            pauseMenuPanel.SetActive(true);
+            pauseMenuPanel.transform.SetAsLastSibling();
         }
 
+        if (settingsPanel != null)
+        {
+            settingsPanel.SetActive(false);
+        }
     }
 
     public void ResumeGame()
@@ -99,16 +121,56 @@ public class PauseManager : MonoBehaviour
         isPaused = false;
         Time.timeScale = 1f;
 
-        if (currentSettingsPanel != null)
-            currentSettingsPanel.SetActive(false);
+        if (pauseMenuPanel != null)
+            pauseMenuPanel.SetActive(false);
+
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
     }
 
-    public void TogglePause()
+    public void OpenSettings()
     {
-        if (isPaused)
-            ResumeGame();
-        else
-            PauseGame();
+        if (pauseMenuPanel != null)
+            pauseMenuPanel.SetActive(false);
+
+        if (settingsPanel != null)
+        {
+            settingsPanel.SetActive(true);
+            settingsPanel.transform.SetAsLastSibling();
+        }
+    }
+
+    public void CloseSettingsAndBackToMenu()
+    {
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
+
+        if (pauseMenuPanel != null)
+        {
+            pauseMenuPanel.SetActive(true);
+            pauseMenuPanel.transform.SetAsLastSibling();
+        }
+    }
+
+    public void GoToMainScene(string sceneName)
+    {
+        Time.timeScale = 1f;
+        isPaused = false;
+
+        if (pauseMenuPanel != null)
+            pauseMenuPanel.SetActive(false);
+
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
+
+        SceneManager.LoadScene(sceneName);
+    }
+
+    public void QuitGame()
+    {
+        Time.timeScale = 1f;
+        isPaused = false;
+        Application.Quit();
     }
 
     public void ForceResumeWithoutPanel()

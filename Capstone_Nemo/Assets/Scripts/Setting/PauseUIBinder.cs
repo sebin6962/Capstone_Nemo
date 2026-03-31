@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PauseUIBinder : MonoBehaviour
 {
+    [SerializeField] private GameObject pauseMenuPanel;
     [SerializeField] private GameObject settingsPanel;
 
     private void Start()
@@ -11,9 +12,6 @@ public class PauseUIBinder : MonoBehaviour
         if (PauseManager.Instance == null)
             return;
 
-        if (settingsPanel == null)
-            return;
-
-        PauseManager.Instance.RegisterSettingsPanel(settingsPanel);
+        PauseManager.Instance.RegisterPauseUI(pauseMenuPanel, settingsPanel);
     }
 }
