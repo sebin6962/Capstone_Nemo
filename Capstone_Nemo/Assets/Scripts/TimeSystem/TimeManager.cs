@@ -261,10 +261,10 @@ public class TimeManager : MonoBehaviour
         int minutesPassed = (hour - 9) * 60 + minute;
         float progress = Mathf.Clamp01((float)minutesPassed / totalGameMinutes);
         //float angle = Mathf.Lerp(0, 360, progress);
-        float zAngle = Mathf.Lerp(-90f, 0f, progress);
+        float zAngle = Mathf.Lerp(-90f, -360f, progress);
 
         // 시계방향 회전(원하면 -angle)
-        clockHandImage.rectTransform.localEulerAngles = new Vector3(0, 0, -zAngle);
+        clockHandImage.rectTransform.localEulerAngles = new Vector3(0, 0, zAngle);
     }
 
     void UpdateDayUI()

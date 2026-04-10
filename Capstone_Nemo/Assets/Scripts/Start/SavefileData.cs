@@ -45,6 +45,8 @@ public class SaveData
     public float moveDirX;
     public float moveDirY;
 
+    public List<string> acceptedQuestIds;
+
     // 생성자: 새 게임 생성시 0으로 초기화
     public SaveData()
     {
@@ -54,6 +56,8 @@ public class SaveData
         level = 1;
         currentUnlockedTreeLevel = 0;
         storageItems = new List<StorageEntry>();
+        acceptedQuestIds = new List<string>();
+
 
         storageItems.Add(new StorageEntry { name = "Mepssalgaru", amount = 50 });
 

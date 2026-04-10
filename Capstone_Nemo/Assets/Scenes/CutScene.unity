@@ -453,10 +453,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.00045913458
-    y: 0
-    width: 0.99908173
-    height: 1
+    x: 0
+    y: 0.01886794
+    width: 1
+    height: 0.9622641
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -1040,32 +1040,42 @@ MonoBehaviour:
   fadeSeconds: 1.5
   cutSceneDuration: 13.5
   subtitles:
-  - content: "\uC544\uC8FC \uBA3C \uC61B\uB0A0\uBD80\uD130, \uB2EC\uC5D0\uB294 \uD1A0\uB07C\uB4E4\uC774
-      \uC0B4\uACE0 \uC788\uC5C8\uC2B5\uB2C8\uB2E4."
-  - content: "\uC2DC\uAC04\uC774 \uC9C0\uB0A0 \uC218\uB85D \uB354 \uB9CE\uC740 \uD1A0\uB07C\uB4E4\uC774
-      \uBAA8\uC5EC \uAC00\uC815\uC744 \uAFB8\uB9AC\uACE0, \uB9C8\uC744\uC744 \uB9CC\uB4E4\uC5C8\uC5B4\uC694.||\r\n\uB2EC\uD1A0\uB07C
-      \uB9C8\uC744\uC758 \uCEE4\uB2E4\uB780 \uACC4\uC218\uB098\uBB34\uB294 \uD1A0\uB07C\uB4E4\uC5D0\uAC8C
-      \uC7AC\uD654\uB85C \uC0AC\uC6A9\uD560 \uC218 \uC788\uB294 \uBCC4\uBE5B\uC744
-      \uC81C\uACF5\uD574\uC8FC\uC5C8\uC9C0\uC694."
-  - content: "\uADF8\uB7F0\uB370 \uC5B4\uB290 \uB0A0\uBD80\uD130 \uACC4\uC218\uB098\uBB34\uB294
-      \uBE5B\uC744 \uC783\uC5B4\uAC00\uACE0, \uC2DC\uB4E4\uC5B4\uAC00\uAE30 \uC2DC\uC791\uD588\uC2B5\uB2C8\uB2E4.||\n\uC88B\uC740
-      \uBE44\uB8CC\uB97C \uBFCC\uB9AC\uACE0, \uD558\uB298\uC5D0 \uAE30\uB3C4\uB97C
-      \uB4DC\uB824\uB3C4 \uC18C\uC6A9\uC774 \uC5C6\uC5C8\uC5B4\uC694."
-  - content: "\uC774\uB300\uB85C\uB294 \uACC4\uC218\uB098\uBB34\uC640 \uD568\uAED8
-      \uB2EC\uD1A0\uB07C \uB9C8\uC744\uC5D0\uB3C4 \uC704\uAE30\uAC00 \uCC3E\uC544\uC62C
-      \uAC83\uC774 \uBD84\uBA85\uD588\uC8E0.||\r\n\uB9C8\uC744\uC758 \uD55C \uD1A0\uB07C\uB294
-      \uACE0\uBBFC\uC5D0 \uBE60\uC84C\uC2B5\uB2C8\uB2E4."
-  - content: "\uC2DC\uAC04\uC774 \uD750\uB974\uACE0, \uD1A0\uB07C\uB294 \uD55C \uAC00\uC9C0\uB97C
-      \uB5A0\uC62C\uB838\uC2B5\uB2C8\uB2E4.||\n\uBC14\uB85C \uC790\uC2E0\uC774 \uD55C\uAD6D\uC758
-      \uC804\uD1B5 \uB2E4\uACFC\uB97C \uB9CC\uB4DC\uB294 \uAC8C \uD2B9\uAE30\uB77C\uB294
-      \uC0AC\uC2E4\uC744!\r "
-  - content: "\uC774\uC5B4\uC11C \uD1A0\uB07C\uB294 \uC0DD\uAC01\uD588\uC5B4\uC694.||\n\uB2E4\uACFC\uC810\uC744
-      \uC5F4\uC5B4 \uC678\uACC4\uC778 \uC190\uB2D8\uB4E4\uC5D0\uAC8C \uBCC4\uBE5B\uC744
-      \uBC1B\uACE0 \uD30C\uB294 \uAC74 \uC5B4\uB5A8\uAE4C?"
-  - content: "\uADF8\uB807\uAC8C \uD1A0\uB07C\uB294 \uC804\uD1B5 \uB2E4\uACFC\uB97C
-      \uD310\uB9E4\uD558\uB294 \uAC00\uAC8C, \u2018\uB2EC\uB2E4\uB2F4'\uC744 \uC6B4\uC601\uD558\uAE30\uB85C
-      \uACB0\uC2EC\uD558\uB294\uB370... || \n\uACFC\uC5F0 \uD1A0\uB07C\uB294 \uBB34\uC0AC\uD788
-      \uACC4\uC218\uB098\uBB34\uB97C \uC0B4\uB9B4 \uC218 \uC788\uC744\uAE4C\uC694?"
+  - content: "\uC61B\uB0A0 \uC61B\uC801, \uB2EC\uC5D0\uC11C \uD1A0\uB07C\uB4E4\uC774
+      \uC808\uAD6C\uB97C \uCC27\uC73C\uBA70 \uB5A1\uC744 \uB9CC\uB4E4\uACE0 \uC788\uB2E4\uB294
+      \uC774\uC57C\uAE30\uB97C \uB4E4\uC5B4\uBCF8 \uC801 \uC788\uB098\uC694?||\n\uC0AC\uB78C\uB4E4\uC740
+      \uC804\uC124\uC774\uB77C \uBBFF\uC5C8\uC9C0\uB9CC, \uB2EC\uBE5B \uB108\uBA38\uC5D0\uB294
+      \uC815\uB9D0\uB85C \uD1A0\uB07C\uB4E4\uC774 \uC0B4\uC544\uAC00\uB294 \uC791\uC740
+      \uB9C8\uC744\uC774 \uC228\uACA8\uC838 \uC788\uC5C8\uC5B4\uC694."
+  - content: "\uC2DC\uAC04\uC774 \uD750\uB97C\uC218\uB85D \uB354 \uB9CE\uC740 \uD1A0\uB07C\uB4E4\uC774
+      \uC774\uACF3\uC5D0 \uBAA8\uC5EC\uB4E4\uC5B4 \uAC00\uC871\uC744 \uC774\uB8E8\uC5C8\uACE0,
+      \uC791\uC740 \uB9C8\uC744\uB3C4 \uC870\uAE08\uC529 \uC790\uB77C\uB0AC\uC2B5\uB2C8\uB2E4.||\n\uC138\uC6D4\uC774
+      \uD750\uB974\uACE0 \uC2DC\uB300\uAC00 \uBCC0\uD558\uBA74\uC11C, \uD1A0\uB07C\uB4E4\uC774
+      \uD558\uB294 \uC77C\uB3C4 \uD558\uB098\uB458\uC529 \uB2E4\uC591\uD574\uC9C0\uAE30
+      \uC2DC\uC791\uD588\uC9C0\uC694."
+  - content: "\uADF8\uB7F0\uB370 \uC5B4\uB290 \uB0A0\uBD80\uD130, \uBE5B\uC744 \uBA38\uAE08\uACE0
+      \uC788\uB358 \uACC4\uC218\uB098\uBB34\uAC00 \uC870\uAE08\uC529 \uC2DC\uB4E4\uAE30
+      \uC2DC\uC791\uD588\uC2B5\uB2C8\uB2E4.||\n\uC815\uC131\uAECF \uC88B\uC740 \uBE44\uB8CC\uB97C
+      \uBFCC\uB9AC\uACE0, \uAC04\uC808\uD55C \uB9C8\uC74C\uC73C\uB85C \uD558\uB298\uC5D0
+      \uAE30\uB3C4\uB97C \uB4DC\uB824 \uBCF4\uC544\uB3C4 \uC544\uBB34 \uC18C\uC6A9\uC774
+      \uC5C6\uC5C8\uC5B4\uC694."
+  - content: "\uC774\uB300\uB85C \uB450\uC5C8\uB2E4\uAC00\uB294 \uACC4\uC218\uB098\uBB34\uB3C4,
+      \uD1A0\uB07C\uB4E4\uC774 \uC0B4\uC544\uAC00\uB358 \uB2EC\uB9C8\uC744\uB3C4
+      \uD568\uAED8 \uC2DC\uB4E4\uC5B4 \uBC84\uB9B4\uC9C0 \uBAB0\uB790\uC5B4\uC694.||\n\uBAA8\uB450\uAC00
+      \uBD88\uC548\uC5D0 \uC7A0\uAE34 \uADF8\uB54C, \uD55C \uD1A0\uB07C\uAC00 \uAC00\uB9CC\uD788
+      \uC0DD\uAC01\uC5D0 \uC7A0\uACBC\uC2B5\uB2C8\uB2E4."
+  - content: "\uACE0\uBBFC\uD558\uB358 \uD1A0\uB07C\uC5D0\uAC8C\uB294 \uD55C \uAC00\uC9C0
+      \uD2B9\uBCC4\uD55C \uC7AC\uC8FC\uAC00 \uC788\uC5C8\uC5B4\uC694.||\n\uBC14\uB85C
+      \uBA40\uACE0 \uBA3C \uC9C0\uAD6C\uBCC4\uC758 \uC791\uC740 \uB098\uB77C, \uD55C\uAD6D\uC758
+      \uC804\uD1B5 \uB2E4\uACFC\uB97C \uB9CC\uB4DC\uB294 \uC77C\uC774\uC5C8\uC9C0\uC694.\r "
+  - content: "\uC21C\uAC04, \uD1A0\uB07C\uC758 \uBA38\uB9BF\uC18D\uC5D0 \uBC18\uC9DD\uC774\uB294
+      \uC0DD\uAC01 \uD558\uB098\uAC00 \uB5A0\uC62C\uB790\uC5B4\uC694.||\n\u201C\uBCC4\uBE5B\uC744
+      \uD654\uD3D0\uB85C \uC4F0\uB294 \uC678\uACC4\uC778\uB4E4\uC5D0\uAC8C \uB2E4\uACFC\uB97C
+      \uD314\uC544 \uBCF4\uBA74 \uC5B4\uB5A8\uAE4C?\u201D"
+  - content: "\uADF8\uB807\uAC8C \uD1A0\uB07C\uB294 \uD55C\uAD6D \uC804\uD1B5 \uB2E4\uACFC\uB97C
+      \uD310\uB9E4\uD558\uB294 \uC791\uC740 \uB2E4\uACFC\uC810, \u2018\uB2EC\uB2E4\uB2F4\u2019\uC758
+      \uBB38\uC744 \uC5F4\uAE30\uB85C \uD588\uB2F5\uB2C8\uB2E4.||\n\uACFC\uC5F0 \uD1A0\uB07C\uB294
+      \uB2E4\uACFC\uB97C \uD314\uC544 \uBAA8\uC740 \uBCC4\uBE5B\uC73C\uB85C, \uACC4\uC218\uB098\uBB34\uC640
+      \uB2EC\uB9C8\uC744\uC744 \uB2E4\uC2DC \uB418\uC0B4\uB9B4 \uC218 \uC788\uC744\uAE4C\uC694?"
   cutImagePans:
   - targetImage: {fileID: 1082799482}
     useImagePan: 0
@@ -1074,7 +1084,7 @@ MonoBehaviour:
     useZoom: 1
     startScale: {x: 1.2, y: 1.2, z: 1}
     endScale: {x: 1, y: 1, z: 1}
-    moveDuration: 7
+    moveDuration: 15
   - targetImage: {fileID: 998882414}
     useImagePan: 1
     startAnchoredPos: {x: 0, y: 100}
@@ -1082,7 +1092,7 @@ MonoBehaviour:
     useZoom: 0
     startScale: {x: 1, y: 1, z: 1}
     endScale: {x: 1, y: 1, z: 1}
-    moveDuration: 10
+    moveDuration: 15
   - targetImage: {fileID: 1414336580}
     useImagePan: 1
     startAnchoredPos: {x: 100, y: -100}
@@ -1090,7 +1100,7 @@ MonoBehaviour:
     useZoom: 0
     startScale: {x: 1, y: 1, z: 1}
     endScale: {x: 1, y: 1, z: 1}
-    moveDuration: 10
+    moveDuration: 15
   - targetImage: {fileID: 619307646}
     useImagePan: 1
     startAnchoredPos: {x: -100, y: 40}
@@ -1098,7 +1108,7 @@ MonoBehaviour:
     useZoom: 1
     startScale: {x: 1.1, y: 1.1, z: 1}
     endScale: {x: 1, y: 1, z: 1}
-    moveDuration: 10
+    moveDuration: 15
   - targetImage: {fileID: 951583930}
     useImagePan: 1
     startAnchoredPos: {x: 0, y: 40}
@@ -1106,7 +1116,7 @@ MonoBehaviour:
     useZoom: 1
     startScale: {x: 1.1, y: 1.1, z: 1}
     endScale: {x: 1, y: 1, z: 1}
-    moveDuration: 10
+    moveDuration: 15
   - targetImage: {fileID: 1198673620}
     useImagePan: 0
     startAnchoredPos: {x: 0, y: -100}
@@ -1114,7 +1124,7 @@ MonoBehaviour:
     useZoom: 1
     startScale: {x: 1.2, y: 1.2, z: 1}
     endScale: {x: 1, y: 1, z: 1}
-    moveDuration: 10
+    moveDuration: 15
   - targetImage: {fileID: 1848112480}
     useImagePan: 0
     startAnchoredPos: {x: 0, y: 100}
@@ -1122,12 +1132,12 @@ MonoBehaviour:
     useZoom: 1
     startScale: {x: 1.2, y: 1.2, z: 1}
     endScale: {x: 1, y: 1, z: 1}
-    moveDuration: 10
+    moveDuration: 15
   subtitleContainer: {fileID: 1244207705}
   subtitleLinePrefab: {fileID: 3207494433359376507, guid: 53e408f211f9d3348b2c95e325c3c33a, type: 3}
   subtitleGroup: {fileID: 0}
   lineSpacingPx: 18
-  textLineSpacing: 10
+  textLineSpacing: 8
   forceTopLeftAlign: 0
   firstLineDelay: 1
   betweenLinesDelay: 4

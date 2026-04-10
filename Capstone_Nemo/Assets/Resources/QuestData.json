@@ -1,0 +1,28 @@
+{
+  "quests": [
+    {
+      "id": "quest_001",
+      "npcSprite": "mob_4_front_0",
+      "title": "절구 토끼의 소지품 찾아주기",
+      "description": "절구 토끼가 마을에서 잃어버린 물건들을 모두 찾아주세요.",
+      "targetType": "Talk",
+      "targetId": "guest_001",
+      "targetCount": 1,
+      "rewardType": "Item",
+      "rewardId": "tteok",
+      "rewardAmount": 3
+    },
+    {
+      "id": "quest_002",
+      "npcSprite": "mob_4_front_0",
+      "title": "떡 3개 전달",
+      "description": "마을 주민에게 떡 3개를 전달해 주세요.",
+      "targetType": "Deliver",
+      "targetId": "tteok",
+      "targetCount": 3,
+      "rewardType": "Gold",
+      "rewardId": "",
+      "rewardAmount": 100
+    }
+  ]
+}
