@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2296982870676960918}
   - component: {fileID: 1815332540423763515}
   - component: {fileID: 5656283481386682180}
+  - component: {fileID: 1960427325174801476}
   - component: {fileID: 4255544075682551870}
   - component: {fileID: 785070786723797767}
   - component: {fileID: 6351056110003210931}
@@ -124,6 +125,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1960427325174801476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7491980835258098131}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0834c1915e30f884b948196e9af11cb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  npcId: Npc_brown_rabbit
+  npcName: "\uAC08\uC0C9 \uD1A0\uB07C"
+  interactHintUI: {fileID: 0}
+  patrolRoute: {fileID: 4255544075682551870}
 --- !u!114 &4255544075682551870
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -151,6 +168,11 @@ MonoBehaviour:
   waitTimeAtPoint: 3
   loop: 1
   animator: {fileID: 5656283481386682180}
+  Player:
+    serializedVersion: 2
+    m_Bits: 0
+  skinWidth: 0.02
+  blockCheckDistance: 0.25
 --- !u!70 &785070786723797767
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -158,7 +180,7 @@ CapsuleCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7491980835258098131}
-  m_Enabled: 0
+  m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -180,11 +202,11 @@ CapsuleCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 0.9375, y: 1.8125}
+  m_Offset: {x: -0.015296719, y: -0.035692345}
+  m_Size: {x: 1.8043028, y: 3.005628}
   m_Direction: 0
 --- !u!61 &6351056110003210931
 BoxCollider2D:

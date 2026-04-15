@@ -122,6 +122,8 @@ public class QuestBoardUIManager : MonoBehaviour
         }
 
         RefreshAcceptButtonState();
+        CloseQuestDetail();
+        RefreshQuestList();
     }
 
     private void RefreshAcceptButtonState()

@@ -201,6 +201,11 @@ public class SaveSelectManager : MonoBehaviour
 
                     TutorialFlowManager.ForceResetInstance();
 
+                    if (QuestAcceptManager.Instance != null)
+                    {
+                        QuestAcceptManager.Instance.SwitchToSave(serverName);
+                    }
+
                     // 해금 매니저에 이 서버로 전환하라고 알려줌
                     if (UnlockManager.Instance != null)
                     {

@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1023990112899405158}
   - component: {fileID: 8293917913911264705}
-  m_Layer: 8
+  m_Layer: 13
   m_Name: Circle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -96,11 +96,12 @@ GameObject:
   - component: {fileID: 8272977974744214134}
   - component: {fileID: 2504280521412766199}
   - component: {fileID: 4526268086367110305}
+  - component: {fileID: 4596532237453022863}
   - component: {fileID: 4869063729275652478}
   - component: {fileID: 3322087657232271409}
   - component: {fileID: 5932829408800467684}
   - component: {fileID: 974206332173076862}
-  m_Layer: 8
+  m_Layer: 13
   m_Name: Npc3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -208,6 +209,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4596532237453022863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1265699167806293448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0834c1915e30f884b948196e9af11cb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  npcId: npc_glasses_rabbit
+  npcName: "\uC548\uACBD \uD1A0\uB07C"
+  interactHintUI: {fileID: 0}
+  patrolRoute: {fileID: 4869063729275652478}
 --- !u!114 &4869063729275652478
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -243,6 +260,11 @@ MonoBehaviour:
   waitTimeAtPoint: 3
   loop: 1
   animator: {fileID: 4526268086367110305}
+  Player:
+    serializedVersion: 2
+    m_Bits: 0
+  skinWidth: 0.02
+  blockCheckDistance: 0.25
 --- !u!70 &3322087657232271409
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -250,7 +272,7 @@ CapsuleCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1265699167806293448}
-  m_Enabled: 0
+  m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -272,11 +294,11 @@ CapsuleCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 0.9375, y: 1.8125}
+  m_Offset: {x: -0.008277784, y: -0.024831511}
+  m_Size: {x: 1.9142252, y: 2.888552}
   m_Direction: 0
 --- !u!61 &5932829408800467684
 BoxCollider2D:
