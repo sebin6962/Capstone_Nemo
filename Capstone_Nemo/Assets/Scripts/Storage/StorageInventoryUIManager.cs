@@ -9,6 +9,7 @@ public class StorageInventoryUIManager : MonoBehaviour
     public static StorageInventoryUIManager Instance;
     public GameObject panel;                     // 창고 패널
     public List<StorageInventorySlot> slots;     // 미리 배치된 슬롯들
+    public Button openButton;
 
     void Awake()
     {
@@ -32,6 +33,27 @@ public class StorageInventoryUIManager : MonoBehaviour
         SyncMaxSlotsToInventory();
     }
 
+    private void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.G))
+            return;
+
+        // 이미 열려 있으면 버튼 상태와 상관없이 닫기 허용
+        if (IsOpen())
+        {
+            ToggleStorageUIByHotkey();
+            return;
+        }
+
+        // 닫혀 있을 때만 버튼 상태 검사
+        if (openButton == null ||
+            !openButton.gameObject.activeInHierarchy ||
+            !openButton.interactable)
+            return;
+
+        ToggleStorageUIByHotkey();
+    }
+
     public void SyncMaxSlotsToInventory()
     {
         if (StorageInventory.Instance == null) return;
@@ -44,6 +66,16 @@ public class StorageInventoryUIManager : MonoBehaviour
     }
 
     public void ToggleStorageUI()
+    {
+        ToggleStorageUIInternal(false);
+    }
+
+    public void ToggleStorageUIByHotkey()
+    {
+        ToggleStorageUIInternal(true);
+    }
+
+    public void ToggleStorageUIInternal(bool ignoreButtonCheck)
     {
         // 가게 박스 인벤토리 열려 있으면 창고 열기/닫기 막기
         if (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
@@ -66,9 +98,17 @@ public class StorageInventoryUIManager : MonoBehaviour
             return;
 
         // UI 버튼 외에는 열 수 없게 조건문 추가
-        if (!EventSystem.current.currentSelectedGameObject ||
-            EventSystem.current.currentSelectedGameObject.GetComponent<Button>() == null)
-            return;
+        //if (!EventSystem.current.currentSelectedGameObject ||
+        //    EventSystem.current.currentSelectedGameObject.GetComponent<Button>() == null)
+        //    return;
+
+        // 버튼 클릭이 아닐 때는 막되, 단축키 호출은 예외
+        if (!ignoreButtonCheck)
+        {
+            if (!EventSystem.current.currentSelectedGameObject ||
+                EventSystem.current.currentSelectedGameObject.GetComponent<Button>() == null)
+                return;
+        }
 
         if (panel.activeSelf)
         {

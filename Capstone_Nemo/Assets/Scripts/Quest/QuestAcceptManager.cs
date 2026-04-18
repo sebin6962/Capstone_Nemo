@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
@@ -11,6 +12,7 @@ public class QuestAcceptManager : MonoBehaviour
 
     private readonly List<QuestData> acceptedQuests = new();
     private string currentLoadedSave = "";
+    private string pendingSaveToLoad = "";
     private bool hasInitialized = false;
 
     public IReadOnlyList<QuestData> AcceptedQuests => acceptedQuests;
@@ -48,6 +50,12 @@ public class QuestAcceptManager : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         EnsureLoadedForCurrentSave();
+        StartCoroutine(RefreshHUDAfterFrame());
+    }
+
+    private IEnumerator RefreshHUDAfterFrame()
+    {
+        yield return null;
         RefreshHUD();
     }
 
@@ -57,8 +65,16 @@ public class QuestAcceptManager : MonoBehaviour
 
         if (!hasInitialized)
         {
-            LoadFromSave(selectedSave);
-            hasInitialized = true;
+            bool loaded = LoadFromSave(selectedSave);
+            if (loaded)
+                hasInitialized = true;
+            return;
+        }
+
+        // 아직 로드 보류 중인 세이브가 있으면 우선 그것부터 재시도
+        if (!string.IsNullOrEmpty(pendingSaveToLoad))
+        {
+            LoadFromSave(pendingSaveToLoad);
             return;
         }
 
@@ -73,6 +89,7 @@ public class QuestAcceptManager : MonoBehaviour
         PlayerPrefs.SetString("SelectedSave", saveName);
         PlayerPrefs.Save();
 
+        // 바로 로드 시도하되, QuestDatabase 없는 씬이면 pending 상태로 남김
         LoadFromSave(saveName);
         RefreshHUD();
     }
@@ -131,39 +148,44 @@ public class QuestAcceptManager : MonoBehaviour
         RefreshHUD();
     }
 
-    private void LoadFromSave(string saveName)
+    private bool LoadFromSave(string saveName)
     {
-        acceptedQuests.Clear();
-        currentLoadedSave = saveName;
-
         if (string.IsNullOrEmpty(saveName))
         {
             Debug.LogWarning("[QuestAcceptManager] 선택된 세이브가 없습니다.");
-            return;
+            pendingSaveToLoad = "";
+            return false;
         }
 
         string path = Path.Combine(Application.persistentDataPath, $"save_myuser_{saveName}.json");
         if (!File.Exists(path))
         {
             Debug.LogWarning($"[QuestAcceptManager] 세이브 파일이 없습니다: {path}");
-            return;
+            pendingSaveToLoad = "";
+            return false;
         }
 
         SaveData saveData = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
         if (saveData == null)
         {
             Debug.LogWarning("[QuestAcceptManager] SaveData 로드 실패");
-            return;
+            pendingSaveToLoad = "";
+            return false;
         }
 
         if (saveData.acceptedQuestIds == null)
             saveData.acceptedQuestIds = new List<string>();
 
+        // 여기서 QuestDatabase가 없으면 로드 보류
         if (QuestDatabase.Instance == null)
         {
-            Debug.LogWarning("[QuestAcceptManager] QuestDatabase.Instance가 없습니다.");
-            return;
+            Debug.LogWarning("[QuestAcceptManager] QuestDatabase.Instance가 없습니다. 다음 씬에서 다시 로드 시도합니다.");
+            pendingSaveToLoad = saveName;
+            return false;
         }
+
+        // 성공할 때만 임시 리스트를 최종 반영
+        List<QuestData> loadedQuests = new List<QuestData>();
 
         foreach (string questId in saveData.acceptedQuestIds)
         {
@@ -171,10 +193,20 @@ public class QuestAcceptManager : MonoBehaviour
 
             QuestData questData = QuestDatabase.Instance.GetQuestById(questId);
             if (questData != null)
-                acceptedQuests.Add(questData);
+                loadedQuests.Add(questData);
+            else
+                Debug.LogWarning($"[QuestAcceptManager] 퀘스트 ID를 찾지 못했습니다: {questId}");
         }
 
+        acceptedQuests.Clear();
+        acceptedQuests.AddRange(loadedQuests);
+
+        currentLoadedSave = saveName;
+        pendingSaveToLoad = "";
+        hasInitialized = true;
+
         Debug.Log($"[QuestAcceptManager] 세이브 [{saveName}] 퀘스트 {acceptedQuests.Count}개 로드 완료");
+        return true;
     }
 
     public void LoadFromCurrentSaveFile()
@@ -249,6 +281,7 @@ public class QuestAcceptManager : MonoBehaviour
         SaveToCurrentSaveFile();
         RefreshHUD();
     }
+
     private void RefreshHUD()
     {
         if (QuestHUDUIManager.Instance != null)

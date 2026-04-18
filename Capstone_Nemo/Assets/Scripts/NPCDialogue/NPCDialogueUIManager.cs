@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,6 +24,15 @@ public class NPCDialogueUIManager : MonoBehaviour
     [SerializeField] private Button nextButton;
     [SerializeField] private TMP_Text nextButtonText;
 
+    [Header("Typing Effect")]
+    [SerializeField] private float typingSpeed = 0.03f;
+
+    [Header("Next Button Blink")]
+    [SerializeField] private float nextButtonBlinkInterval = 0.45f;
+    [SerializeField] private bool hideNextButtonWhileTyping = false;
+    [SerializeField] private float blinkMinAlpha = 0.25f;
+    [SerializeField] private float blinkMaxAlpha = 1f;
+
     private readonly List<GameObject> spawnedOptions = new();
     private readonly Queue<string> pendingLines = new();
     private readonly Dictionary<string, NPCDialogueNodeData> nodeDict = new();
@@ -33,6 +43,12 @@ public class NPCDialogueUIManager : MonoBehaviour
     private DialogueState currentState = DialogueState.None;
     private string nextNodeAfterLines;
 
+    private Coroutine typingCoroutine;
+    private Coroutine nextButtonBlinkCoroutine;
+
+    private string currentFullLine = "";
+    private bool isTyping = false;
+
     public bool IsOpen()
     {
         return dialoguePanel != null && dialoguePanel.activeSelf;
@@ -40,7 +56,11 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
         else
         {
             Destroy(gameObject);
@@ -210,6 +230,9 @@ public class NPCDialogueUIManager : MonoBehaviour
         pendingLines.Clear();
         nextNodeAfterLines = null;
 
+        StopTypingImmediately();
+        StopNextButtonBlink();
+
         currentState = DialogueState.Choice;
         SetNextButton(false, "다음");
 
@@ -278,6 +301,12 @@ public class NPCDialogueUIManager : MonoBehaviour
         if (currentState != DialogueState.Line)
             return;
 
+        if (isTyping)
+        {
+            CompleteCurrentTyping();
+            return;
+        }
+
         ShowNextLine();
     }
 
@@ -285,14 +314,153 @@ public class NPCDialogueUIManager : MonoBehaviour
     {
         if (pendingLines.Count > 0)
         {
-            if (dialogueText != null)
-                dialogueText.text = pendingLines.Dequeue();
-
-            SetNextButton(true, "다음");
+            string line = pendingLines.Dequeue();
+            StartTyping(line);
             return;
         }
 
         MoveToNode(nextNodeAfterLines);
+    }
+
+    private void StartTyping(string line)
+    {
+        StopTypingImmediately();
+        StopNextButtonBlink();
+
+        currentFullLine = line;
+
+        if (dialogueText == null)
+            return;
+
+        dialogueText.text = currentFullLine;
+        dialogueText.maxVisibleCharacters = 0;
+
+        if (hideNextButtonWhileTyping)
+            SetNextButton(false, "다음");
+        else
+        {
+            SetNextButton(true, "다음");
+            if (nextButton != null)
+                nextButton.interactable = false;
+        }
+
+        typingCoroutine = StartCoroutine(TypeLineCoroutine());
+    }
+
+    private IEnumerator TypeLineCoroutine()
+    {
+        isTyping = true;
+
+        dialogueText.ForceMeshUpdate();
+        int totalVisibleCount = dialogueText.textInfo.characterCount;
+
+        for (int i = 0; i <= totalVisibleCount; i++)
+        {
+            dialogueText.maxVisibleCharacters = i;
+            yield return new WaitForSeconds(typingSpeed);
+        }
+
+        dialogueText.maxVisibleCharacters = totalVisibleCount;
+        isTyping = false;
+        typingCoroutine = null;
+
+        ActivateAndBlinkNextButton();
+    }
+
+    private void CompleteCurrentTyping()
+    {
+        if (dialogueText == null) return;
+
+        if (typingCoroutine != null)
+        {
+            StopCoroutine(typingCoroutine);
+            typingCoroutine = null;
+        }
+
+        dialogueText.text = currentFullLine;
+        dialogueText.ForceMeshUpdate();
+        dialogueText.maxVisibleCharacters = dialogueText.textInfo.characterCount;
+        isTyping = false;
+
+        ActivateAndBlinkNextButton();
+    }
+
+    private void ActivateAndBlinkNextButton()
+    {
+        SetNextButton(true, "다음");
+
+        if (nextButton != null)
+            nextButton.interactable = true;
+
+        StartNextButtonBlink();
+    }
+
+    private void StartNextButtonBlink()
+    {
+        StopNextButtonBlink();
+
+        if (nextButton == null)
+            return;
+
+        nextButtonBlinkCoroutine = StartCoroutine(BlinkNextButtonCoroutine());
+    }
+
+    private void StopNextButtonBlink()
+    {
+        if (nextButtonBlinkCoroutine != null)
+        {
+            StopCoroutine(nextButtonBlinkCoroutine);
+            nextButtonBlinkCoroutine = null;
+        }
+
+        if (nextButton != null)
+        {
+            nextButton.gameObject.SetActive(true);
+
+            Image img = nextButton.GetComponent<Image>();
+            if (img != null)
+            {
+                Color c = img.color;
+                c.a = blinkMaxAlpha;
+                img.color = c;
+            }
+        }
+    }
+
+    private IEnumerator BlinkNextButtonCoroutine()
+    {
+        Image img = nextButton != null ? nextButton.GetComponent<Image>() : null;
+
+        if (img == null)
+            yield break;
+
+        while (true)
+        {
+            Color c = img.color;
+            c.a = blinkMinAlpha;
+            img.color = c;
+
+            yield return new WaitForSeconds(nextButtonBlinkInterval);
+
+            c.a = blinkMaxAlpha;
+            img.color = c;
+
+            yield return new WaitForSeconds(nextButtonBlinkInterval);
+        }
+    }
+
+    private void StopTypingImmediately()
+    {
+        if (typingCoroutine != null)
+        {
+            StopCoroutine(typingCoroutine);
+            typingCoroutine = null;
+        }
+
+        isTyping = false;
+
+        if (dialogueText != null)
+            dialogueText.maxVisibleCharacters = int.MaxValue;
     }
 
     private void CreateOption(string text, UnityEngine.Events.UnityAction callback)
@@ -351,6 +519,9 @@ public class NPCDialogueUIManager : MonoBehaviour
         pendingLines.Clear();
         nodeDict.Clear();
         nextNodeAfterLines = null;
+        StopTypingImmediately();
+        StopNextButtonBlink();
+        currentFullLine = "";
 
         if (dialoguePanel != null)
             dialoguePanel.SetActive(false);

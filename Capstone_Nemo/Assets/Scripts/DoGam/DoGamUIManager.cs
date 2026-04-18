@@ -280,6 +280,27 @@ public class DoGamUIManager : MonoBehaviour
         InitSeenRecipeState();
     }
 
+    private void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.F))
+            return;
+
+        // 이미 열려 있으면 버튼 상태와 상관없이 닫기 허용
+        if (IsOpen())
+        {
+            CloseDoGam();
+            return;
+        }
+
+        // 닫혀 있을 때만 버튼이 실제로 사용 가능한 상태인지 검사
+        if (openButton == null ||
+            !openButton.gameObject.activeInHierarchy ||
+            !openButton.interactable)
+            return;
+
+        OnOpenButtonClicked();
+    }
+
     // ===================== 공통 토글 =====================
     private void SetRecipeLayout(bool on)
     {

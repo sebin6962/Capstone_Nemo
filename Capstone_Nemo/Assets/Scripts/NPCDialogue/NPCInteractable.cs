@@ -7,8 +7,10 @@ public class NPCInteractable : MonoBehaviour
     [SerializeField] private string npcName;
 
     [Header("상호작용")]
-    //[SerializeField] private GameObject interactHintUI;
     [SerializeField] private NPCPatrolRoute patrolRoute;
+
+    [Header("입력 설정")]
+    [SerializeField] private bool useDirectInteractKey = true;
 
     private bool canInteract = false;
     private bool isTalking = false;
@@ -18,33 +20,41 @@ public class NPCInteractable : MonoBehaviour
 
     private void Start()
     {
-        //if (interactHintUI != null)
-            //interactHintUI.SetActive(false);
-
         if (patrolRoute == null)
             patrolRoute = GetComponent<NPCPatrolRoute>();
     }
 
     private void Update()
     {
+        if (!useDirectInteractKey) return;
         if (!canInteract || isTalking) return;
 
         if (Input.GetKeyDown(KeyCode.E))
         {
-            Debug.Log("[NPCInteractable] E 입력 감지");
-
-            if (NPCDialogueUIManager.Instance == null) return;
-
-            isTalking = true;
-
-            //f (interactHintUI != null)
-                //interactHintUI.SetActive(false);
-
-            if (patrolRoute != null)
-                patrolRoute.SetActive(false);
-
-            NPCDialogueUIManager.Instance.OpenDialogue(this);
+            StartDialogueInternally();
         }
+    }
+
+    public void StartDialogueExternally()
+    {
+        if (!canInteract || isTalking) return;
+        StartDialogueInternally();
+    }
+
+    private void StartDialogueInternally()
+    {
+        if (NPCDialogueUIManager.Instance == null) return;
+
+        isTalking = true;
+
+        if (patrolRoute != null)
+            patrolRoute.SetActive(false);
+
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (DialogueFocusManager.Instance != null)
+            DialogueFocusManager.Instance.BeginFocus(playerObj, gameObject);
+
+        NPCDialogueUIManager.Instance.OpenDialogue(this);
     }
 
     public void EndDialogue()
@@ -54,28 +64,19 @@ public class NPCInteractable : MonoBehaviour
         if (patrolRoute != null)
             patrolRoute.SetActive(true);
 
-        //if (canInteract && interactHintUI != null)
-           // interactHintUI.SetActive(true);
+        if (DialogueFocusManager.Instance != null)
+            DialogueFocusManager.Instance.EndFocus();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!other.CompareTag("Player")) return;
-
         canInteract = true;
-        Debug.Log("[NPCInteractable] 플레이어 접근 감지 성공");
-
-        // if (!isTalking && interactHintUI != null)
-        //  interactHintUI.SetActive(true);
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
         if (!other.CompareTag("Player")) return;
-
         canInteract = false;
-
-      //  if (interactHintUI != null)
-           // interactHintUI.SetActive(false);
     }
 }

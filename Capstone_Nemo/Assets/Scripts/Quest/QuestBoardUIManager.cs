@@ -20,6 +20,7 @@ public class QuestBoardUIManager : MonoBehaviour
     [SerializeField] private GameObject questLineBackgroundPrefab;
 
     [Header("상세")]
+    [SerializeField] private Image detailNpcImage;
     [SerializeField] private TMP_Text detailTitleText;
     [SerializeField] private TMP_Text detailDescriptionText;
     [SerializeField] private TMP_Text detailRewardText;
@@ -35,7 +36,11 @@ public class QuestBoardUIManager : MonoBehaviour
     private void Awake()
     {
         if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         if (questListPopup != null) questListPopup.SetActive(false);
         if (questDetailPopup != null) questDetailPopup.SetActive(false);
@@ -59,8 +64,28 @@ public class QuestBoardUIManager : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        // 씬 다시 들어왔을 때 현재 세이브 기준 퀘스트 상태를 다시 맞춤
+        if (QuestAcceptManager.Instance != null)
+            QuestAcceptManager.Instance.EnsureLoadedForCurrentSave();
+
+        RefreshQuestList();
+        RefreshAcceptButtonState();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
     public void OpenQuestList()
     {
+        // 열 때마다 최신 상태로 다시 그림
+        if (QuestAcceptManager.Instance != null)
+            QuestAcceptManager.Instance.EnsureLoadedForCurrentSave();
+
         RefreshQuestList();
 
         if (questListPopup != null) questListPopup.SetActive(true);
@@ -90,6 +115,9 @@ public class QuestBoardUIManager : MonoBehaviour
     {
         if (data == null) return;
 
+        if (QuestAcceptManager.Instance != null)
+            QuestAcceptManager.Instance.EnsureLoadedForCurrentSave();
+
         currentDetailQuestData = data;
 
         if (detailTitleText != null)
@@ -101,10 +129,39 @@ public class QuestBoardUIManager : MonoBehaviour
         if (detailRewardText != null)
             detailRewardText.text = $"{data.rewardId} {data.rewardAmount}개";
 
+        RefreshDetailNpcImage(data);
         RefreshAcceptButtonState();
 
         if (questDetailPopup != null)
             questDetailPopup.SetActive(true);
+    }
+
+    private void RefreshDetailNpcImage(QuestData data)
+    {
+        if (detailNpcImage == null)
+            return;
+
+        if (data == null || string.IsNullOrWhiteSpace(data.npcSprite))
+        {
+            detailNpcImage.sprite = null;
+            detailNpcImage.gameObject.SetActive(false);
+            return;
+        }
+
+        Sprite sprite = Resources.Load<Sprite>($"Sprites/NPC/{data.npcSprite}");
+
+        if (sprite != null)
+        {
+            detailNpcImage.sprite = sprite;
+            detailNpcImage.preserveAspect = true;
+            detailNpcImage.gameObject.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning($"[QuestBoardUIManager] 상세창 NPC 스프라이트를 찾을 수 없습니다: Sprites/NPC/{data.npcSprite}");
+            detailNpcImage.sprite = null;
+            detailNpcImage.gameObject.SetActive(false);
+        }
     }
 
     private void OnClickAcceptQuestButton()
@@ -118,12 +175,13 @@ public class QuestBoardUIManager : MonoBehaviour
         {
             Debug.Log("[QuestBoardUIManager] 퀘스트는 최대 3개까지만 수락할 수 있습니다.");
             RefreshAcceptButtonState();
+            RefreshQuestList();
             return;
         }
 
         RefreshAcceptButtonState();
-        CloseQuestDetail();
         RefreshQuestList();
+        CloseQuestDetail();
     }
 
     private void RefreshAcceptButtonState()
@@ -137,6 +195,9 @@ public class QuestBoardUIManager : MonoBehaviour
             acceptQuestButtonText.text = "수락하기";
             return;
         }
+
+        if (QuestAcceptManager.Instance != null)
+            QuestAcceptManager.Instance.EnsureLoadedForCurrentSave();
 
         if (QuestAcceptManager.Instance != null &&
             QuestAcceptManager.Instance.IsAccepted(currentDetailQuestData.id))
@@ -156,11 +217,19 @@ public class QuestBoardUIManager : MonoBehaviour
     {
         ClearQuestList();
 
-        if (QuestDatabase.Instance == null || QuestDatabase.Instance.QuestList == null)
+        if (DailyQuestManager.Instance != null)
+            DailyQuestManager.Instance.EnsureTodayQuestsLoadedOncePerSession();
+
+        if (DailyQuestManager.Instance == null || DailyQuestManager.Instance.TodayQuests == null)
             return;
 
-        foreach (QuestData quest in QuestDatabase.Instance.QuestList)
+        IReadOnlyList<QuestData> dailyQuests = DailyQuestManager.Instance.TodayQuests;
+
+        for (int i = 0; i < dailyQuests.Count; i++)
         {
+            QuestData quest = dailyQuests[i];
+            if (quest == null) continue;
+
             GameObject lineGO = Instantiate(questLineBackgroundPrefab, questListContent, false);
 
             RectTransform rt = lineGO.GetComponent<RectTransform>();
@@ -174,6 +243,12 @@ public class QuestBoardUIManager : MonoBehaviour
             currentItems.Add(lineGO);
         }
     }
+
+    public void RefreshQuestListExternally()
+    {
+        RefreshQuestList();
+    }
+
 
     private void ClearQuestList()
     {

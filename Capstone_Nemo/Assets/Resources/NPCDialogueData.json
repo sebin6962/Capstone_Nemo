@@ -1,6 +1,154 @@
 {
   "npcs": [
     {
+      "npcId": "npc_yellow_rabbit",
+      "npcName": "노란 토끼",
+      "startNodeId": "main_choice",
+      "randomGreetingNodeIds": [
+        "greeting_1",
+        "greeting_2",
+        "greeting_3"
+      ],
+      "nodes": [
+        {
+          "nodeId": "greeting_1",
+          "type": "line",
+          "lines": [
+            "안녕! 오늘은 햇살이 유난히 따뜻하네.",
+            "너를 보니까 기분이 더 좋아졌어."
+          ],
+          "nextNodeId": "main_choice"
+        },
+        {
+          "nodeId": "greeting_2",
+          "type": "line",
+          "lines": [
+            "어라, 왔구나!",
+            "마침 누군가랑 이야기하고 싶었어."
+          ],
+          "nextNodeId": "main_choice"
+        },
+        {
+          "nodeId": "greeting_3",
+          "type": "line",
+          "lines": [
+            "또 만나서 반가워.",
+            "오늘은 어떤 이야기를 해볼까?"
+          ],
+          "nextNodeId": "main_choice"
+        },
+        {
+          "nodeId": "main_choice",
+          "type": "choice",
+          "options": [
+            {
+              "text": "부탁받은 일에 대해 묻는다.",
+              "nextNodeId": "quest_reply",
+              "requiredQuestTargetNpcId": "npc_yellow_rabbit",
+              "completeTalkQuestOnSelect": true
+            },
+            {
+              "text": "오늘 기분은 어때?",
+              "nextNodeId": "today_reply"
+            },
+            {
+              "text": "무슨 생각 하고 있었어?",
+              "nextNodeId": "thought_reply"
+            }
+          ]
+        },
+        {
+          "nodeId": "today_reply",
+          "type": "line",
+          "lines": [
+            "기분은 꽤 좋은 편이야.",
+            "조용한 날에는 괜히 마음이 느긋해지더라.",
+            "이럴 때 누군가랑 이야기하면 더 즐거워."
+          ],
+          "nextNodeId": "after_today_choice"
+        },
+        {
+          "nodeId": "after_today_choice",
+          "type": "choice",
+          "options": [
+            {
+              "text": "나도 그런 날이 좋아.",
+              "nextNodeId": "same_feeling_reply"
+            },
+            {
+              "text": "이만 갈게.",
+              "nextNodeId": "goodbye"
+            }
+          ]
+        },
+        {
+          "nodeId": "same_feeling_reply",
+          "type": "line",
+          "lines": [
+            "역시 그렇지?",
+            "평온한 하루는 생각보다 소중한 것 같아."
+          ],
+          "nextNodeId": "goodbye"
+        },
+        {
+          "nodeId": "thought_reply",
+          "type": "line",
+          "lines": [
+            "별건 아니고, 그냥 오늘 있었던 일들을 떠올리고 있었어.",
+            "작은 일이어도 지나고 나면 괜히 마음에 남을 때가 있잖아.",
+            "그래도 이렇게 말로 꺼내면 좀 정리가 되는 것 같아."
+          ],
+          "nextNodeId": "after_thought_choice"
+        },
+        {
+          "nodeId": "after_thought_choice",
+          "type": "choice",
+          "options": [
+            {
+              "text": "조금 더 들어줄게.",
+              "nextNodeId": "thought_more_reply"
+            },
+            {
+              "text": "다음에 또 이야기하자.",
+              "nextNodeId": "goodbye"
+            }
+          ]
+        },
+        {
+          "nodeId": "thought_more_reply",
+          "type": "line",
+          "lines": [
+            "고마워.",
+            "네가 들어주면 별일 아닌 것도 괜히 특별하게 느껴져.",
+            "다음에도 생각이 많아지면 또 이야기할게."
+          ],
+          "nextNodeId": "goodbye"
+        },
+        {
+          "nodeId": "quest_reply",
+          "type": "line",
+          "lines": [
+            "아, 내가 부탁했던 걸 기억하고 있었구나!",
+            "덕분에 걱정을 덜었어. 정말 고마워.",
+            "다음에 꼭 보답할 기회를 만들게."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "goodbye",
+          "type": "line",
+          "lines": [
+            "다음에 또 이야기하자."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "end_node",
+          "type": "end"
+        }
+      ]
+    },
+    {
       "npcId": "npc_mortar_rabbit",
       "npcName": "절구 토끼",
       "startNodeId": "main_choice",
@@ -162,7 +310,7 @@
           "type": "line",
           "lines": [
             "안녕? 오늘도 바쁜 하루네.",
-            "오, 오랜만이야."
+            "너...좀 오랜만인 것 같다?"
           ],
           "nextNodeId": "main_choice"
         },
@@ -442,6 +590,303 @@
           "type": "line",
           "lines": [
             "다음에도 이야기하러 와."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "end_node",
+          "type": "end"
+        }
+      ]
+    },
+    {
+      "npcId": "npc_millShop_rabbit",
+      "npcName": "방앗간 토끼",
+      "startNodeId": "main_choice",
+      "randomGreetingNodeIds": [
+        "greeting_1",
+        "greeting_2",
+        "greeting_3"
+      ],
+      "nodes": [
+        {
+          "nodeId": "greeting_1",
+          "type": "line",
+          "lines": [
+            "어서 와. 방앗간에 온 걸 환영해.",
+            "오늘도 고운 재료 냄새가 가득하지?"
+          ],
+          "nextNodeId": "main_choice"
+        },
+        {
+          "nodeId": "greeting_2",
+          "type": "line",
+          "lines": [
+            "딱 좋은 때에 왔네.",
+            "방금 막 재료 손질을 끝낸 참이야."
+          ],
+          "nextNodeId": "main_choice"
+        },
+        {
+          "nodeId": "greeting_3",
+          "type": "line",
+          "lines": [
+            "또 왔구나.",
+            "오늘은 뭘 찾으러 왔어?"
+          ],
+          "nextNodeId": "main_choice"
+        },
+        {
+          "nodeId": "main_choice",
+          "type": "choice",
+          "options": [
+            {
+              "text": "부탁받은 일에 대해 묻는다.",
+              "nextNodeId": "quest_reply",
+              "requiredQuestTargetNpcId": "npc_millShop_rabbit",
+              "completeTalkQuestOnSelect": true
+            },
+            {
+              "text": "오늘은 어때?",
+              "nextNodeId": "today_reply"
+            },
+            {
+              "text": "방앗간 일은 어때?",
+              "nextNodeId": "shop_reply"
+            }
+          ]
+        },
+        {
+          "nodeId": "today_reply",
+          "type": "line",
+          "lines": [
+            "늘 비슷한 하루 같아도, 손님이 오면 분위기가 달라져.",
+            "재료를 고르고 빻고 정리하다 보면 시간 가는 줄 모르겠어.",
+            "그래도 이렇게 잠깐 이야기할 여유는 좋네."
+          ],
+          "nextNodeId": "after_today_choice"
+        },
+        {
+          "nodeId": "after_today_choice",
+          "type": "choice",
+          "options": [
+            {
+              "text": "바빠 보여도 즐거워 보이네.",
+              "nextNodeId": "today_more_reply"
+            },
+            {
+              "text": "이만 갈게.",
+              "nextNodeId": "goodbye"
+            }
+          ]
+        },
+        {
+          "nodeId": "today_more_reply",
+          "type": "line",
+          "lines": [
+            "좋아하는 일을 하면 바빠도 견딜 만하거든.",
+            "네가 그렇게 말해주니 오늘은 더 힘이 나는걸."
+          ],
+          "nextNodeId": "goodbye"
+        },
+        {
+          "nodeId": "shop_reply",
+          "type": "line",
+          "lines": [
+            "방앗간 일은 생각보다 손이 많이 가.",
+            "재료 상태를 잘 봐야 하고, 빻는 정도도 맞춰야 하거든.",
+            "하지만 딱 알맞게 완성됐을 때의 기분은 꽤 뿌듯해."
+          ],
+          "nextNodeId": "after_shop_choice"
+        },
+        {
+          "nodeId": "after_shop_choice",
+          "type": "choice",
+          "options": [
+            {
+              "text": "무척 꼼꼼해야겠네.",
+              "nextNodeId": "shop_more_reply"
+            },
+            {
+              "text": "다음에 또 올게.",
+              "nextNodeId": "goodbye"
+            }
+          ]
+        },
+        {
+          "nodeId": "shop_more_reply",
+          "type": "line",
+          "lines": [
+            "맞아, 조금만 방심해도 결과가 달라지거든.",
+            "그래서 더 정성을 들이게 돼.",
+            "좋은 재료는 그런 손끝에서 나온다고 믿고 있어."
+          ],
+          "nextNodeId": "goodbye"
+        },
+        {
+          "nodeId": "quest_reply",
+          "type": "line",
+          "lines": [
+            "아, 내가 부탁했던 일 말이구나.",
+            "덕분에 방앗간 일을 한결 수월하게 할 수 있겠어.",
+            "정말 고마워. 다음엔 더 좋은 걸 챙겨줄게."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "goodbye",
+          "type": "line",
+          "lines": [
+            "필요한 게 있으면 언제든 다시 와."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "end_node",
+          "type": "end"
+        }
+      ]
+    },
+    {
+      "npcId": "npc_market_rabbit",
+      "npcName": "상점 토끼",
+      "startNodeId": "main_choice",
+      "randomGreetingNodeIds": [
+        "greeting_1",
+        "greeting_2",
+        "greeting_3"
+      ],
+      "nodes": [
+        {
+          "nodeId": "greeting_1",
+          "type": "line",
+          "lines": [
+            "어서 와! 필요한 물건 있으면 천천히 둘러봐.",
+            "오늘도 좋은 물건들로 꽉 채워뒀어."
+          ],
+          "nextNodeId": "main_choice"
+        },
+        {
+          "nodeId": "greeting_2",
+          "type": "line",
+          "lines": [
+            "오, 반가운 손님이네.",
+            "가게에 네가 오면 괜히 더 활기차지는 것 같아."
+          ],
+          "nextNodeId": "main_choice"
+        },
+        {
+          "nodeId": "greeting_3",
+          "type": "line",
+          "lines": [
+            "또 찾아왔구나.",
+            "오늘은 뭘 구경하고 싶어?"
+          ],
+          "nextNodeId": "main_choice"
+        },
+        {
+          "nodeId": "main_choice",
+          "type": "choice",
+          "options": [
+            {
+              "text": "부탁받은 일에 대해 묻는다.",
+              "nextNodeId": "quest_reply",
+              "requiredQuestTargetNpcId": "npc_market_rabbit",
+              "completeTalkQuestOnSelect": true
+            },
+            {
+              "text": "오늘 장사는 어때?",
+              "nextNodeId": "today_reply"
+            },
+            {
+              "text": "가게 일은 힘들지 않아?",
+              "nextNodeId": "shop_reply"
+            }
+          ]
+        },
+        {
+          "nodeId": "today_reply",
+          "type": "line",
+          "lines": [
+            "오늘은 손님이 꾸준히 와서 제법 바쁜 편이야.",
+            "그래도 가게가 북적이면 이상하게 기분이 좋아지더라.",
+            "누가 뭘 좋아하는지 알아가는 것도 은근 즐겁고."
+          ],
+          "nextNodeId": "after_today_choice"
+        },
+        {
+          "nodeId": "after_today_choice",
+          "type": "choice",
+          "options": [
+            {
+              "text": "장사가 잘돼서 다행이네.",
+              "nextNodeId": "today_more_reply"
+            },
+            {
+              "text": "이만 갈게.",
+              "nextNodeId": "goodbye"
+            }
+          ]
+        },
+        {
+          "nodeId": "today_more_reply",
+          "type": "line",
+          "lines": [
+            "고마워.",
+            "이 가게를 오래 지키고 싶어서 더 열심히 하게 돼.",
+            "다음에도 편하게 들러줘."
+          ],
+          "nextNodeId": "goodbye"
+        },
+        {
+          "nodeId": "shop_reply",
+          "type": "line",
+          "lines": [
+            "힘들 때도 있지만, 손님이 만족해하면 금방 잊게 돼.",
+            "물건 정리도 해야 하고 재고도 챙겨야 해서 쉴 틈은 별로 없지.",
+            "그래도 이 가게는 내가 제일 아끼는 장소야."
+          ],
+          "nextNodeId": "after_shop_choice"
+        },
+        {
+          "nodeId": "after_shop_choice",
+          "type": "choice",
+          "options": [
+            {
+              "text": "가게를 정말 좋아하는구나.",
+              "nextNodeId": "shop_more_reply"
+            },
+            {
+              "text": "다음에 또 올게.",
+              "nextNodeId": "goodbye"
+            }
+          ]
+        },
+        {
+          "nodeId": "shop_more_reply",
+          "type": "line",
+          "lines": [
+            "응, 오래 돌보다 보니 정이 많이 들었거든.",
+            "여기 있는 물건 하나하나에도 나름의 이야기가 있어.",
+            "언젠가 시간 나면 그런 얘기도 들려줄게."
+          ],
+          "nextNodeId": "goodbye"
+        },
+        {
+          "nodeId": "quest_reply",
+          "type": "line",
+          "lines": [
+            "아, 내가 부탁했던 일을 신경 써줬구나.",
+            "덕분에 가게 일을 훨씬 수월하게 마무리할 수 있었어.",
+            "정말 고마워. 다음에 필요한 게 있으면 내가 도와줄게."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "goodbye",
+          "type": "line",
+          "lines": [
+            "언제든 다시 들러. 반갑게 맞아줄게."
           ],
           "nextNodeId": "end_node"
         },

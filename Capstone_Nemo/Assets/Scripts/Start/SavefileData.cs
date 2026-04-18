@@ -47,6 +47,9 @@ public class SaveData
 
     public List<string> acceptedQuestIds;
 
+    public string dailyQuestRealDate;
+    public List<string> dailyQuestIds;
+
     // 생성자: 새 게임 생성시 0으로 초기화
     public SaveData()
     {
@@ -58,6 +61,8 @@ public class SaveData
         storageItems = new List<StorageEntry>();
         acceptedQuestIds = new List<string>();
 
+        dailyQuestRealDate = "";
+        dailyQuestIds = new List<string>();
 
         storageItems.Add(new StorageEntry { name = "Mepssalgaru", amount = 50 });
 

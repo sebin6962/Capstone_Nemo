@@ -26,7 +26,11 @@ public class QuestHUDUIManager : MonoBehaviour
     private void Awake()
     {
         if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         if (toggleButton != null)
         {
@@ -35,7 +39,17 @@ public class QuestHUDUIManager : MonoBehaviour
         }
 
         SetExpanded(false);
+    }
+
+    private void OnEnable()
+    {
         RefreshAcceptedQuestUI();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     public void ToggleList()
@@ -61,7 +75,8 @@ public class QuestHUDUIManager : MonoBehaviour
         if (QuestAcceptManager.Instance == null)
         {
             if (questCountText != null) questCountText.text = "0";
-            if (rootObject != null) rootObject.SetActive(false);
+            if (rootObject != null) rootObject.SetActive(true);
+            if (questListPanel != null) questListPanel.SetActive(false);
             return;
         }
 
@@ -71,7 +86,18 @@ public class QuestHUDUIManager : MonoBehaviour
             questCountText.text = accepted.Count.ToString();
 
         if (rootObject != null)
-            rootObject.SetActive(accepted.Count > 0);
+            rootObject.SetActive(true);
+
+        if (accepted.Count == 0)
+        {
+            isExpanded = false;
+
+            if (questListPanel != null)
+                questListPanel.SetActive(false);
+
+            if (arrowImage != null)
+                arrowImage.sprite = arrowDownSprite;
+        }
 
         for (int i = 0; i < accepted.Count; i++)
         {

@@ -197,6 +197,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 35517478}
   m_CullTransparentMesh: 1
+--- !u!1 &59658222
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 59658224}
+  - component: {fileID: 59658223}
+  m_Layer: 0
+  m_Name: DailyQuestManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &59658223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 59658222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c2911fff9c2de04abd674dbbc22e5dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dailyQuestCount: 3
+--- !u!4 &59658224
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 59658222}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.1878335, y: -1.8603592, z: -0.071217865}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &259708885
 GameObject:
   m_ObjectHideFlags: 0
@@ -1458,10 +1503,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.00005733967
-    y: 0
-    width: 0.9998853
-    height: 1
+    x: 0
+    y: 0.0006214678
+    width: 1
+    height: 0.99875706
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -2058,3 +2103,4 @@ SceneRoots:
   - {fileID: 1829946133}
   - {fileID: 259708889}
   - {fileID: 2084235211}
+  - {fileID: 59658224}

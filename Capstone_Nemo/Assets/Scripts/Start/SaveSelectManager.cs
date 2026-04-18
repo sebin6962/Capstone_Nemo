@@ -206,6 +206,11 @@ public class SaveSelectManager : MonoBehaviour
                         QuestAcceptManager.Instance.SwitchToSave(serverName);
                     }
 
+                    if (DailyQuestManager.Instance != null)
+                    {
+                        DailyQuestManager.Instance.SwitchToSave(serverName);
+                    }
+
                     // 해금 매니저에 이 서버로 전환하라고 알려줌
                     if (UnlockManager.Instance != null)
                     {
