@@ -15,6 +15,7 @@ public class CropTileSave
     public string lastWaterTime;
 
     public bool isTree;
+    public bool autoRegrow;
 }
 
 [System.Serializable]
@@ -50,6 +51,8 @@ public class FarmManager : MonoBehaviour
     private HashSet<Vector3Int> farmPositions = new HashSet<Vector3Int>();
 
     private HashSet<Vector3Int> wateredTiles = new();
+
+    private HashSet<Vector3Int> autoGrowingTrees = new();
 
     [Header("나무 레벨 부족 패널")]
     public GameObject levelTooLowPanel;
@@ -154,15 +157,20 @@ public class FarmManager : MonoBehaviour
 
         foreach (var kvp in growingTiles)
         {
+            var pos = kvp.Key;
             var tile = kvp.Value;
 
-            if (tile.isWatered && tile.currentStage < tile.cropData.stages.Count - 1)
+            bool canGrow =
+                tile.currentStage < tile.cropData.stages.Count - 1 &&
+                (tile.isWatered || autoGrowingTrees.Contains(pos));
+
+            if (canGrow)
             {
                 tile.timer += Time.deltaTime;
 
                 if (tile.timer >= tile.cropData.stages[tile.currentStage].timeToNextStage)
                 {
-                    readyToAdvance.Add(kvp.Key);
+                    readyToAdvance.Add(pos);
                 }
             }
         }
@@ -196,10 +204,11 @@ public class FarmManager : MonoBehaviour
                 currentStage = t.currentStage,
                 timer = t.timer,
                 isWatered = t.isWatered,
-                isTree = t.cropData.isTree
+                isTree = t.cropData.isTree,
+                autoRegrow = autoGrowingTrees.Contains(pos)   // 추가
             });
 
-            System.IO.File.WriteAllText(FarmSavePath, JsonUtility.ToJson(data, true));
+            
         }
 
         // 2) 젖은 흙 저장
@@ -211,7 +220,6 @@ public class FarmManager : MonoBehaviour
 
         // 3) 마지막 저장 시각 기록
         data.lastSavedUtcSeconds = (System.DateTime.UtcNow - System.DateTime.UnixEpoch).TotalSeconds;
-
         System.IO.File.WriteAllText(FarmSavePath, JsonUtility.ToJson(data, true));
     }
 
@@ -235,6 +243,7 @@ public class FarmManager : MonoBehaviour
             if (kv.Value.cropOverlayObject) Destroy(kv.Value.cropOverlayObject);
         growingTiles.Clear();
         wateredTiles.Clear();
+        autoGrowingTrees.Clear();
 
         // 2) 젖은 흙 복원 (overlay 타일/집합)
         for (int i = 0; i < data.wetXs.Count; i++)
@@ -264,30 +273,40 @@ public class FarmManager : MonoBehaviour
 
             // 오프라인 성장: elapsed를 현재/이후 단계에 순차적으로 적용
             float remain = elapsed;
-            while (remain > 0f && watered && stage < cropData.stages.Count - 1)
+
+            bool autoRegrow = c.autoRegrow && cropData.isTree;
+
+            while (remain > 0f && (watered || autoRegrow) && stage < cropData.stages.Count - 1)
             {
                 float need = cropData.stages[stage].timeToNextStage - timer;
+
                 if (need <= 0f)
                 {
-                    // 즉시 한 단계 진급 처리
                     stage = Mathf.Min(stage + 1, cropData.stages.Count - 1);
                     timer = 0f;
-                    watered = false;
-                    break;
+
+                    if (stage >= cropData.stages.Count - 1)
+                    {
+                        watered = false;
+                        autoRegrow = false;
+                    }
+                    continue;
                 }
 
                 if (remain >= need)
                 {
-                    // 다음 단계로 성장
                     remain -= need;
                     stage += 1;
                     timer = 0f;
 
-                    watered = false;
+                    if (stage >= cropData.stages.Count - 1)
+                    {
+                        watered = false;
+                        autoRegrow = false;
+                    }
                 }
                 else
                 {
-                    // 아직 다음 단계 못 감: 타이머만 누적
                     timer += remain;
                     remain = 0f;
                 }
@@ -318,6 +337,16 @@ public class FarmManager : MonoBehaviour
                 timer = timer,
                 isWatered = watered
             };
+
+            if (autoRegrow)
+            {
+                autoGrowingTrees.Add(pos);
+            }
+            else
+            {
+                autoGrowingTrees.Remove(pos);
+            }
+
             growingTiles.Add(pos, cropInfo);
 
             //아웃라인
@@ -549,26 +578,42 @@ public class FarmManager : MonoBehaviour
         var tile = growingTiles[pos];
         tile.currentStage++;
         tile.timer = 0f;
-        tile.isWatered = false;
+
+        bool isFinalStage = tile.currentStage >= tile.cropData.stages.Count - 1;
+        bool isAutoTree = autoGrowingTrees.Contains(pos);
 
         if (tile.cropOverlayObject != null)
         {
-            tile.cropOverlayObject.GetComponent<SpriteRenderer>().sprite = tile.cropData.stages[tile.currentStage].sprite;
+            tile.cropOverlayObject.GetComponent<SpriteRenderer>().sprite =
+                tile.cropData.stages[tile.currentStage].sprite;
+        }
+
+        // 최종 단계에 도달했을 때만 성장 상태 종료
+        if (isFinalStage)
+        {
+            tile.isWatered = false;
+            autoGrowingTrees.Remove(pos);
 
             overlayTilemap.SetTile(pos, null);
             wateredTiles.Remove(pos);
         }
-
-        //overlayTilemap.ClearTile(pos);
-
+        else
+        {
+            // 나무 자동 재성장은 물 없이 자라는 상태이므로 젖은 흙 표시 제거 유지
+            if (isAutoTree)
+            {
+                overlayTilemap.SetTile(pos, null);
+                wateredTiles.Remove(pos);
+            }
+        }
 
         Debug.Log($"작물 {tile.cropData.cropName}이 {tile.currentStage}단계로 성장함");
 
-        //아웃라인
         UpdateCropOutlineState(tile);
 
-        //village2 튜토리얼 진행 트리거 8
-        if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.CropGrowing) && tile.currentStage == tile.cropData.stages.Count - 1)
+        if (TutorialManager.Instance &&
+            TutorialManager.Instance.IsCurrentStep(VillageSecondStep.CropGrowing) &&
+            tile.currentStage == tile.cropData.stages.Count - 1)
         {
             TutorialManager.Instance.GoToNextVillageSecondStep();
         }
@@ -678,25 +723,24 @@ public class FarmManager : MonoBehaviour
 
         if (data.isTree)
         {
-            // 흔들기 먼저 실행
             if (tile.cropOverlayObject != null)
             {
                 StartCoroutine(PlayTreeHarvestShake(tile.cropOverlayObject.transform));
             }
 
-            // 나무: 제거하지 않고 1단계로 되감기
             tile.currentStage = Mathf.Clamp(data.harvestResetStage, 0, data.stages.Count - 1);
             tile.timer = 0f;
             tile.isWatered = false;
 
-            // 스프라이트 갱신
+            // 수확 후에는 물 없이 자동 재성장 시작
+            autoGrowingTrees.Add(pos);
+
             if (tile.cropOverlayObject != null)
             {
                 var sr = tile.cropOverlayObject.GetComponent<SpriteRenderer>();
                 sr.sprite = data.stages[tile.currentStage].sprite;
             }
 
-            // 젖은 흙 비주얼은 제거(수확 후 바로 젖어있지 않음)
             overlayTilemap.SetTile(pos, null);
             wateredTiles.Remove(pos);
         }
