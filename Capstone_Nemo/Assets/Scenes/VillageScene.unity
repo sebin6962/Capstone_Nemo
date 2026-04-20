@@ -6250,6 +6250,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pauseMenuPanel: {fileID: 0}
   settingsPanel: {fileID: 0}
+  fadeImage: {fileID: 0}
+  fadeDuration: 0.35
   isPaused: 0
 --- !u!1 &273979831
 GameObject:
@@ -8819,7 +8821,6 @@ GameObject:
   - component: {fileID: 428365728}
   - component: {fileID: 428365732}
   - component: {fileID: 428365731}
-  - component: {fileID: 428365730}
   - component: {fileID: 428365729}
   m_Layer: 0
   m_Name: Panel
@@ -8869,18 +8870,6 @@ MonoBehaviour:
   lampFadeStart: 0.35
   lampFadeEnd: 0.55
   instantOn: 0
---- !u!225 &428365730
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 428365727}
-  m_Enabled: 1
-  m_Alpha: 0
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
 --- !u!114 &428365731
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8894,7 +8883,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.089580126, g: 0, b: 0.3207547, a: 0.5058824}
+  m_Color: {r: 0, g: 0, b: 0, a: 0}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -34207,7 +34196,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 994475557
-  m_SortingOrder: 0
+  m_SortingOrder: 100
   m_TargetDisplay: 0
 --- !u!224 &1527536568
 RectTransform:
@@ -52959,6 +52948,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pauseMenuPanel: {fileID: 1498819166}
   settingsPanel: {fileID: 356895069}
+  fadeImage: {fileID: 428365731}
 --- !u!1 &2110549462
 GameObject:
   m_ObjectHideFlags: 0
