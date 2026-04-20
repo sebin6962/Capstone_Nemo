@@ -1,24 +1,17 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class PauseUIBinder : MonoBehaviour
 {
     [SerializeField] private GameObject pauseMenuPanel;
     [SerializeField] private GameObject settingsPanel;
-    [SerializeField] private Image fadeImage;
 
-    private IEnumerator Start()
+    private void Start()
     {
-        yield return null;
-
         if (PauseManager.Instance == null)
-        {
-            Debug.LogWarning("[PauseUIBinder] PauseManager.Instance is null");
-            yield break;
-        }
+            return;
 
         PauseManager.Instance.RegisterPauseUI(pauseMenuPanel, settingsPanel);
-        PauseManager.Instance.RegisterFadeImage(fadeImage);
     }
 }

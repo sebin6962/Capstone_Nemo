@@ -190,51 +190,24 @@ public class PauseManager : MonoBehaviour
 
     public void GoToMainScene(string sceneName)
     {
-        if (isSceneChanging)
-            return;
-
         if (string.IsNullOrWhiteSpace(sceneName))
         {
             Debug.LogError("[PauseManager] sceneName is empty.");
             return;
         }
 
-        StartCoroutine(GoToMainSceneRoutine(sceneName));
-    }
-
-    private IEnumerator GoToMainSceneRoutine(string sceneName)
-    {
-        isSceneChanging = true;
-
-        if (fadeImage != null)
-        {
-            fadeImage.gameObject.SetActive(true);
-            fadeImage.transform.SetAsLastSibling();
-
-            Color c = fadeImage.color;
-            c.a = 0f;
-            fadeImage.color = c;
-
-            float t = 0f;
-            while (t < fadeDuration)
-            {
-                t += Time.unscaledDeltaTime;
-                float a = Mathf.Clamp01(t / fadeDuration);
-
-                c.a = a;
-                fadeImage.color = c;
-
-                yield return null;
-            }
-
-            c.a = 1f;
-            fadeImage.color = c;
-        }
-
         Time.timeScale = 1f;
         isPaused = false;
 
-        SceneManager.LoadScene(sceneName);
+        if (FadeManager.Instance != null)
+        {
+            FadeManager.Instance.FadeToScene(sceneName, 0f);
+        }
+        else
+        {
+            Debug.LogWarning("[PauseManager] FadeManager.Instance is null. LoadScene fallback.");
+            SceneManager.LoadScene(sceneName);
+        }
     }
 
     public void QuitGame()
