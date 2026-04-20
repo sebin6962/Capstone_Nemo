@@ -178,9 +178,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.0006944537
+    y: 0.000880301
     width: 1
-    height: 0.9986111
+    height: 0.9982394
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -831,6 +831,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1472361619}
     m_Modifications:
+    - target: {fileID: 544208904355119364, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+      propertyPath: tooltipObjects.Array.data[0]
+      value: 
+      objectReference: {fileID: 2067623680}
     - target: {fileID: 662765454311978276, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -4529,6 +4533,11 @@ MonoBehaviour:
   levelTooLowGroup: {fileID: 0}
   player: {fileID: 0}
   interactRadius: 1.6
+  cropTooltipRange: 1.6
+  cropTooltipOffset: {x: 0, y: 0.9, z: 0}
+  cropTouchBoxPadding: {x: 0.12, y: 0.05}
+  cropTouchTopExtra: 0.45
+  playerTouchProbeOffsetY: 0.55
   farmSfxCooldown: 0.15
 --- !u!1001 &1030323612
 PrefabInstance:
@@ -4610,6 +4619,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 603945600628134287, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
+      propertyPath: tooltipObjects.Array.data[0]
+      value: 
+      objectReference: {fileID: 2067623680}
     - target: {fileID: 1296375650697382555, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: -920
@@ -6680,6 +6693,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1195014009}
   - {fileID: 1680242855}
   - {fileID: 1158854861}
   - {fileID: 1030323613}
@@ -6687,7 +6701,6 @@ RectTransform:
   - {fileID: 2067623681}
   - {fileID: 1836729175}
   - {fileID: 1145568552}
-  - {fileID: 1195014009}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}

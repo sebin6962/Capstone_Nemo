@@ -1,7 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class PauseManager : MonoBehaviour
 {
@@ -11,9 +11,24 @@ public class PauseManager : MonoBehaviour
     [SerializeField] private GameObject pauseMenuPanel;
     [SerializeField] private GameObject settingsPanel;
 
+    [Header("Fade")]
+    [SerializeField] private Image fadeImage;
+    [SerializeField] private float fadeDuration = 0.35f;
+
     [SerializeField] private bool isPaused = false;
+    private bool isSceneChanging = false;
 
     public bool IsPaused => isPaused;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void AutoCreate()
+    {
+        if (Instance != null)
+            return;
+
+        GameObject go = new GameObject("PauseManager");
+        go.AddComponent<PauseManager>();
+    }
 
     private void Awake()
     {
@@ -40,37 +55,34 @@ public class PauseManager : MonoBehaviour
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
-        {
             HandleEscapeInput();
-        }
     }
 
     private void HandleEscapeInput()
     {
+        if (isSceneChanging)
+            return;
+
         if (!CanUsePause())
             return;
 
-        //설정창 열려 있으면 설정창 닫고 메뉴로 돌아감
         if (settingsPanel != null && settingsPanel.activeSelf)
         {
             CloseSettingsAndBackToMenu();
             return;
         }
 
-        //메뉴가 열려 있으면 닫고 게임 재개
         if (pauseMenuPanel != null && pauseMenuPanel.activeSelf)
         {
             ResumeGame();
             return;
         }
 
-        //둘 다 안 열려 있으면 메뉴 열기
         PauseGame();
     }
 
     private bool CanUsePause()
     {
-        //필요하면 나중에 추가
         return true;
     }
 
@@ -79,6 +91,16 @@ public class PauseManager : MonoBehaviour
         pauseMenuPanel = null;
         settingsPanel = null;
         ForceResumeWithoutPanel();
+
+        if (fadeImage != null)
+        {
+            Color c = fadeImage.color;
+            c.a = 0f;
+            fadeImage.color = c;
+            fadeImage.gameObject.SetActive(false);
+        }
+
+        isSceneChanging = false;
     }
 
     public void RegisterPauseUI(GameObject menuPanel, GameObject settingPanel)
@@ -93,29 +115,43 @@ public class PauseManager : MonoBehaviour
             settingsPanel.SetActive(false);
     }
 
+    public void RegisterFadeImage(Image image)
+    {
+        fadeImage = image;
+
+        if (fadeImage != null)
+        {
+            Color c = fadeImage.color;
+            c.a = 0f;
+            fadeImage.color = c;
+            fadeImage.gameObject.SetActive(false);
+        }
+    }
+
     public void PauseGame()
     {
-        if (isPaused)
+        if (isPaused || isSceneChanging)
             return;
+
+        if (pauseMenuPanel == null)
+        {
+            Debug.LogWarning("[PauseManager] pauseMenuPanel is null. Pause cancelled.");
+            return;
+        }
 
         isPaused = true;
         Time.timeScale = 0f;
 
-        if (pauseMenuPanel != null)
-        {
-            pauseMenuPanel.SetActive(true);
-            pauseMenuPanel.transform.SetAsLastSibling();
-        }
+        pauseMenuPanel.SetActive(true);
+        pauseMenuPanel.transform.SetAsLastSibling();
 
         if (settingsPanel != null)
-        {
             settingsPanel.SetActive(false);
-        }
     }
 
     public void ResumeGame()
     {
-        if (!isPaused)
+        if (!isPaused || isSceneChanging)
             return;
 
         isPaused = false;
@@ -154,14 +190,49 @@ public class PauseManager : MonoBehaviour
 
     public void GoToMainScene(string sceneName)
     {
+        if (isSceneChanging)
+            return;
+
+        if (string.IsNullOrWhiteSpace(sceneName))
+        {
+            Debug.LogError("[PauseManager] sceneName is empty.");
+            return;
+        }
+
+        StartCoroutine(GoToMainSceneRoutine(sceneName));
+    }
+
+    private IEnumerator GoToMainSceneRoutine(string sceneName)
+    {
+        isSceneChanging = true;
+
+        if (fadeImage != null)
+        {
+            fadeImage.gameObject.SetActive(true);
+            fadeImage.transform.SetAsLastSibling();
+
+            Color c = fadeImage.color;
+            c.a = 0f;
+            fadeImage.color = c;
+
+            float t = 0f;
+            while (t < fadeDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                float a = Mathf.Clamp01(t / fadeDuration);
+
+                c.a = a;
+                fadeImage.color = c;
+
+                yield return null;
+            }
+
+            c.a = 1f;
+            fadeImage.color = c;
+        }
+
         Time.timeScale = 1f;
         isPaused = false;
-
-        if (pauseMenuPanel != null)
-            pauseMenuPanel.SetActive(false);
-
-        if (settingsPanel != null)
-            settingsPanel.SetActive(false);
 
         SceneManager.LoadScene(sceneName);
     }

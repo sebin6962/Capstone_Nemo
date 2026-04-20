@@ -67,6 +67,19 @@ public class FarmManager : MonoBehaviour
 
     private TreeTooltip currentHoverTree;
 
+    [Header("성장중 작물 툴팁")]
+    public float cropTooltipRange = 1.6f;
+    public Vector3 cropTooltipOffset = new Vector3(0f, 0.9f, 0f);
+
+    private Vector3Int? currentNearbyCropPos = null;
+
+    [Header("작물 스치기 흔들림")]
+    public Vector2 cropTouchBoxPadding = new Vector2(0.12f, 0.05f); // 좌우/아래 여유
+    public float cropTouchTopExtra = 0.45f;                         // 위쪽 추가 판정
+    public float playerTouchProbeOffsetY = 0.55f;                   // 플레이어 상체 판정용
+
+    private readonly HashSet<Vector3Int> touchingCropTiles = new();
+
     string FarmSavePath
         => string.IsNullOrEmpty(CurrentServer)
            ? null
@@ -179,10 +192,14 @@ public class FarmManager : MonoBehaviour
         {
             AdvanceCropStage(pos);
         }
+
         HandleTreeLevelWarningByInput();
         HandleRightClickHarvest();
 
+        // 같은 툴팁 패널을 쓰기때문에 나무 먼저, 작물은 그 다음
         HandleTreeTooltipHover();
+        HandleGrowingCropTooltip();
+        HandleCropTouchShake();
     }
 
     public void SaveFarmState()
@@ -1072,5 +1089,183 @@ public class FarmManager : MonoBehaviour
             sensor.SetOutline(false);
         }
         Debug.Log($"[Outline] {tile.cropData.cropName} stage={tile.currentStage}/{tile.cropData.stages.Count - 1} final={isFinalStage} sensorEnabled={sensor.enabled}");
+    }
+
+    private void HandleGrowingCropTooltip()
+    {
+        if (InventoryTooltipManager.Instance == null) return;
+
+        Transform target = playerTransform != null ? playerTransform : player;
+        if (target == null) return;
+
+        // 나무 툴팁이 우선
+        if (currentHoverTree != null) return;
+
+        CropTile nearestTile = null;
+        Vector3Int nearestPos = default;
+
+        float maxSqr = cropTooltipRange * cropTooltipRange;
+        float bestSqr = maxSqr;
+
+        foreach (var kv in growingTiles)
+        {
+            var pos = kv.Key;
+            var tile = kv.Value;
+
+            if (tile == null || tile.cropData == null) continue;
+            if (tile.cropData.isTree) continue;
+            if (!tile.isWatered) continue; // 물 준 뒤에만 툴팁 표시
+
+            int finalStage = tile.cropData.stages.Count - 1;
+            if (tile.currentStage >= finalStage) continue; // 최종 단계면 안 띄움
+
+            Vector3 cropWorldPos =
+                tile.cropOverlayObject != null
+                ? tile.cropOverlayObject.transform.position
+                : overlayTilemap.CellToWorld(pos) + new Vector3(0.5f, 0.5f, 0f);
+
+            float sqr = (target.position - cropWorldPos).sqrMagnitude;
+            if (sqr <= bestSqr)
+            {
+                bestSqr = sqr;
+                nearestTile = tile;
+                nearestPos = pos;
+            }
+        }
+
+        if (nearestTile == null)
+        {
+            if (currentNearbyCropPos.HasValue)
+            {
+                currentNearbyCropPos = null;
+                InventoryTooltipManager.Instance.HideWorld();
+            }
+            return;
+        }
+
+        currentNearbyCropPos = nearestPos;
+
+        string tooltip = BuildGrowingCropTooltipText(nearestTile);
+
+        Vector3 tooltipWorldPos =
+            nearestTile.cropOverlayObject != null
+            ? nearestTile.cropOverlayObject.transform.position + cropTooltipOffset
+            : overlayTilemap.CellToWorld(nearestPos) + new Vector3(0.5f, 0.5f, 0f) + cropTooltipOffset;
+
+        InventoryTooltipManager.Instance.ShowWorld(tooltip, tooltipWorldPos);
+    }
+
+    private string BuildGrowingCropTooltipText(CropTile tile)
+    {
+        string cropName = GetCropDisplayName(tile.cropData);
+        float remain = GetRemainingTimeToFinalStage(tile);
+
+            return $"{cropName}\n{FormatTime(remain)}";
+    }
+
+    private string GetCropDisplayName(CropData data)
+    {
+        if (data == null) return "작물";
+
+        if (!string.IsNullOrEmpty(data.harvestItemName) &&
+            ItemTooltipDB.TooltipTexts.TryGetValue(data.harvestItemName, out var name))
+        {
+            return name;
+        }
+
+        if (!string.IsNullOrEmpty(data.cropName))
+            return data.cropName;
+
+        return "작물";
+    }
+
+    private float GetRemainingTimeToFinalStage(CropTile tile)
+    {
+        if (tile == null || tile.cropData == null || tile.cropData.stages == null)
+            return 0f;
+
+        int finalStage = tile.cropData.stages.Count - 1;
+        if (tile.currentStage >= finalStage)
+            return 0f;
+
+        // 현재 단계에서 다음 단계까지 남은 시간
+        float remain = Mathf.Max(
+            0f,
+            tile.cropData.stages[tile.currentStage].timeToNextStage - tile.timer
+        );
+
+        // 이후 단계들의 시간 누적
+        for (int i = tile.currentStage + 1; i < finalStage; i++)
+        {
+            remain += tile.cropData.stages[i].timeToNextStage;
+        }
+
+        return remain;
+    }
+
+    private string FormatTime(float seconds)
+    {
+        int total = Mathf.CeilToInt(seconds);
+
+        int hour = total / 3600;
+        int min = (total % 3600) / 60;
+        int sec = total % 60;
+
+        if (hour > 0) return $"{hour}시간 {min}분 {sec}초";
+        if (min > 0) return $"{min}분 {sec}초";
+        return $"{sec}초";
+    }
+
+    private void HandleCropTouchShake()
+    {
+        Transform target = playerTransform != null ? playerTransform : player;
+        if (target == null) return;
+
+        HashSet<Vector3Int> touchedThisFrame = new();
+
+        Vector3 playerFeet = target.position;
+        Vector3 playerBody = target.position + new Vector3(0f, playerTouchProbeOffsetY, 0f);
+
+        foreach (var kv in growingTiles)
+        {
+            var pos = kv.Key;
+            var tile = kv.Value;
+
+            if (tile == null || tile.cropData == null) continue;
+            if (tile.cropData.isTree) continue;
+            if (tile.cropOverlayObject == null) continue;
+
+            var sr = tile.cropOverlayObject.GetComponent<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) continue;
+
+            Bounds touchBounds = sr.bounds;
+
+            // 기본 범위를 살짝 넓힘
+            touchBounds.Expand(new Vector3(cropTouchBoxPadding.x * 2f, cropTouchBoxPadding.y * 2f, 0f));
+
+            // 위쪽(칸 밖으로 튀어나온 잎/줄기) 판정을 더 크게
+            Vector3 min = touchBounds.min;
+            Vector3 max = touchBounds.max + new Vector3(0f, cropTouchTopExtra, 0f);
+            touchBounds.SetMinMax(min, max);
+
+            // 플레이어 발 + 상체 두 점으로 체크
+            bool isTouching =
+                touchBounds.Contains(playerFeet) ||
+                touchBounds.Contains(playerBody);
+
+            if (!isTouching) continue;
+
+            touchedThisFrame.Add(pos);
+
+            // 들어온 순간에만 1회 흔들림
+            if (!touchingCropTiles.Contains(pos))
+            {
+                touchingCropTiles.Add(pos);
+                StartCoroutine(PlayTreeHarvestShake(tile.cropOverlayObject.transform));
+            }
+        }
+
+        // 범위에서 벗어난 작물은 다시 흔들릴 수 있게 해제
+        touchingCropTiles.RemoveWhere(pos => !touchedThisFrame.Contains(pos));
     }
 }

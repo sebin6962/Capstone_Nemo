@@ -256,6 +256,8 @@ public class StorageInventoryUIManager : MonoBehaviour
 
     private void OnDisable()
     {
+        if (InventoryTooltipManager.Instance != null)
+            InventoryTooltipManager.Instance.Hide();
         RestoreOpenButtonMaterial();
     }
 }
