@@ -1,40 +1,109 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 public class DayNightController : MonoBehaviour
 {
-    public CanvasGroup nightOverlay;   
-    public TimeManager timeManager;    
+    public TimeManager timeManager;
+    public Light2D globalLight;   // 반드시 Global Light 2D 연결
 
-    // 몇 시부터 어두워질지 / 완전 밤인지
+    [Header("Night Time Range")]
     public int nightStartHour = 18;
-    public int nightEndHour = 24;
+    public int fullNightHour = 24;
 
-    void Awake()
-    {
-        nightOverlay = GetComponent<CanvasGroup>();
-    }
+    [Header("Global Light")]
+    [Range(0f, 2f)] public float dayIntensity = 1f;
+    [Range(0f, 2f)] public float nightIntensity = 0.22f;
+
+    [Header("Street Lamp Lights")]
+    public Light2D[] streetLampLights;   // 가로등 Spot Light 2D들 넣기
+
+    [Tooltip("이 값부터 가로등이 켜지기 시작함 (0~1, 밤 진행도 기준)")]
+    [Range(0f, 1f)] public float lampFadeStart = 0.35f;
+
+    [Tooltip("이 값에서 가로등 밝기가 최대가 됨 (0~1, 밤 진행도 기준)")]
+    [Range(0f, 1f)] public float lampFadeEnd = 0.55f;
+
+    [Tooltip("true면 특정 시점에 바로 켜짐 / false면 서서히 켜짐")]
+    public bool instantOn = false;
+
+    private float[] lampBaseIntensities;
 
     void Start()
     {
-        timeManager = FindObjectOfType<TimeManager>();
+        if (timeManager == null)
+            timeManager = TimeManager.Instance ?? FindObjectOfType<TimeManager>();
+
+        CacheLampBaseIntensities();
+        UpdateLighting();
     }
 
     void Update()
     {
-        if (nightOverlay == null || timeManager == null)
+        if (timeManager == null)
+            timeManager = TimeManager.Instance ?? FindObjectOfType<TimeManager>();
+
+        if (timeManager == null || globalLight == null)
             return;
 
         if (!timeManager.isTimeFlow)
             return;
 
+        UpdateLighting();
+    }
+
+    void CacheLampBaseIntensities()
+    {
+        if (streetLampLights == null)
+        {
+            lampBaseIntensities = new float[0];
+            return;
+        }
+
+        lampBaseIntensities = new float[streetLampLights.Length];
+
+        for (int i = 0; i < streetLampLights.Length; i++)
+        {
+            if (streetLampLights[i] == null) continue;
+            lampBaseIntensities[i] = streetLampLights[i].intensity;
+        }
+    }
+
+    void UpdateLighting()
+    {
         int minutesPassed = (timeManager.hour - 9) * 60 + timeManager.minute;
         int startMinutes = (nightStartHour - 9) * 60;
-        int endMinutes = (nightEndHour - 9) * 60;
+        int fullNightMinutes = (fullNightHour - 9) * 60;
 
+        float nightT = Mathf.Clamp01(
+            Mathf.InverseLerp(startMinutes, fullNightMinutes, minutesPassed)
+        );
 
-        float t = Mathf.InverseLerp(startMinutes, endMinutes, minutesPassed);
-        nightOverlay.alpha = t;  
+        globalLight.intensity = Mathf.Lerp(dayIntensity, nightIntensity, nightT);
+
+        UpdateStreetLamps(nightT);
+    }
+
+    void UpdateStreetLamps(float nightT)
+    {
+        if (streetLampLights == null || lampBaseIntensities == null)
+            return;
+
+        float lampT;
+
+        if (instantOn)
+            lampT = (nightT >= lampFadeStart) ? 1f : 0f;
+        else
+            lampT = Mathf.Clamp01(Mathf.InverseLerp(lampFadeStart, lampFadeEnd, nightT));
+
+        for (int i = 0; i < streetLampLights.Length; i++)
+        {
+            Light2D lamp = streetLampLights[i];
+            if (lamp == null) continue;
+
+            float baseIntensity = lampBaseIntensities[i];
+
+            lamp.enabled = lampT > 0.001f;
+            lamp.intensity = baseIntensity * lampT;
+        }
     }
 }

@@ -11,6 +11,18 @@ public class StorageInventoryUIManager : MonoBehaviour
     public List<StorageInventorySlot> slots;     // 미리 배치된 슬롯들
     public Button openButton;
 
+    [Header("Open Button Color")]
+    [SerializeField] private Color openButtonOpenedColor = new Color(0.7f, 0.7f, 0.7f, 1f);
+
+    private Image _openButtonImage;
+    private Color _openButtonNormalColor;
+
+    [Header("Open Button Hover Material")]
+    [SerializeField] private Material openButtonHoverMaterial;
+
+    private Graphic _openButtonGraphic;
+    private Material _openButtonOriginalMaterial;
+
     void Awake()
     {
         Instance = this;
@@ -18,6 +30,17 @@ public class StorageInventoryUIManager : MonoBehaviour
             StorageInventory.Instance.LoadStorage();
         SyncMaxSlotsToInventory();
         StartCoroutine(RefreshNextFrame());
+
+        if (openButton != null)
+        {
+            _openButtonImage = openButton.image;
+            if (_openButtonImage != null)
+                _openButtonNormalColor = _openButtonImage.color;
+        }
+
+        UpdateOpenButtonVisual(panel != null && panel.activeSelf);
+
+        RegisterOpenButtonHoverMaterial();
     }
 
     System.Collections.IEnumerator RefreshNextFrame()
@@ -31,6 +54,7 @@ public class StorageInventoryUIManager : MonoBehaviour
         if (StorageInventory.Instance != null)
             StorageInventory.Instance.LoadStorage();
         SyncMaxSlotsToInventory();
+        UpdateOpenButtonVisual(panel != null && panel.activeSelf);
     }
 
     private void Update()
@@ -113,12 +137,14 @@ public class StorageInventoryUIManager : MonoBehaviour
         if (panel.activeSelf)
         {
             panel.SetActive(false);
+            UpdateOpenButtonVisual(false);
             SFXManager.Instance.PlayBoxOpenSFX();
         }
         else
         {
             UpdateSlots();
             panel.SetActive(true);
+            UpdateOpenButtonVisual(true);
             SFXManager.Instance.PlayBoxOpenSFX();
         }
 
@@ -163,5 +189,73 @@ public class StorageInventoryUIManager : MonoBehaviour
     public bool IsOpen()
     {
         return panel != null && panel.activeSelf;
+    }
+
+    private void UpdateOpenButtonVisual(bool isOpen)
+    {
+        if (_openButtonImage == null)
+            return;
+
+        _openButtonImage.color = isOpen ? openButtonOpenedColor : _openButtonNormalColor;
+    }
+
+    private void RegisterOpenButtonHoverMaterial()
+    {
+        if (openButton == null || openButtonHoverMaterial == null)
+            return;
+
+        _openButtonGraphic = openButton.targetGraphic != null
+            ? openButton.targetGraphic as Graphic
+            : openButton.GetComponent<Graphic>();
+
+        if (_openButtonGraphic == null)
+            return;
+
+        _openButtonOriginalMaterial = _openButtonGraphic.material;
+
+        EventTrigger trigger = openButton.GetComponent<EventTrigger>();
+        if (trigger == null)
+            trigger = openButton.gameObject.AddComponent<EventTrigger>();
+
+        AddEventTrigger(trigger, EventTriggerType.PointerEnter, (data) =>
+        {
+            ApplyOpenButtonHoverMaterial();
+        });
+
+        AddEventTrigger(trigger, EventTriggerType.PointerExit, (data) =>
+        {
+            RestoreOpenButtonMaterial();
+        });
+    }
+
+    private void AddEventTrigger(EventTrigger trigger, EventTriggerType eventType, UnityEngine.Events.UnityAction<BaseEventData> action)
+    {
+        if (trigger == null) return;
+
+        EventTrigger.Entry entry = new EventTrigger.Entry();
+        entry.eventID = eventType;
+        entry.callback.AddListener(action);
+        trigger.triggers.Add(entry);
+    }
+
+    private void ApplyOpenButtonHoverMaterial()
+    {
+        if (_openButtonGraphic == null || openButtonHoverMaterial == null)
+            return;
+
+        _openButtonGraphic.material = openButtonHoverMaterial;
+    }
+
+    private void RestoreOpenButtonMaterial()
+    {
+        if (_openButtonGraphic == null)
+            return;
+
+        _openButtonGraphic.material = _openButtonOriginalMaterial;
+    }
+
+    private void OnDisable()
+    {
+        RestoreOpenButtonMaterial();
     }
 }
