@@ -73,11 +73,23 @@ public class PlayerSkinManager : MonoBehaviour
     {
         yield return null;
 
+        string selectedSave = PlayerPrefs.GetString("SelectedSave", string.Empty);
+
+        // 선택된 세이브가 바뀌었는데 아직 스킨 매니저가 이전 세이브를 들고 있으면 다시 로드
+        if (!string.IsNullOrEmpty(selectedSave) && selectedSave != _currentServerName)
+        {
+            SwitchToSave(selectedSave);
+            yield break;
+        }
+
+        // 새 씬의 플레이어 SpriteLibrary로 다시 바인딩
         targetLibrary = FindObjectOfType<SpriteLibrary>();
 
-        // 씬이 바뀌어도 스킨 + 저장된 색상 다시 적용
+        // 현재 선택된 세이브의 스킨/색상을 다시 적용
         Apply(_data.equippedIndex, save: false);
     }
+
+    private string _currentServerName = "";
 
     void Awake()
     {
@@ -99,13 +111,32 @@ public class PlayerSkinManager : MonoBehaviour
             return;
         }
 
+        SwitchToSave(serverName);
+    }
+
+    public void SwitchToSave(string serverName)
+    {
+        if (string.IsNullOrEmpty(serverName))
+        {
+            Debug.LogWarning("[Skin] serverName is empty.");
+            return;
+        }
+
+        _currentServerName = serverName;
         _path = Path.Combine(Application.persistentDataPath, $"playerSkin_{serverName}.json");
 
-        if (targetLibrary == null)
-            targetLibrary = FindObjectOfType<SpriteLibrary>();
+        // 중요: 이전 세이브의 스킨/색상 데이터가 남지 않도록 먼저 초기화
+        _data = new SkinSaveData();
+
+        targetLibrary = FindObjectOfType<SpriteLibrary>();
 
         LoadOrCreate();
+
+        // 현재 씬에 플레이어가 있으면 바로 적용,
+        // SaveSelectScene처럼 플레이어가 없어도 데이터만 새로 로드됨
         Apply(_data.equippedIndex, save: false);
+
+        Debug.Log($"[Skin] SwitchToSave: {serverName}");
     }
 
     public bool IsOwned(int idx)
