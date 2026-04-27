@@ -77,6 +77,7 @@ public class PlayerManager : MonoBehaviour
             (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen()) ||
             (DoGamUIManager.Instance != null && DoGamUIManager.Instance.IsOpen()) ||
             (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen()) ||
+            (StatueColorChangeUIManager.Instance != null && StatueColorChangeUIManager.Instance.IsOpen()) ||
             (TreeInteract.Instance != null && TreeInteract.Instance.IsOpen()) ||
             (TreeLevelUnlocker.Instance != null && TreeLevelUnlocker.Instance.IsPlayingUnlockSequence))
         {

@@ -50,6 +50,9 @@ public class NPCInteractable : MonoBehaviour
         if (patrolRoute != null)
             patrolRoute.SetActive(false);
 
+        if (TimeManager.Instance != null)
+            TimeManager.Instance.SetTimeFlow(false);
+
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (DialogueFocusManager.Instance != null)
             DialogueFocusManager.Instance.BeginFocus(playerObj, gameObject);
@@ -66,6 +69,9 @@ public class NPCInteractable : MonoBehaviour
 
         if (DialogueFocusManager.Instance != null)
             DialogueFocusManager.Instance.EndFocus();
+
+        if (TimeManager.Instance != null)
+            TimeManager.Instance.SetTimeFlow(true);
     }
 
     private void OnTriggerEnter2D(Collider2D other)

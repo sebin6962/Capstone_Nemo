@@ -21,10 +21,8 @@ public class SkinShopUIManager : MonoBehaviour
         public GameObject lockBadge;   // 잠금 표시
     }
 
-    [Header("3개 슬롯(0,1,2)")]
-    public SkinSlot slot0;
-    public SkinSlot slot1;
-    public SkinSlot slot2;
+    [Header("스킨 슬롯 목록")]
+    public List<SkinSlot> slots = new List<SkinSlot>();
 
     [Header("Buttons")]
     public Button btnConfirm;
@@ -42,7 +40,6 @@ public class SkinShopUIManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        _slots = new[] { slot0, slot1, slot2 };
 
         if (panelRoot) panelRoot.SetActive(false);
     }
@@ -82,20 +79,18 @@ public class SkinShopUIManager : MonoBehaviour
 
         _binding = true;
 
-        for (int i = 0; i < _slots.Length; i++)
+        for (int i = 0; i < slots.Count; i++)
         {
             int idx = i;
-            var s = _slots[i];
+            var s = slots[i];
 
-            if (s.toggle == null) continue;
+            if (s == null || s.toggle == null) continue;
 
-            // 스킨 데이터가 3개 미만일 수도 있으니 방어
             bool exists = skinMgr.skins != null && idx < skinMgr.skins.Count;
 
             s.toggle.interactable = exists;
             s.toggle.isOn = false;
 
-            // 썸네일/가격/보유 표시 갱신
             if (exists)
             {
                 if (s.previewImage) s.previewImage.sprite = skinMgr.GetPreview(idx);
@@ -112,6 +107,7 @@ public class SkinShopUIManager : MonoBehaviour
                     else
                         s.priceText.text = $"{price}";
                 }
+
                 if (s.ownedBadge) s.ownedBadge.SetActive(owned);
                 if (s.lockBadge) s.lockBadge.SetActive(!owned);
             }
@@ -145,10 +141,10 @@ public class SkinShopUIManager : MonoBehaviour
         _selectedIndex = idx;
 
         _binding = true;
-        for (int i = 0; i < _slots.Length; i++)
+        for (int i = 0; i < slots.Count; i++)
         {
-            if (_slots[i].toggle != null)
-                _slots[i].toggle.isOn = (i == _selectedIndex);
+            if (slots[i] != null && slots[i].toggle != null)
+                slots[i].toggle.isOn = (i == _selectedIndex);
         }
         _binding = false;
 

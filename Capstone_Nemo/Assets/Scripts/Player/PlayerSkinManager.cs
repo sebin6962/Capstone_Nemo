@@ -17,6 +17,13 @@ public class PlayerSkinManager : MonoBehaviour
     {
         public int equippedIndex = 0;
         public List<int> ownedIndexes = new List<int> { 0 }; // 기본 스킨은 항상 소유
+
+        // 석상 색상 변경 저장값
+        public bool hasCustomColor = false;
+        public float colorR = 1f;
+        public float colorG = 1f;
+        public float colorB = 1f;
+        public float colorA = 1f;
     }
 
     [Serializable]
@@ -34,6 +41,16 @@ public class PlayerSkinManager : MonoBehaviour
     [Header("적용 대상 SpriteLibrary (없으면 플레이어에서 자동 탐색)")]
     public SpriteLibrary targetLibrary;
 
+    [Header("색상 제외 대상 SpriteRenderers")]
+    [Tooltip("그림자처럼 색상이 바뀌면 안 되는 SpriteRenderer를 직접 넣을 수 있습니다.")]
+    public SpriteRenderer[] colorExcludeTargets;
+
+    [Header("색상 제외 이름 키워드")]
+    public string[] colorExcludeNameKeywords = { "Shadow", "shadow", "그림자" };
+
+    [Header("색상 적용 대상 SpriteRenderers (비워두면 targetLibrary 하위에서 자동 탐색)")]
+    public SpriteRenderer[] colorTargets;
+
     private SkinSaveData _data = new SkinSaveData();
     private string _path = "";
 
@@ -49,7 +66,6 @@ public class PlayerSkinManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // 씬 로드 직후엔 플레이어가 아직 없을 수 있어서 한 프레임 뒤에 적용
         StartCoroutine(RebindAndApplyNextFrame());
     }
 
@@ -57,10 +73,9 @@ public class PlayerSkinManager : MonoBehaviour
     {
         yield return null;
 
-        // 새 씬의 플레이어 SpriteLibrary로 다시 바인딩
         targetLibrary = FindObjectOfType<SpriteLibrary>();
 
-        // 현재 저장된 착용 스킨을 다시 적용 (save=false)
+        // 씬이 바뀌어도 스킨 + 저장된 색상 다시 적용
         Apply(_data.equippedIndex, save: false);
     }
 
@@ -127,7 +142,6 @@ public class PlayerSkinManager : MonoBehaviour
 
         int price = GetPrice(idx);
 
-        // SpendStarlight는 음수 방지 체크가 없음 → UI/로직에서 먼저 체크 필요 :contentReference[oaicite:1]{index=1}
         if (star.playerData.starlight < price)
         {
             failReason = "별빛이 부족해요.";
@@ -156,16 +170,116 @@ public class PlayerSkinManager : MonoBehaviour
         {
             targetLibrary.spriteLibraryAsset = skins[idx].libraryAsset;
 
-            // 라이브러리 교체 후, Resolver들 강제 갱신
             var resolvers = targetLibrary.GetComponentsInChildren<SpriteResolver>(true);
             foreach (var r in resolvers)
             {
-                try { r.ResolveSpriteToSpriteRenderer(); } catch { /* 버전차 방어 */ }
+                try { r.ResolveSpriteToSpriteRenderer(); } catch { }
             }
         }
 
         _data.equippedIndex = idx;
+
+        // 스킨을 바꿔도 저장된 색상 유지
+        ApplySavedColor();
+
         if (save) Save();
+    }
+
+    public void SetPlayerColor(Color color, bool save = true)
+    {
+        _data.hasCustomColor = true;
+        _data.colorR = color.r;
+        _data.colorG = color.g;
+        _data.colorB = color.b;
+        _data.colorA = color.a;
+
+        ApplyColorToPlayer(color);
+
+        if (save) Save();
+    }
+
+    public void ResetPlayerColor(bool save = true)
+    {
+        _data.hasCustomColor = false;
+        _data.colorR = 1f;
+        _data.colorG = 1f;
+        _data.colorB = 1f;
+        _data.colorA = 1f;
+
+        ApplyColorToPlayer(Color.white);
+
+        if (save) Save();
+    }
+    public Color GetSavedColor()
+    {
+        if (!_data.hasCustomColor)
+            return Color.white;
+
+        return new Color(_data.colorR, _data.colorG, _data.colorB, _data.colorA);
+    }
+
+    private void ApplySavedColor()
+    {
+        ApplyColorToPlayer(GetSavedColor());
+    }
+
+    private void ApplyColorToPlayer(Color color)
+    {
+        SpriteRenderer[] targets = colorTargets;
+
+        // colorTargets를 직접 지정하지 않았다면,
+        // 현재 플레이어 SpriteLibrary 하위 SpriteRenderer들을 자동 탐색
+        if (targets == null || targets.Length == 0)
+        {
+            if (targetLibrary == null)
+                targetLibrary = FindObjectOfType<SpriteLibrary>();
+
+            if (targetLibrary != null)
+                targets = targetLibrary.GetComponentsInChildren<SpriteRenderer>(true);
+        }
+
+        if (targets == null) return;
+
+        foreach (var sr in targets)
+        {
+            if (sr == null) continue;
+
+            // 그림자/제외 대상은 색상 변경하지 않음
+            if (IsColorExcluded(sr)) continue;
+
+            sr.color = color;
+        }
+    }
+
+    private bool IsColorExcluded(SpriteRenderer sr)
+    {
+        if (sr == null) return true;
+
+        // 직접 제외 목록에 들어간 SpriteRenderer면 제외
+        if (colorExcludeTargets != null)
+        {
+            foreach (var exclude in colorExcludeTargets)
+            {
+                if (exclude != null && exclude == sr)
+                    return true;
+            }
+        }
+
+        // 오브젝트 이름에 제외 키워드가 들어가면 제외
+        if (colorExcludeNameKeywords != null)
+        {
+            string objName = sr.gameObject.name;
+
+            foreach (string keyword in colorExcludeNameKeywords)
+            {
+                if (string.IsNullOrEmpty(keyword)) continue;
+
+                if (objName.Contains(keyword))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private void LoadOrCreate()

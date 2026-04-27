@@ -28,6 +28,10 @@ public class DayNightController : MonoBehaviour
 
     private float[] lampBaseIntensities;
 
+    [Header("Global Light Color")]
+    public Color dayLightColor = Color.white;
+    public Color nightLightColor = new Color32(0x38, 0x3D, 0x57, 0xFF);
+
     void Start()
     {
         if (timeManager == null)
@@ -81,6 +85,8 @@ public class DayNightController : MonoBehaviour
         globalLight.intensity = Mathf.Lerp(dayIntensity, nightIntensity, nightT);
 
         UpdateStreetLamps(nightT);
+
+        globalLight.color = Color.Lerp(dayLightColor, nightLightColor, nightT);
     }
 
     void UpdateStreetLamps(float nightT)
