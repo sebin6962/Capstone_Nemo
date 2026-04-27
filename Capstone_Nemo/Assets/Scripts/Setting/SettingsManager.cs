@@ -4,9 +4,12 @@ using UnityEngine;
 
 [DefaultExecutionOrder(-999)]
 
+
 public class SettingsManager : MonoBehaviour
 {
     public static SettingsManager Instance;
+
+    [SerializeField] private GameObject audioSettingPrefab;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 
@@ -47,8 +50,9 @@ public class SettingsManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            LoadSettings();
-            ApplyToAudio();
+
+            EnsureAudioSetting();   
+            LoadSettings();        
         }
         else
         {
@@ -61,6 +65,24 @@ public class SettingsManager : MonoBehaviour
         ApplyToAudio();
     }
 
+    private void EnsureAudioSetting()
+    {
+        if (AudioSetting.Instance != null)
+            return;
+
+        GameObject prefab = Resources.Load<GameObject>("AudioSetting");
+
+        if (prefab != null)
+        {
+            GameObject obj = Instantiate(prefab);
+            obj.name = "AudioSetting";
+            DontDestroyOnLoad(obj);
+        }
+        else
+        {
+            Debug.LogError("[SettingsManager] Resources/AudioSetting 프리팹을 찾을 수 없습니다.");
+        }
+    }
 
     public void SaveSettings()
     {

@@ -38,6 +38,10 @@ public class StoreTutorialManager : MonoBehaviour
 
     [SerializeField] private GameObject tutorialBlocker;
 
+    [SerializeField] private List<TutorialDialogueLine> storeStartDialogues;
+    [SerializeField] private List<TutorialDialogueLine> afterSiruFinishDialogues;
+    [SerializeField] private List<TutorialDialogueLine> afterNextOrderDialogues;
+
     private TutorialStateData state;
     private string server;
 
@@ -90,6 +94,51 @@ public class StoreTutorialManager : MonoBehaviour
         }
     }
 
+    void PlayDialogueThen(System.Action onFinished, List<TutorialDialogueLine> lines)
+    {
+        if (lines == null || lines.Count == 0)
+        {
+            onFinished?.Invoke();
+            return;
+        }
+
+        if (TutorialDialogueManager.Instance == null)
+        {
+            Debug.LogError("TutorialDialogueManager가 없습니다.");
+            onFinished?.Invoke();
+            return;
+        }
+
+        TutorialDialogueManager.Instance.StartDialogue(lines, () =>
+        {
+            onFinished?.Invoke();
+        });
+    }
+
+    void ShowStepWithOptionalDialogue(StoreTutorialStep step)
+    {
+        switch (step)
+        {
+            case StoreTutorialStep.Serve:
+                PlayDialogueThen(() =>
+                {
+                    ShowStepPanel(step);
+                }, afterSiruFinishDialogues);
+                break;
+
+            case StoreTutorialStep.NextOrder:
+                PlayDialogueThen(() =>
+                {
+                    ShowStepPanel(step);
+                }, afterNextOrderDialogues);
+                break;
+
+            default:
+                ShowStepPanel(step);
+                break;
+        }
+    }
+
     void StartStoreTutorial(GlobalTutorialStep globalStep)
     {
         IsStoreTutorialRunning = true;
@@ -106,7 +155,10 @@ public class StoreTutorialManager : MonoBehaviour
         if (customerSpawner)
             customerSpawner.SpawnTutorialCustomer(2, "baekseolgi_finish", 15f);
 
-        ShowStepPanel(currentStep);
+        PlayDialogueThen(() =>
+        {
+            ShowStepPanel(currentStep);
+        }, storeStartDialogues);
     }
 
     void ShowStepPanel(StoreTutorialStep step)
@@ -245,7 +297,7 @@ public class StoreTutorialManager : MonoBehaviour
                 return;
         }
 
-        ShowStepPanel(currentStep);
+        ShowStepWithOptionalDialogue(currentStep);
     }
 
     public void CompleteStoreTutorial()

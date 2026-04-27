@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 /*public enum TutorialStep
 {
@@ -53,6 +54,8 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private GameObject[] fixedStepPanels;
     [SerializeField] private GameObject fixedVillageTutorialPanels;
 
+    [SerializeField] private List<TutorialDialogueLine> villageFirstStartDialogues;
+
     private string server;
     private TutorialStateData state;
 
@@ -95,6 +98,7 @@ public class TutorialManager : MonoBehaviour
                 break;
 
             case GlobalTutorialStep.Village_First:
+                StartTutorial_VillageFirst();
                 break;
 
             case GlobalTutorialStep.Village_Second:
@@ -106,6 +110,20 @@ public class TutorialManager : MonoBehaviour
                 tutorialBlocker.SetActive(false);
                 break;
         }
+    }
+
+    public void PlayDialogueThen(Action onFinished, List<TutorialDialogueLine> lines)
+    {
+        if (TutorialFlowManager.Instance != null)
+            TutorialFlowManager.Instance.RequestTutorialTimePause();
+
+        TutorialDialogueManager.Instance.StartDialogue(lines, () =>
+        {
+            if (TutorialFlowManager.Instance != null)
+                TutorialFlowManager.Instance.ReleaseTutorialTimePause();
+
+            onFinished?.Invoke();
+        });
     }
 
     void StartTutorial_DogamIntro()
@@ -153,6 +171,31 @@ public class TutorialManager : MonoBehaviour
                 ps.Play(true);
             }
         }
+    }
+
+    void StartTutorial_VillageFirst()
+    {
+        Debug.Log("VillageFirst ½ÃÀÛµÊ");
+
+        CleanupTutorialVisuals();
+
+        if (tutorialBlocker)
+            tutorialBlocker.SetActive(false);
+
+        PlayDialogueThen(() =>
+        {
+            Debug.Log("´ëÈ­ ³¡³²");
+
+            if (villageTutorialPanel)
+            {
+                SFXManager.Instance.PlayTutorialSFX();
+                villageTutorialPanel.SetActive(true);
+            }
+
+            if (fixedVillageTutorialPanels)
+                fixedVillageTutorialPanels.SetActive(true);
+
+        }, villageFirstStartDialogues);
     }
 
     void StartTutorial_VillageSecond()
@@ -389,16 +432,9 @@ public class TutorialManager : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
-        if (villageTutorialPanel)
-        {
-            SFXManager.Instance.PlayTutorialSFX();
-            villageTutorialPanel.SetActive(true);
-            fixedVillageTutorialPanels.SetActive(true);
-        }
-
-        //currentStep = TutorialStep.Village;
-
         TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Village_First);
+
+        StartTutorial_VillageFirst();
     }
 
     //Æ©Åä¸®¾ó¾¾¾ÑÀá±Ý
