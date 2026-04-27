@@ -277,6 +277,12 @@ public class TimeManager : MonoBehaviour
     {
         isTimeFlow = false;
 
+        if (NPCDialogueUIManager.Instance != null && NPCDialogueUIManager.Instance.IsOpen())
+            NPCDialogueUIManager.Instance.CloseDialogue();
+
+        if (DialogueFocusManager.Instance != null)
+            DialogueFocusManager.Instance.EndFocusImmediate();
+
         yield return null;
 
         currentDay++;           // 날짜 먼저 증가

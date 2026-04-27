@@ -199,7 +199,28 @@ public class SaveSelectManager : MonoBehaviour
                     PlayerPrefs.SetString("SelectedSave", serverName);
                     PlayerPrefs.Save();
 
+                    // 세이브 전환 시 데이터 매니저들도 새 세이브 기준으로 다시 로드
+                    if (PlayerSkinManager.Instance != null)
+                    {
+                        PlayerSkinManager.Instance.SwitchToSave(serverName);
+                    }
+
+                    if (StarDataManager.Instance != null)
+                    {
+                        StarDataManager.Instance.InitFromSelectedSave();
+                    }
+
                     TutorialFlowManager.ForceResetInstance();
+
+                    if (QuestAcceptManager.Instance != null)
+                    {
+                        QuestAcceptManager.Instance.SwitchToSave(serverName);
+                    }
+
+                    if (DailyQuestManager.Instance != null)
+                    {
+                        DailyQuestManager.Instance.SwitchToSave(serverName);
+                    }
 
                     // 해금 매니저에 이 서버로 전환하라고 알려줌
                     if (UnlockManager.Instance != null)

@@ -2,26 +2,38 @@
   "quests": [
     {
       "id": "quest_001",
-      "npcSprite": "mob_4_front_0",
-      "title": "절구 토끼의 소지품 찾아주기",
-      "description": "절구 토끼가 마을에서 잃어버린 물건들을 모두 찾아주세요.",
+      "npcSprite": "mob_1_front_0",
+      "title": "노란 토끼의 소지품",
+      "description": "노란 토끼가 마을에서 잃어버린 물건들을 모두 찾아주세요.",
       "targetType": "Talk",
-      "targetId": "guest_001",
+      "targetId": "npc_yellow_rabbit",
       "targetCount": 1,
-      "rewardType": "Item",
-      "rewardId": "tteok",
-      "rewardAmount": 3
+      "rewardType": "Gold",
+      "rewardId": "별빛",
+      "rewardAmount": 100
     },
     {
       "id": "quest_002",
       "npcSprite": "mob_4_front_0",
-      "title": "떡 3개 전달",
-      "description": "마을 주민에게 떡 3개를 전달해 주세요.",
+      "title": "떡 배달 주문!",
+      "description": "갈색 토끼에게 아무 떡 3개를 전달해 주세요.",
       "targetType": "Deliver",
-      "targetId": "tteok",
+      "targetId": "npc_brown_rabbit",
       "targetCount": 3,
       "rewardType": "Gold",
-      "rewardId": "",
+      "rewardId": "별빛",
+      "rewardAmount": 100
+    },
+    {
+      "id": "quest_003",
+      "npcSprite": "mob_6_front_0",
+      "title": "안경 토끼의 고민",
+      "description": "안경 토끼의 고민을 들어주세요.",
+      "targetType": "Talk",
+      "targetId": "npc_glasses_rabbit",
+      "targetCount": 1,
+      "rewardType": "Gold",
+      "rewardId": "별빛",
       "rewardAmount": 100
     }
   ]

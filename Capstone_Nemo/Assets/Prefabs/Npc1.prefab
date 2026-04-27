@@ -26,8 +26,8 @@ Transform:
   m_GameObject: {fileID: 608234138406777182}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.002, y: -0.714, z: 0}
-  m_LocalScale: {x: 0.73231816, y: 0.47254547, z: 1}
+  m_LocalPosition: {x: -0.002, y: -0.67, z: 0}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3594218519915025748}
@@ -52,7 +52,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -73,7 +73,7 @@ SpriteRenderer:
   m_SortingLayerID: -952592031
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 20c5d0e377db81a44b6b55bb692585c6, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 0.44705883}
   m_FlipX: 0
   m_FlipY: 0
@@ -97,6 +97,7 @@ GameObject:
   - component: {fileID: 2185089649895807262}
   - component: {fileID: 3969514267462347897}
   - component: {fileID: 7732907081790168728}
+  - component: {fileID: 3484699157188593669}
   - component: {fileID: 2900574119872469598}
   - component: {fileID: 2809496075762847698}
   - component: {fileID: 476093617001624696}
@@ -235,6 +236,27 @@ MonoBehaviour:
   waitTimeAtPoint: 3
   loop: 1
   animator: {fileID: 3969514267462347897}
+  Player:
+    serializedVersion: 2
+    m_Bits: 0
+  skinWidth: 0.02
+  blockCheckDistance: 0.25
+--- !u!114 &3484699157188593669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2472663993336910016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0834c1915e30f884b948196e9af11cb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  npcId: npc_yellow_rabbit
+  npcName: "\uB178\uB780 \uD1A0\uB07C"
+  patrolRoute: {fileID: 7732907081790168728}
+  useDirectInteractKey: 1
 --- !u!70 &2900574119872469598
 CapsuleCollider2D:
   m_ObjectHideFlags: 0

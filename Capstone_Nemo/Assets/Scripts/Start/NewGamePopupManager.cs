@@ -6,6 +6,19 @@ using System.IO;
 
 public class NewGamePopupManager : MonoBehaviour
 {
+    [System.Serializable]
+    private class DefaultSkinSaveData
+    {
+        public int equippedIndex = 0;
+        public int[] ownedIndexes = new int[] { 0 };
+
+        public bool hasCustomColor = false;
+        public float colorR = 1f;
+        public float colorG = 1f;
+        public float colorB = 1f;
+        public float colorA = 1f;
+    }
+
     public TMP_InputField inputServerName;
     public Button btnCreate, btnCancel;
 
@@ -193,8 +206,28 @@ public class NewGamePopupManager : MonoBehaviour
             File.WriteAllText(Application.persistentDataPath + $"/player_level_data_{serverName}.json", "{\"Level\":1,\"Exp\":0}");
             File.WriteAllText(Application.persistentDataPath + $"/dayData_{serverName}.json", "{\"day\":1,\"hour\":9,\"minute\":0}");
 
+            var defaultSkinData = new DefaultSkinSaveData();
+
+            File.WriteAllText(
+                Application.persistentDataPath + $"/playerSkin_{serverName}.json",
+                JsonUtility.ToJson(defaultSkinData, true)
+            );
+
             PlayerPrefs.SetString("SelectedSave", serverName);
             PlayerPrefs.Save();
+
+            // 새 파일 생성 직후 스킨 데이터를 새 세이브 기준으로 전환
+            if (PlayerSkinManager.Instance != null)
+            {
+                PlayerSkinManager.Instance.SwitchToSave(serverName);
+            }
+
+            // 별빛 데이터도 새 세이브 기준으로 다시 로드
+            if (StarDataManager.Instance != null)
+            {
+                StarDataManager.Instance.InitFromSelectedSave();
+            }
+
 
             TutorialFlowManager.ForceResetInstance();
 

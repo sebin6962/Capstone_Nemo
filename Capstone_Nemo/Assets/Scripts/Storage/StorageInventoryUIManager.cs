@@ -9,6 +9,19 @@ public class StorageInventoryUIManager : MonoBehaviour
     public static StorageInventoryUIManager Instance;
     public GameObject panel;                     // 창고 패널
     public List<StorageInventorySlot> slots;     // 미리 배치된 슬롯들
+    public Button openButton;
+
+    [Header("Open Button Color")]
+    [SerializeField] private Color openButtonOpenedColor = new Color(0.7f, 0.7f, 0.7f, 1f);
+
+    private Image _openButtonImage;
+    private Color _openButtonNormalColor;
+
+    [Header("Open Button Hover Material")]
+    [SerializeField] private Material openButtonHoverMaterial;
+
+    private Graphic _openButtonGraphic;
+    private Material _openButtonOriginalMaterial;
 
     void Awake()
     {
@@ -17,6 +30,17 @@ public class StorageInventoryUIManager : MonoBehaviour
             StorageInventory.Instance.LoadStorage();
         SyncMaxSlotsToInventory();
         StartCoroutine(RefreshNextFrame());
+
+        if (openButton != null)
+        {
+            _openButtonImage = openButton.image;
+            if (_openButtonImage != null)
+                _openButtonNormalColor = _openButtonImage.color;
+        }
+
+        UpdateOpenButtonVisual(panel != null && panel.activeSelf);
+
+        RegisterOpenButtonHoverMaterial();
     }
 
     System.Collections.IEnumerator RefreshNextFrame()
@@ -30,6 +54,28 @@ public class StorageInventoryUIManager : MonoBehaviour
         if (StorageInventory.Instance != null)
             StorageInventory.Instance.LoadStorage();
         SyncMaxSlotsToInventory();
+        UpdateOpenButtonVisual(panel != null && panel.activeSelf);
+    }
+
+    private void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.G))
+            return;
+
+        // 이미 열려 있으면 버튼 상태와 상관없이 닫기 허용
+        if (IsOpen())
+        {
+            ToggleStorageUIByHotkey();
+            return;
+        }
+
+        // 닫혀 있을 때만 버튼 상태 검사
+        if (openButton == null ||
+            !openButton.gameObject.activeInHierarchy ||
+            !openButton.interactable)
+            return;
+
+        ToggleStorageUIByHotkey();
     }
 
     public void SyncMaxSlotsToInventory()
@@ -44,6 +90,16 @@ public class StorageInventoryUIManager : MonoBehaviour
     }
 
     public void ToggleStorageUI()
+    {
+        ToggleStorageUIInternal(false);
+    }
+
+    public void ToggleStorageUIByHotkey()
+    {
+        ToggleStorageUIInternal(true);
+    }
+
+    public void ToggleStorageUIInternal(bool ignoreButtonCheck)
     {
         // 가게 박스 인벤토리 열려 있으면 창고 열기/닫기 막기
         if (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
@@ -66,19 +122,29 @@ public class StorageInventoryUIManager : MonoBehaviour
             return;
 
         // UI 버튼 외에는 열 수 없게 조건문 추가
-        if (!EventSystem.current.currentSelectedGameObject ||
-            EventSystem.current.currentSelectedGameObject.GetComponent<Button>() == null)
-            return;
+        //if (!EventSystem.current.currentSelectedGameObject ||
+        //    EventSystem.current.currentSelectedGameObject.GetComponent<Button>() == null)
+        //    return;
+
+        // 버튼 클릭이 아닐 때는 막되, 단축키 호출은 예외
+        if (!ignoreButtonCheck)
+        {
+            if (!EventSystem.current.currentSelectedGameObject ||
+                EventSystem.current.currentSelectedGameObject.GetComponent<Button>() == null)
+                return;
+        }
 
         if (panel.activeSelf)
         {
             panel.SetActive(false);
+            UpdateOpenButtonVisual(false);
             SFXManager.Instance.PlayBoxOpenSFX();
         }
         else
         {
             UpdateSlots();
             panel.SetActive(true);
+            UpdateOpenButtonVisual(true);
             SFXManager.Instance.PlayBoxOpenSFX();
         }
 
@@ -123,5 +189,75 @@ public class StorageInventoryUIManager : MonoBehaviour
     public bool IsOpen()
     {
         return panel != null && panel.activeSelf;
+    }
+
+    private void UpdateOpenButtonVisual(bool isOpen)
+    {
+        if (_openButtonImage == null)
+            return;
+
+        _openButtonImage.color = isOpen ? openButtonOpenedColor : _openButtonNormalColor;
+    }
+
+    private void RegisterOpenButtonHoverMaterial()
+    {
+        if (openButton == null || openButtonHoverMaterial == null)
+            return;
+
+        _openButtonGraphic = openButton.targetGraphic != null
+            ? openButton.targetGraphic as Graphic
+            : openButton.GetComponent<Graphic>();
+
+        if (_openButtonGraphic == null)
+            return;
+
+        _openButtonOriginalMaterial = _openButtonGraphic.material;
+
+        EventTrigger trigger = openButton.GetComponent<EventTrigger>();
+        if (trigger == null)
+            trigger = openButton.gameObject.AddComponent<EventTrigger>();
+
+        AddEventTrigger(trigger, EventTriggerType.PointerEnter, (data) =>
+        {
+            ApplyOpenButtonHoverMaterial();
+        });
+
+        AddEventTrigger(trigger, EventTriggerType.PointerExit, (data) =>
+        {
+            RestoreOpenButtonMaterial();
+        });
+    }
+
+    private void AddEventTrigger(EventTrigger trigger, EventTriggerType eventType, UnityEngine.Events.UnityAction<BaseEventData> action)
+    {
+        if (trigger == null) return;
+
+        EventTrigger.Entry entry = new EventTrigger.Entry();
+        entry.eventID = eventType;
+        entry.callback.AddListener(action);
+        trigger.triggers.Add(entry);
+    }
+
+    private void ApplyOpenButtonHoverMaterial()
+    {
+        if (_openButtonGraphic == null || openButtonHoverMaterial == null)
+            return;
+
+        _openButtonGraphic.material = openButtonHoverMaterial;
+    }
+
+    private void RestoreOpenButtonMaterial()
+    {
+        if (_openButtonGraphic == null)
+            return;
+
+        _openButtonGraphic.material = _openButtonOriginalMaterial;
+    }
+
+    private void OnDisable()
+    {
+        if (InventoryTooltipManager.Instance != null)
+            InventoryTooltipManager.Instance.Hide();
+        RestoreOpenButtonMaterial();
     }
 }

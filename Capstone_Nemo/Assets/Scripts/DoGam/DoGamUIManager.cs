@@ -10,6 +10,10 @@ using System.IO;
 public class DoGamUIManager : MonoBehaviour
 {
     public static DoGamUIManager Instance;
+    [Header("Button Hover Material")]
+    [SerializeField] private Material hoverEffectMaterial;
+
+    private readonly Dictionary<Graphic, Material> _originalButtonMaterials = new();
 
     [Header("Unlock Filter")]
     [Tooltip("잠긴 레시피는 리스트에서 숨길지 여부")]
@@ -278,6 +282,110 @@ public class DoGamUIManager : MonoBehaviour
         if (makerRoot != null) makerRoot.SetActive(false);
 
         InitSeenRecipeState();
+        RegisterAllButtonHoverMaterials();
+    }
+
+    private void RegisterAllButtonHoverMaterials()
+    {
+        RegisterButtonHoverMaterial(openButton);
+        RegisterButtonHoverMaterial(closeButton);
+
+        RegisterButtonHoverMaterial(nextButton);
+        RegisterButtonHoverMaterial(prevButton);
+
+        RegisterButtonHoverMaterial(tteokButton);
+        RegisterButtonHoverMaterial(drinkButton);
+
+        RegisterButtonHoverMaterial(howToButton);
+        RegisterButtonHoverMaterial(howToPrevButton);
+        RegisterButtonHoverMaterial(howToNextButton);
+
+        RegisterButtonHoverMaterial(makerButton);
+        RegisterButtonHoverMaterial(makerPrevButton);
+        RegisterButtonHoverMaterial(makerNextButton);
+    }
+
+    private void RegisterButtonHoverMaterial(Button button)
+    {
+        if (button == null || hoverEffectMaterial == null)
+            return;
+
+        Graphic targetGraphic = button.targetGraphic != null
+            ? button.targetGraphic as Graphic
+            : button.GetComponent<Graphic>();
+
+        if (targetGraphic == null)
+            return;
+
+        if (!_originalButtonMaterials.ContainsKey(targetGraphic))
+            _originalButtonMaterials[targetGraphic] = targetGraphic.material;
+
+        EventTrigger trigger = button.GetComponent<EventTrigger>();
+        if (trigger == null)
+            trigger = button.gameObject.AddComponent<EventTrigger>();
+
+        AddEventTrigger(trigger, EventTriggerType.PointerEnter, (data) =>
+        {
+            ApplyHoverMaterial(targetGraphic);
+        });
+
+        AddEventTrigger(trigger, EventTriggerType.PointerExit, (data) =>
+        {
+            RestoreOriginalMaterial(targetGraphic);
+        });
+    }
+
+    private void AddEventTrigger(
+        EventTrigger trigger,
+        EventTriggerType eventType,
+        UnityEngine.Events.UnityAction<BaseEventData> action)
+    {
+        if (trigger == null) return;
+
+        EventTrigger.Entry entry = new EventTrigger.Entry();
+        entry.eventID = eventType;
+        entry.callback.AddListener(action);
+        trigger.triggers.Add(entry);
+    }
+
+    private void ApplyHoverMaterial(Graphic targetGraphic)
+    {
+        if (targetGraphic == null || hoverEffectMaterial == null)
+            return;
+
+        targetGraphic.material = hoverEffectMaterial;
+    }
+
+    private void RestoreOriginalMaterial(Graphic targetGraphic)
+    {
+        if (targetGraphic == null)
+            return;
+
+        if (_originalButtonMaterials.TryGetValue(targetGraphic, out Material originalMat))
+            targetGraphic.material = originalMat;
+        else
+            targetGraphic.material = null;
+    }
+
+    private void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.F))
+            return;
+
+        // 이미 열려 있으면 버튼 상태와 상관없이 닫기 허용
+        if (IsOpen())
+        {
+            CloseDoGam();
+            return;
+        }
+
+        // 닫혀 있을 때만 버튼이 실제로 사용 가능한 상태인지 검사
+        if (openButton == null ||
+            !openButton.gameObject.activeInHierarchy ||
+            !openButton.interactable)
+            return;
+
+        OnOpenButtonClicked();
     }
 
     // ===================== 공통 토글 =====================
