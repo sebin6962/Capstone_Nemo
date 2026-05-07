@@ -66,9 +66,35 @@ public class TutorialManager : MonoBehaviour
 
     private Coroutine showStepPanelRoutine;
 
+    [Header("인트로 자동 시퀀스")]
+    [SerializeField] private Transform villageEntryPoint;
+    [SerializeField] private Transform grandmaNoticePoint;
+    [SerializeField] private Transform grandmaTalkPoint;
+    [SerializeField] private GameObject grandmaNpcObject;
+    [SerializeField] private Animator playerAnimator;
+    [SerializeField] private GameObject grandmaReactionBubble;
+    [SerializeField] private float autoMoveSpeed = 2.2f;
+    [SerializeField] private float reactionBubbleDuration = 0.8f;
+
+    [Header("튜토리얼 중 NPC 제어")]
+    [SerializeField] private NPCPatrolRoute[] tutorialStopPatrolNpcs;
+    [SerializeField] private GameObject[] tutorialHideNpcObjects;
+
+    private bool isAutoSequenceRunning = false;
+    private bool waitingVillageIntroFade = false;
+
     private void Awake()
     {
         Instance = this;
+
+        if (playerAnimator == null && player != null)
+            playerAnimator = player.GetComponentInChildren<Animator>();
+    }
+
+    private void SetGrandmaVisible(bool visible)
+    {
+        if (grandmaNpcObject != null)
+            grandmaNpcObject.SetActive(visible);
     }
 
     void Start()
@@ -78,8 +104,12 @@ public class TutorialManager : MonoBehaviour
 
         var flow = TutorialFlowManager.Instance;
 
+        bool isTutorialRunning = (flow != null && flow.currentStep != GlobalTutorialStep.Done);
+        SetTutorialNpcState(isTutorialRunning);
+
         if (state.tutorialDone || flow == null || flow.currentStep == GlobalTutorialStep.Done)
         {
+            SetGrandmaVisible(false);
             CleanupTutorialVisuals();
             if (tutorialBlocker) tutorialBlocker.SetActive(false);
             //if (secondTutorialBlocker) secondTutorialBlocker.SetActive(false);
@@ -91,13 +121,40 @@ public class TutorialManager : MonoBehaviour
         Debug.Log($"[TutorialManager] Start in Village, flowStep={flow?.currentStep}, tutorialDone={state.tutorialDone}");
 
 
+        bool shouldShowGrandma =
+            (globalStep == GlobalTutorialStep.DogamIntro ||
+             globalStep == GlobalTutorialStep.Village_First);
+
+        SetGrandmaVisible(shouldShowGrandma);
+
         switch (globalStep)
         {
+            //원래 코드
+            //case GlobalTutorialStep.DogamIntro:
+            //    //currentStep = TutorialStep.DogamIntro;
+            //    tutorialBlocker.gameObject.SetActive(true);
+            //   // secondTutorialBlocker.gameObject.SetActive(false);
+            //    StartTutorial_DogamIntro();
+            //    break;
+
+            //새 코드
             case GlobalTutorialStep.DogamIntro:
-                //currentStep = TutorialStep.DogamIntro;
-                tutorialBlocker.gameObject.SetActive(true);
-               // secondTutorialBlocker.gameObject.SetActive(false);
-                StartTutorial_DogamIntro();
+                if (tutorialBlocker) tutorialBlocker.SetActive(true);
+                // secondTutorialBlocker.gameObject.SetActive(false);
+
+                if (TutorialFlowManager.Instance != null)
+                    TutorialFlowManager.Instance.RequestTutorialTimePause();
+
+                if (TutorialFlowManager.Instance != null &&
+                    !TutorialFlowManager.Instance.VillageIntroAutoSequencePlayed)
+                {
+                    waitingVillageIntroFade = true;
+                    SetPlayerInput(false);
+                }
+                else
+                {
+                    BeginDogamIntroUI();
+                }
                 break;
 
             case GlobalTutorialStep.Village_First:
@@ -109,13 +166,97 @@ public class TutorialManager : MonoBehaviour
                 break;
 
             default:
+                SetGrandmaVisible(false);
                 CleanupTutorialVisuals();
-                tutorialBlocker.SetActive(false);
+                if (tutorialBlocker) tutorialBlocker.SetActive(false);
                 break;
         }
     }
 
-    void PlayDialogueThen(System.Action onFinished, List<TutorialDialogueLine> lines)
+    public void PrepareVillageIntroUnderFade()
+    {
+        if (!waitingVillageIntroFade || player == null)
+            return;
+
+        SetGrandmaVisible(true);
+        CleanupTutorialVisuals();
+        SetPlayerInput(false);
+
+        if (grandmaReactionBubble != null)
+            grandmaReactionBubble.SetActive(false);
+
+        if (villageEntryPoint != null)
+        {
+            Vector3 startPos = villageEntryPoint.position;
+            startPos.z = player.transform.position.z;
+            player.transform.position = startPos;
+        }
+
+        // 처음 시작 방향도 필요하면 여기서 맞춤
+        if (grandmaNoticePoint != null)
+            FacePlayerTo(grandmaNoticePoint.position);
+
+        SetPlayerAnimation(Vector2.zero, false);
+    }
+
+    public void BeginVillageIntroAfterFade()
+    {
+        if (!waitingVillageIntroFade || isAutoSequenceRunning)
+            return;
+
+        waitingVillageIntroFade = false;
+        StartCoroutine(PlayVillageIntroAutoSequence_AfterFade());
+    }
+
+    private IEnumerator PlayVillageIntroAutoSequence_AfterFade()
+    {
+        isAutoSequenceRunning = true;
+        SetPlayerInput(false);
+        SetGrandmaVisible(true);
+
+        // 여기서 더 이상 villageEntryPoint로 옮기지 않음
+        // 이미 검은 화면에서 PrepareVillageIntroUnderFade()가 끝냈음
+
+        // 1) 마을로 걸어 들어오기
+        if (grandmaNoticePoint != null && player != null)
+            yield return MovePlayerTo(grandmaNoticePoint.position);
+
+        // 2) 할머니 발견 말풍선
+        if (grandmaReactionBubble != null)
+        {
+            grandmaReactionBubble.SetActive(true);
+            yield return new WaitForSeconds(reactionBubbleDuration);
+            grandmaReactionBubble.SetActive(false);
+        }
+
+        // 3) 할머니에게 다가가기
+        if (grandmaTalkPoint != null && player != null)
+            yield return MovePlayerTo(grandmaTalkPoint.position);
+
+        // 4) 마지막 방향 고정
+        if (grandmaNpcObject != null && player != null)
+            FacePlayerTo(grandmaNpcObject.transform.position);
+
+        SetPlayerAnimation(Vector2.zero, false);
+
+        // 5) 첫 대화
+        bool dialogueFinished = false;
+
+        PlayDialogueThen(() =>
+        {
+            dialogueFinished = true;
+        }, villageFirstStartDialogues, grandmaNpcObject);
+
+        yield return new WaitUntil(() => dialogueFinished);
+
+        if (TutorialFlowManager.Instance != null)
+            TutorialFlowManager.Instance.VillageIntroAutoSequencePlayed = true;
+
+        isAutoSequenceRunning = false;
+        BeginDogamIntroUI();
+    }
+
+    void PlayDialogueThen(System.Action onFinished, List<TutorialDialogueLine> lines, GameObject focusNpcObj = null)
     {
         if (lines == null || lines.Count == 0)
         {
@@ -126,12 +267,29 @@ public class TutorialManager : MonoBehaviour
         if (NPCDialogueUIManager.Instance == null)
         {
             Debug.LogError("NPCDialogueUIManager가 없습니다.");
+
+            if (DialogueFocusManager.Instance != null)
+                DialogueFocusManager.Instance.EndFocusImmediate();
+
             onFinished?.Invoke();
             return;
         }
 
+        bool useFocus =
+            DialogueFocusManager.Instance != null &&
+            player != null &&
+            focusNpcObj != null;
+
+        if (useFocus)
+        {
+            DialogueFocusManager.Instance.BeginFocus(player.gameObject, focusNpcObj);
+        }
+
         NPCDialogueUIManager.Instance.OpenTutorialDialogue(lines, () =>
         {
+            if (useFocus && DialogueFocusManager.Instance != null)
+                DialogueFocusManager.Instance.EndFocus();
+
             onFinished?.Invoke();
         });
     }
@@ -140,14 +298,14 @@ public class TutorialManager : MonoBehaviour
     {
         switch (step)
         {
-            case VillageSecondStep.OpenStorage: 
+            case VillageSecondStep.OpenStorage:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
                 }, afterGoToFieldDialogues);
                 break;
 
-            case VillageSecondStep.GoToMill: 
+            case VillageSecondStep.GoToMill:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
@@ -160,15 +318,57 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
-    void StartTutorial_DogamIntro()
+    //void StartTutorial_DogamIntro()
+    //{
+    //    //시간 정지, 이동X
+    //    SetPlayerInput(false);
+    //
+    //    if (TutorialFlowManager.Instance != null)
+    //        TutorialFlowManager.Instance.RequestTutorialTimePause();
+    //
+    //    //Time.timeScale = 0f;
+    //
+    //    //클릭X
+    //    if (overlayBlocker)
+    //    {
+    //        overlayBlocker.gameObject.SetActive(true);
+    //        overlayBlocker.blocksRaycasts = true;
+    //        overlayBlocker.interactable = true;
+    //        overlayBlocker.alpha = 0.9f;
+    //    }
+    //
+    //    if (tutorialText)
+    //    {
+    //        tutorialText.gameObject.SetActive(true);
+    //    }
+    //
+    //    if (dogamCloseButton)
+    //    {
+    //        dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
+    //        dogamCloseButton.onClick.AddListener(OnDogamClicked);
+    //        dogamCloseButton.interactable = true;
+    //    }
+    //
+    //    //이펙트
+    //    if (dogamHighlightFX)
+    //    {
+    //        dogamHighlightFX.gameObject.SetActive(true);
+    //
+    //        var pSystems = dogamHighlightFX.GetComponentsInChildren<ParticleSystem>(true);
+    //        foreach (var ps in pSystems)
+    //        {
+    //            var main = ps.main;
+    //            main.useUnscaledTime = true;  // Time.timeScale=0에서도 재생
+    //            ps.Clear(true);
+    //            ps.Play(true);
+    //        }
+    //    }
+    //}
+
+    void BeginDogamIntroUI()
     {
         //시간 정지, 이동X
         SetPlayerInput(false);
-
-        if (TutorialFlowManager.Instance != null)
-            TutorialFlowManager.Instance.RequestTutorialTimePause();
-
-        //Time.timeScale = 0f;
 
         //클릭X
         if (overlayBlocker)
@@ -216,20 +416,14 @@ public class TutorialManager : MonoBehaviour
         if (tutorialBlocker)
             tutorialBlocker.SetActive(false);
 
-        PlayDialogueThen(() =>
+        if (villageTutorialPanel)
         {
-            Debug.Log("대화 끝남");
+            SFXManager.Instance.PlayTutorialSFX();
+            villageTutorialPanel.SetActive(true);
+        }
 
-            if (villageTutorialPanel)
-            {
-                SFXManager.Instance.PlayTutorialSFX();
-                villageTutorialPanel.SetActive(true);
-            }
-
-            if (fixedVillageTutorialPanels)
-                fixedVillageTutorialPanels.SetActive(true);
-
-        }, villageFirstStartDialogues);
+        if (fixedVillageTutorialPanels)
+            fixedVillageTutorialPanels.SetActive(true);
     }
 
     void StartTutorial_VillageSecond()
@@ -256,13 +450,12 @@ public class TutorialManager : MonoBehaviour
 
     public void GoToNextVillageSecondStep()
     {
-
         switch (villageSecondStep)
         {
             //TutorialTriggerArea.cs
             case VillageSecondStep.GoToField:
                 //secondTutorialBlocker.gameObject.SetActive(true);
-                villageSecondStep = VillageSecondStep.OpenStorage;    
+                villageSecondStep = VillageSecondStep.OpenStorage;
                 break;
             //BoxInventoryManager.cs
             case VillageSecondStep.OpenStorage:
@@ -325,6 +518,45 @@ public class TutorialManager : MonoBehaviour
         UpdateTriggerAreas();
     }
 
+    private void SetTutorialNpcState(bool tutorialRunning)
+    {
+        if (tutorialStopPatrolNpcs != null)
+        {
+            foreach (var patrol in tutorialStopPatrolNpcs)
+            {
+                if (patrol == null) continue;
+                patrol.SetActive(!tutorialRunning);
+            }
+        }
+
+        if (tutorialHideNpcObjects != null)
+        {
+            foreach (var npcObj in tutorialHideNpcObjects)
+            {
+                if (npcObj == null) continue;
+                npcObj.SetActive(!tutorialRunning);
+            }
+        }
+
+        // 할머니는 튜토리얼용 NPC라 별도로 다시 제어
+        if (tutorialRunning)
+        {
+            var globalStep = TutorialFlowManager.Instance != null
+                ? TutorialFlowManager.Instance.currentStep
+                : GlobalTutorialStep.None;
+
+            bool shouldShowGrandma =
+                (globalStep == GlobalTutorialStep.DogamIntro ||
+                 globalStep == GlobalTutorialStep.Village_First);
+
+            SetGrandmaVisible(shouldShowGrandma);
+        }
+        else
+        {
+            SetGrandmaVisible(false);
+        }
+    }
+
     public void UpdateTriggerAreas()
     {
         var areas = FindObjectsOfType<TutorialTriggerArea>(true);
@@ -347,6 +579,7 @@ public class TutorialManager : MonoBehaviour
         }
 
         TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Mill);
+        SetTutorialNpcState(false);
     }
 
     void ShowStepPanel(VillageSecondStep step)
@@ -360,7 +593,7 @@ public class TutorialManager : MonoBehaviour
         if (showStepPanelRoutine != null)
             StopCoroutine(showStepPanelRoutine);
 
-        float delay = 0f; 
+        float delay = 0f;
 
         if (step == VillageSecondStep.GoToMill)
             delay = 3.5f;
@@ -387,7 +620,6 @@ public class TutorialManager : MonoBehaviour
         if (fixedStepPanels != null && index >= 0 && index < fixedStepPanels.Length && fixedStepPanels[index])
             fixedStepPanels[index].SetActive(true);
 
-
         // 코루틴 끝남
         showStepPanelRoutine = null;
     }
@@ -408,7 +640,7 @@ public class TutorialManager : MonoBehaviour
     }
 
     public bool IsCurrentStep(VillageSecondStep step)
-    { 
+    {
         return IsVillageSecondTutorialRunning && villageSecondStep == step;
     }
 
@@ -441,6 +673,9 @@ public class TutorialManager : MonoBehaviour
             dogamHighlightFX.gameObject.SetActive(false);
         }
 
+        if (TutorialFlowManager.Instance != null)
+            TutorialFlowManager.Instance.ReleaseTutorialTimePause();
+
         SetPlayerInput(true);
 
         //if (villageTutorialPanel)
@@ -469,6 +704,56 @@ public class TutorialManager : MonoBehaviour
         TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.Village_First);
 
         StartTutorial_VillageFirst();
+    }
+
+    private IEnumerator MovePlayerTo(Vector3 target)
+    {
+        if (player == null)
+            yield break;
+
+        Vector3 destination = target;
+        destination.z = player.transform.position.z;
+
+        while (Vector2.Distance(player.transform.position, destination) > 0.03f)
+        {
+            Vector3 current = player.transform.position;
+            Vector2 dir = ((Vector2)(destination - current)).normalized;
+
+            player.transform.position = Vector3.MoveTowards(
+                current,
+                destination,
+                autoMoveSpeed * Time.deltaTime
+            );
+
+            SetPlayerAnimation(dir, true);
+            yield return null;
+        }
+
+        player.transform.position = destination;
+        SetPlayerAnimation(Vector2.zero, false);
+    }
+
+    private void FacePlayerTo(Vector3 target)
+    {
+        if (player == null)
+            return;
+
+        Vector2 dir = ((Vector2)(target - player.transform.position)).normalized;
+        SetPlayerAnimation(dir, false);
+    }
+
+    private void SetPlayerAnimation(Vector2 dir, bool isMoving)
+    {
+        if (playerAnimator == null)
+            return;
+
+        if (dir.sqrMagnitude > 0.0001f)
+        {
+            playerAnimator.SetFloat("MoveX", dir.x);
+            playerAnimator.SetFloat("MoveY", dir.y);
+        }
+
+        playerAnimator.SetBool("IsWalking", isMoving);
     }
 
     //튜토리얼씨앗잠금
@@ -517,7 +802,6 @@ public class TutorialManager : MonoBehaviour
         if (dogamCloseButton != null)
             dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
     }*/
-
 
     void CleanupTutorialVisuals()
     {

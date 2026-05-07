@@ -399,7 +399,7 @@ public class CutSceneManager : MonoBehaviour
             VillageSceneManager.Instance.ResetData();
         }
 
-        SceneTransitionInfo.Instance.entranceID = "FromPlayerStore";
+        //SceneTransitionInfo.Instance.entranceID = "FromPlayerStore";
         FadeManager.Instance.FadeToScene("VillageScene");
         PlayerPrefs.SetInt("StartTimeOnEnter", 1);
         yield return null;

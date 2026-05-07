@@ -24,6 +24,9 @@ public class TutorialFlowManager : MonoBehaviour
 
     public GlobalTutorialStep currentStep = GlobalTutorialStep.None;
 
+    //튜토리얼 전 자동 컷신용 추가
+    public bool VillageIntroAutoSequencePlayed { get; set; } = false;
+
     private string server;
     private TutorialStateData state;
 
@@ -72,6 +75,7 @@ public class TutorialFlowManager : MonoBehaviour
         state = TutorialState.Load(server);
 
         timePauseRequestCount = 0;
+        VillageIntroAutoSequencePlayed = false;
         UpdateTimeFlow();
 
         if (state.tutorialDone)

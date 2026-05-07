@@ -102,7 +102,23 @@ public class FadeManager : MonoBehaviour
         //if (preRevealHoldSeconds > 0f)
         //    yield return new WaitForSeconds(preRevealHoldSeconds);
 
+        // 아직 화면이 검은 상태일 때 플레이어 위치/방향 먼저 세팅
+        if (sceneName == "VillageScene" && TutorialManager.Instance != null)
+        {
+            TutorialManager.Instance.PrepareVillageIntroUnderFade();
+        }
+
+        // 로딩 직후 잠깐 더 검은 화면 유지하고 싶으면 사용
+        if (sceneName == "VillageScene" && preRevealHoldSeconds > 0f)
+            yield return new WaitForSecondsRealtime(preRevealHoldSeconds);
+
         yield return StartCoroutine(FadeIn());
+
+        // 화면이 보이기 시작한 뒤 자동 걷기 연출 시작
+        if (sceneName == "VillageScene" && TutorialManager.Instance != null)
+        {
+            TutorialManager.Instance.BeginVillageIntroAfterFade();
+        }
 
         // 1) 포인터가 완전히 올라갈 때까지 대기
         yield return new WaitUntil(() => !IsPointerDown());
