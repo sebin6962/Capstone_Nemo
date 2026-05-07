@@ -25,6 +25,9 @@ public class SecondStoreTutorialManager : MonoBehaviour
 
     [SerializeField] private GameObject[] stepPanels;
 
+    [SerializeField] private List<TutorialDialogueLine> secondStoreStartDialogues;
+    [SerializeField] private List<TutorialDialogueLine> afterSiruFinishDialogues;
+
     [SerializeField] private GameObject storeTutorialPanel;
     [SerializeField] private CustomerSpawner customerSpawner;
     [SerializeField] private SeatManager seatManager;
@@ -89,7 +92,48 @@ public class SecondStoreTutorialManager : MonoBehaviour
         if (customerSpawner)
             customerSpawner.SpawnTutorialCustomer(1, "Danhobakseolgi_finish", 15f);
 
-        ShowStepPanel(currentStep);
+        PlayDialogueThen(() =>
+        {
+            ShowStepPanel(currentStep);
+        }, secondStoreStartDialogues);
+    }
+
+    void ShowStepWithOptionalDialogue(SecondStoreTutorialStep step)
+    {
+        switch (step)
+        {
+            case SecondStoreTutorialStep.Serve: 
+                PlayDialogueThen(() =>
+                {
+                    ShowStepPanel(step);
+                }, afterSiruFinishDialogues);
+                break;
+
+            default:
+                ShowStepPanel(step);
+                break;
+        }
+    }
+
+    void PlayDialogueThen(System.Action onFinished, List<TutorialDialogueLine> lines)
+    {
+        if (lines == null || lines.Count == 0)
+        {
+            onFinished?.Invoke();
+            return;
+        }
+
+        if (NPCDialogueUIManager.Instance == null)
+        {
+            Debug.LogError("NPCDialogueUIManager가 없습니다.");
+            onFinished?.Invoke();
+            return;
+        }
+
+        NPCDialogueUIManager.Instance.OpenTutorialDialogue(lines, () =>
+        {
+            onFinished?.Invoke();
+        });
     }
 
     void ShowStepPanel(SecondStoreTutorialStep step)
@@ -201,7 +245,7 @@ public class SecondStoreTutorialManager : MonoBehaviour
                 return;
         }
 
-        ShowStepPanel(currentStep);
+        ShowStepWithOptionalDialogue(currentStep);
     }
 
     public void FinishStoreSecondTutorial()

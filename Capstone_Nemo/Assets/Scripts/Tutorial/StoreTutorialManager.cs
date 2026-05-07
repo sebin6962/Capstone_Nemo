@@ -102,14 +102,14 @@ public class StoreTutorialManager : MonoBehaviour
             return;
         }
 
-        if (TutorialDialogueManager.Instance == null)
+        if (NPCDialogueUIManager.Instance == null)
         {
-            Debug.LogError("TutorialDialogueManager가 없습니다.");
+            Debug.LogError("NPCDialogueUIManager가 없습니다.");
             onFinished?.Invoke();
             return;
         }
 
-        TutorialDialogueManager.Instance.StartDialogue(lines, () =>
+        NPCDialogueUIManager.Instance.OpenTutorialDialogue(lines, () =>
         {
             onFinished?.Invoke();
         });

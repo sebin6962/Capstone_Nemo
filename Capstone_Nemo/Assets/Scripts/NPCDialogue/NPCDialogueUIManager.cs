@@ -23,6 +23,7 @@ public class NPCDialogueUIManager : MonoBehaviour
     [SerializeField] private GameObject optionButtonPrefab;
     [SerializeField] private Button nextButton;
     [SerializeField] private TMP_Text nextButtonText;
+    [SerializeField] private Image portraitImage;
 
     [Header("Typing Effect")]
     [SerializeField] private float typingSpeed = 0.03f;
@@ -32,6 +33,10 @@ public class NPCDialogueUIManager : MonoBehaviour
     [SerializeField] private bool hideNextButtonWhileTyping = false;
     [SerializeField] private float blinkMinAlpha = 0.25f;
     [SerializeField] private float blinkMaxAlpha = 1f;
+
+    [SerializeField] private List<PortraitDisplaySetting> portraitSettings;
+    private Vector3 defaultPortraitScale;
+    private Vector2 defaultPortraitPosition;
 
     private readonly List<GameObject> spawnedOptions = new();
     private readonly Queue<string> pendingLines = new();
@@ -48,6 +53,21 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     private string currentFullLine = "";
     private bool isTyping = false;
+
+    //튜토리얼용
+    private System.Action tutorialDialogueFinishedCallback;
+    private bool isTutorialDialogueMode = false;
+    private Queue<TutorialDialogueLine> tutorialLines = new();
+    private TutorialDialogueLine currentTutorialLine;
+
+    //초상화크기
+    [System.Serializable]
+    public class PortraitDisplaySetting
+    {
+        public Sprite portrait;
+        public float scale = 1f;
+        public Vector2 positionOffset;
+    }
 
     public bool IsOpen()
     {
@@ -74,6 +94,39 @@ public class NPCDialogueUIManager : MonoBehaviour
         {
             nextButton.onClick.RemoveAllListeners();
             nextButton.onClick.AddListener(OnClickNextButton);
+        }
+
+        if (portraitImage != null)
+        {
+            defaultPortraitScale = portraitImage.transform.localScale;
+            defaultPortraitPosition = portraitImage.rectTransform.anchoredPosition;
+        }
+    }
+
+    //초상화크기
+    private void ApplyPortrait(Sprite portrait)
+    {
+        if (portraitImage == null)
+            return;
+
+        portraitImage.sprite = portrait;
+        portraitImage.gameObject.SetActive(portrait != null);
+
+        portraitImage.transform.localScale = defaultPortraitScale;
+        portraitImage.rectTransform.anchoredPosition = defaultPortraitPosition;
+
+        if (portrait == null)
+            return;
+
+        foreach (var setting in portraitSettings)
+        {
+            if (setting.portrait == portrait)
+            {
+                portraitImage.transform.localScale = defaultPortraitScale * setting.scale;
+                portraitImage.rectTransform.anchoredPosition =
+                    defaultPortraitPosition + setting.positionOffset;
+                return;
+            }
         }
     }
 
@@ -114,6 +167,60 @@ public class NPCDialogueUIManager : MonoBehaviour
         }
 
         MoveToNode(entryNodeId);
+    }
+
+    //튜토리얼용
+    public void OpenTutorialDialogue(List<TutorialDialogueLine> lines, System.Action onFinished = null)
+    {
+        if (lines == null || lines.Count == 0)
+        {
+            onFinished?.Invoke();
+            return;
+        }
+
+        isTutorialDialogueMode = true;
+        tutorialDialogueFinishedCallback = onFinished;
+
+        tutorialLines.Clear();
+
+        foreach (var line in lines)
+        {
+            tutorialLines.Enqueue(line);
+        }
+
+        ClearOptions();
+        pendingLines.Clear();
+        nextNodeAfterLines = null;
+
+        currentState = DialogueState.Line;
+
+        if (dialoguePanel != null)
+            dialoguePanel.SetActive(true);
+
+        ShowNextTutorialLine();
+    }
+
+    //튜토리얼
+    private void ShowNextTutorialLine()
+    {
+        if (tutorialLines.Count == 0)
+        {
+            CloseTutorialDialogue();
+            return;
+        }
+
+        currentTutorialLine = tutorialLines.Dequeue();
+
+        if (npcNameText != null)
+            npcNameText.text = currentTutorialLine.speakerName;
+
+        if (portraitImage != null)
+        {
+            ApplyPortrait(currentTutorialLine.portrait);
+            portraitImage.gameObject.SetActive(currentTutorialLine.portrait != null);
+        }
+
+        StartTyping(currentTutorialLine.dialogue);
     }
 
     private void BuildNodeDictionary(NPCDialogueData data)
@@ -307,7 +414,31 @@ public class NPCDialogueUIManager : MonoBehaviour
             return;
         }
 
+        //튜토리얼
+        if (isTutorialDialogueMode)
+        {
+            ShowNextTutorialLine();
+            return;
+        }
+
+
         ShowNextLine();
+    }
+
+    //튜토리얼
+    private void CloseTutorialDialogue()
+    {
+        if (dialoguePanel != null)
+            dialoguePanel.SetActive(false);
+
+        tutorialLines.Clear();
+
+        isTutorialDialogueMode = false;
+
+        System.Action callback = tutorialDialogueFinishedCallback;
+        tutorialDialogueFinishedCallback = null;
+
+        callback?.Invoke();
     }
 
     private void ShowNextLine()
@@ -512,6 +643,7 @@ public class NPCDialogueUIManager : MonoBehaviour
         if (nextButtonText != null)
             nextButtonText.text = text;
     }
+
 
     public void CloseDialogue()
     {

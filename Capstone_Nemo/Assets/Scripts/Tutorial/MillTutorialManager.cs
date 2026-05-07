@@ -20,6 +20,12 @@ public class MillTutorialManager : MonoBehaviour
 
     [SerializeField] private GameObject[] stepPanels;
 
+    [SerializeField] private List<TutorialDialogueLine> millStartDialogues;
+    [SerializeField] private List<TutorialDialogueLine> afterTalkToNpcDialogues;
+    [SerializeField] private List<TutorialDialogueLine> afterGrindDialogues;
+    [SerializeField] private List<TutorialDialogueLine> afterOpenStoreDialogues;
+    [SerializeField] private List<TutorialDialogueLine> afterQuitStoreDialogues;
+
     [SerializeField] private GameObject millTutorialPanel;
 /*    [SerializeField] private CustomerSpawner customerSpawner;
     [SerializeField] private SeatManager seatManager;*/
@@ -90,12 +96,15 @@ public class MillTutorialManager : MonoBehaviour
             TutorialFlowManager.Instance.RequestTutorialTimePause();
             TutorialFlowManager.Instance.LockScenePortal();
         }
-          
+
 
         /*if (customerSpawner)
             customerSpawner.SpawnTutorialCustomer("baekseolgi_finish", 15f);*/
 
-        ShowStepPanel(currentStep);
+        PlayDialogueThen(() =>
+        {
+            ShowStepPanel(currentStep);
+        }, millStartDialogues);
     }
 
     void ShowStepPanel(MillTutorialStep step)
@@ -189,7 +198,66 @@ public class MillTutorialManager : MonoBehaviour
                 return;
         }
 
-        ShowStepPanel(currentStep);
+        ShowMillStepWithOptionalDialogue(currentStep);
+    }
+
+    void ShowMillStepWithOptionalDialogue(MillTutorialStep step)
+    {
+        switch (step)
+        {
+            case MillTutorialStep.SelectCrop: 
+                PlayDialogueThen(() =>
+                {
+                    ShowStepPanel(step);
+                }, afterTalkToNpcDialogues);
+                break;
+
+            case MillTutorialStep.GrindQuit: 
+                PlayDialogueThen(() =>
+                {
+                    ShowStepPanel(step);
+                }, afterGrindDialogues);
+                break;
+
+            case MillTutorialStep.QuitStore: 
+                PlayDialogueThen(() =>
+                {
+                    ShowStepPanel(step);
+                }, afterOpenStoreDialogues);
+                break;
+
+            case MillTutorialStep.Mill_Finish: 
+                PlayDialogueThen(() =>
+                {
+                    ShowStepPanel(step);
+                }, afterQuitStoreDialogues);
+                break;
+
+            default:
+                ShowStepPanel(step);
+                break;
+        }
+    }
+
+    void PlayDialogueThen(System.Action onFinished, List<TutorialDialogueLine> lines)
+    {
+        if (lines == null || lines.Count == 0)
+        {
+            onFinished?.Invoke();
+            return;
+        }
+
+        if (NPCDialogueUIManager.Instance == null)
+        {
+            Debug.LogError("NPCDialogueUIManager가 없습니다.");
+            onFinished?.Invoke();
+            return;
+        }
+
+        NPCDialogueUIManager.Instance.OpenTutorialDialogue(lines, () =>
+        {
+            onFinished?.Invoke();
+        });
     }
 
     public void FinishMillTutorial()

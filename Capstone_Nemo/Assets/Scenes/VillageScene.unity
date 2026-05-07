@@ -11029,7 +11029,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 722.4, y: 353.72}
+  m_AnchoredPosition: {x: 716.81, y: 353.72}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &535928837
@@ -12382,8 +12382,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uD55C \uC528\uC557\uC5D0 \uCD1D 3\uBC88 \uBB3C\uC744 \uC8FC\uBA74,\n\uC791\uBB3C\uC774
-    \uB2E4 \uC790\uB77C \uC218\uD655\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.\n"
+  m_text: "\uD55C \uC528\uC557\uC5D0 \uBB3C\uC744 \uD55C \uBC88 \uC8FC\uBA74,\n3\uB2E8\uACC4\uC5D0
+    \uAC78\uCCD0 \uC791\uBB3C\uC774 \uC790\uB78D\uB2C8\uB2E4.\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 254faa5d2cf5fb54f99f5ceec196efa6, type: 2}
   m_sharedMaterial: {fileID: 3162937654041563834, guid: 254faa5d2cf5fb54f99f5ceec196efa6, type: 2}
@@ -22121,11 +22121,22 @@ MonoBehaviour:
   optionButtonPrefab: {fileID: 7834145438969093736, guid: d595ae3035188c34aa8db65c2c4dfa2a, type: 3}
   nextButton: {fileID: 69227680}
   nextButtonText: {fileID: 2088067470}
+  portraitImage: {fileID: 1855327520}
   typingSpeed: 0.03
   nextButtonBlinkInterval: 0.45
   hideNextButtonWhileTyping: 1
   blinkMinAlpha: 0.25
   blinkMaxAlpha: 1
+  portraitSettings:
+  - portrait: {fileID: 21300000, guid: 6192a9ec3cbad8e46a24408052383252, type: 3}
+    scale: 2
+    positionOffset: {x: 0, y: 400}
+  - portrait: {fileID: 21300000, guid: d048fbd7569a1fe4390464ab779f87a0, type: 3}
+    scale: 3
+    positionOffset: {x: -200, y: 260}
+  - portrait: {fileID: 21300000, guid: f28a5501c2164c3458e6bd9f3db4a7ae, type: 3}
+    scale: 4
+    positionOffset: {x: -300, y: 400}
 --- !u!1 &1051978456
 GameObject:
   m_ObjectHideFlags: 0
@@ -33234,7 +33245,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 722.4, y: 353.72}
+  m_AnchoredPosition: {x: 716.81, y: 353.72}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1403941597
@@ -39343,7 +39354,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -121.003845, y: -41.0011}
+  m_AnchoredPosition: {x: -121.00391, y: -41.001892}
   m_SizeDelta: {x: 918, y: 516}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1706858485
@@ -40334,6 +40345,33 @@ MonoBehaviour:
   - speakerName: "\uB4E0\uD574"
     dialogue: "\uC548\uC73C\uB85C \uB4E4\uC5B4\uAC00\uC11C \uAD6C\uACBD \uD55C\uBC88
       \uC2DC\uCF1C\uC8FC\uACA0\uB2C8?"
+    portrait: {fileID: 21300000, guid: 6192a9ec3cbad8e46a24408052383252, type: 3}
+  afterGoToFieldDialogues:
+  - speakerName: "\uB4E0\uD574"
+    dialogue: "\uBC2D\uB3C4 \uC81C\uBC95 \uD130\uB97C \uC798 \uC7A1\uC558\uAD6C\uB098!\n\uB545
+      \uAE30\uC6B4\uC774 \uC88B\uC544 \uBCF4\uC5EC \uB2E4\uD589\uC774\uC57C."
+    portrait: {fileID: 21300000, guid: 6192a9ec3cbad8e46a24408052383252, type: 3}
+  - speakerName: "\uB4E0\uD574"
+    dialogue: "\uCC38, \uC694\uC998 \uB9C8\uC744 \uC190\uB2D8\uB4E4\uC774 \uB2E8\uD638\uBC15
+      \uC124\uAE30\uB97C \uADF8\uB807\uAC8C \uCC3E\uB294\uB2E4\uB354\uAD6C\uB098.\n\uBBF8\uB9AC
+      \uB2E8\uD638\uBC15\uC744 \uB109\uB109\uD788 \uC218\uD655\uD574 \uB450\uC5B4\uC57C
+      \uD558\uC9C0 \uC54A\uACA0\uB2C8?"
+    portrait: {fileID: 21300000, guid: 6192a9ec3cbad8e46a24408052383252, type: 3}
+  afterHarvestDialogues:
+  - speakerName: "\uB4E0\uD574"
+    dialogue: "\uC88B\uC544, \uC218\uD655\uAE4C\uC9C0 \uCC99\uCC99 \uD574\uB0B4\uB294
+      \uAC78 \uBCF4\uB2C8 \uB9C8\uC74C\uC774 \uB193\uC774\uB294\uAD6C\uB098.\n\uD558\uC9C0\uB9CC
+      \uC218\uD655\uC774 \uB05D\uC774 \uC544\uB2C8\uB780\uB2E4."
+    portrait: {fileID: 21300000, guid: 6192a9ec3cbad8e46a24408052383252, type: 3}
+  - speakerName: "\uB4E0\uD574"
+    dialogue: "\uB2E8\uD638\uBC15\uC744 \uAC00\uB8E8\uB85C \uB9CC\uB4E4\uC5B4 \uBC18\uC8FD\uC5D0
+      \uC11E\uC5B4\uC57C \uC9C4\uC815\uD55C \uB9DB\uC774 \uC6B0\uB7EC\uB098\uB294
+      \uBC95\uC778\uB370,\n\uADF8 \uBC29\uBC95\uC740 \uC78A\uC9C0 \uC54A\uC558\uACA0\uC9C0?"
+    portrait: {fileID: 21300000, guid: 6192a9ec3cbad8e46a24408052383252, type: 3}
+  - speakerName: "\uB4E0\uD574"
+    dialogue: "\uBC29\uC557\uAC04\uC5D0 \uAC00\uC11C \uAC00\uB8E8\uB85C \uBC14\uAFB8\uB294
+      \uBC95\uB3C4 \uB2E4\uC2DC \uC775\uD790 \uACB8, \uD568\uAED8 \uAC00\uBCF4\uC790\uAFB8\uB098.
+      \n\uBC1C\uAC78\uC74C\uC744 \uC11C\uB458\uB7EC\uC57C\uACA0\uC5B4."
     portrait: {fileID: 21300000, guid: 6192a9ec3cbad8e46a24408052383252, type: 3}
   IsVillageSecondTutorialRunning: 1
 --- !u!1 &1747499272
@@ -43331,7 +43369,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1855327519
 RectTransform:
   m_ObjectHideFlags: 0
@@ -43373,7 +43411,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: c5223df06cc9f2a42b0b0af0cbff3cdd, type: 2}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -49884,10 +49922,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.21170947
-    width: 1
-    height: 0.57658106
+    x: 0.045440167
+    y: 0
+    width: 0.90911967
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -49925,7 +49963,7 @@ Transform:
   m_GameObject: {fileID: 2130387756}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9.85515, y: 6.80425, z: -10}
+  m_LocalPosition: {x: -9.849571, y: 6.80425, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

@@ -56,6 +56,9 @@ public class TutorialManager : MonoBehaviour
 
     [SerializeField] private List<TutorialDialogueLine> villageFirstStartDialogues;
 
+    [SerializeField] private List<TutorialDialogueLine> afterGoToFieldDialogues;
+    [SerializeField] private List<TutorialDialogueLine> afterHarvestDialogues;
+
     private string server;
     private TutorialStateData state;
 
@@ -112,18 +115,49 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
-    public void PlayDialogueThen(Action onFinished, List<TutorialDialogueLine> lines)
+    void PlayDialogueThen(System.Action onFinished, List<TutorialDialogueLine> lines)
     {
-        if (TutorialFlowManager.Instance != null)
-            TutorialFlowManager.Instance.RequestTutorialTimePause();
-
-        TutorialDialogueManager.Instance.StartDialogue(lines, () =>
+        if (lines == null || lines.Count == 0)
         {
-            if (TutorialFlowManager.Instance != null)
-                TutorialFlowManager.Instance.ReleaseTutorialTimePause();
+            onFinished?.Invoke();
+            return;
+        }
 
+        if (NPCDialogueUIManager.Instance == null)
+        {
+            Debug.LogError("NPCDialogueUIManager가 없습니다.");
+            onFinished?.Invoke();
+            return;
+        }
+
+        NPCDialogueUIManager.Instance.OpenTutorialDialogue(lines, () =>
+        {
             onFinished?.Invoke();
         });
+    }
+
+    void ShowVillageSecondStepWithDialogue(VillageSecondStep step)
+    {
+        switch (step)
+        {
+            case VillageSecondStep.OpenStorage: 
+                PlayDialogueThen(() =>
+                {
+                    ShowStepPanel(step);
+                }, afterGoToFieldDialogues);
+                break;
+
+            case VillageSecondStep.GoToMill: 
+                PlayDialogueThen(() =>
+                {
+                    ShowStepPanel(step);
+                }, afterHarvestDialogues);
+                break;
+
+            default:
+                ShowStepPanel(step);
+                break;
+        }
     }
 
     void StartTutorial_DogamIntro()
@@ -286,7 +320,7 @@ public class TutorialManager : MonoBehaviour
                 return;
         }
 
-        ShowStepPanel(villageSecondStep);
+        ShowVillageSecondStepWithDialogue(villageSecondStep);
 
         UpdateTriggerAreas();
     }
