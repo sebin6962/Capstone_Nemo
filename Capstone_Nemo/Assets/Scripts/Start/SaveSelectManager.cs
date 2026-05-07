@@ -232,6 +232,7 @@ public class SaveSelectManager : MonoBehaviour
                     {
                         VillageSceneManager.Instance.ResetData();
                     }
+                    SceneTransitionInfo.Instance.entranceID = "FromPlayerStore";
                     FadeManager.Instance.FadeToScene("VillageScene");
                 });
 
