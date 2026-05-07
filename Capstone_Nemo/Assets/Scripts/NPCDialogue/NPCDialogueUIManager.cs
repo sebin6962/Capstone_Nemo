@@ -53,6 +53,7 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     private string currentFullLine = "";
     private bool isTyping = false;
+    private string currentCategoryId = null;
 
     //튜토리얼용
     private System.Action tutorialDialogueFinishedCallback;
@@ -132,10 +133,16 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     public void OpenDialogue(NPCInteractable npc)
     {
+        OpenDialogue(npc, null);
+    }
+
+    public void OpenDialogue(NPCInteractable npc, string categoryId)
+    {
         if (npc == null) return;
         if (NPCDialogueDatabase.Instance == null) return;
 
         currentNpc = npc;
+        currentCategoryId = categoryId;
         currentDialogueData = NPCDialogueDatabase.Instance.GetDialogueByNpcId(npc.NpcId);
 
         if (currentDialogueData == null)
@@ -157,7 +164,7 @@ public class NPCDialogueUIManager : MonoBehaviour
         pendingLines.Clear();
         nextNodeAfterLines = null;
 
-        string entryNodeId = GetEntryNodeId(currentDialogueData);
+        string entryNodeId = GetEntryNodeId(currentDialogueData, currentCategoryId);
 
         if (string.IsNullOrEmpty(entryNodeId))
         {
@@ -240,29 +247,22 @@ public class NPCDialogueUIManager : MonoBehaviour
         }
     }
 
-    private string GetEntryNodeId(NPCDialogueData data)
+    private string GetEntryNodeId(NPCDialogueData data, string categoryId)
     {
-        if (data == null) return null;
+        if (data == null)
+            return null;
 
-        if (data.randomGreetingNodeIds != null && data.randomGreetingNodeIds.Count > 0)
-        {
-            List<string> validIds = new List<string>();
+        NPCDialogueNpcProgressData npcProgress = null;
 
-            for (int i = 0; i < data.randomGreetingNodeIds.Count; i++)
-            {
-                string id = data.randomGreetingNodeIds[i];
-                if (!string.IsNullOrWhiteSpace(id) && nodeDict.ContainsKey(id))
-                    validIds.Add(id);
-            }
+        if (NPCDialogueProgressManager.Instance != null)
+            npcProgress = NPCDialogueProgressManager.Instance.GetOrCreateNpcProgress(data.npcId);
 
-            if (validIds.Count > 0)
-            {
-                int randomIndex = Random.Range(0, validIds.Count);
-                return validIds[randomIndex];
-            }
-        }
+        string entryNodeId = NPCDialogueSelector.GetStartNodeId(data, npcProgress, categoryId);
 
-        return data.startNodeId;
+        if (NPCDialogueProgressManager.Instance != null)
+            NPCDialogueProgressManager.Instance.Save();
+
+        return entryNodeId;
     }
 
     private void MoveToNode(string nodeId)
@@ -322,13 +322,9 @@ public class NPCDialogueUIManager : MonoBehaviour
         currentState = DialogueState.Line;
 
         if (pendingLines.Count > 0)
-        {
             ShowNextLine();
-        }
         else
-        {
             MoveToNode(nextNodeAfterLines);
-        }
     }
 
     private void StartChoiceNode(NPCDialogueNodeData node)
@@ -349,6 +345,8 @@ public class NPCDialogueUIManager : MonoBehaviour
             return;
         }
 
+        int createdOptionCount = 0;
+
         for (int i = 0; i < node.options.Count; i++)
         {
             NPCDialogueChoiceOptionData option = node.options[i];
@@ -357,11 +355,16 @@ public class NPCDialogueUIManager : MonoBehaviour
             if (!ShouldShowOption(option))
                 continue;
 
+            createdOptionCount++;
+
             CreateOption(option.text, () =>
             {
                 HandleOptionSelected(option);
             });
         }
+
+        if (createdOptionCount == 0)
+            CloseDialogue();
     }
 
     private bool ShouldShowOption(NPCDialogueChoiceOptionData option)
@@ -398,6 +401,23 @@ public class NPCDialogueUIManager : MonoBehaviour
             QuestData talkQuest = QuestAcceptManager.Instance.GetAcceptedTalkQuestForNpc(currentNpc.NpcId);
             if (talkQuest != null)
                 QuestAcceptManager.Instance.CompleteAcceptedTalkQuest(talkQuest.id);
+        }
+
+        if (option.openRandomSetFromCategory && !string.IsNullOrEmpty(option.targetCategoryId))
+        {
+            currentCategoryId = option.targetCategoryId;
+
+            string categoryEntryNodeId = GetEntryNodeId(currentDialogueData, currentCategoryId);
+
+            if (string.IsNullOrEmpty(categoryEntryNodeId))
+            {
+                Debug.LogWarning($"[NPCDialogueUIManager] categoryId={currentCategoryId} 의 시작 노드를 찾을 수 없습니다.");
+                CloseDialogue();
+                return;
+            }
+
+            MoveToNode(categoryEntryNodeId);
+            return;
         }
 
         MoveToNode(option.nextNodeId);
@@ -606,7 +626,6 @@ public class NPCDialogueUIManager : MonoBehaviour
         {
             rt.localScale = Vector3.one;
             rt.localRotation = Quaternion.identity;
-            rt.anchoredPosition = Vector2.zero;
         }
 
         Button button = obj.GetComponent<Button>();
@@ -654,6 +673,7 @@ public class NPCDialogueUIManager : MonoBehaviour
         StopTypingImmediately();
         StopNextButtonBlink();
         currentFullLine = "";
+        currentCategoryId = null;
 
         if (dialoguePanel != null)
             dialoguePanel.SetActive(false);

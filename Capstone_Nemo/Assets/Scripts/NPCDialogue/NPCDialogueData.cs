@@ -13,6 +13,10 @@ public class NPCDialogueChoiceOptionData
 
     // 이 선택지를 고르면 현재 NPC 관련 Talk 퀘스트를 완료 처리할지
     public bool completeTalkQuestOnSelect;
+
+    // 특정 카테고리의 랜덤 세트를 열기 위한 옵션
+    public string targetCategoryId;
+    public bool openRandomSetFromCategory;
 }
 
 [Serializable]
@@ -28,22 +32,70 @@ public class NPCDialogueNodeData
 }
 
 [Serializable]
+public class NPCDialogueCategoryData
+{
+    public string categoryId;              // 예: daily_talk
+    public string categoryName;            // 예: 일상 대화
+    public bool useNonRepeatingRandom = true;
+    public List<string> setIds = new List<string>();
+}
+
+[Serializable]
+public class NPCDialogueSetData
+{
+    public string setId;                   // 예: yellow_daily_01
+    public string title;                   // 예: 안부
+    public string categoryId;              // 예: daily_talk
+    public string startNodeId;             // 실제 시작 노드
+}
+
+[Serializable]
 public class NPCDialogueData
 {
     public string npcId;
     public string npcName;
 
-    // 기본 시작 노드(랜덤 인사말을 안 쓸 때 fallback)
+    // NPC와 첫 상호작용일 때만 실행할 전용 시작 노드
+    public string firstInteractionStartNodeId;
+
+    // 구버전 fallback
     public string startNodeId;
+    public List<string> randomGreetingNodeIds = new List<string>();
 
-    // 랜덤 인사말 후보 노드들
-    public List<string> randomGreetingNodeIds;
+    // 신버전
+    public string defaultCategoryId;
+    public List<NPCDialogueCategoryData> categories = new List<NPCDialogueCategoryData>();
+    public List<NPCDialogueSetData> dialogueSets = new List<NPCDialogueSetData>();
 
-    public List<NPCDialogueNodeData> nodes;
+    public List<NPCDialogueNodeData> nodes = new List<NPCDialogueNodeData>();
 }
 
 [Serializable]
 public class NPCDialogueDataList
 {
-    public List<NPCDialogueData> npcs;
+    public List<NPCDialogueData> npcs = new List<NPCDialogueData>();
+}
+
+[Serializable]
+public class NPCDialogueCategoryProgressData
+{
+    public string categoryId;
+    public List<string> seenSetIds = new List<string>();
+}
+
+[Serializable]
+public class NPCDialogueNpcProgressData
+{
+    public string npcId;
+
+    // NPC와 한 번이라도 상호작용했는지
+    public bool hasMetNpc;
+
+    public List<NPCDialogueCategoryProgressData> categoryProgressList = new List<NPCDialogueCategoryProgressData>();
+}
+
+[Serializable]
+public class NPCDialogueProgressDataList
+{
+    public List<NPCDialogueNpcProgressData> npcProgressList = new List<NPCDialogueNpcProgressData>();
 }
