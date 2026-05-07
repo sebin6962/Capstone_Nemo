@@ -28,6 +28,9 @@ public class NPCDialogueUIManager : MonoBehaviour
     [Header("Typing Effect")]
     [SerializeField] private float typingSpeed = 0.03f;
 
+    [SerializeField] private float firstLineTypingStartDelay = 0.4f;
+    private bool waitTypingDelayForNextLine = false;
+
     [Header("Next Button Blink")]
     [SerializeField] private float nextButtonBlinkInterval = 0.45f;
     [SerializeField] private bool hideNextButtonWhileTyping = false;
@@ -104,6 +107,21 @@ public class NPCDialogueUIManager : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        if (dialoguePanel == null || !dialoguePanel.activeSelf)
+            return;
+
+        // 선택지 상태에서는 E로 넘기지 않음
+        if (currentState != DialogueState.Line)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.E)|| Input.GetKeyDown(KeyCode.Space))
+        {
+            OnClickNextButton();
+        }
+    }
+
     //초상화크기
     private void ApplyPortrait(Sprite portrait)
     {
@@ -160,6 +178,8 @@ public class NPCDialogueUIManager : MonoBehaviour
         if (dialoguePanel != null)
             dialoguePanel.SetActive(true);
 
+        waitTypingDelayForNextLine = true;
+
         ClearOptions();
         pendingLines.Clear();
         nextNodeAfterLines = null;
@@ -203,6 +223,8 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         if (dialoguePanel != null)
             dialoguePanel.SetActive(true);
+
+        waitTypingDelayForNextLine = true;
 
         ShowNextTutorialLine();
     }
@@ -459,6 +481,7 @@ public class NPCDialogueUIManager : MonoBehaviour
         tutorialDialogueFinishedCallback = null;
 
         callback?.Invoke();
+        waitTypingDelayForNextLine = false;
     }
 
     private void ShowNextLine()
@@ -495,12 +518,18 @@ public class NPCDialogueUIManager : MonoBehaviour
                 nextButton.interactable = false;
         }
 
-        typingCoroutine = StartCoroutine(TypeLineCoroutine());
+        float startDelay = waitTypingDelayForNextLine ? firstLineTypingStartDelay : 0f;
+        waitTypingDelayForNextLine = false;
+
+        typingCoroutine = StartCoroutine(TypeLineCoroutine(startDelay));
     }
 
-    private IEnumerator TypeLineCoroutine()
+    private IEnumerator TypeLineCoroutine(float startDelay)
     {
         isTyping = true;
+
+        if (startDelay > 0f)
+            yield return new WaitForSeconds(startDelay);
 
         dialogueText.ForceMeshUpdate();
         int totalVisibleCount = dialogueText.textInfo.characterCount;
@@ -685,5 +714,6 @@ public class NPCDialogueUIManager : MonoBehaviour
         currentDialogueData = null;
         currentNode = null;
         currentState = DialogueState.None;
+        waitTypingDelayForNextLine = false;
     }
 }

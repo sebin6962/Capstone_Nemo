@@ -10449,7 +10449,7 @@ Transform:
   m_GameObject: {fileID: 502761209}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.95, y: 0.9, z: 0}
+  m_LocalPosition: {x: -2.87, y: 0.9, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -18577,6 +18577,8 @@ GameObject:
   - component: {fileID: 880863158}
   - component: {fileID: 880863157}
   - component: {fileID: 880863156}
+  - component: {fileID: 880863160}
+  - component: {fileID: 880863159}
   m_Layer: 5
   m_Name: SpeechBubble
   m_TagString: Untagged
@@ -18642,6 +18644,39 @@ RectTransform:
   m_AnchoredPosition: {x: -151.32, y: -69}
   m_SizeDelta: {x: 440, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &880863159
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880863155}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!114 &880863160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880863155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1be83fa508d6194b9500c56adb0d447, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bubbleText: {fileID: 687173357}
+  canvasGroup: {fileID: 880863159}
+  introShowDuration: 0.28
+  introHideDuration: 0.18
+  noticeShowDuration: 0.24
+  noticeHideDuration: 0.18
+  hiddenScaleMultiplier: 0.05
+  boingOvershootMultiplier: 1.18
+  boingSettleMultiplier: 0.96
 --- !u!1 &891842002
 GameObject:
   m_ObjectHideFlags: 0
@@ -22562,6 +22597,7 @@ MonoBehaviour:
   nextButtonText: {fileID: 2088067470}
   portraitImage: {fileID: 1855327520}
   typingSpeed: 0.03
+  firstLineTypingStartDelay: 0.5
   nextButtonBlinkInterval: 0.45
   hideNextButtonWhileTyping: 1
   blinkMinAlpha: 0.25
@@ -39911,7 +39947,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -121.00375, y: -41.001114}
+  m_AnchoredPosition: {x: -121.00372, y: -41.00113}
   m_SizeDelta: {x: 918, y: 516}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1706858485
@@ -40936,9 +40972,27 @@ MonoBehaviour:
   grandmaTalkPoint: {fileID: 124064867}
   grandmaNpcObject: {fileID: 633999341}
   playerAnimator: {fileID: 8625244720612140946}
-  grandmaReactionBubble: {fileID: 880863155}
   autoMoveSpeed: 2.2
-  reactionBubbleDuration: 0.8
+  reactionBubbleDuration: 2
+  introVirtualCamera: {fileID: 2002994371}
+  introZoomSize: 7
+  introZoomDuration: 1.2
+  beforeMoveDelay: 0.5
+  beforeNoticeBubbleDelay: 1.5
+  afterIntroBubbleDelay: 0.7
+  beforeDialogueDelay: 1.5
+  introConfiner2D: {fileID: 2002994373}
+  commonBubbleObject: {fileID: 880863155}
+  commonBubbleText: {fileID: 687173357}
+  commonBubbleDefaultAnchor: {fileID: 880863158}
+  commonBubbleOffset: {x: 0, y: 1.5, z: 0}
+  introBubbleDuration: 3
+  introBubbleTexts:
+  - "\uB4DC\uB514\uC5B4..."
+  - "\uAC00\uAC8C \uCCAB \uB0A0\uC774\uC57C."
+  - "\uB5A8\uB9AC\uB124..."
+  noticeBubbleMessage: "\uD560\uBA38\uB2C8!"
+  commonBubbleEffect: {fileID: 880863160}
   tutorialStopPatrolNpcs:
   - {fileID: 2023808813}
   - {fileID: 111447244}
@@ -40948,6 +41002,10 @@ MonoBehaviour:
   - {fileID: 111447240}
   - {fileID: 1259828305}
   - {fileID: 600734908}
+  dialogueLockButtons:
+  - {fileID: 2070309693}
+  - {fileID: 1232511704}
+  - {fileID: 351511335}
 --- !u!1 &1747499272
 GameObject:
   m_ObjectHideFlags: 0
@@ -41219,7 +41277,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -671.99976, y: 326}
+  m_AnchoredPosition: {x: -671.9997, y: 326}
   m_SizeDelta: {x: -1423.4169, y: -719.6829}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1757436636
@@ -50563,9 +50621,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.17664424
+    y: 0.12390986
     width: 1
-    height: 0.6467115
+    height: 0.7521803
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60

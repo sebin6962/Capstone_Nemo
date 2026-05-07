@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using Cinemachine;
 
 /*public enum TutorialStep
 {
@@ -72,9 +73,36 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private Transform grandmaTalkPoint;
     [SerializeField] private GameObject grandmaNpcObject;
     [SerializeField] private Animator playerAnimator;
-    [SerializeField] private GameObject grandmaReactionBubble;
     [SerializeField] private float autoMoveSpeed = 2.2f;
     [SerializeField] private float reactionBubbleDuration = 0.8f;
+
+    [Header("인트로 카메라 연출")]
+    [SerializeField] private CinemachineVirtualCamera introVirtualCamera;
+    [SerializeField] private float introZoomSize = 4.2f;
+    [SerializeField] private float introZoomDuration = 0.6f;
+    [SerializeField] private float beforeMoveDelay = 0.5f;
+    [SerializeField] private float beforeNoticeBubbleDelay = 1f;
+    [SerializeField] private float afterIntroBubbleDelay = 0.7f;
+    [SerializeField] private float beforeDialogueDelay = 1f;
+    [SerializeField] private CinemachineConfiner2D introConfiner2D;
+
+    private CinemachineFramingTransposer framingTransposer;
+    private float originalXDamping;
+    private float originalYDamping;
+    private float originalDeadZoneWidth;
+    private float originalDeadZoneHeight;
+    private bool introCameraFollowTuned = false;
+
+    [Header("공용 말풍선")]
+    [SerializeField] private GameObject commonBubbleObject;
+    [SerializeField] private TMP_Text commonBubbleText;
+    [SerializeField] private Transform commonBubbleDefaultAnchor;
+    [SerializeField] private Vector3 commonBubbleOffset = new Vector3(0f, 1.2f, 0f);
+    [SerializeField] private float introBubbleDuration = 3f;
+    [SerializeField] private List<string> introBubbleTexts;
+    [SerializeField] private string noticeBubbleMessage = "!";
+
+    [SerializeField] private BubblePopupEffect commonBubbleEffect;
 
     [Header("튜토리얼 중 NPC 제어")]
     [SerializeField] private NPCPatrolRoute[] tutorialStopPatrolNpcs;
@@ -83,12 +111,33 @@ public class TutorialManager : MonoBehaviour
     private bool isAutoSequenceRunning = false;
     private bool waitingVillageIntroFade = false;
 
+    private float originalCameraSize;
+    private bool hasCachedCameraSize = false;
+
+    [Header("대화 중 비활성화할 버튼들")]
+    [SerializeField] private List<Button> dialogueLockButtons = new List<Button>();
+
+    private Dictionary<Button, bool> dialogueButtonStateCache = new Dictionary<Button, bool>();
+
     private void Awake()
     {
         Instance = this;
 
         if (playerAnimator == null && player != null)
             playerAnimator = player.GetComponentInChildren<Animator>();
+
+        if (commonBubbleEffect != null)
+            commonBubbleEffect.HideImmediate();
+        else if (commonBubbleObject != null)
+            commonBubbleObject.SetActive(false);
+
+        if (introVirtualCamera != null)
+        {
+            framingTransposer = introVirtualCamera.GetCinemachineComponent<CinemachineFramingTransposer>();
+
+            if (introConfiner2D == null)
+                introConfiner2D = introVirtualCamera.GetComponent<CinemachineConfiner2D>();
+        }
     }
 
     private void SetGrandmaVisible(bool visible)
@@ -119,7 +168,6 @@ public class TutorialManager : MonoBehaviour
         var globalStep = TutorialFlowManager.Instance.currentStep;
 
         Debug.Log($"[TutorialManager] Start in Village, flowStep={flow?.currentStep}, tutorialDone={state.tutorialDone}");
-
 
         bool shouldShowGrandma =
             (globalStep == GlobalTutorialStep.DogamIntro ||
@@ -182,8 +230,7 @@ public class TutorialManager : MonoBehaviour
         CleanupTutorialVisuals();
         SetPlayerInput(false);
 
-        if (grandmaReactionBubble != null)
-            grandmaReactionBubble.SetActive(false);
+        HideCommonBubble();
 
         if (villageEntryPoint != null)
         {
@@ -197,6 +244,8 @@ public class TutorialManager : MonoBehaviour
             FacePlayerTo(grandmaNoticePoint.position);
 
         SetPlayerAnimation(Vector2.zero, false);
+        CacheOriginalCameraSize();
+        PrepareIntroCameraFollow();
     }
 
     public void BeginVillageIntroAfterFade()
@@ -208,38 +257,95 @@ public class TutorialManager : MonoBehaviour
         StartCoroutine(PlayVillageIntroAutoSequence_AfterFade());
     }
 
+    private void SetDialogueButtonsLocked(bool locked)
+    {
+        if (dialogueLockButtons == null)
+            return;
+
+        if (locked)
+        {
+            dialogueButtonStateCache.Clear();
+
+            foreach (var btn in dialogueLockButtons)
+            {
+                if (btn == null) continue;
+
+                dialogueButtonStateCache[btn] = btn.interactable;
+                btn.interactable = false;
+            }
+        }
+        else
+        {
+            foreach (var pair in dialogueButtonStateCache)
+            {
+                if (pair.Key == null) continue;
+                pair.Key.interactable = pair.Value;
+            }
+
+            dialogueButtonStateCache.Clear();
+        }
+    }
     private IEnumerator PlayVillageIntroAutoSequence_AfterFade()
     {
         isAutoSequenceRunning = true;
         SetPlayerInput(false);
         SetGrandmaVisible(true);
 
-        // 여기서 더 이상 villageEntryPoint로 옮기지 않음
-        // 이미 검은 화면에서 PrepareVillageIntroUnderFade()가 끝냈음
+        // 0) 시퀀스 시작 후 잠깐 멈춤
+        yield return new WaitForSeconds(beforeMoveDelay);
 
-        // 1) 마을로 걸어 들어오기
+        // 1) 카메라 줌인
+        if (introVirtualCamera != null)
+            yield return StartCoroutine(ZoomCameraTo(introZoomSize, introZoomDuration));
+
+        // 2) 이동 시작 전 말풍선 텍스트 여러 개
+        if (introBubbleTexts != null && introBubbleTexts.Count > 0)
+        {
+            Transform introAnchor = player != null ? player.transform : commonBubbleDefaultAnchor;
+            yield return StartCoroutine(ShowCommonBubbleSequence(introBubbleTexts, introBubbleDuration, introAnchor));
+        }
+
+        // 2.5) 말풍선 끝나고 이동 전 텀
+        yield return new WaitForSeconds(afterIntroBubbleDelay);
+
+        // 3) 마을로 걸어 들어오기
         if (grandmaNoticePoint != null && player != null)
             yield return MovePlayerTo(grandmaNoticePoint.position);
 
-        // 2) 할머니 발견 말풍선
-        if (grandmaReactionBubble != null)
+        // 4) 멈춘 뒤 말풍선 전에 1초 텀
+        yield return new WaitForSeconds(beforeNoticeBubbleDelay);
+
+        // 5) 기존 말풍선 (공용 말풍선으로 처리)
+        if (!string.IsNullOrEmpty(noticeBubbleMessage))
         {
-            grandmaReactionBubble.SetActive(true);
-            yield return new WaitForSeconds(reactionBubbleDuration);
-            grandmaReactionBubble.SetActive(false);
+            Transform noticeAnchor = player != null ? player.transform : commonBubbleDefaultAnchor;
+            yield return StartCoroutine(
+                ShowCommonBubble(
+                    noticeBubbleMessage,
+                    reactionBubbleDuration,
+                    noticeAnchor,
+                    BubblePopupEffect.ShowStyle.NoticeBoing
+                )
+            );
         }
 
-        // 3) 할머니에게 다가가기
+        // 2.5) 말풍선 끝나고 이동 전 텀
+        yield return new WaitForSeconds(afterIntroBubbleDelay);
+
+        // 6) 할머니에게 다가가기
         if (grandmaTalkPoint != null && player != null)
             yield return MovePlayerTo(grandmaTalkPoint.position);
 
-        // 4) 마지막 방향 고정
+        // 7) 마지막 방향 고정
         if (grandmaNpcObject != null && player != null)
             FacePlayerTo(grandmaNpcObject.transform.position);
 
         SetPlayerAnimation(Vector2.zero, false);
 
-        // 5) 첫 대화
+        // 8) 대화 시작 전 1초 텀
+        yield return new WaitForSeconds(beforeDialogueDelay);
+
+        // 9) 첫 대화
         bool dialogueFinished = false;
 
         PlayDialogueThen(() =>
@@ -271,6 +377,7 @@ public class TutorialManager : MonoBehaviour
             if (DialogueFocusManager.Instance != null)
                 DialogueFocusManager.Instance.EndFocusImmediate();
 
+            SetDialogueButtonsLocked(false);
             onFinished?.Invoke();
             return;
         }
@@ -285,11 +392,14 @@ public class TutorialManager : MonoBehaviour
             DialogueFocusManager.Instance.BeginFocus(player.gameObject, focusNpcObj);
         }
 
+        SetDialogueButtonsLocked(true);
+
         NPCDialogueUIManager.Instance.OpenTutorialDialogue(lines, () =>
         {
             if (useFocus && DialogueFocusManager.Instance != null)
                 DialogueFocusManager.Instance.EndFocus();
 
+            SetDialogueButtonsLocked(false);
             onFinished?.Invoke();
         });
     }
@@ -318,52 +428,90 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
-    //void StartTutorial_DogamIntro()
-    //{
-    //    //시간 정지, 이동X
-    //    SetPlayerInput(false);
-    //
-    //    if (TutorialFlowManager.Instance != null)
-    //        TutorialFlowManager.Instance.RequestTutorialTimePause();
-    //
-    //    //Time.timeScale = 0f;
-    //
-    //    //클릭X
-    //    if (overlayBlocker)
-    //    {
-    //        overlayBlocker.gameObject.SetActive(true);
-    //        overlayBlocker.blocksRaycasts = true;
-    //        overlayBlocker.interactable = true;
-    //        overlayBlocker.alpha = 0.9f;
-    //    }
-    //
-    //    if (tutorialText)
-    //    {
-    //        tutorialText.gameObject.SetActive(true);
-    //    }
-    //
-    //    if (dogamCloseButton)
-    //    {
-    //        dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
-    //        dogamCloseButton.onClick.AddListener(OnDogamClicked);
-    //        dogamCloseButton.interactable = true;
-    //    }
-    //
-    //    //이펙트
-    //    if (dogamHighlightFX)
-    //    {
-    //        dogamHighlightFX.gameObject.SetActive(true);
-    //
-    //        var pSystems = dogamHighlightFX.GetComponentsInChildren<ParticleSystem>(true);
-    //        foreach (var ps in pSystems)
-    //        {
-    //            var main = ps.main;
-    //            main.useUnscaledTime = true;  // Time.timeScale=0에서도 재생
-    //            ps.Clear(true);
-    //            ps.Play(true);
-    //        }
-    //    }
-    //}
+    private void SetTutorialNpcState(bool tutorialRunning)
+    {
+        if (tutorialStopPatrolNpcs != null)
+        {
+            foreach (var patrol in tutorialStopPatrolNpcs)
+            {
+                if (patrol == null) continue;
+                patrol.SetActive(!tutorialRunning);
+            }
+        }
+
+        if (tutorialHideNpcObjects != null)
+        {
+            foreach (var npcObj in tutorialHideNpcObjects)
+            {
+                if (npcObj == null) continue;
+                npcObj.SetActive(!tutorialRunning);
+            }
+        }
+
+        // 할머니는 튜토리얼용 NPC라 별도로 다시 제어
+        if (tutorialRunning)
+        {
+            var globalStep = TutorialFlowManager.Instance != null
+                ? TutorialFlowManager.Instance.currentStep
+                : GlobalTutorialStep.None;
+
+            bool shouldShowGrandma =
+                (globalStep == GlobalTutorialStep.DogamIntro ||
+                 globalStep == GlobalTutorialStep.Village_First);
+
+            SetGrandmaVisible(shouldShowGrandma);
+        }
+        else
+        {
+            SetGrandmaVisible(false);
+        }
+    }
+    void StartTutorial_DogamIntro()
+    {
+        //시간 정지, 이동X
+        SetPlayerInput(false);
+
+        if (TutorialFlowManager.Instance != null)
+            TutorialFlowManager.Instance.RequestTutorialTimePause();
+
+        //Time.timeScale = 0f;
+
+        //클릭X
+        if (overlayBlocker)
+        {
+            overlayBlocker.gameObject.SetActive(true);
+            overlayBlocker.blocksRaycasts = true;
+            overlayBlocker.interactable = true;
+            overlayBlocker.alpha = 0.9f;
+        }
+
+        if (tutorialText)
+        {
+            tutorialText.gameObject.SetActive(true);
+        }
+
+        if (dogamCloseButton)
+        {
+            dogamCloseButton.onClick.RemoveListener(OnDogamClicked);
+            dogamCloseButton.onClick.AddListener(OnDogamClicked);
+            dogamCloseButton.interactable = true;
+        }
+
+        //이펙트
+        if (dogamHighlightFX)
+        {
+            dogamHighlightFX.gameObject.SetActive(true);
+
+            var pSystems = dogamHighlightFX.GetComponentsInChildren<ParticleSystem>(true);
+            foreach (var ps in pSystems)
+            {
+                var main = ps.main;
+                main.useUnscaledTime = true;  // Time.timeScale=0에서도 재생
+                ps.Clear(true);
+                ps.Play(true);
+            }
+        }
+    }
 
     void BeginDogamIntroUI()
     {
@@ -518,45 +666,6 @@ public class TutorialManager : MonoBehaviour
         UpdateTriggerAreas();
     }
 
-    private void SetTutorialNpcState(bool tutorialRunning)
-    {
-        if (tutorialStopPatrolNpcs != null)
-        {
-            foreach (var patrol in tutorialStopPatrolNpcs)
-            {
-                if (patrol == null) continue;
-                patrol.SetActive(!tutorialRunning);
-            }
-        }
-
-        if (tutorialHideNpcObjects != null)
-        {
-            foreach (var npcObj in tutorialHideNpcObjects)
-            {
-                if (npcObj == null) continue;
-                npcObj.SetActive(!tutorialRunning);
-            }
-        }
-
-        // 할머니는 튜토리얼용 NPC라 별도로 다시 제어
-        if (tutorialRunning)
-        {
-            var globalStep = TutorialFlowManager.Instance != null
-                ? TutorialFlowManager.Instance.currentStep
-                : GlobalTutorialStep.None;
-
-            bool shouldShowGrandma =
-                (globalStep == GlobalTutorialStep.DogamIntro ||
-                 globalStep == GlobalTutorialStep.Village_First);
-
-            SetGrandmaVisible(shouldShowGrandma);
-        }
-        else
-        {
-            SetGrandmaVisible(false);
-        }
-    }
-
     public void UpdateTriggerAreas()
     {
         var areas = FindObjectsOfType<TutorialTriggerArea>(true);
@@ -676,6 +785,9 @@ public class TutorialManager : MonoBehaviour
         if (TutorialFlowManager.Instance != null)
             TutorialFlowManager.Instance.ReleaseTutorialTimePause();
 
+        if (introVirtualCamera != null && hasCachedCameraSize)
+            StartCoroutine(ZoomOutAndRestoreCamera());
+
         SetPlayerInput(true);
 
         //if (villageTutorialPanel)
@@ -695,6 +807,12 @@ public class TutorialManager : MonoBehaviour
 
         //효과음 넣으니까 겹쳐서 2초 지연 코루틴으로 뺐습니다!
         StartCoroutine(ShowVillageTutorialAfterDelay(1.2f));
+    }
+
+    private IEnumerator ZoomOutAndRestoreCamera()
+    {
+        yield return StartCoroutine(ZoomCameraTo(originalCameraSize, introZoomDuration));
+        RestoreIntroCameraFollow();
     }
 
     private IEnumerator ShowVillageTutorialAfterDelay(float delay)
@@ -754,6 +872,161 @@ public class TutorialManager : MonoBehaviour
         }
 
         playerAnimator.SetBool("IsWalking", isMoving);
+    }
+
+    private void PrepareIntroCameraFollow()
+    {
+        if (introCameraFollowTuned)
+            return;
+
+        if (framingTransposer != null)
+        {
+            originalXDamping = framingTransposer.m_XDamping;
+            originalYDamping = framingTransposer.m_YDamping;
+            originalDeadZoneWidth = framingTransposer.m_DeadZoneWidth;
+            originalDeadZoneHeight = framingTransposer.m_DeadZoneHeight;
+
+            framingTransposer.m_XDamping = 0f;
+            framingTransposer.m_YDamping = 0f;
+            framingTransposer.m_DeadZoneWidth = 0f;
+            framingTransposer.m_DeadZoneHeight = 0f;
+        }
+
+        if (introVirtualCamera != null)
+            introVirtualCamera.PreviousStateIsValid = false;
+
+        if (introConfiner2D != null)
+            introConfiner2D.InvalidateCache();
+
+        introCameraFollowTuned = true;
+    }
+
+    private void RestoreIntroCameraFollow()
+    {
+        if (!introCameraFollowTuned)
+            return;
+
+        if (framingTransposer != null)
+        {
+            framingTransposer.m_XDamping = originalXDamping;
+            framingTransposer.m_YDamping = originalYDamping;
+            framingTransposer.m_DeadZoneWidth = originalDeadZoneWidth;
+            framingTransposer.m_DeadZoneHeight = originalDeadZoneHeight;
+        }
+
+        if (introVirtualCamera != null)
+            introVirtualCamera.PreviousStateIsValid = false;
+
+        if (introConfiner2D != null)
+            introConfiner2D.InvalidateCache();
+
+        introCameraFollowTuned = false;
+    }
+    private void CacheOriginalCameraSize()
+    {
+        if (hasCachedCameraSize) return;
+        if (introVirtualCamera == null) return;
+
+        originalCameraSize = introVirtualCamera.m_Lens.OrthographicSize;
+        hasCachedCameraSize = true;
+    }
+
+    private IEnumerator ZoomCameraTo(float targetSize, float duration)
+    {
+        if (introVirtualCamera == null)
+            yield break;
+
+        float startSize = introVirtualCamera.m_Lens.OrthographicSize;
+        float t = 0f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float lerp = Mathf.Clamp01(t / duration);
+            float size = Mathf.Lerp(startSize, targetSize, lerp);
+
+            var lens = introVirtualCamera.m_Lens;
+            lens.OrthographicSize = size;
+            introVirtualCamera.m_Lens = lens;
+
+            if (introConfiner2D != null)
+                introConfiner2D.InvalidateCache();
+
+            introVirtualCamera.PreviousStateIsValid = false;
+
+            yield return null;
+        }
+
+        var finalLens = introVirtualCamera.m_Lens;
+        finalLens.OrthographicSize = targetSize;
+        introVirtualCamera.m_Lens = finalLens;
+
+        if (introConfiner2D != null)
+            introConfiner2D.InvalidateCache();
+
+        introVirtualCamera.PreviousStateIsValid = false;
+    }
+
+    private void SetBubblePosition(Transform anchor)
+    {
+        if (commonBubbleObject == null)
+            return;
+
+        Transform target = anchor != null ? anchor : commonBubbleDefaultAnchor;
+        if (target == null)
+            return;
+
+        commonBubbleObject.transform.position = target.position + commonBubbleOffset;
+    }
+
+    private void HideCommonBubble()
+    {
+        if (commonBubbleEffect != null)
+        {
+            commonBubbleEffect.HideImmediate();
+            return;
+        }
+
+        if (commonBubbleObject != null)
+            commonBubbleObject.SetActive(false);
+    }
+
+    private IEnumerator ShowCommonBubble(string message, float duration, Transform anchor = null, BubblePopupEffect.ShowStyle style = BubblePopupEffect.ShowStyle.IntroSpread)
+    {
+        SetBubblePosition(anchor);
+
+        if (commonBubbleEffect != null)
+        {
+            if (commonBubbleObject != null)
+                commonBubbleObject.SetActive(true);
+
+            yield return commonBubbleEffect.Play(message, duration, style);
+            yield break;
+        }
+
+        if (commonBubbleObject == null || commonBubbleText == null)
+            yield break;
+
+        commonBubbleText.text = message;
+        commonBubbleObject.SetActive(true);
+
+        yield return new WaitForSeconds(duration);
+
+        commonBubbleObject.SetActive(false);
+    }
+
+    private IEnumerator ShowCommonBubbleSequence(List<string> messages, float durationPerMessage, Transform anchor = null)
+    {
+        if (messages == null || messages.Count == 0)
+            yield break;
+
+        foreach (var msg in messages)
+        {
+            SetBubblePosition(anchor);
+            yield return StartCoroutine(
+                ShowCommonBubble(msg, durationPerMessage, anchor, BubblePopupEffect.ShowStyle.IntroSpread)
+            );
+        }
     }
 
     //튜토리얼씨앗잠금
@@ -826,6 +1099,9 @@ public class TutorialManager : MonoBehaviour
 
             dogamHighlightFX.gameObject.SetActive(false);
         }
+
+        HideCommonBubble();
+        SetDialogueButtonsLocked(false);
     }
 
     void SetPlayerInput(bool enable)
