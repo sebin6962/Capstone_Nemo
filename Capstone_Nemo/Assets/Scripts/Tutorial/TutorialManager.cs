@@ -119,6 +119,11 @@ public class TutorialManager : MonoBehaviour
 
     private Dictionary<Button, bool> dialogueButtonStateCache = new Dictionary<Button, bool>();
 
+    [Header("자동 시퀀스 중 비활성화할 UI 오브젝트들")]
+    [SerializeField] private List<GameObject> autoSequenceDisableUIObjects = new List<GameObject>();
+
+    private Dictionary<GameObject, bool> autoSequenceUIStateCache = new Dictionary<GameObject, bool>();
+
     private void Awake()
     {
         Instance = this;
@@ -230,6 +235,7 @@ public class TutorialManager : MonoBehaviour
         CleanupTutorialVisuals();
         SetPlayerInput(false);
 
+        SetAutoSequenceUIObjectsHidden(true);
         HideCommonBubble();
 
         if (villageEntryPoint != null)
@@ -285,6 +291,43 @@ public class TutorialManager : MonoBehaviour
             dialogueButtonStateCache.Clear();
         }
     }
+
+    private void SetAutoSequenceUIObjectsHidden(bool hidden)
+    {
+        if (autoSequenceDisableUIObjects == null)
+            return;
+
+        if (hidden)
+        {
+            // 이미 숨김 처리된 상태면 중복 저장 방지
+            if (autoSequenceUIStateCache.Count > 0)
+                return;
+
+            autoSequenceUIStateCache.Clear();
+
+            foreach (var uiObj in autoSequenceDisableUIObjects)
+            {
+                if (uiObj == null) continue;
+
+                autoSequenceUIStateCache[uiObj] = uiObj.activeSelf;
+                uiObj.SetActive(false);
+            }
+        }
+        else
+        {
+            if (autoSequenceUIStateCache.Count == 0)
+                return;
+
+            foreach (var pair in autoSequenceUIStateCache)
+            {
+                if (pair.Key == null) continue;
+                pair.Key.SetActive(pair.Value);
+            }
+
+            autoSequenceUIStateCache.Clear();
+        }
+    }
+
     private IEnumerator PlayVillageIntroAutoSequence_AfterFade()
     {
         isAutoSequenceRunning = true;
@@ -354,6 +397,9 @@ public class TutorialManager : MonoBehaviour
         }, villageFirstStartDialogues, grandmaNpcObject);
 
         yield return new WaitUntil(() => dialogueFinished);
+
+        // 할머니 대화 종료 직후, 도감 열기 전에 UI 복원
+        SetAutoSequenceUIObjectsHidden(false);
 
         if (TutorialFlowManager.Instance != null)
             TutorialFlowManager.Instance.VillageIntroAutoSequencePlayed = true;
@@ -1102,6 +1148,7 @@ public class TutorialManager : MonoBehaviour
 
         HideCommonBubble();
         SetDialogueButtonsLocked(false);
+        SetAutoSequenceUIObjectsHidden(false);
     }
 
     void SetPlayerInput(bool enable)
