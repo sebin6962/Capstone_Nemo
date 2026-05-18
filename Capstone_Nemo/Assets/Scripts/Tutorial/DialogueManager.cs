@@ -20,6 +20,7 @@ public class TutorialDialogueManager : MonoBehaviour
     private List<TutorialDialogueLine> currentLines;
     private int currentIndex;
     private Action onDialogueFinished;
+    public static bool IsDialogueOpen { get; private set; }
 
     private void Awake()
     {
@@ -95,6 +96,8 @@ public class TutorialDialogueManager : MonoBehaviour
         currentIndex = 0;
         onDialogueFinished = onFinished;
 
+
+        IsDialogueOpen = true;
         dialoguePanel.SetActive(true);
         ShowCurrentLine();
     }
@@ -139,6 +142,7 @@ public class TutorialDialogueManager : MonoBehaviour
     {
         if (dialoguePanel != null)
             dialoguePanel.SetActive(false);
+        IsDialogueOpen = false;
 
         Action finishedCallback = onDialogueFinished;
 

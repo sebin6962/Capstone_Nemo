@@ -10,6 +10,9 @@ public class VillagePlayerManager : MonoBehaviour
 
     void Update()
     {
+        if (TutorialDialogueManager.IsDialogueOpen)
+            return;
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (BoxInventoryManager.Instance.IsInventoryOpen() &&

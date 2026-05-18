@@ -119,14 +119,14 @@ public class StoreTutorialManager : MonoBehaviour
     {
         switch (step)
         {
-            case StoreTutorialStep.Serve:
+            case StoreTutorialStep.NextOrder:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
                 }, afterSiruFinishDialogues);
                 break;
 
-            case StoreTutorialStep.NextOrder:
+            case StoreTutorialStep.DogamCheck:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
@@ -144,16 +144,14 @@ public class StoreTutorialManager : MonoBehaviour
         IsStoreTutorialRunning = true;
         currentStep = StoreTutorialStep.OpenStorage;
 
-        //시간 정지, 씬 이동X
         if (TutorialFlowManager.Instance != null)
         {
             TutorialFlowManager.Instance.RequestTutorialTimePause();
             TutorialFlowManager.Instance.LockScenePortal();
-
         }
 
         if (customerSpawner)
-            customerSpawner.SpawnTutorialCustomer(2, "baekseolgi_finish", 15f);
+            customerSpawner.SpawnSeatedTutorialCustomer("baekseolgi_finish", 1f);
 
         PlayDialogueThen(() =>
         {

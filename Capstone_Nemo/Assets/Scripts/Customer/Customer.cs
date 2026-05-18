@@ -40,6 +40,8 @@ public class Customer : MonoBehaviour
     [SerializeField] private Animator animator;
     private Vector2 lastMoveDir = Vector2.down;
 
+    private bool isForceSeatedTutorial = false;
+
     public int prefabIndex;
     public float OrderTimeLimit => orderTimeLimit;
 
@@ -117,6 +119,9 @@ public class Customer : MonoBehaviour
 
     private void UpdateAnimation(Vector3 moveDir)
     {
+        if (isForceSeatedTutorial)
+            return;
+
         if (animator == null)
             return;
 
@@ -543,5 +548,22 @@ public class Customer : MonoBehaviour
                 isTimerRunning = false;
             }
         }
+    }
+
+    public void ForceSeatedTutorialState()
+    {
+        isForceSeatedTutorial = true;
+
+        state = CustomerState.Sit;
+
+        if (animator != null)
+        {
+            animator.SetBool("IsMoving", false);
+            animator.SetFloat("MoveX", 0f);
+            animator.SetFloat("MoveY", 1f);
+        }
+
+        AssignPlate();
+        StartOrdering();
     }
 }

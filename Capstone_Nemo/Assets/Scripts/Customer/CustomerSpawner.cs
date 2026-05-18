@@ -20,6 +20,8 @@ public class CustomerSpawner : MonoBehaviour
 
     [SerializeField] private bool allowNewCustomers = true;
 
+    [SerializeField] private GameObject tutorialSeatedCustomerPrefab;
+
     void Awake()
     {
         Debug.Log($"[CustomerSpawner] Awake name={name}, tutorialMode={tutorialMode}");
@@ -100,6 +102,70 @@ public class CustomerSpawner : MonoBehaviour
     {
         tutorialMode = true;
         StartCoroutine(SpawnCustomerDelay(prefabIndex, tutorialDagwaId, delay));
+    }
+
+    public void SpawnSeatedTutorialCustomer(string tutorialDagwaId, float delay = 0f)
+    {
+        tutorialMode = true;
+        StartCoroutine(SpawnSeatedTutorialCustomerDelay(tutorialDagwaId, delay));
+    }
+
+    private IEnumerator SpawnSeatedTutorialCustomerDelay(string tutorialDagwaId, float delay)
+    {
+        if (delay > 0f)
+            yield return new WaitForSecondsRealtime(delay);
+
+        if (seatManager == null)
+        {
+            Debug.LogError("[Tutorial] seatManager가 null입니다.");
+            yield break;
+        }
+
+        int seatIndex = seatManager.GetAvailableSeatIndex();
+
+        if (seatIndex < 0 || seatIndex >= routesPerSeat.Count)
+        {
+            Debug.LogError($"[Tutorial] 잘못된 seatIndex={seatIndex}");
+            yield break;
+        }
+
+        if (tutorialSeatedCustomerPrefab == null)
+        {
+            Debug.LogError("[Tutorial] tutorialSeatedCustomerPrefab이 연결되지 않았습니다.");
+            yield break;
+        }
+
+        var route = routesPerSeat[seatIndex];
+
+        if (route == null || route.waypoints == null || route.waypoints.Length == 0)
+        {
+            Debug.LogError($"[Tutorial] routesPerSeat[{seatIndex}]의 waypoints가 비어 있습니다.");
+            yield break;
+        }
+
+        seatManager.OccupySeat(seatIndex);
+
+        Vector3 seatPos = route.waypoints[route.waypoints.Length - 1].position;
+
+        GameObject customer = Instantiate(
+            tutorialSeatedCustomerPrefab,
+            seatPos,
+            Quaternion.identity
+        );
+
+        Customer customerScript = customer.GetComponent<Customer>();
+
+        if (customerScript == null)
+        {
+            Debug.LogError("[Tutorial] 앉은 튜토리얼 손님 프리팹에 Customer 컴포넌트가 없습니다.");
+            yield break;
+        }
+
+        customerScript.SetSeatInfo(seatIndex, seatManager);
+        customerScript.SetTutorialCustomer(tutorialDagwaId);
+
+        // 필요하면 Customer 쪽에 아래 함수 추가
+        customerScript.ForceSeatedTutorialState();
     }
 
     private IEnumerator SpawnCustomerDelay(int prefabIndex, string tutorialDagwaId, float delay)
