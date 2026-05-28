@@ -68,6 +68,7 @@ public class NPCDialogueUIManager : MonoBehaviour
     [System.Serializable]
     public class PortraitDisplaySetting
     {
+        public string npcId;
         public Sprite portrait;
         public float scale = 1f;
         public Vector2 positionOffset;
@@ -139,7 +140,7 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         foreach (var setting in portraitSettings)
         {
-            if (setting.portrait == portrait)
+            if (setting != null && setting.portrait == portrait)
             {
                 portraitImage.transform.localScale = defaultPortraitScale * setting.scale;
                 portraitImage.rectTransform.anchoredPosition =
@@ -147,6 +148,20 @@ public class NPCDialogueUIManager : MonoBehaviour
                 return;
             }
         }
+    }
+
+    private Sprite GetPortraitByNpcId(string npcId)
+    {
+        if (portraitSettings == null || string.IsNullOrEmpty(npcId))
+            return null;
+
+        foreach (var setting in portraitSettings)
+        {
+            if (setting != null && setting.npcId == npcId)
+                return setting.portrait;
+        }
+
+        return null;
     }
 
     public void OpenDialogue(NPCInteractable npc)
@@ -172,6 +187,9 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         if (npcNameText != null)
             npcNameText.text = string.IsNullOrEmpty(currentDialogueData.npcName) ? npc.NpcName : currentDialogueData.npcName;
+
+        // NPC마다 다른 초상화 적용
+        ApplyPortrait(GetPortraitByNpcId(currentDialogueData.npcId));
 
         BuildNodeDictionary(currentDialogueData);
 

@@ -87,8 +87,13 @@ public class MillManager : MonoBehaviour
         confirmButton.onClick.AddListener(Confirm);
         confirmButton.interactable = false;
 
-        if (inventoryPanel != null) inventoryPanel.SetActive(false);
-        OpenMill();
+        //if (inventoryPanel != null) inventoryPanel.SetActive(false);
+        //OpenMill();
+        if (inventoryPanel != null)
+            inventoryPanel.SetActive(false);
+
+        if (MillPanel != null)
+            MillPanel.SetActive(false);
     }
 
     public void OpenMill()
@@ -101,9 +106,10 @@ public class MillManager : MonoBehaviour
         if (DoGamUIManager.Instance != null && DoGamUIManager.Instance.IsOpen())
             return;
 
-        gameObject.SetActive(true);
+        if (MillPanel != null)
+            MillPanel.SetActive(true);
 
-        //SFXManager.Instance.PlayBbyongSFX();
+        gameObject.SetActive(true);
 
         foreach (Transform child in inventoryPanelParent)
             Destroy(child.gameObject);
@@ -115,8 +121,13 @@ public class MillManager : MonoBehaviour
         }
 
         selectedItem = null;
-        selectedSlot.Clear();
+        queuedCount = 0;
 
+        if (selectedSlot != null)
+            selectedSlot.Clear();
+
+        if (confirmButton != null)
+            confirmButton.interactable = false;
     }
 
     public void OnSelectedSlotClicked()
