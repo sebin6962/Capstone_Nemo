@@ -63,6 +63,7 @@ public class SaveSelectManager : MonoBehaviour
         TryDelete(Path.Combine(p, $"ps_tableItem_{serverName}.json"));
         TryDelete(Path.Combine(p, $"playerSkin_{serverName}.json"));
         TryDelete(System.IO.Path.Combine(p, $"farm_{serverName}.json"));
+        TryDelete(Path.Combine(p, $"grassLoot_{serverName}.json"));
 
         // 레거시 해금 파일 더 이상 쓰지 않는다면 지우기
         var legacy = Path.Combine(p, "unlock_state.json");
