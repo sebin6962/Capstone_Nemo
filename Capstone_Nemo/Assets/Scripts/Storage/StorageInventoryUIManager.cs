@@ -69,6 +69,10 @@ public class StorageInventoryUIManager : MonoBehaviour
             return;
         }
 
+        // 대화창 열려 있으면 재고 열기 금지
+        if (IsDialogueOpen())
+            return;
+
         // 닫혀 있을 때만 버튼 상태 검사
         if (openButton == null ||
             !openButton.gameObject.activeInHierarchy ||
@@ -101,6 +105,10 @@ public class StorageInventoryUIManager : MonoBehaviour
 
     public void ToggleStorageUIInternal(bool ignoreButtonCheck)
     {
+        // 대화창 열려 있으면 재고 열기 금지
+        if (IsDialogueOpen())
+            return;
+
         // 가게 박스 인벤토리 열려 있으면 창고 열기/닫기 막기
         if (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen())
             return;
@@ -259,5 +267,11 @@ public class StorageInventoryUIManager : MonoBehaviour
         if (InventoryTooltipManager.Instance != null)
             InventoryTooltipManager.Instance.Hide();
         RestoreOpenButtonMaterial();
+    }
+
+    private bool IsDialogueOpen()
+    {
+        return NPCDialogueUIManager.Instance != null &&
+               NPCDialogueUIManager.Instance.IsDialogueOpen;
     }
 }

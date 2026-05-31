@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
-
+using System.Collections.Generic;
 public class DayNightController : MonoBehaviour
 {
     public TimeManager timeManager;
@@ -32,10 +32,28 @@ public class DayNightController : MonoBehaviour
     public Color dayLightColor = Color.white;
     public Color nightLightColor = new Color32(0x38, 0x3D, 0x57, 0xFF);
 
+    [Header("Window Sky Gradient Sprites")]
+    public List<SpriteRenderer> windowSkyRenderers = new List<SpriteRenderer>();
+
+    [Tooltip("창문 하늘에서 위쪽 색이 차지하는 비율")]
+    [Range(0f, 1f)] public float windowSkyTopRatio = 0.7f;
+
+    [Header("Window Sky Day Gradient")]
+    public Color daySkyTopColor = new Color32(0x68, 0xC8, 0xFF, 0xFF);
+    public Color daySkyBottomColor = new Color32(0xFF, 0xD6, 0x9A, 0xFF);
+
+    [Header("Window Sky Night Gradient")]
+    public Color nightSkyTopColor = new Color32(0x12, 0x18, 0x35, 0xFF);
+    public Color nightSkyBottomColor = new Color32(0x3A, 0x2C, 0x5A, 0xFF);
+
+    private MaterialPropertyBlock windowSkyPropertyBlock;
+
     void Start()
     {
         if (timeManager == null)
             timeManager = TimeManager.Instance ?? FindObjectOfType<TimeManager>();
+
+        windowSkyPropertyBlock = new MaterialPropertyBlock();
 
         CacheLampBaseIntensities();
         UpdateLighting();
@@ -87,7 +105,38 @@ public class DayNightController : MonoBehaviour
         UpdateStreetLamps(nightT);
 
         globalLight.color = Color.Lerp(dayLightColor, nightLightColor, nightT);
+
+        UpdateWindowSkyGradients(nightT);
     }
+
+    void UpdateWindowSkyGradients(float nightT)
+    {
+        if (windowSkyRenderers == null)
+            return;
+
+        if (windowSkyPropertyBlock == null)
+            windowSkyPropertyBlock = new MaterialPropertyBlock();
+
+        Color currentTopColor = Color.Lerp(daySkyTopColor, nightSkyTopColor, nightT);
+        Color currentBottomColor = Color.Lerp(daySkyBottomColor, nightSkyBottomColor, nightT);
+
+        for (int i = 0; i < windowSkyRenderers.Count; i++)
+        {
+            SpriteRenderer skyRenderer = windowSkyRenderers[i];
+
+            if (skyRenderer == null)
+                continue;
+
+            skyRenderer.GetPropertyBlock(windowSkyPropertyBlock);
+
+            windowSkyPropertyBlock.SetColor("_TopColor", currentTopColor);
+            windowSkyPropertyBlock.SetColor("_BottomColor", currentBottomColor);
+            windowSkyPropertyBlock.SetFloat("_TopRatio", windowSkyTopRatio);
+
+            skyRenderer.SetPropertyBlock(windowSkyPropertyBlock);
+        }
+    }
+
 
     void UpdateStreetLamps(float nightT)
     {

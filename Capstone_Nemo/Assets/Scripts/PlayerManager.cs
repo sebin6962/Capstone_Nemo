@@ -78,6 +78,7 @@ public class PlayerManager : MonoBehaviour
             (DoGamUIManager.Instance != null && DoGamUIManager.Instance.IsOpen()) ||
             (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen()) ||
             (StatueColorChangeUIManager.Instance != null && StatueColorChangeUIManager.Instance.IsOpen()) ||
+            (NPCDialogueUIManager.Instance != null && NPCDialogueUIManager.Instance.IsDialogueOpen) ||
             (TreeInteract.Instance != null && TreeInteract.Instance.IsOpen()) ||
             (TreeLevelUnlocker.Instance != null && TreeLevelUnlocker.Instance.IsPlayingUnlockSequence))
         {
@@ -149,6 +150,7 @@ public class PlayerManager : MonoBehaviour
             (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen()) ||
             (DoGamUIManager.Instance != null && DoGamUIManager.Instance.IsOpen()) ||
             (StorageInventoryUIManager.Instance != null && StorageInventoryUIManager.Instance.IsOpen()) ||
+            (NPCDialogueUIManager.Instance != null && NPCDialogueUIManager.Instance.IsDialogueOpen) ||
             (TreeLevelUnlocker.Instance != null && TreeLevelUnlocker.Instance.IsPlayingUnlockSequence))
         {
             return;

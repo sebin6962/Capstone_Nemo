@@ -379,6 +379,10 @@ public class DoGamUIManager : MonoBehaviour
             return;
         }
 
+        // 대화창 열려 있으면 도감 열기 금지
+        if (IsDialogueOpen())
+            return;
+
         // 닫혀 있을 때만 버튼이 실제로 사용 가능한 상태인지 검사
         if (openButton == null ||
             !openButton.gameObject.activeInHierarchy ||
@@ -434,6 +438,10 @@ public class DoGamUIManager : MonoBehaviour
     // ===================== 도감 열기/닫기 =====================
     public void OpenDoGam(string itemName)
     {
+        // 대화창 열려 있으면 도감 열기 금지
+        if (IsDialogueOpen())
+            return;
+
         // 새로 해금된 레시피가 있다면 갱신
         RefreshUnseenFinishKeys();
 
@@ -499,6 +507,10 @@ public class DoGamUIManager : MonoBehaviour
     // 도감 버튼 눌렀을 때 진입 지점
     private void OnOpenButtonClicked()
     {
+        // 대화창 열려 있으면 도감 열기 금지
+        if (IsDialogueOpen())
+            return;
+
         if (Input.GetKey(KeyCode.Space) ||
         Input.GetKey(KeyCode.Return) ||
         Input.GetKey(KeyCode.KeypadEnter))
@@ -1674,6 +1686,12 @@ public void CloseDoGam()
                 count++;
         }
         return count;
+    }
+
+    private bool IsDialogueOpen()
+    {
+        return NPCDialogueUIManager.Instance != null &&
+               NPCDialogueUIManager.Instance.IsDialogueOpen;
     }
 }
 

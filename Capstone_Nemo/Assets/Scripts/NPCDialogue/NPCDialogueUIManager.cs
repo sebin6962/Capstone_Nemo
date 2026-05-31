@@ -150,6 +150,14 @@ public class NPCDialogueUIManager : MonoBehaviour
         }
     }
 
+    public bool IsDialogueOpen
+    {
+        get
+        {
+            return dialoguePanel != null && dialoguePanel.activeSelf;
+        }
+    }
+
     private Sprite GetPortraitByNpcId(string npcId)
     {
         if (portraitSettings == null || string.IsNullOrEmpty(npcId))

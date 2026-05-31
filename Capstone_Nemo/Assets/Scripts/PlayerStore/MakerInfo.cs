@@ -25,6 +25,9 @@ public class MakerInfo : MonoBehaviour
     [Header("Lock Visual")]
     public Color unlockedColor = Color.white;
     public Color lockedColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+
+    [SerializeField] private GameObject lockIconObject; // 자물쇠 스프라이트 오브젝트
+
     private bool _isLocked;
 
     //이펙트
@@ -258,10 +261,20 @@ public class MakerInfo : MonoBehaviour
     {
         _isLocked = locked;
 
+        // 0) 자물쇠 스프라이트 활성/비활성
+        if (lockIconObject != null)
+            lockIconObject.SetActive(locked);
+
         // 1) 월드 오브젝트 색상(스프라이트) 틴트
         var srs = GetComponentsInChildren<SpriteRenderer>(includeInactive: true);
         foreach (var sr in srs)
+        {
+            // 자물쇠 스프라이트는 회색 틴트 대상에서 제외
+            if (lockIconObject != null && sr.transform.IsChildOf(lockIconObject.transform))
+                continue;
+
             sr.color = locked ? lockedColor : unlockedColor;
+        }
 
         // 2) UI 이미지도 회색 처리(있다면)
         //var imgs = GetComponentsInChildren<Image>(includeInactive: true);

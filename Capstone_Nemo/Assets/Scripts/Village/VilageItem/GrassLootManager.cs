@@ -4,13 +4,16 @@ using System.IO;
 using UnityEngine;
 using System.Collections;
 
-[Serializable]
+[System.Serializable]
 public class GrassLootPoint
 {
     public Transform point;
 
     [Tooltip("실제로 흔들릴 오브젝트. 비워두면 point가 흔들립니다.")]
     public Transform shakeTarget;
+
+    [Tooltip("획득 가능 상태일 때 풀 위에 표시할 말풍선 오브젝트")]
+    public GameObject speechBubble;
 
     [Tooltip("저장용 고유 ID. 비워두면 오브젝트 이름+좌표로 자동 생성되지만, 직접 적는 것을 추천합니다.")]
     public string id;
@@ -43,6 +46,8 @@ public class GrassLootItem
 
 public class GrassLootManager : MonoBehaviour
 {
+    private bool lastTutorialBlockingState;
+
     private readonly HashSet<Transform> shakingGrassObjects = new HashSet<Transform>();
 
     [Header("기본 설정")]
@@ -91,9 +96,26 @@ public class GrassLootManager : MonoBehaviour
         Load();
     }
 
+    private void Start()
+    {
+        lastTutorialBlockingState = IsTutorialBlockingGrassLoot();
+        UpdateAllSpeechBubbles();
+    }
+
+    private void OnEnable()
+    {
+        TimeManager.OnNewDayStarted += HandleNewDayStarted;
+    }
+
     private void OnDisable()
     {
+        TimeManager.OnNewDayStarted -= HandleNewDayStarted;
         Save();
+    }
+
+    private void HandleNewDayStarted()
+    {
+        UpdateAllSpeechBubbles();
     }
 
     private void OnApplicationQuit()
@@ -103,14 +125,91 @@ public class GrassLootManager : MonoBehaviour
 
     private void Update()
     {
+        bool tutorialBlockingNow = IsTutorialBlockingGrassLoot();
+
+        if (tutorialBlockingNow != lastTutorialBlockingState)
+        {
+            lastTutorialBlockingState = tutorialBlockingNow;
+            UpdateAllSpeechBubbles();
+        }
+
         if (Input.GetKeyDown(interactKey))
         {
             TryInteract();
         }
     }
 
+    private void UpdateAllSpeechBubbles()
+    {
+        // 튜토리얼 중에는 모든 풀 말풍선 숨김
+        if (IsTutorialBlockingGrassLoot())
+        {
+            foreach (GrassLootPoint grass in grassPoints)
+            {
+                if (grass == null)
+                    continue;
+
+                if (grass.speechBubble != null)
+                    grass.speechBubble.SetActive(false);
+            }
+
+            return;
+        }
+
+        int today = GetCurrentDay();
+
+        bool hasAnyUnlockedLoot = HasAnyUnlockedLootItem();
+
+        foreach (GrassLootPoint grass in grassPoints)
+        {
+            if (grass == null || grass.point == null)
+                continue;
+
+            if (grass.speechBubble == null)
+                continue;
+
+            string spotId = GetPointId(grass);
+
+            bool alreadyLootedToday = IsLootedToday(spotId, today);
+
+            // 핵심:
+            // 거리 체크 X
+            // 창고 공간 체크 X
+            // 오늘 뒤졌는지 + 현재 레벨에서 나올 재료가 있는지만 체크
+            bool canLoot = !alreadyLootedToday && hasAnyUnlockedLoot;
+
+            grass.speechBubble.SetActive(canLoot);
+        }
+    }
+
+    private bool HasAnyUnlockedLootItem()
+    {
+        int currentLevel = GetCurrentPlayerLevel();
+
+        foreach (GrassLootItem lootItem in lootItems)
+        {
+            if (lootItem == null)
+                continue;
+
+            if (string.IsNullOrWhiteSpace(lootItem.itemKey))
+                continue;
+
+            if (lootItem.unlockLevel <= currentLevel)
+                return true;
+        }
+
+        return false;
+    }
+
     private void TryInteract()
     {
+        // 튜토리얼 중에는 아이템 획득 불가
+        if (IsTutorialBlockingGrassLoot())
+        {
+            UpdateAllSpeechBubbles();
+            return;
+        }
+
         if (player == null) return;
 
         GrassLootPoint nearest = FindNearestPointInRange();
@@ -199,6 +298,8 @@ public class GrassLootManager : MonoBehaviour
         // 중요: 아이템 획득 성공 후에만 오늘 뒤짐 저장
         SetLootedToday(spotId, today);
         Save();
+
+        UpdateAllSpeechBubbles();
 
         Debug.Log($"[GrassLoot] {spotId}에서 {itemKey} 획득");
     }
@@ -466,5 +567,24 @@ public class GrassLootManager : MonoBehaviour
         target.localRotation = originalRot;
 
         shakingGrassObjects.Remove(target);
+    }
+
+    private bool IsTutorialBlockingGrassLoot()
+    {
+        // 마을 2차 튜토리얼 진행 중
+        if (TutorialManager.Instance != null &&
+            TutorialManager.Instance.IsVillageSecondTutorialRunning)
+        {
+            return true;
+        }
+
+        // 전체 튜토리얼 플로우가 아직 Done이 아니면 차단
+        if (TutorialFlowManager.Instance != null &&
+            TutorialFlowManager.Instance.currentStep != GlobalTutorialStep.Done)
+        {
+            return true;
+        }
+
+        return false;
     }
 }

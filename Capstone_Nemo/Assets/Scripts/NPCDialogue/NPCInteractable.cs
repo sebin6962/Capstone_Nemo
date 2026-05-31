@@ -14,6 +14,7 @@ public class NPCInteractable : MonoBehaviour
 
     private bool canInteract = false;
     private bool isTalking = false;
+    private bool waitForInteractKeyRelease = false;
 
     public string NpcId => npcId;
     public string NpcName => npcName;
@@ -26,7 +27,24 @@ public class NPCInteractable : MonoBehaviour
 
     private void Update()
     {
+        // 대화 종료 직후 E키가 아직 눌려 있으면 재상호작용 방지
+        if (waitForInteractKeyRelease)
+        {
+            if (!Input.GetKey(KeyCode.E))
+                waitForInteractKeyRelease = false;
+
+            return;
+        }
+
         if (!useDirectInteractKey) return;
+
+        // 대화창이 활성화되어 있으면 NPC 상호작용 입력 무시
+        if (NPCDialogueUIManager.Instance != null &&
+            NPCDialogueUIManager.Instance.IsDialogueOpen)
+        {
+            return;
+        }
+
         if (!canInteract || isTalking) return;
 
         if (Input.GetKeyDown(KeyCode.E))
@@ -38,6 +56,16 @@ public class NPCInteractable : MonoBehaviour
     public void StartDialogueExternally()
     {
         if (!canInteract || isTalking) return;
+
+        if (waitForInteractKeyRelease)
+            return;
+
+        if (NPCDialogueUIManager.Instance != null &&
+            NPCDialogueUIManager.Instance.IsDialogueOpen)
+        {
+            return;
+        }
+
         StartDialogueInternally();
     }
 
@@ -63,6 +91,9 @@ public class NPCInteractable : MonoBehaviour
     public void EndDialogue()
     {
         isTalking = false;
+
+        // 대화 종료에 사용된 E 입력이 바로 NPC 상호작용으로 이어지는 것 방지
+        waitForInteractKeyRelease = true;
 
         if (patrolRoute != null)
             patrolRoute.SetActive(true);
