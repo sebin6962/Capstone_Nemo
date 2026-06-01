@@ -99,6 +99,18 @@ public class GrassLootManager : MonoBehaviour
     private void Start()
     {
         lastTutorialBlockingState = IsTutorialBlockingGrassLoot();
+        Debug.Log(
+        $"[GrassLoot Debug/Start] " +
+        $"managerActive={gameObject.activeInHierarchy}, " +
+        $"enabled={enabled}, " +
+        $"player={(player != null ? player.name : "NULL")}, " +
+        $"grassPoints={grassPoints.Count}, " +
+        $"lootItems={lootItems.Count}, " +
+        $"today={GetCurrentDay()}, " +
+        $"tutorialBlocking={IsTutorialBlockingGrassLoot()}, " +
+        $"hasAnyLoot={HasAnyUnlockedLootItem()}, " +
+        $"save={CurrentServer}"
+    );
         UpdateAllSpeechBubbles();
     }
 
@@ -204,18 +216,36 @@ public class GrassLootManager : MonoBehaviour
     private void TryInteract()
     {
         // 튜토리얼 중에는 아이템 획득 불가
+        Debug.Log("[GrassLoot Debug] TryInteract 호출됨");
+
         if (IsTutorialBlockingGrassLoot())
         {
+            Debug.LogWarning("[GrassLoot Debug] 차단됨: 튜토리얼 상태로 판단됨");
             UpdateAllSpeechBubbles();
             return;
         }
 
-        if (player == null) return;
+        if (player == null)
+        {
+            Debug.LogWarning("[GrassLoot Debug] 차단됨: player가 연결되어 있지 않음");
+            return;
+        }
+
+        if (grassPoints == null || grassPoints.Count == 0)
+        {
+            Debug.LogWarning("[GrassLoot Debug] 차단됨: grassPoints가 비어 있음");
+            return;
+        }
 
         GrassLootPoint nearest = FindNearestPointInRange();
 
         if (nearest == null)
+        {
+            Debug.LogWarning(
+                $"[GrassLoot Debug] 차단됨: 범위 안의 풀이 없음 / playerPos={player.position}, radius={interactRadius}"
+            );
             return;
+        }
 
         string spotId = GetPointId(nearest);
         int today = GetCurrentDay();
@@ -572,11 +602,11 @@ public class GrassLootManager : MonoBehaviour
     private bool IsTutorialBlockingGrassLoot()
     {
         // 마을 2차 튜토리얼 진행 중
-        if (TutorialManager.Instance != null &&
-            TutorialManager.Instance.IsVillageSecondTutorialRunning)
-        {
-            return true;
-        }
+        //if (TutorialManager.Instance != null &&
+        //    TutorialManager.Instance.IsVillageSecondTutorialRunning)
+        //{
+        //    return true;
+        //}
 
         // 전체 튜토리얼 플로우가 아직 Done이 아니면 차단
         if (TutorialFlowManager.Instance != null &&

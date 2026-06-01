@@ -384,21 +384,8 @@ public class PlayerInteract : MonoBehaviour
                 string heldName = HeldItemManager.Instance.GetHeldItemName();
 
                 // Spot 위치에 아이템 오브젝트 생성
-                GameObject tableItemObj = new GameObject("TableItem");
-                SpriteRenderer sr = tableItemObj.AddComponent<SpriteRenderer>();
-                sr.sprite = heldSprite;
-
-                // Sorting Layer/Order를 탁자보다 높게 설정
-                sr.sortingLayerName = "Obj";   // 원하는 Sorting Layer 이름
-                sr.sortingOrder = 60;              // 탁자 SpriteRenderer보다 더 큰 값
-
-                // 아이템 크기 조정
-                tableItemObj.transform.localScale = new Vector3(1f, 1f, 1f);
-
-                // Spot 위치에 배치
-                tableItemObj.transform.position = nearbyTable.itemSpot.position;
-
-                nearbyTable.currentPlacedObject = tableItemObj;
+                // TableInfo의 공통 생성 함수 사용
+                nearbyTable.CreateTableItem(heldSprite);
 
                 // --- 테이블 아이템 상태 저장 ---
                 var tableMgr = FindObjectOfType<TableManager>();

@@ -97,30 +97,42 @@ public class TableInfo : MonoBehaviour
             return false;
         }
 
-        GameObject go = new GameObject("TableItem");
+        CreateTableItem(spr);
+        return currentPlacedObject != null;
+    }
+
+    public GameObject CreateTableItem(Sprite sprite, string objectName = "TableItem")
+    {
+        if (sprite == null)
+        {
+            Debug.LogWarning("[TableInfo] CreateTableItem 실패: sprite가 null입니다.");
+            return null;
+        }
+
+        GameObject go = new GameObject(objectName);
+
         var sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = spr;
+        sr.sprite = sprite;
         sr.sortingLayerName = sortingLayerName;
-        //sr.sortingOrder = sortingOrder;
         sr.sortingOrder = 60;
 
-        // 추가: Global Light 2D 적용용 Material 지정
+        // 핵심: Global Light 2D 적용용 Material 강제 적용
         if (spriteLitMaterial != null)
         {
             sr.sharedMaterial = spriteLitMaterial;
         }
         else
         {
-            Debug.LogWarning("[TableInfo] spriteLitMaterial이 비어 있습니다. Sprite-Lit-Default Material을 연결하세요.");
+            Debug.LogWarning($"[TableInfo] {tableId}의 spriteLitMaterial이 비어 있습니다. Sprite-Lit-Default Material을 연결하세요.");
         }
-
 
         go.transform.SetParent(itemSpot, worldPositionStays: false);
         go.transform.localPosition = Vector3.zero;
         go.transform.localScale = initialScale;
 
         currentPlacedObject = go;
-        return true;
+
+        return go;
     }
 }
 

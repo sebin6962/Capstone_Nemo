@@ -170,19 +170,7 @@ public class TableManager : MonoBehaviour
             }
 
             // 테이블 위에 새 TableItem 생성
-            GameObject go = new GameObject("TableItem");
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = spr;
-
-            // PlayerInteract에서 탁자에 올릴 때와 동일하게 맞춤
-            sr.sortingLayerName = "Obj";
-            sr.sortingOrder = 60;  // 항상 위에 보이도록
-
-            go.transform.SetParent(table.itemSpot, worldPositionStays: false);
-            go.transform.localPosition = Vector3.zero;
-            go.transform.localScale = table.initialScale;
-
-            table.currentPlacedObject = go;
+            table.CreateTableItem(spr);
 
             Debug.Log($"[Table] 복원: tableId={saved.tableId}, item={saved.itemSpriteName}");
         }
