@@ -32,6 +32,9 @@ public class TableInfo : MonoBehaviour
     private bool _isLocked;
     public bool IsLocked() => _isLocked;
 
+    [Header("2D Light Material")]
+    [SerializeField] private Material spriteLitMaterial;
+
     public void ApplyLockState(bool locked)
     {
         _isLocked = locked;
@@ -100,6 +103,17 @@ public class TableInfo : MonoBehaviour
         sr.sortingLayerName = sortingLayerName;
         //sr.sortingOrder = sortingOrder;
         sr.sortingOrder = 60;
+
+        // 추가: Global Light 2D 적용용 Material 지정
+        if (spriteLitMaterial != null)
+        {
+            sr.sharedMaterial = spriteLitMaterial;
+        }
+        else
+        {
+            Debug.LogWarning("[TableInfo] spriteLitMaterial이 비어 있습니다. Sprite-Lit-Default Material을 연결하세요.");
+        }
+
 
         go.transform.SetParent(itemSpot, worldPositionStays: false);
         go.transform.localPosition = Vector3.zero;

@@ -39,6 +39,31 @@ public class MakerInfo : MonoBehaviour
     public string resultItemName;           // 결과 아이템 이름 (스프라이트 이름)
     public double craftEndUtcSeconds;       // 제작 종료 시각(초)
 
+    [Header("제작 중 셰이더 효과")]
+    [SerializeField] private bool useCraftShaderEffect = false;
+    [SerializeField] private bool includeChildSpriteRenderers = true;
+
+    [SerializeField] private float craftShaderMoveAmount = 0.015f;
+    [SerializeField] private float craftShaderMoveSpeed = 12f;
+
+    [Range(0f, 1f)]
+    [SerializeField] private float craftShaderTopStart = 0.6f;
+
+    private readonly List<SpriteRenderer> craftShaderRenderers = new List<SpriteRenderer>();
+    private MaterialPropertyBlock craftShaderBlock;
+
+    public event System.Action CraftVisualStarted;
+    public event System.Action CraftVisualEnded;
+
+    private void SetMakerCraftVisuals(bool active)
+    {
+        SetCraftShaderEffect(active);
+
+        if (active)
+            CraftVisualStarted?.Invoke();
+        else
+            CraftVisualEnded?.Invoke();
+    }
     // --- 여기부터 씬 전환 시 진행 상태 관련 ---
     public void StartCraft(Sprite resultSprite, float duration, bool force = false)
     {
@@ -132,6 +157,9 @@ public class MakerInfo : MonoBehaviour
         // SFX 시작
         SFXManager.Instance.PlayMakerProgressSFX(makerId);
 
+        // 제작 중 비주얼 ON
+        SetMakerCraftVisuals(true);
+
         // 1. 진행바 프리팹 인스턴스 생성 및 위치 지정
         RectTransform progressBar = Instantiate(progressBarPrefab, ProgressworldCanvasParent);
         Vector3 worldPos = transform.position + new Vector3(0f, 1.0f, 0f);
@@ -143,6 +171,7 @@ public class MakerInfo : MonoBehaviour
         {
             Debug.LogError("진행바 프리팹에 'Fill' 오브젝트가 없습니다!");
             SFXManager.Instance.StopMakerProgressSFX(makerId); // 에러 시에도 멈추기
+            SetMakerCraftVisuals(false);
             yield break;
         }
         Image fillImage = fill.GetComponent<Image>();
@@ -159,6 +188,9 @@ public class MakerInfo : MonoBehaviour
 
         // 진행바 끝났을 때 SFX 멈춤
         SFXManager.Instance.StopMakerProgressSFX(makerId);
+
+        // 제작 중 셰이더 효과 OFF
+        SetMakerCraftVisuals(false);
 
         // 4. 진행바 파괴
         Destroy(progressBar.gameObject);
@@ -351,6 +383,65 @@ public class MakerInfo : MonoBehaviour
             makerMgr.SaveMakerState();
     }
 
+    private void CacheCraftShaderRenderers()
+    {
+        craftShaderRenderers.Clear();
+
+        if (includeChildSpriteRenderers)
+        {
+            var renderers = GetComponentsInChildren<SpriteRenderer>(includeInactive: true);
+
+            foreach (var sr in renderers)
+            {
+                if (sr == null)
+                    continue;
+
+                // 자물쇠 아이콘은 흔들림 대상 제외
+                if (lockIconObject != null && sr.transform.IsChildOf(lockIconObject.transform))
+                    continue;
+
+                craftShaderRenderers.Add(sr);
+            }
+        }
+        else
+        {
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr != null)
+                craftShaderRenderers.Add(sr);
+        }
+    }
+
+    private void SetCraftShaderEffect(bool active)
+    {
+        if (!useCraftShaderEffect)
+            return;
+
+        if (craftShaderBlock == null)
+            craftShaderBlock = new MaterialPropertyBlock();
+
+        if (craftShaderRenderers.Count == 0)
+            CacheCraftShaderRenderers();
+
+        foreach (var sr in craftShaderRenderers)
+        {
+            if (sr == null)
+                continue;
+
+            sr.GetPropertyBlock(craftShaderBlock);
+
+            craftShaderBlock.SetFloat("_Crafting", active ? 1f : 0f);
+            craftShaderBlock.SetFloat("_MoveAmount", craftShaderMoveAmount);
+            craftShaderBlock.SetFloat("_MoveSpeed", craftShaderMoveSpeed);
+            craftShaderBlock.SetFloat("_TopStart", craftShaderTopStart);
+
+            sr.SetPropertyBlock(craftShaderBlock);
+        }
+    }
+
+    private void OnDisable()
+    {
+        SetMakerCraftVisuals(false);
+    }
 }
 
 
