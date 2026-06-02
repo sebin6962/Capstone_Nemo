@@ -18,6 +18,8 @@ public class MillTutorialManager : MonoBehaviour
 {
     public static MillTutorialManager Instance;
 
+    private bool isFinishingMillTutorial = false;
+
     [SerializeField] private GameObject[] stepPanels;
 
     [SerializeField] private List<TutorialDialogueLine> millStartDialogues;
@@ -262,13 +264,16 @@ public class MillTutorialManager : MonoBehaviour
 
     public void FinishMillTutorial()
     {
+        if (isFinishingMillTutorial)
+            return;
+
+        isFinishingMillTutorial = true;
 
         IsMillTutorialRunning = false;
         HideAllPanels();
 
-      /*  if (customerSpawner)
+        /*  if (customerSpawner)
             customerSpawner.EndTutorial();*/
-
 
         if (TutorialFlowManager.Instance != null)
         {
@@ -277,7 +282,15 @@ public class MillTutorialManager : MonoBehaviour
             TutorialFlowManager.Instance.SetStep(GlobalTutorialStep.PlayerStore_Second);
         }
 
-        SceneManager.LoadScene("PlayerStoreScene");
+        if (CircleSceneTransition.Instance != null)
+        {
+            CircleSceneTransition.Instance.TransitionToScene("PlayerStoreScene");
+        }
+        else
+        {
+            Debug.LogWarning("[MillTutorial] CircleSceneTransition이 없어서 일반 씬 전환을 실행합니다.");
+            SceneManager.LoadScene("PlayerStoreScene");
+        }
     }
 
     public void FinishAllTutorial()
