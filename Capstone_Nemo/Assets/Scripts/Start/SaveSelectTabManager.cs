@@ -2,62 +2,71 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using TMPro;
 
 public class SaveSelectTabManager : MonoBehaviour
 {
+    [Header("Panels")]
     public GameObject fileSelectPanel;
     public GameObject settingPanel;
     public GameObject exitPanel;
     public GameObject aboutPanel;
 
+    [Header("Tab Buttons")]
     public Button btnFileSelect;
     public Button btnSetting;
     public Button btnExit;
     public Button btnAbout;
 
+    [Header("Tab Texts")]
+    public TMP_Text txtFileSelect;
+    public TMP_Text txtSetting;
+    public TMP_Text txtExit;
+    public TMP_Text txtAbout;
+
+    [Header("Managers")]
     public SaveSelectManager saveSelectManager;
     public Button btnGameExit;
 
-    [Header("Sprites (탭 스프라이트)")]
-    public Sprite normalSprite;
-    public Sprite pressedSprite;
+    [Header("탭 텍스트 색")]
+    public Color normalTextColor = Color.white;
+    public Color selectedTextColor = Color.yellow;
 
-    [Header("Sprites (새 파일 탭 전용 스프라이트)")]
-    public Sprite aboutNormalSprite;
-    public Sprite aboutPressedSprite;
+    [Header("탭 텍스트 크기 효과")]
+    public float normalTextScale = 1f;
+    public float hoverTextScale = 1.08f;
+    public float selectedTextScale = 1.12f;
+    public float clickTextScale = 1f;
 
     [Header("선택된 탭 표시 UI")]
     public RectTransform selectedTabMarker;
 
     [Tooltip("선택된 버튼 기준 마커 위치 조정값입니다. 왼쪽에 두려면 X를 음수로 설정하세요.")]
-    public Vector2 markerOffset = new Vector2(-80f, 0f);
-
-    public Color selectedColor = Color.gray;
-    public Color normalColor = Color.white;
-
-    private readonly List<string> tabOrder = new List<string>();
-
-    private int currentTabIndex = 0;
-    private string currentTab = "File";
+    public Vector2 markerOffset = new Vector2(-30f, 0f);
 
     [Header("선택 마커 기준 부모")]
     public RectTransform markerLayer;
 
+    private readonly List<string> tabOrder = new List<string>();
+    private readonly HashSet<string> hoveringTabs = new HashSet<string>();
+
+    private readonly Dictionary<string, Button> tabButtons = new Dictionary<string, Button>();
+    private readonly Dictionary<string, TMP_Text> tabTexts = new Dictionary<string, TMP_Text>();
+    private readonly Dictionary<string, Vector3> originalTextScales = new Dictionary<string, Vector3>();
+
+    private int currentTabIndex = 0;
+    private string currentTab = "File";
+
     void Start()
     {
+        AutoFindTexts();
         BuildTabOrder();
+        BuildTabDictionaries();
 
-        if (btnFileSelect != null)
-            btnFileSelect.onClick.AddListener(() => SwitchTab("File"));
-
-        if (btnSetting != null)
-            btnSetting.onClick.AddListener(() => SwitchTab("Setting"));
-
-        if (btnExit != null)
-            btnExit.onClick.AddListener(() => SwitchTab("Exit"));
-
-        if (btnAbout != null)
-            btnAbout.onClick.AddListener(() => SwitchTab("About"));
+        SetupTabButton(btnFileSelect, "File");
+        SetupTabButton(btnSetting, "Setting");
+        SetupTabButton(btnExit, "Exit");
+        SetupTabButton(btnAbout, "About");
 
         if (btnGameExit != null)
         {
@@ -68,6 +77,7 @@ public class SaveSelectTabManager : MonoBehaviour
         }
 
         DisableButtonTransitions();
+        SaveOriginalTextScales();
 
         SwitchTab("File");
     }
@@ -82,6 +92,21 @@ public class SaveSelectTabManager : MonoBehaviour
         {
             MoveTab(1);
         }
+    }
+
+    private void AutoFindTexts()
+    {
+        if (txtFileSelect == null && btnFileSelect != null)
+            txtFileSelect = btnFileSelect.GetComponentInChildren<TMP_Text>(true);
+
+        if (txtSetting == null && btnSetting != null)
+            txtSetting = btnSetting.GetComponentInChildren<TMP_Text>(true);
+
+        if (txtExit == null && btnExit != null)
+            txtExit = btnExit.GetComponentInChildren<TMP_Text>(true);
+
+        if (txtAbout == null && btnAbout != null)
+            txtAbout = btnAbout.GetComponentInChildren<TMP_Text>(true);
     }
 
     private void BuildTabOrder()
@@ -101,6 +126,52 @@ public class SaveSelectTabManager : MonoBehaviour
             tabOrder.Add("About");
     }
 
+    private void BuildTabDictionaries()
+    {
+        tabButtons.Clear();
+        tabTexts.Clear();
+
+        AddTabData("File", btnFileSelect, txtFileSelect);
+        AddTabData("Setting", btnSetting, txtSetting);
+        AddTabData("Exit", btnExit, txtExit);
+        AddTabData("About", btnAbout, txtAbout);
+    }
+
+    private void AddTabData(string tabName, Button button, TMP_Text text)
+    {
+        if (button != null)
+            tabButtons[tabName] = button;
+
+        if (text != null)
+            tabTexts[tabName] = text;
+    }
+
+    private void SetupTabButton(Button button, string tabName)
+    {
+        if (button == null)
+            return;
+
+        button.onClick.AddListener(() => SwitchTab(tabName));
+
+        TabTextButtonEffect effect = button.GetComponent<TabTextButtonEffect>();
+
+        if (effect == null)
+            effect = button.gameObject.AddComponent<TabTextButtonEffect>();
+
+        effect.Init(this, tabName);
+    }
+
+    private void SaveOriginalTextScales()
+    {
+        originalTextScales.Clear();
+
+        foreach (var pair in tabTexts)
+        {
+            if (pair.Value != null)
+                originalTextScales[pair.Key] = pair.Value.rectTransform.localScale;
+        }
+    }
+
     private void MoveTab(int direction)
     {
         if (tabOrder.Count == 0)
@@ -114,12 +185,6 @@ public class SaveSelectTabManager : MonoBehaviour
             currentTabIndex = 0;
 
         SwitchTab(tabOrder[currentTabIndex]);
-    }
-
-    public void QuitGame()
-    {
-        Debug.Log("게임 종료");
-        Application.Quit();
     }
 
     public void SwitchTab(string tab)
@@ -145,9 +210,10 @@ public class SaveSelectTabManager : MonoBehaviour
         if (aboutPanel != null)
             aboutPanel.SetActive(tab == "About");
 
-        SetActiveTabByName(tab);
+        RefreshAllTabTextStates();
 
         Button activeButton = GetButtonByTabName(tab);
+
         MoveSelectedMarker(activeButton);
 
         if (EventSystem.current != null && activeButton != null)
@@ -163,67 +229,67 @@ public class SaveSelectTabManager : MonoBehaviour
 
     private Button GetButtonByTabName(string tab)
     {
-        switch (tab)
-        {
-            case "File":
-                return btnFileSelect;
-
-            case "Setting":
-                return btnSetting;
-
-            case "Exit":
-                return btnExit;
-
-            case "About":
-                return btnAbout;
-        }
+        if (tabButtons.ContainsKey(tab))
+            return tabButtons[tab];
 
         return null;
     }
 
-    private void SetActiveTabByName(string tab)
+    private TMP_Text GetTextByTabName(string tab)
     {
-        SetButtonSprite(btnFileSelect, normalSprite);
-        SetButtonSprite(btnSetting, normalSprite);
-        SetButtonSprite(btnExit, normalSprite);
+        if (tabTexts.ContainsKey(tab))
+            return tabTexts[tab];
 
-        if (btnAbout != null)
-        {
-            Sprite normalAbout = aboutNormalSprite != null ? aboutNormalSprite : normalSprite;
-            SetButtonSprite(btnAbout, normalAbout);
-        }
+        return null;
+    }
 
-        if (tab == "File")
+    private void RefreshAllTabTextStates()
+    {
+        foreach (string tab in tabOrder)
         {
-            SetButtonSprite(btnFileSelect, pressedSprite);
-        }
-        else if (tab == "Setting")
-        {
-            SetButtonSprite(btnSetting, pressedSprite);
-        }
-        else if (tab == "Exit")
-        {
-            SetButtonSprite(btnExit, pressedSprite);
-        }
-        else if (tab == "About")
-        {
-            Sprite pressedAbout = aboutPressedSprite != null ? aboutPressedSprite : pressedSprite;
-            SetButtonSprite(btnAbout, pressedAbout);
+            RefreshTabTextState(tab);
         }
     }
 
-    private void SetButtonSprite(Button button, Sprite sprite)
+    private void RefreshTabTextState(string tab)
     {
-        if (button == null)
+        TMP_Text text = GetTextByTabName(tab);
+
+        if (text == null)
             return;
 
-        if (button.image == null)
+        bool isSelected = tab == currentTab;
+        bool isHovering = hoveringTabs.Contains(tab);
+
+        text.color = isSelected ? selectedTextColor : normalTextColor;
+
+        float targetScale = normalTextScale;
+
+        if (isSelected)
+        {
+            targetScale = selectedTextScale;
+        }
+        else if (isHovering)
+        {
+            targetScale = hoverTextScale;
+        }
+
+        SetTextScale(tab, targetScale);
+    }
+
+    private void SetTextScale(string tab, float scaleValue)
+    {
+        TMP_Text text = GetTextByTabName(tab);
+
+        if (text == null)
             return;
 
-        if (sprite == null)
-            return;
+        Vector3 baseScale = Vector3.one;
 
-        button.image.sprite = sprite;
+        if (originalTextScales.ContainsKey(tab))
+            baseScale = originalTextScales[tab];
+
+        text.rectTransform.localScale = baseScale * scaleValue;
     }
 
     private void MoveSelectedMarker(Button targetButton)
@@ -250,10 +316,10 @@ public class SaveSelectTabManager : MonoBehaviour
 
         selectedTabMarker.gameObject.SetActive(true);
 
-        // Layout Group의 영향을 받지 않는 별도 레이어로 고정
         selectedTabMarker.SetParent(markerLayer, false);
 
         LayoutElement layoutElement = selectedTabMarker.GetComponent<LayoutElement>();
+
         if (layoutElement == null)
             layoutElement = selectedTabMarker.gameObject.AddComponent<LayoutElement>();
 
@@ -282,7 +348,54 @@ public class SaveSelectTabManager : MonoBehaviour
         selectedTabMarker.anchoredPosition = localPoint + markerOffset;
     }
 
-    void DisableButtonTransitions()
+    public void OnTabPointerEnter(string tab)
+    {
+        hoveringTabs.Add(tab);
+
+        if (tab != currentTab)
+        {
+            TMP_Text text = GetTextByTabName(tab);
+
+            if (text != null)
+            {
+                text.color = normalTextColor;
+                SetTextScale(tab, hoverTextScale);
+            }
+        }
+    }
+
+    public void OnTabPointerExit(string tab)
+    {
+        hoveringTabs.Remove(tab);
+
+        RefreshTabTextState(tab);
+    }
+
+    public void OnTabPointerDown(string tab)
+    {
+        TMP_Text text = GetTextByTabName(tab);
+
+        if (text == null)
+            return;
+
+        // 클릭하는 순간에는 원래 크기로 돌아감
+        SetTextScale(tab, clickTextScale);
+    }
+
+    public void OnTabPointerUp(string tab)
+    {
+        // 클릭을 떼면 현재 상태에 맞게 다시 갱신
+        // 실제 선택 처리는 Button.onClick -> SwitchTab()에서 처리됨
+        RefreshTabTextState(tab);
+    }
+
+    public void QuitGame()
+    {
+        Debug.Log("게임 종료");
+        Application.Quit();
+    }
+
+    private void DisableButtonTransitions()
     {
         if (btnFileSelect != null)
             btnFileSelect.transition = Selectable.Transition.None;
@@ -295,16 +408,5 @@ public class SaveSelectTabManager : MonoBehaviour
 
         if (btnAbout != null)
             btnAbout.transition = Selectable.Transition.None;
-    }
-
-    private void SetButtonColor(Button button, bool isSelected)
-    {
-        if (button == null)
-            return;
-
-        var colors = button.colors;
-        colors.normalColor = isSelected ? selectedColor : normalColor;
-        colors.selectedColor = isSelected ? selectedColor : normalColor;
-        button.colors = colors;
     }
 }

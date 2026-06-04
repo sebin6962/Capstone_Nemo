@@ -51,6 +51,42 @@ public class StoreTutorialManager : MonoBehaviour
 
     public bool IsStoreTutorialRunning;
 
+    private IEnumerator StartStoreTutorialAfterTransition(GlobalTutorialStep globalStep)
+    {
+        // 원형 전환 오브젝트가 존재하고, 전환 중이거나 검은 화면이 켜져 있으면 대기
+        if (CircleSceneTransition.Instance != null)
+        {
+            yield return new WaitUntil(() =>
+                !CircleSceneTransition.Instance.IsTransitioning &&
+                !CircleSceneTransition.Instance.IsCoverVisible
+            );
+        }
+
+        // 전환이 끝난 뒤 살짝 텀
+        yield return new WaitForSecondsRealtime(0.2f);
+
+        StartStoreTutorial(globalStep);
+    }
+
+    private IEnumerator StartStoreSecondTutorialAfterTransition()
+    {
+        if (CircleSceneTransition.Instance != null)
+        {
+            yield return new WaitUntil(() =>
+                !CircleSceneTransition.Instance.IsTransitioning &&
+                !CircleSceneTransition.Instance.IsCoverVisible
+            );
+        }
+
+        yield return new WaitForSecondsRealtime(0.2f);
+
+        // 여기에서 방앗간 이후 가게 튜토리얼을 시작하면 됩니다.
+        // 예시:
+        // StartStoreSecondTutorial();
+
+        Debug.Log("[StoreTutorial] PlayerStore_Second 전환 완료 후 튜토리얼 시작 가능");
+    }
+
     void Awake()
     {
         if(Instance != null && Instance != this)
@@ -85,7 +121,12 @@ public class StoreTutorialManager : MonoBehaviour
 
             ShowStepPanel(currentStep);*/
 
-            StartStoreTutorial(flow.currentStep);
+            //StartStoreTutorial(flow.currentStep);
+            StartCoroutine(StartStoreTutorialAfterTransition(flow.currentStep));
+        }
+        else if (flow.currentStep == GlobalTutorialStep.PlayerStore_Second)
+        {
+            StartCoroutine(StartStoreSecondTutorialAfterTransition());
         }
         else
         {

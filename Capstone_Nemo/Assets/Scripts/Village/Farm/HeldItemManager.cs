@@ -150,4 +150,18 @@ public class HeldItemManager : MonoBehaviour
         return currentHeldSprite;
     }
 
+    public void SetHeldItemVisualVisible(bool visible)
+    {
+        if (heldItemImage == null) return;
+
+        // 실제로 아이템을 들고 있을 때만 다시 보이게 함
+        if (visible)
+        {
+            heldItemImage.enabled = IsHoldingItem();
+        }
+        else
+        {
+            heldItemImage.enabled = false;
+        }
+    }
 }
