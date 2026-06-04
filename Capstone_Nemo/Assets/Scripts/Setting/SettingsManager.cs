@@ -95,6 +95,7 @@ public class SettingsManager : MonoBehaviour
         PlayerPrefs.SetInt("SFXMute", sfxMute ? 1 : 0);
 
         PlayerPrefs.SetFloat("UIScale", UIScale);
+        PlayerPrefs.SetFloat("Brightness", brightness);
         PlayerPrefs.SetInt("IsFullScreen", isFullScreen ? 1 : 0);
 
         PlayerPrefs.Save();
@@ -112,6 +113,7 @@ public class SettingsManager : MonoBehaviour
         sfxMute = PlayerPrefs.GetInt("SFXMute", 0) == 1;
 
         UIScale = PlayerPrefs.GetFloat("UIScale", 1f);
+        brightness = PlayerPrefs.GetFloat("Brightness", 1f);
         isFullScreen = PlayerPrefs.GetInt("IsFullScreen", 1) == 1;
 
         if (AudioSetting.Instance != null)

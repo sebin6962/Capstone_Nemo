@@ -11,7 +11,33 @@ public class ScreenSetting : MonoBehaviour
 
     void Start()
     {
-        brightnessSlider.onValueChanged.AddListener(SetBrightness);
+        if (brightnessSlider != null)
+        {
+            brightnessSlider.onValueChanged.AddListener(SetBrightness);
+        }
+
+        ApplySavedBrightness();
+    }
+
+    private void ApplySavedBrightness()
+    {
+        if (SettingsManager.Instance == null)
+            return;
+
+        float savedBrightness = SettingsManager.Instance.brightness;
+
+        if (brightnessSlider != null)
+        {
+            brightnessSlider.SetValueWithoutNotify(savedBrightness);
+        }
+
+        if (brightnessPanel != null)
+        {
+            float maxAlpha = 0.8f;
+            Color panelColor = brightnessPanel.color;
+            panelColor.a = Mathf.Lerp(maxAlpha, 0f, savedBrightness);
+            brightnessPanel.color = panelColor;
+        }
     }
 
     public void SetUISize_Small()
@@ -62,6 +88,11 @@ public class ScreenSetting : MonoBehaviour
 
     public void SetBrightness(float value)
     {
+        if (SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.brightness = value;
+        }
+
         if (brightnessPanel != null)
         {
             float maxAlpha = 0.8f;
@@ -69,6 +100,12 @@ public class ScreenSetting : MonoBehaviour
             panelColor.a = Mathf.Lerp(maxAlpha, 0f, value);
             brightnessPanel.color = panelColor;
         }
-        SettingsManager.Instance.brightness = value;
+
+        BrightnessApply[] appliers = FindObjectsOfType<BrightnessApply>(true);
+
+        foreach (BrightnessApply applier in appliers)
+        {
+            applier.Apply(value);
+        }
     }
 }
