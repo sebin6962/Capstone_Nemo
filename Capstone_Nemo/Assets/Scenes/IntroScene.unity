@@ -1103,13 +1103,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 480295560}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 257d0476ae96ca64cae9eb090c3eb1a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   breathAmount: 0.02
-  breathSpeed: 1.2
+  breathSpeed: 0.5
 --- !u!1 &515982940
 GameObject:
   m_ObjectHideFlags: 0
@@ -2490,9 +2490,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.03198588
+    y: 0.15389708
     width: 1
-    height: 0.93602824
+    height: 0.69220585
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -2567,6 +2567,13 @@ MonoBehaviour:
   - {fileID: 1436339314, guid: 62f516ae91366434fbf5b6a4621d565b, type: 3}
   - {fileID: 916570254, guid: 62f516ae91366434fbf5b6a4621d565b, type: 3}
   - {fileID: 786203026, guid: 62f516ae91366434fbf5b6a4621d565b, type: 3}
+  logoRect: {fileID: 480295561}
+  logoStartOffsetY: 400
+  logoDropDuration: 4
+  logoImpactOffsetY: 100
+  logoBounceOvershootY: 4
+  logoBounceUpDuration: 2
+  logoSettleDuration: 3
 --- !u!114 &1367691876
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -57,6 +57,15 @@ public class IntroSceneManager : MonoBehaviour
 
     private bool allowSkipToText = false;
 
+    [Header("Logo Drop Bounce")]
+    public RectTransform logoRect;              // 로고 UI의 RectTransform
+    public float logoStartOffsetY = 350f;       // 시작 위치: 최종 위치보다 위로 얼마나 올릴지
+    public float logoDropDuration = 1.1f;       // 위에서 내려오는 시간
+    public float logoImpactOffsetY = 28f;       // 배경에 닿는 느낌: 최종 위치보다 아래로 내려가는 정도
+    public float logoBounceOvershootY = 14f;    // 튕겨 올라가는 정도
+    public float logoBounceUpDuration = 0.22f;  // 튕겨 올라가는 시간
+    public float logoSettleDuration = 0.18f;    // 제자리로 돌아오는 시간
+
     void Awake()
     {
         // 하단 그라데이션 세팅
@@ -98,6 +107,10 @@ public class IntroSceneManager : MonoBehaviour
         // 초기 상태: 전부 숨김
         logoUI.alpha = 0;
         logoUI.gameObject.SetActive(true);
+
+        if (logoRect == null && logoUI != null)
+            logoRect = logoUI.GetComponent<RectTransform>();
+
         clickTextUI.alpha = 0;
         clickTextUI.gameObject.SetActive(false);
 
@@ -169,14 +182,15 @@ public class IntroSceneManager : MonoBehaviour
         // 로고 등장과 동시에 우주선 이동 시작
         StartShipOnce();
 
-        yield return StartCoroutine(FadeCanvasGroup(logoUI, 0, 1, logoFadeDuration));
+        // 로고가 위에서 내려오고 튕기면서 제자리로 이동
+        yield return StartCoroutine(DropBounceLogo());
 
         if (gradientGroup != null)
             yield return StartCoroutine(FadeCanvasGroup(gradientGroup, 0, 1, gradientFadeSeconds));
 
         allowSkipToText = true;
 
-        // 2 텍스트 등장 (이미 강제 시작되었는지 확인)
+        // 2 텍스트 등장
         if (!textStarted)
         {
             yield return new WaitForSeconds(delayBeforeText);
@@ -320,5 +334,96 @@ public class IntroSceneManager : MonoBehaviour
         // 5) 웨이브 기준 시간 초기화 후 이동 시작
         moveStartTime = Time.time;
         moveShip = true;
+    }
+
+    IEnumerator DropBounceLogo()
+    {
+        if (logoUI == null)
+            yield break;
+
+        if (logoRect == null)
+            logoRect = logoUI.GetComponent<RectTransform>();
+
+        if (logoRect == null)
+        {
+            logoUI.alpha = 1f;
+            yield break;
+        }
+
+        Vector2 finalPos = logoRect.anchoredPosition;
+
+        Vector2 startPos = finalPos + new Vector2(0f, logoStartOffsetY);
+        Vector2 impactPos = finalPos + new Vector2(0f, -logoImpactOffsetY);
+        Vector2 bouncePos = finalPos + new Vector2(0f, logoBounceOvershootY);
+
+        // 페이드 없이 바로 보이게
+        logoUI.alpha = 1f;
+        logoRect.anchoredPosition = startPos;
+
+        float t = 0f;
+
+        // 1) 위에서 내려옴
+        while (t < logoDropDuration)
+        {
+            t += Time.deltaTime;
+            float p = Mathf.Clamp01(t / logoDropDuration);
+
+            float eased = EaseInQuad(p);
+            logoRect.anchoredPosition = Vector2.Lerp(startPos, impactPos, eased);
+
+            yield return null;
+        }
+
+        logoRect.anchoredPosition = impactPos;
+
+        // 2) 닿은 뒤 부드럽게 위로 '통' 튐
+        t = 0f;
+        while (t < logoBounceUpDuration)
+        {
+            t += Time.deltaTime;
+            float p = Mathf.Clamp01(t / logoBounceUpDuration);
+
+            float eased = EaseOutCubic(p);
+            logoRect.anchoredPosition = Vector2.Lerp(impactPos, bouncePos, eased);
+
+            yield return null;
+        }
+
+        logoRect.anchoredPosition = bouncePos;
+
+        // 3) 다시 제자리로 부드럽게 안착
+        t = 0f;
+        while (t < logoSettleDuration)
+        {
+            t += Time.deltaTime;
+            float p = Mathf.Clamp01(t / logoSettleDuration);
+
+            float eased = EaseInOutSine(p);
+            logoRect.anchoredPosition = Vector2.Lerp(bouncePos, finalPos, eased);
+
+            yield return null;
+        }
+
+        logoRect.anchoredPosition = finalPos;
+    }
+
+    float EaseOutCubic(float x)
+    {
+        return 1f - Mathf.Pow(1f - x, 3f);
+    }
+
+    float EaseInOutSine(float x)
+    {
+        return -(Mathf.Cos(Mathf.PI * x) - 1f) / 2f;
+    }
+
+    float EaseInCubic(float x)
+    {
+        return x * x * x;
+    }
+
+    float EaseInQuad(float x)
+    {
+        return x * x;
     }
 }
