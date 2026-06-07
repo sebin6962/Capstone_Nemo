@@ -18,6 +18,28 @@ public class PlayerManager : MonoBehaviour
     public enum InitialFacing { Up, Down, Left, Right }
     [SerializeField] private InitialFacing initialFacing = InitialFacing.Down;
 
+    private bool isActionLocked = false;
+
+    public void SetActionLocked(bool locked)
+    {
+        isActionLocked = locked;
+
+        if (locked)
+        {
+            movement = Vector2.zero;
+
+            if (animator != null)
+            {
+                animator.SetBool("IsWalking", false);
+                animator.SetFloat("MoveX", lastMoveDir.x);
+                animator.SetFloat("MoveY", lastMoveDir.y);
+            }
+
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.StopPlayerWalkLoop();
+        }
+    }
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -55,6 +77,23 @@ public class PlayerManager : MonoBehaviour
     {
         // 하루가 끝난 상태라면, 계속 걷기 막고 소리도 끔
         if (isDayEnding)
+        {
+            movement = Vector2.zero;
+
+            if (animator != null)
+            {
+                animator.SetBool("IsWalking", false);
+                animator.SetFloat("MoveX", lastMoveDir.x);
+                animator.SetFloat("MoveY", lastMoveDir.y);
+            }
+
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.StopPlayerWalkLoop();
+
+            return;
+        }
+
+        if (isActionLocked)
         {
             movement = Vector2.zero;
 
@@ -145,6 +184,9 @@ public class PlayerManager : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (isActionLocked)
+            return;
+
         if (((SkinShopUIManager.Instance != null && SkinShopUIManager.Instance.IsOpen()) || BoxInventoryManager.Instance != null && BoxInventoryManager.Instance.IsInventoryOpen()) ||
             (PopupInventoryUIManager.Instance != null && PopupInventoryUIManager.Instance.IsPopupOpen()) ||
             (PlayerStoreBoxInventoryUIManager.Instance != null && PlayerStoreBoxInventoryUIManager.Instance.IsOpen()) ||

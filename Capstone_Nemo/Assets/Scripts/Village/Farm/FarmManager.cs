@@ -80,6 +80,65 @@ public class FarmManager : MonoBehaviour
 
     private readonly HashSet<Vector3Int> touchingCropTiles = new();
 
+    [Header("플레이어 물주기 모션")]
+    public PlayerWateringResolverMotion playerWateringMotion;
+
+    private void PlayPlayerWateringMotion(Vector3Int cellPos)
+    {
+        Debug.Log($"[FarmWaterMotion] PlayPlayerWateringMotion 진입 / cellPos={cellPos}");
+
+        if (player == null)
+        {
+            Debug.LogWarning("[FarmWaterMotion] player Transform이 FarmManager에 연결되어 있지 않습니다.");
+        }
+        else
+        {
+            Debug.Log($"[FarmWaterMotion] player 연결됨: {player.name}");
+        }
+
+        if (playerWateringMotion == null && player != null)
+        {
+            Debug.Log("[FarmWaterMotion] playerWateringMotion이 null이라 player에서 검색합니다.");
+
+            // 기존 검색
+            playerWateringMotion = player.GetComponent<PlayerWateringResolverMotion>();
+
+            if (playerWateringMotion == null)
+            {
+                Debug.LogWarning("[FarmWaterMotion] player.GetComponent<PlayerWateringResolverMotion>() 실패");
+
+                // 자식 오브젝트에 붙어있는 경우 확인용
+                playerWateringMotion = player.GetComponentInChildren<PlayerWateringResolverMotion>(true);
+
+                if (playerWateringMotion != null)
+                {
+                    Debug.Log($"[FarmWaterMotion] 자식에서 PlayerWateringResolverMotion 찾음: {playerWateringMotion.name}");
+                }
+            }
+            else
+            {
+                Debug.Log($"[FarmWaterMotion] player에서 PlayerWateringResolverMotion 찾음: {playerWateringMotion.name}");
+            }
+        }
+
+        if (playerWateringMotion == null)
+        {
+            Debug.LogError("[FarmWaterMotion] PlayerWateringResolverMotion을 찾지 못해서 물주기 모션을 재생할 수 없습니다.");
+            return;
+        }
+
+        if (fieldTilemap == null)
+        {
+            Debug.LogError("[FarmWaterMotion] fieldTilemap이 null입니다.");
+            return;
+        }
+
+        Vector3 tileCenter = fieldTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0f);
+
+        Debug.Log($"[FarmWaterMotion] 물주기 모션 Play 호출 / tileCenter={tileCenter}");
+        playerWateringMotion.Play(tileCenter);
+    }
+
     string FarmSavePath
         => string.IsNullOrEmpty(CurrentServer)
            ? null
@@ -497,6 +556,10 @@ public class FarmManager : MonoBehaviour
         //SFXManager.Instance.PlayFarmWaterSFX();
         Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
 
+        Debug.Log($"[FarmWater] 클릭한 셀 위치: {cellPos}");
+        Debug.Log($"[FarmWater] growingTiles 포함 여부: {growingTiles.ContainsKey(cellPos)}");
+        Debug.Log($"[FarmWater] wateredTiles 포함 여부: {wateredTiles.Contains(cellPos)}");
+
         //if (IsFarmTile(worldPos))
         //{
         //    overlayTilemap.SetTile(cellPos, wetSoilTile);
@@ -526,7 +589,9 @@ public class FarmManager : MonoBehaviour
             wateredTiles.Add(cellPos);
             tileInfo.isWatered = true;                     // 성장 타이머가 돌도록
 
+            Debug.Log("[FarmWater] 작물/나무 타일에 물주기 성공 → 모션 호출 직전");
             PlayWaterSfxOnce();
+            PlayPlayerWateringMotion(cellPos);
 
             //village2 튜토리얼 진행 트리거 7
             if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.Water))
@@ -548,7 +613,9 @@ public class FarmManager : MonoBehaviour
             overlayTilemap.SetTile(cellPos, wetSoilTile);
             wateredTiles.Add(cellPos);
 
+            Debug.Log("[FarmWater] 빈 밭 타일에 물주기 성공 → 모션 호출 직전");
             PlayWaterSfxOnce();
+            PlayPlayerWateringMotion(cellPos);
         }
 
         bool IsFarmTile(Vector3 worldPos)
