@@ -4,6 +4,14 @@ using UnityEngine.U2D.Animation;
 
 public class PlayerWateringResolverMotion : MonoBehaviour
 {
+    [Header("방향 감지 세부 설정")]
+    [SerializeField] private Vector2 directionOriginOffset = new Vector2(0f, 0.35f);
+
+    [SerializeField] private float horizontalThreshold = 0.35f;
+    [SerializeField] private float verticalThreshold = 0.35f;
+
+    [SerializeField] private float diagonalBias = 1.25f;
+
     [Header("기존 플레이어 Animator")]
     [SerializeField] private Animator playerAnimator;
 
@@ -99,13 +107,51 @@ public class PlayerWateringResolverMotion : MonoBehaviour
 
     private string GetDirectionName(Vector3 targetWorldPos)
     {
-        Vector2 diff = targetWorldPos - transform.position;
+        Vector2 origin = (Vector2)transform.position + directionOriginOffset;
+        Vector2 target = targetWorldPos;
+        Vector2 diff = target - origin;
 
-        if (Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
+        Debug.Log($"[WateringMotion/Direction] origin={origin}, target={target}, diff={diff}");
+
+        float absX = Mathf.Abs(diff.x);
+        float absY = Mathf.Abs(diff.y);
+
+        // 너무 가까운 클릭이면 현재 바라보는 방향 또는 아래 방향 사용
+        if (absX < horizontalThreshold && absY < verticalThreshold)
         {
-            return diff.x >= 0f ? "Right" : "Left";
+            Debug.Log("[WateringMotion/Direction] 클릭 위치가 기준점과 너무 가까워 Down 사용");
+            return "Down";
         }
 
-        return diff.y >= 0f ? "Up" : "Down";
+        // 좌우가 충분히 강할 때만 Left/Right
+        if (absX > absY * diagonalBias && absX >= horizontalThreshold)
+        {
+            string dir = diff.x >= 0f ? "Right" : "Left";
+            Debug.Log($"[WateringMotion/Direction] 좌우 방향 선택: {dir}");
+            return dir;
+        }
+
+        // 상하가 충분히 강할 때만 Up/Down
+        if (absY > absX * diagonalBias && absY >= verticalThreshold)
+        {
+            string dir = diff.y >= 0f ? "Up" : "Down";
+            Debug.Log($"[WateringMotion/Direction] 상하 방향 선택: {dir}");
+            return dir;
+        }
+
+        // 애매한 대각선 영역이면 y 우선
+        // 농사 게임에서는 보통 위/아래 밭 판정이 더 자연스러움
+        if (absY >= absX)
+        {
+            string dir = diff.y >= 0f ? "Up" : "Down";
+            Debug.Log($"[WateringMotion/Direction] 애매한 대각선 → 상하 우선: {dir}");
+            return dir;
+        }
+        else
+        {
+            string dir = diff.x >= 0f ? "Right" : "Left";
+            Debug.Log($"[WateringMotion/Direction] 애매한 대각선 → 좌우 우선: {dir}");
+            return dir;
+        }
     }
 }
