@@ -5,46 +5,64 @@ using UnityEngine.UI;
 public class SinkInfo : MonoBehaviour
 {
     [Header("진행바/캔버스")]
-    public RectTransform progressBarPrefab;   
-    public Transform worldCanvasParent;       // 진행바를 붙일 월드 캔버스
+    public RectTransform progressBarPrefab;
+    public Transform worldCanvasParent;
 
     [Header("물 아이템")]
-    public Sprite waterSprite;                
-    public string waterItemName = "water";    
-    public GameObject waterResultPrefab;      
+    public Sprite waterSprite;
+    public string waterItemName = "water";
+    public GameObject waterResultPrefab;
 
     [Header("연출")]
-    public float fillDuration = 1.5f;        
+    public float fillDuration = 1.5f;
     public Vector3 barOffset = new Vector3(0f, 1.2f, 0f);
-    public Vector3 resultOffset = new Vector3(0f, 1.2f, 0f); // 물 결과물 위치 오프셋
+    public Vector3 resultOffset = new Vector3(0f, 1.2f, 0f);
 
-    // 진행 중 여부/결과 오브젝트
     private bool isRunning = false;
     [HideInInspector] public GameObject currentWaterObject;
 
-    // PlayerInteract에서 읽기용 프로퍼티
     public bool IsRunning => isRunning;
     public bool HasWaterResult => currentWaterObject != null;
 
+    // 싱크대 비주얼 이벤트
+    public event System.Action SinkVisualStarted;
+    public event System.Action SinkVisualEnded;
+
+    private void SetSinkVisuals(bool active)
+    {
+        if (active)
+            SinkVisualStarted?.Invoke();
+        else
+            SinkVisualEnded?.Invoke();
+    }
+
     public IEnumerator FillAndGiveWater()
     {
-        if (isRunning) yield break; // 연타 방지
+        if (isRunning) yield break;
+
         isRunning = true;
+
+        // 싱크대 스프라이트 애니메이션 시작
+        SetSinkVisuals(true);
 
         SFXManager.Instance.PlayMakerProgressSFX("Sink");
 
-        // 진행바 생성
         RectTransform progressBar = Instantiate(progressBarPrefab, worldCanvasParent);
         Vector3 worldPos = transform.position + barOffset;
         progressBar.position = worldPos;
 
-        // Fill 이미지 채우기
         Transform fill = progressBar.transform.Find("Fill");
         if (fill == null)
         {
             Debug.LogError("[SinkInfo] 진행바 프리팹에 'Fill' 오브젝트가 없습니다!");
             SFXManager.Instance.StopMakerProgressSFX("Sink");
-            Destroy(progressBar.gameObject);
+
+            if (progressBar != null)
+                Destroy(progressBar.gameObject);
+
+            // 싱크대 스프라이트 애니메이션 종료
+            SetSinkVisuals(false);
+
             isRunning = false;
             yield break;
         }
@@ -61,16 +79,19 @@ public class SinkInfo : MonoBehaviour
         }
 
         SFXManager.Instance.StopMakerProgressSFX("Sink");
-        Destroy(progressBar.gameObject);
 
-        // 이미 결과물이 있으면 하나만 유지
+        if (progressBar != null)
+            Destroy(progressBar.gameObject);
+
+        // 싱크대 스프라이트 애니메이션 종료
+        SetSinkVisuals(false);
+
         if (currentWaterObject != null)
         {
             Destroy(currentWaterObject);
             currentWaterObject = null;
         }
 
-        // 싱크 위에 결과 오브젝트 스폰 (제작기 결과랑 같은 느낌)
         Vector3 resultPos = transform.position + resultOffset;
         GameObject resultObj = Instantiate(waterResultPrefab, resultPos, Quaternion.identity);
 
@@ -90,10 +111,6 @@ public class SinkInfo : MonoBehaviour
         isRunning = false;
     }
 
-    /// <summary>
-    /// 싱크 위에 생성된 물 결과물을 플레이어 손으로 옮김
-    /// (제작기 currentResultObject 줍는 로직과 동일한 패턴)
-    /// </summary>
     public void PickupWaterResult()
     {
         if (currentWaterObject == null)
@@ -131,6 +148,11 @@ public class SinkInfo : MonoBehaviour
             Destroy(currentWaterObject);
             currentWaterObject = null;
         }
+    }
+
+    private void OnDisable()
+    {
+        SetSinkVisuals(false);
     }
 }
 

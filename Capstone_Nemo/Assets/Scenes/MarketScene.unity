@@ -178,9 +178,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.0046114624
+    y: 0.034513444
     width: 1
-    height: 0.9907771
+    height: 0.9309731
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -9436,6 +9436,7 @@ MonoBehaviour:
   cropTouchBoxPadding: {x: 0.12, y: 0.05}
   cropTouchTopExtra: 0.45
   playerTouchProbeOffsetY: 0.55
+  playerWateringMotion: {fileID: 0}
   farmSfxCooldown: 0.15
 --- !u!1001 &1030323612
 PrefabInstance:
@@ -10584,6 +10585,7 @@ GameObject:
   - component: {fileID: 1158854863}
   - component: {fileID: 1158854862}
   - component: {fileID: 1158854864}
+  - component: {fileID: 1158854865}
   m_Layer: 5
   m_Name: ShopPanel
   m_TagString: Untagged
@@ -10681,6 +10683,26 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &1158854865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1158854860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebd6ca98968b04e4bb5a0fedf912b474, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 1158854861}
+  dropHeight: 20
+  bounceHeight: 5
+  fallDuration: 0.14
+  bounceDuration: 0.16
+  squashAmount: 0.035
+  playOnEnable: 1
+  useUnscaledTime: 1
 --- !u!1001 &1195014008
 PrefabInstance:
   m_ObjectHideFlags: 0

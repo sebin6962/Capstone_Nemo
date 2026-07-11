@@ -15,19 +15,6 @@ public class NPCDialogueUIManager : MonoBehaviour
         Choice
     }
 
-    [Header("Dialogue Open Animation")]
-    [SerializeField] private RectTransform dialoguePanelRect;
-    [SerializeField] private float panelStartOffsetX = -900f;
-    [SerializeField] private float panelSlideDuration = 0.28f;
-
-    [SerializeField] private float portraitStartOffsetY = -180f;
-    [SerializeField] private float portraitPopDuration = 0.25f;
-    [SerializeField] private float portraitOvershootY = 18f;
-
-    private Vector2 defaultPanelPosition;
-    private Coroutine openAnimationCoroutine;
-    private bool isOpeningAnimation = false;
-
     [Header("UI")]
     [SerializeField] private GameObject dialoguePanel;
     [SerializeField] private TMP_Text npcNameText;
@@ -38,10 +25,16 @@ public class NPCDialogueUIManager : MonoBehaviour
     [SerializeField] private TMP_Text nextButtonText;
     [SerializeField] private Image portraitImage;
 
+    [Header("Portrait Open Animation")]
+    [SerializeField] private float portraitStartDelay = 0.28f;
+    [SerializeField] private float portraitStartOffsetY = -180f;
+    [SerializeField] private float portraitPopDuration = 0.25f;
+    [SerializeField] private float portraitOvershootY = 18f;
+
     [Header("Typing Effect")]
     [SerializeField] private float typingSpeed = 0.03f;
-
     [SerializeField] private float firstLineTypingStartDelay = 0.4f;
+
     private bool waitTypingDelayForNextLine = false;
 
     [Header("Next Button Move Effect")]
@@ -51,9 +44,12 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     private Vector2 defaultNextButtonPosition;
 
+    [Header("Portrait Settings")]
     [SerializeField] private List<PortraitDisplaySetting> portraitSettings;
+
     private Vector3 defaultPortraitScale;
     private Vector2 defaultPortraitPosition;
+    private Vector2 currentPortraitTargetPosition;
 
     private readonly List<GameObject> spawnedOptions = new();
     private readonly Queue<string> pendingLines = new();
@@ -62,23 +58,25 @@ public class NPCDialogueUIManager : MonoBehaviour
     private NPCInteractable currentNpc;
     private NPCDialogueData currentDialogueData;
     private NPCDialogueNodeData currentNode;
+
     private DialogueState currentState = DialogueState.None;
     private string nextNodeAfterLines;
 
     private Coroutine typingCoroutine;
     private Coroutine nextButtonBlinkCoroutine;
+    private Coroutine portraitOpenCoroutine;
 
+    private bool isPortraitOpeningAnimation = false;
     private string currentFullLine = "";
     private bool isTyping = false;
     private string currentCategoryId = null;
 
-    //튜토리얼용
+    // 튜토리얼용
     private System.Action tutorialDialogueFinishedCallback;
     private bool isTutorialDialogueMode = false;
-    private Queue<TutorialDialogueLine> tutorialLines = new();
+    private readonly Queue<TutorialDialogueLine> tutorialLines = new();
     private TutorialDialogueLine currentTutorialLine;
 
-    //초상화크기
     [System.Serializable]
     public class PortraitDisplaySetting
     {
@@ -91,6 +89,14 @@ public class NPCDialogueUIManager : MonoBehaviour
     public bool IsOpen()
     {
         return dialoguePanel != null && dialoguePanel.activeSelf;
+    }
+
+    public bool IsDialogueOpen
+    {
+        get
+        {
+            return dialoguePanel != null && dialoguePanel.activeSelf;
+        }
     }
 
     private void Awake()
@@ -114,83 +120,98 @@ public class NPCDialogueUIManager : MonoBehaviour
             nextButton.onClick.RemoveAllListeners();
             nextButton.onClick.AddListener(OnClickNextButton);
 
-            RectTransform nextButtonRect = nextButton.GetComponent<RectTransform>();
+            RectTransform nextButtonRect =
+                nextButton.GetComponent<RectTransform>();
+
             if (nextButtonRect != null)
-                defaultNextButtonPosition = nextButtonRect.anchoredPosition;
+                defaultNextButtonPosition =
+                    nextButtonRect.anchoredPosition;
         }
 
         if (portraitImage != null)
         {
-            defaultPortraitScale = portraitImage.transform.localScale;
-            defaultPortraitPosition = portraitImage.rectTransform.anchoredPosition;
-        }
+            defaultPortraitScale =
+                portraitImage.transform.localScale;
 
-        if (dialoguePanel != null)
-        {
-            if (dialoguePanelRect == null)
-                dialoguePanelRect = dialoguePanel.GetComponent<RectTransform>();
+            defaultPortraitPosition =
+                portraitImage.rectTransform.anchoredPosition;
 
-            if (dialoguePanelRect != null)
-                defaultPanelPosition = dialoguePanelRect.anchoredPosition;
+            currentPortraitTargetPosition =
+                defaultPortraitPosition;
         }
     }
 
     private void Update()
     {
-        if (dialoguePanel == null || !dialoguePanel.activeSelf)
+        if (dialoguePanel == null ||
+            !dialoguePanel.activeSelf)
+        {
+            return;
+        }
+
+        // 초상화 등장 연출 중에는 입력 방지
+        if (isPortraitOpeningAnimation)
             return;
 
-        if (isOpeningAnimation)
-            return;
-
-        // 선택지 상태에서는 E로 넘기지 않음
+        // 선택지 상태에서는 E키로 넘기지 않음
         if (currentState != DialogueState.Line)
             return;
 
-        if (Input.GetKeyDown(KeyCode.E)|| Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.E) ||
+            Input.GetKeyDown(KeyCode.Space))
         {
             OnClickNextButton();
         }
     }
 
-    //초상화크기
     private void ApplyPortrait(Sprite portrait)
     {
         if (portraitImage == null)
             return;
 
         portraitImage.sprite = portrait;
-        portraitImage.gameObject.SetActive(portrait != null);
 
-        portraitImage.transform.localScale = defaultPortraitScale;
-        portraitImage.rectTransform.anchoredPosition = defaultPortraitPosition;
+        portraitImage.transform.localScale =
+            defaultPortraitScale;
 
-        if (portrait == null)
-            return;
+        portraitImage.rectTransform.anchoredPosition =
+            defaultPortraitPosition;
 
-        foreach (var setting in portraitSettings)
+        if (portrait != null && portraitSettings != null)
         {
-            if (setting != null && setting.portrait == portrait)
+            foreach (PortraitDisplaySetting setting
+                     in portraitSettings)
             {
-                portraitImage.transform.localScale = defaultPortraitScale * setting.scale;
+                if (setting == null)
+                    continue;
+
+                if (setting.portrait != portrait)
+                    continue;
+
+                portraitImage.transform.localScale =
+                    defaultPortraitScale * setting.scale;
+
                 portraitImage.rectTransform.anchoredPosition =
-                    defaultPortraitPosition + setting.positionOffset;
-                return;
+                    defaultPortraitPosition +
+                    setting.positionOffset;
+
+                break;
             }
         }
+
+        currentPortraitTargetPosition =
+            portraitImage.rectTransform.anchoredPosition;
+
+        portraitImage.gameObject.SetActive(
+            portrait != null
+        );
     }
 
-    private void StartOpenAnimation(System.Action onFinished)
+    private void OpenPanelWithPortraitAnimation(
+        System.Action onFinished
+    )
     {
-        if (openAnimationCoroutine != null)
-            StopCoroutine(openAnimationCoroutine);
-
-        openAnimationCoroutine = StartCoroutine(OpenAnimationCoroutine(onFinished));
-    }
-
-    private IEnumerator OpenAnimationCoroutine(System.Action onFinished)
-    {
-        isOpeningAnimation = true;
+        StopPortraitOpenAnimation();
 
         StopNextButtonBlink();
         SetNextButton(false, "다음");
@@ -201,107 +222,184 @@ public class NPCDialogueUIManager : MonoBehaviour
             dialogueText.maxVisibleCharacters = 0;
         }
 
+        bool hasPortrait =
+            portraitImage != null &&
+            portraitImage.sprite != null;
+
+        if (hasPortrait)
+        {
+            currentPortraitTargetPosition =
+                portraitImage.rectTransform.anchoredPosition;
+
+            portraitImage.rectTransform.anchoredPosition =
+                currentPortraitTargetPosition +
+                new Vector2(
+                    0f,
+                    portraitStartOffsetY
+                );
+
+            // 패널이 켜지는 순간 최종 위치의 초상화가
+            // 잠깐 보이는 현상 방지
+            portraitImage.gameObject.SetActive(false);
+        }
+
+        /*
+         * dialoguePanel에 UIPanelPopAnimation을 붙여두면
+         * SetActive(true) 시 OnEnable()에서 자동 재생됩니다.
+         */
         if (dialoguePanel != null)
             dialoguePanel.SetActive(true);
 
-        if (dialoguePanelRect != null)
-            dialoguePanelRect.anchoredPosition = defaultPanelPosition + new Vector2(panelStartOffsetX, 0f);
+        portraitOpenCoroutine = StartCoroutine(
+            PortraitOpenCoroutine(
+                hasPortrait,
+                onFinished
+            )
+        );
+    }
 
-        bool hasPortrait = portraitImage != null && portraitImage.sprite != null;
+    private IEnumerator PortraitOpenCoroutine(
+        bool hasPortrait,
+        System.Action onFinished
+    )
+    {
+        isPortraitOpeningAnimation = true;
 
-        if (hasPortrait)
+        // 패널 팝업이 먼저 나온 뒤 초상화 등장
+        float delayElapsed = 0f;
+
+        while (delayElapsed < portraitStartDelay)
         {
-            portraitImage.gameObject.SetActive(false);
-            portraitImage.rectTransform.anchoredPosition =
-                defaultPortraitPosition + new Vector2(0f, portraitStartOffsetY);
-        }
-
-        // 1) 대화창 패널: 왼쪽에서 들어오기
-        float t = 0f;
-
-        while (t < panelSlideDuration)
-        {
-            t += Time.unscaledDeltaTime;
-            float p = Mathf.Clamp01(t / panelSlideDuration);
-            float eased = EaseOutCubic(p);
-
-            if (dialoguePanelRect != null)
-            {
-                dialoguePanelRect.anchoredPosition = Vector2.Lerp(
-                    defaultPanelPosition + new Vector2(panelStartOffsetX, 0f),
-                    defaultPanelPosition,
-                    eased
-                );
-            }
-
+            delayElapsed += Time.unscaledDeltaTime;
             yield return null;
         }
 
-        if (dialoguePanelRect != null)
-            dialoguePanelRect.anchoredPosition = defaultPanelPosition;
-
-        // 2) 초상화: 대화창 밑에서 뿅 올라오기
-        if (hasPortrait)
+        if (hasPortrait && portraitImage != null)
         {
+            Vector2 hiddenPosition =
+                currentPortraitTargetPosition +
+                new Vector2(
+                    0f,
+                    portraitStartOffsetY
+                );
+
+            Vector2 overshootPosition =
+                currentPortraitTargetPosition +
+                new Vector2(
+                    0f,
+                    portraitOvershootY
+                );
+
+            portraitImage.rectTransform.anchoredPosition =
+                hiddenPosition;
+
             portraitImage.gameObject.SetActive(true);
 
-            Vector2 hiddenPos = defaultPortraitPosition + new Vector2(0f, portraitStartOffsetY);
-            Vector2 overshootPos = defaultPortraitPosition + new Vector2(0f, portraitOvershootY);
+            float duration =
+                Mathf.Max(
+                    0.01f,
+                    portraitPopDuration
+                );
 
-            t = 0f;
+            float elapsed = 0f;
 
-            while (t < portraitPopDuration)
+            while (elapsed < duration)
             {
-                t += Time.unscaledDeltaTime;
-                float p = Mathf.Clamp01(t / portraitPopDuration);
+                elapsed += Time.unscaledDeltaTime;
 
-                if (p < 0.72f)
+                float progress =
+                    Mathf.Clamp01(
+                        elapsed / duration
+                    );
+
+                /*
+                 * 처음 72%:
+                 * 아래에서 목표보다 살짝 위까지 올라옴
+                 */
+                if (progress < 0.72f)
                 {
-                    float subP = p / 0.72f;
-                    portraitImage.rectTransform.anchoredPosition =
-                        Vector2.Lerp(hiddenPos, overshootPos, EaseOutCubic(subP));
+                    float subProgress =
+                        progress / 0.72f;
+
+                    portraitImage
+                        .rectTransform
+                        .anchoredPosition =
+                        Vector2.Lerp(
+                            hiddenPosition,
+                            overshootPosition,
+                            EaseOutCubic(
+                                subProgress
+                            )
+                        );
                 }
+                /*
+                 * 나머지 28%:
+                 * 오버슈트 위치에서 최종 위치로 내려옴
+                 */
                 else
                 {
-                    float subP = (p - 0.72f) / 0.28f;
-                    portraitImage.rectTransform.anchoredPosition =
-                        Vector2.Lerp(overshootPos, defaultPortraitPosition, EaseOutCubic(subP));
+                    float subProgress =
+                        (progress - 0.72f) /
+                        0.28f;
+
+                    portraitImage
+                        .rectTransform
+                        .anchoredPosition =
+                        Vector2.Lerp(
+                            overshootPosition,
+                            currentPortraitTargetPosition,
+                            EaseOutCubic(
+                                subProgress
+                            )
+                        );
                 }
 
                 yield return null;
             }
 
-            portraitImage.rectTransform.anchoredPosition = defaultPortraitPosition;
+            portraitImage.rectTransform.anchoredPosition =
+                currentPortraitTargetPosition;
         }
 
-        isOpeningAnimation = false;
-        openAnimationCoroutine = null;
+        isPortraitOpeningAnimation = false;
+        portraitOpenCoroutine = null;
 
         onFinished?.Invoke();
     }
 
-    private float EaseOutCubic(float x)
+    private void StopPortraitOpenAnimation()
     {
-        return 1f - Mathf.Pow(1f - x, 3f);
-    }
-
-    public bool IsDialogueOpen
-    {
-        get
+        if (portraitOpenCoroutine != null)
         {
-            return dialoguePanel != null && dialoguePanel.activeSelf;
+            StopCoroutine(portraitOpenCoroutine);
+            portraitOpenCoroutine = null;
+        }
+
+        isPortraitOpeningAnimation = false;
+
+        if (portraitImage != null)
+        {
+            portraitImage.rectTransform.anchoredPosition =
+                currentPortraitTargetPosition;
         }
     }
 
     private Sprite GetPortraitByNpcId(string npcId)
     {
-        if (portraitSettings == null || string.IsNullOrEmpty(npcId))
-            return null;
-
-        foreach (var setting in portraitSettings)
+        if (portraitSettings == null ||
+            string.IsNullOrEmpty(npcId))
         {
-            if (setting != null && setting.npcId == npcId)
+            return null;
+        }
+
+        foreach (PortraitDisplaySetting setting
+                 in portraitSettings)
+        {
+            if (setting != null &&
+                setting.npcId == npcId)
+            {
                 return setting.portrait;
+            }
         }
 
         return null;
@@ -312,32 +410,57 @@ public class NPCDialogueUIManager : MonoBehaviour
         OpenDialogue(npc, null);
     }
 
-    public void OpenDialogue(NPCInteractable npc, string categoryId)
+    public void OpenDialogue(
+        NPCInteractable npc,
+        string categoryId
+    )
     {
-        if (npc == null) return;
-        if (NPCDialogueDatabase.Instance == null) return;
+        if (npc == null)
+            return;
+
+        if (NPCDialogueDatabase.Instance == null)
+            return;
 
         currentNpc = npc;
         currentCategoryId = categoryId;
-        currentDialogueData = NPCDialogueDatabase.Instance.GetDialogueByNpcId(npc.NpcId);
+
+        currentDialogueData =
+            NPCDialogueDatabase.Instance
+                .GetDialogueByNpcId(
+                    npc.NpcId
+                );
 
         if (currentDialogueData == null)
         {
-            Debug.LogWarning($"[NPCDialogueUIManager] npcId={npc.NpcId} 의 대화 데이터가 없습니다.");
+            Debug.LogWarning(
+                $"[NPCDialogueUIManager] " +
+                $"npcId={npc.NpcId}의 " +
+                $"대화 데이터가 없습니다."
+            );
+
             CloseDialogue();
             return;
         }
 
         if (npcNameText != null)
-            npcNameText.text = string.IsNullOrEmpty(currentDialogueData.npcName) ? npc.NpcName : currentDialogueData.npcName;
+        {
+            npcNameText.text =
+                string.IsNullOrEmpty(
+                    currentDialogueData.npcName
+                )
+                    ? npc.NpcName
+                    : currentDialogueData.npcName;
+        }
 
-        // NPC마다 다른 초상화 적용
-        ApplyPortrait(GetPortraitByNpcId(currentDialogueData.npcId));
+        ApplyPortrait(
+            GetPortraitByNpcId(
+                currentDialogueData.npcId
+            )
+        );
 
-        BuildNodeDictionary(currentDialogueData);
-
-        //if (dialoguePanel != null)
-            //dialoguePanel.SetActive(true);
+        BuildNodeDictionary(
+            currentDialogueData
+        );
 
         waitTypingDelayForNextLine = true;
 
@@ -345,57 +468,71 @@ public class NPCDialogueUIManager : MonoBehaviour
         pendingLines.Clear();
         nextNodeAfterLines = null;
 
-        string entryNodeId = GetEntryNodeId(currentDialogueData, currentCategoryId);
+        string entryNodeId =
+            GetEntryNodeId(
+                currentDialogueData,
+                currentCategoryId
+            );
 
         if (string.IsNullOrEmpty(entryNodeId))
         {
-            Debug.LogWarning($"[NPCDialogueUIManager] npcId={npc.NpcId} 의 시작 노드를 찾을 수 없습니다.");
+            Debug.LogWarning(
+                $"[NPCDialogueUIManager] " +
+                $"npcId={npc.NpcId}의 " +
+                $"시작 노드를 찾을 수 없습니다."
+            );
+
             CloseDialogue();
             return;
         }
 
-        //MoveToNode(entryNodeId);
-        StartOpenAnimation(() =>
+        if (BGMPlayer.Instance != null)
+        {
+            BGMPlayer.Instance
+                .StartDialogueBGM();
+        }
+
+        OpenPanelWithPortraitAnimation(() =>
         {
             MoveToNode(entryNodeId);
         });
     }
 
-    //튜토리얼용
-    public void OpenTutorialDialogue(List<TutorialDialogueLine> lines, System.Action onFinished = null)
+    public void OpenTutorialDialogue(
+        List<TutorialDialogueLine> lines,
+        System.Action onFinished = null
+    )
     {
-        if (lines == null || lines.Count == 0)
+        if (lines == null ||
+            lines.Count == 0)
         {
             onFinished?.Invoke();
             return;
         }
 
         isTutorialDialogueMode = true;
-        tutorialDialogueFinishedCallback = onFinished;
+
+        tutorialDialogueFinishedCallback =
+            onFinished;
 
         tutorialLines.Clear();
 
-        foreach (var line in lines)
-        {
+        foreach (TutorialDialogueLine line in lines)
             tutorialLines.Enqueue(line);
-        }
 
         ClearOptions();
         pendingLines.Clear();
         nextNodeAfterLines = null;
 
         currentState = DialogueState.Line;
-
-        if (dialoguePanel != null)
-            dialoguePanel.SetActive(true);
-
         waitTypingDelayForNextLine = true;
 
-        ShowNextTutorialLine();
+        ShowNextTutorialLine(true);
     }
 
-    //튜토리얼
-    private void ShowNextTutorialLine()
+    private void ShowNextTutorialLine(
+        bool playOpenAnimation = false
+    )
     {
         if (tutorialLines.Count == 0)
         {
@@ -403,51 +540,101 @@ public class NPCDialogueUIManager : MonoBehaviour
             return;
         }
 
-        currentTutorialLine = tutorialLines.Dequeue();
+        currentTutorialLine =
+            tutorialLines.Dequeue();
 
         if (npcNameText != null)
-            npcNameText.text = currentTutorialLine.speakerName;
-
-        if (portraitImage != null)
         {
-            ApplyPortrait(currentTutorialLine.portrait);
-            portraitImage.gameObject.SetActive(currentTutorialLine.portrait != null);
+            npcNameText.text =
+                currentTutorialLine.speakerName;
         }
 
-        StartTyping(currentTutorialLine.dialogue);
+        ApplyPortrait(
+            currentTutorialLine.portrait
+        );
+
+        if (playOpenAnimation)
+        {
+            OpenPanelWithPortraitAnimation(() =>
+            {
+                StartTyping(
+                    currentTutorialLine.dialogue
+                );
+            });
+        }
+        else
+        {
+            StartTyping(
+                currentTutorialLine.dialogue
+            );
+        }
     }
 
-    private void BuildNodeDictionary(NPCDialogueData data)
+    private void BuildNodeDictionary(
+        NPCDialogueData data
+    )
     {
         nodeDict.Clear();
 
-        if (data == null || data.nodes == null)
-            return;
-
-        for (int i = 0; i < data.nodes.Count; i++)
+        if (data == null ||
+            data.nodes == null)
         {
-            NPCDialogueNodeData node = data.nodes[i];
-            if (node == null || string.IsNullOrEmpty(node.nodeId))
+            return;
+        }
+
+        for (int i = 0;
+             i < data.nodes.Count;
+             i++)
+        {
+            NPCDialogueNodeData node =
+                data.nodes[i];
+
+            if (node == null ||
+                string.IsNullOrEmpty(
+                    node.nodeId
+                ))
+            {
                 continue;
+            }
 
             nodeDict[node.nodeId] = node;
         }
     }
 
-    private string GetEntryNodeId(NPCDialogueData data, string categoryId)
+    private string GetEntryNodeId(
+        NPCDialogueData data,
+        string categoryId
+    )
     {
         if (data == null)
             return null;
 
-        NPCDialogueNpcProgressData npcProgress = null;
+        NPCDialogueNpcProgressData npcProgress =
+            null;
 
         if (NPCDialogueProgressManager.Instance != null)
-            npcProgress = NPCDialogueProgressManager.Instance.GetOrCreateNpcProgress(data.npcId);
+        {
+            npcProgress =
+                NPCDialogueProgressManager
+                    .Instance
+                    .GetOrCreateNpcProgress(
+                        data.npcId
+                    );
+        }
 
-        string entryNodeId = NPCDialogueSelector.GetStartNodeId(data, npcProgress, categoryId);
+        string entryNodeId =
+            NPCDialogueSelector.GetStartNodeId(
+                data,
+                npcProgress,
+                categoryId
+            );
 
         if (NPCDialogueProgressManager.Instance != null)
-            NPCDialogueProgressManager.Instance.Save();
+        {
+            NPCDialogueProgressManager
+                .Instance
+                .Save();
+        }
 
         return entryNodeId;
     }
@@ -460,14 +647,26 @@ public class NPCDialogueUIManager : MonoBehaviour
             return;
         }
 
-        if (!nodeDict.TryGetValue(nodeId, out currentNode) || currentNode == null)
+        if (!nodeDict.TryGetValue(
+                nodeId,
+                out currentNode
+            ) ||
+            currentNode == null)
         {
-            Debug.LogWarning($"[NPCDialogueUIManager] nodeId={nodeId} 를 찾을 수 없습니다.");
+            Debug.LogWarning(
+                $"[NPCDialogueUIManager] " +
+                $"nodeId={nodeId}를 " +
+                $"찾을 수 없습니다."
+            );
+
             CloseDialogue();
             return;
         }
 
-        string nodeType = currentNode.type?.Trim().ToLower();
+        string nodeType =
+            currentNode.type?
+                .Trim()
+                .ToLower();
 
         switch (nodeType)
         {
@@ -484,29 +683,42 @@ public class NPCDialogueUIManager : MonoBehaviour
                 break;
 
             default:
-                Debug.LogWarning($"[NPCDialogueUIManager] 알 수 없는 node type: {currentNode.type}");
+                Debug.LogWarning(
+                    $"[NPCDialogueUIManager] " +
+                    $"알 수 없는 node type: " +
+                    $"{currentNode.type}"
+                );
+
                 CloseDialogue();
                 break;
         }
     }
 
-    private void StartLineNode(NPCDialogueNodeData node)
+    private void StartLineNode(
+        NPCDialogueNodeData node
+    )
     {
         ClearOptions();
         pendingLines.Clear();
 
         if (node.lines != null)
         {
-            for (int i = 0; i < node.lines.Count; i++)
+            for (int i = 0;
+                 i < node.lines.Count;
+                 i++)
             {
                 string line = node.lines[i];
+
                 if (!string.IsNullOrWhiteSpace(line))
                     pendingLines.Enqueue(line);
             }
         }
 
-        nextNodeAfterLines = node.nextNodeId;
-        currentState = DialogueState.Line;
+        nextNodeAfterLines =
+            node.nextNodeId;
+
+        currentState =
+            DialogueState.Line;
 
         if (pendingLines.Count > 0)
             ShowNextLine();
@@ -514,7 +726,9 @@ public class NPCDialogueUIManager : MonoBehaviour
             MoveToNode(nextNodeAfterLines);
     }
 
-    private void StartChoiceNode(NPCDialogueNodeData node)
+    private void StartChoiceNode(
+        NPCDialogueNodeData node
+    )
     {
         ClearOptions();
         pendingLines.Clear();
@@ -523,10 +737,13 @@ public class NPCDialogueUIManager : MonoBehaviour
         StopTypingImmediately();
         StopNextButtonBlink();
 
-        currentState = DialogueState.Choice;
+        currentState =
+            DialogueState.Choice;
+
         SetNextButton(false, "다음");
 
-        if (node.options == null || node.options.Count == 0)
+        if (node.options == null ||
+            node.options.Count == 0)
         {
             CloseDialogue();
             return;
@@ -534,71 +751,137 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         int createdOptionCount = 0;
 
-        for (int i = 0; i < node.options.Count; i++)
+        for (int i = 0;
+             i < node.options.Count;
+             i++)
         {
-            NPCDialogueChoiceOptionData option = node.options[i];
-            if (option == null) continue;
+            NPCDialogueChoiceOptionData option =
+                node.options[i];
+
+            if (option == null)
+                continue;
 
             if (!ShouldShowOption(option))
                 continue;
 
             createdOptionCount++;
 
-            CreateOption(option.text, () =>
-            {
-                HandleOptionSelected(option);
-            });
+            CreateOption(
+                option.text,
+                () =>
+                {
+                    HandleOptionSelected(option);
+                }
+            );
         }
 
         if (createdOptionCount == 0)
             CloseDialogue();
     }
 
-    private bool ShouldShowOption(NPCDialogueChoiceOptionData option)
+    private bool ShouldShowOption(
+        NPCDialogueChoiceOptionData option
+    )
     {
-        if (option == null) return false;
+        if (option == null)
+            return false;
 
-        bool hasQuestIdCondition = !string.IsNullOrEmpty(option.requiredQuestId);
-        bool hasQuestTargetNpcCondition = !string.IsNullOrEmpty(option.requiredQuestTargetNpcId);
+        bool hasQuestIdCondition =
+            !string.IsNullOrEmpty(
+                option.requiredQuestId
+            );
 
-        if (!hasQuestIdCondition && !hasQuestTargetNpcCondition)
+        bool hasQuestTargetNpcCondition =
+            !string.IsNullOrEmpty(
+                option.requiredQuestTargetNpcId
+            );
+
+        if (!hasQuestIdCondition &&
+            !hasQuestTargetNpcCondition)
+        {
             return true;
+        }
 
         if (QuestAcceptManager.Instance == null)
             return false;
 
         if (hasQuestIdCondition)
-            return QuestAcceptManager.Instance.IsAccepted(option.requiredQuestId);
+        {
+            return QuestAcceptManager
+                .Instance
+                .IsAccepted(
+                    option.requiredQuestId
+                );
+        }
 
         if (hasQuestTargetNpcCondition)
         {
-            QuestData talkQuest = QuestAcceptManager.Instance.GetAcceptedTalkQuestForNpc(option.requiredQuestTargetNpcId);
+            QuestData talkQuest =
+                QuestAcceptManager
+                    .Instance
+                    .GetAcceptedTalkQuestForNpc(
+                        option.requiredQuestTargetNpcId
+                    );
+
             return talkQuest != null;
         }
 
         return true;
     }
 
-    private void HandleOptionSelected(NPCDialogueChoiceOptionData option)
+    private void HandleOptionSelected(
+        NPCDialogueChoiceOptionData option
+    )
     {
-        if (option == null) return;
+        if (option == null)
+            return;
 
-        if (option.completeTalkQuestOnSelect && QuestAcceptManager.Instance != null && currentNpc != null)
+        if (option.completeTalkQuestOnSelect &&
+            QuestAcceptManager.Instance != null &&
+            currentNpc != null)
         {
-            QuestData talkQuest = QuestAcceptManager.Instance.GetAcceptedTalkQuestForNpc(currentNpc.NpcId);
+            QuestData talkQuest =
+                QuestAcceptManager
+                    .Instance
+                    .GetAcceptedTalkQuestForNpc(
+                        currentNpc.NpcId
+                    );
+
             if (talkQuest != null)
-                QuestAcceptManager.Instance.CompleteAcceptedTalkQuest(talkQuest.id);
+            {
+                QuestAcceptManager
+                    .Instance
+                    .CompleteAcceptedTalkQuest(
+                        talkQuest.id
+                    );
+            }
         }
 
-        if (option.openRandomSetFromCategory && !string.IsNullOrEmpty(option.targetCategoryId))
+        if (option.openRandomSetFromCategory &&
+            !string.IsNullOrEmpty(
+                option.targetCategoryId
+            ))
         {
-            currentCategoryId = option.targetCategoryId;
+            currentCategoryId =
+                option.targetCategoryId;
 
-            string categoryEntryNodeId = GetEntryNodeId(currentDialogueData, currentCategoryId);
+            string categoryEntryNodeId =
+                GetEntryNodeId(
+                    currentDialogueData,
+                    currentCategoryId
+                );
 
-            if (string.IsNullOrEmpty(categoryEntryNodeId))
+            if (string.IsNullOrEmpty(
+                    categoryEntryNodeId
+                ))
             {
-                Debug.LogWarning($"[NPCDialogueUIManager] categoryId={currentCategoryId} 의 시작 노드를 찾을 수 없습니다.");
+                Debug.LogWarning(
+                    $"[NPCDialogueUIManager] " +
+                    $"categoryId=" +
+                    $"{currentCategoryId}의 " +
+                    $"시작 노드를 찾을 수 없습니다."
+                );
+
                 CloseDialogue();
                 return;
             }
@@ -615,45 +898,55 @@ public class NPCDialogueUIManager : MonoBehaviour
         if (currentState != DialogueState.Line)
             return;
 
+        if (isPortraitOpeningAnimation)
+            return;
+
         if (isTyping)
         {
             CompleteCurrentTyping();
             return;
         }
 
-        //튜토리얼
         if (isTutorialDialogueMode)
         {
             ShowNextTutorialLine();
             return;
         }
 
-
         ShowNextLine();
     }
 
-    //튜토리얼
     private void CloseTutorialDialogue()
     {
+        StopPortraitOpenAnimation();
+
+        StopTypingImmediately();
+        StopNextButtonBlink();
+
         if (dialoguePanel != null)
             dialoguePanel.SetActive(false);
 
         tutorialLines.Clear();
-
         isTutorialDialogueMode = false;
 
-        System.Action callback = tutorialDialogueFinishedCallback;
+        System.Action callback =
+            tutorialDialogueFinishedCallback;
+
         tutorialDialogueFinishedCallback = null;
 
-        callback?.Invoke();
         waitTypingDelayForNextLine = false;
+        currentState = DialogueState.None;
+
+        callback?.Invoke();
     }
 
     private void ShowNextLine()
     {
         if (pendingLines.Count > 0)
         {
-            string line = pendingLines.Dequeue();
+            string line =
+                pendingLines.Dequeue();
+
             StartTyping(line);
             return;
         }
@@ -671,41 +964,81 @@ public class NPCDialogueUIManager : MonoBehaviour
         if (dialogueText == null)
             return;
 
-        dialogueText.text = currentFullLine;
+        dialogueText.text =
+            currentFullLine;
+
         dialogueText.maxVisibleCharacters = 0;
 
         if (hideNextButtonWhileTyping)
+        {
             SetNextButton(false, "다음");
+        }
         else
         {
             SetNextButton(true, "다음");
+
             if (nextButton != null)
                 nextButton.interactable = false;
         }
 
-        float startDelay = waitTypingDelayForNextLine ? firstLineTypingStartDelay : 0f;
+        float startDelay =
+            waitTypingDelayForNextLine
+                ? firstLineTypingStartDelay
+                : 0f;
+
         waitTypingDelayForNextLine = false;
 
-        typingCoroutine = StartCoroutine(TypeLineCoroutine(startDelay));
+        typingCoroutine = StartCoroutine(
+            TypeLineCoroutine(startDelay)
+        );
     }
 
-    private IEnumerator TypeLineCoroutine(float startDelay)
+    private IEnumerator TypeLineCoroutine(
+        float startDelay
+    )
     {
         isTyping = true;
 
         if (startDelay > 0f)
-            yield return new WaitForSeconds(startDelay);
-
-        dialogueText.ForceMeshUpdate();
-        int totalVisibleCount = dialogueText.textInfo.characterCount;
-
-        for (int i = 0; i <= totalVisibleCount; i++)
         {
-            dialogueText.maxVisibleCharacters = i;
-            yield return new WaitForSeconds(typingSpeed);
+            float delayElapsed = 0f;
+
+            while (delayElapsed < startDelay)
+            {
+                delayElapsed +=
+                    Time.unscaledDeltaTime;
+
+                yield return null;
+            }
         }
 
-        dialogueText.maxVisibleCharacters = totalVisibleCount;
+        dialogueText.ForceMeshUpdate();
+
+        int totalVisibleCount =
+            dialogueText
+                .textInfo
+                .characterCount;
+
+        for (int i = 0;
+             i <= totalVisibleCount;
+             i++)
+        {
+            dialogueText.maxVisibleCharacters = i;
+
+            float characterDelay = 0f;
+
+            while (characterDelay < typingSpeed)
+            {
+                characterDelay +=
+                    Time.unscaledDeltaTime;
+
+                yield return null;
+            }
+        }
+
+        dialogueText.maxVisibleCharacters =
+            totalVisibleCount;
+
         isTyping = false;
         typingCoroutine = null;
 
@@ -714,7 +1047,8 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     private void CompleteCurrentTyping()
     {
-        if (dialogueText == null) return;
+        if (dialogueText == null)
+            return;
 
         if (typingCoroutine != null)
         {
@@ -722,9 +1056,16 @@ public class NPCDialogueUIManager : MonoBehaviour
             typingCoroutine = null;
         }
 
-        dialogueText.text = currentFullLine;
+        dialogueText.text =
+            currentFullLine;
+
         dialogueText.ForceMeshUpdate();
-        dialogueText.maxVisibleCharacters = dialogueText.textInfo.characterCount;
+
+        dialogueText.maxVisibleCharacters =
+            dialogueText
+                .textInfo
+                .characterCount;
+
         isTyping = false;
 
         ActivateAndBlinkNextButton();
@@ -747,32 +1088,45 @@ public class NPCDialogueUIManager : MonoBehaviour
         if (nextButton == null)
             return;
 
-        nextButtonBlinkCoroutine = StartCoroutine(BlinkNextButtonCoroutine());
+        nextButtonBlinkCoroutine =
+            StartCoroutine(
+                BlinkNextButtonCoroutine()
+            );
     }
 
     private void StopNextButtonBlink()
     {
         if (nextButtonBlinkCoroutine != null)
         {
-            StopCoroutine(nextButtonBlinkCoroutine);
+            StopCoroutine(
+                nextButtonBlinkCoroutine
+            );
+
             nextButtonBlinkCoroutine = null;
         }
 
-        if (nextButton != null)
+        if (nextButton == null)
+            return;
+
+        nextButton.gameObject.SetActive(true);
+
+        RectTransform rectTransform =
+            nextButton.GetComponent<RectTransform>();
+
+        if (rectTransform != null)
         {
-            nextButton.gameObject.SetActive(true);
+            rectTransform.anchoredPosition =
+                defaultNextButtonPosition;
+        }
 
-            RectTransform rt = nextButton.GetComponent<RectTransform>();
-            if (rt != null)
-                rt.anchoredPosition = defaultNextButtonPosition;
+        Image image =
+            nextButton.GetComponent<Image>();
 
-            Image img = nextButton.GetComponent<Image>();
-            if (img != null)
-            {
-                Color c = img.color;
-                c.a = 1f;
-                img.color = c;
-            }
+        if (image != null)
+        {
+            Color color = image.color;
+            color.a = 1f;
+            image.color = color;
         }
     }
 
@@ -781,53 +1135,102 @@ public class NPCDialogueUIManager : MonoBehaviour
         if (nextButton == null)
             yield break;
 
-        RectTransform rt = nextButton.GetComponent<RectTransform>();
+        RectTransform rectTransform =
+            nextButton.GetComponent<RectTransform>();
 
-        if (rt == null)
+        if (rectTransform == null)
             yield break;
 
-        Vector2 upPos = defaultNextButtonPosition;
-        Vector2 downPos = defaultNextButtonPosition + new Vector2(0f, -nextButtonMoveDistance);
+        Vector2 upPosition =
+            defaultNextButtonPosition;
+
+        Vector2 downPosition =
+            defaultNextButtonPosition +
+            new Vector2(
+                0f,
+                -nextButtonMoveDistance
+            );
 
         while (true)
         {
-            float t = 0f;
+            float elapsed = 0f;
 
-            // 아래로 살짝 내려가기
-            while (t < nextButtonMoveDuration)
+            while (elapsed <
+                   nextButtonMoveDuration)
             {
-                t += Time.unscaledDeltaTime;
-                float p = Mathf.Clamp01(t / nextButtonMoveDuration);
-                float eased = EaseInOutSine(p);
+                elapsed +=
+                    Time.unscaledDeltaTime;
 
-                rt.anchoredPosition = Vector2.Lerp(upPos, downPos, eased);
+                float progress =
+                    Mathf.Clamp01(
+                        elapsed /
+                        nextButtonMoveDuration
+                    );
+
+                float eased =
+                    EaseInOutSine(progress);
+
+                rectTransform.anchoredPosition =
+                    Vector2.Lerp(
+                        upPosition,
+                        downPosition,
+                        eased
+                    );
 
                 yield return null;
             }
 
-            rt.anchoredPosition = downPos;
+            rectTransform.anchoredPosition =
+                downPosition;
 
-            t = 0f;
+            elapsed = 0f;
 
-            // 다시 원래 위치로 올라오기
-            while (t < nextButtonMoveDuration)
+            while (elapsed <
+                   nextButtonMoveDuration)
             {
-                t += Time.unscaledDeltaTime;
-                float p = Mathf.Clamp01(t / nextButtonMoveDuration);
-                float eased = EaseInOutSine(p);
+                elapsed +=
+                    Time.unscaledDeltaTime;
 
-                rt.anchoredPosition = Vector2.Lerp(downPos, upPos, eased);
+                float progress =
+                    Mathf.Clamp01(
+                        elapsed /
+                        nextButtonMoveDuration
+                    );
+
+                float eased =
+                    EaseInOutSine(progress);
+
+                rectTransform.anchoredPosition =
+                    Vector2.Lerp(
+                        downPosition,
+                        upPosition,
+                        eased
+                    );
 
                 yield return null;
             }
 
-            rt.anchoredPosition = upPos;
+            rectTransform.anchoredPosition =
+                upPosition;
         }
     }
 
-    private float EaseInOutSine(float x)
+    private float EaseOutCubic(float value)
     {
-        return -(Mathf.Cos(Mathf.PI * x) - 1f) / 2f;
+        return 1f -
+               Mathf.Pow(
+                   1f - value,
+                   3f
+               );
+    }
+
+    private float EaseInOutSine(float value)
+    {
+        return -(
+            Mathf.Cos(
+                Mathf.PI * value
+            ) - 1f
+        ) / 2f;
     }
 
     private void StopTypingImmediately()
@@ -841,28 +1244,54 @@ public class NPCDialogueUIManager : MonoBehaviour
         isTyping = false;
 
         if (dialogueText != null)
-            dialogueText.maxVisibleCharacters = int.MaxValue;
+        {
+            dialogueText.maxVisibleCharacters =
+                int.MaxValue;
+        }
     }
 
-    private void CreateOption(string text, UnityEngine.Events.UnityAction callback)
+    private void CreateOption(
+        string text,
+        UnityEngine.Events.UnityAction callback
+    )
     {
-        if (optionButtonPrefab == null || optionParent == null) return;
-
-        GameObject obj = Instantiate(optionButtonPrefab, optionParent, false);
-        spawnedOptions.Add(obj);
-
-        RectTransform rt = obj.GetComponent<RectTransform>();
-        if (rt != null)
+        if (optionButtonPrefab == null ||
+            optionParent == null)
         {
-            rt.localScale = Vector3.one;
-            rt.localRotation = Quaternion.identity;
+            return;
         }
 
-        Button button = obj.GetComponent<Button>();
-        TMP_Text textComp = obj.GetComponentInChildren<TMP_Text>();
+        GameObject optionObject =
+            Instantiate(
+                optionButtonPrefab,
+                optionParent,
+                false
+            );
 
-        if (textComp != null)
-            textComp.text = text;
+        spawnedOptions.Add(optionObject);
+
+        RectTransform rectTransform =
+            optionObject
+                .GetComponent<RectTransform>();
+
+        if (rectTransform != null)
+        {
+            rectTransform.localScale =
+                Vector3.one;
+
+            rectTransform.localRotation =
+                Quaternion.identity;
+        }
+
+        Button button =
+            optionObject.GetComponent<Button>();
+
+        TMP_Text textComponent =
+            optionObject
+                .GetComponentInChildren<TMP_Text>();
+
+        if (textComponent != null)
+            textComponent.text = text;
 
         if (button != null)
         {
@@ -870,12 +1299,16 @@ public class NPCDialogueUIManager : MonoBehaviour
             button.onClick.AddListener(callback);
         }
 
-        LayoutRebuilder.ForceRebuildLayoutImmediate(optionParent as RectTransform);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(
+            optionParent as RectTransform
+        );
     }
 
     private void ClearOptions()
     {
-        for (int i = spawnedOptions.Count - 1; i >= 0; i--)
+        for (int i = spawnedOptions.Count - 1;
+             i >= 0;
+             i--)
         {
             if (spawnedOptions[i] != null)
                 Destroy(spawnedOptions[i]);
@@ -884,38 +1317,41 @@ public class NPCDialogueUIManager : MonoBehaviour
         spawnedOptions.Clear();
     }
 
-    private void SetNextButton(bool visible, string text)
+    private void SetNextButton(
+        bool visible,
+        string text
+    )
     {
         if (nextButton != null)
-            nextButton.gameObject.SetActive(visible);
+        {
+            nextButton.gameObject.SetActive(
+                visible
+            );
+        }
 
         if (nextButtonText != null)
             nextButtonText.text = text;
     }
 
-
     public void CloseDialogue()
     {
-        if (openAnimationCoroutine != null)
+        if (BGMPlayer.Instance != null)
         {
-            StopCoroutine(openAnimationCoroutine);
-            openAnimationCoroutine = null;
+            BGMPlayer.Instance
+                .StopDialogueBGM();
         }
 
-        isOpeningAnimation = false;
-
-        if (dialoguePanelRect != null)
-            dialoguePanelRect.anchoredPosition = defaultPanelPosition;
-
-        if (portraitImage != null)
-            portraitImage.rectTransform.anchoredPosition = defaultPortraitPosition;
+        StopPortraitOpenAnimation();
 
         ClearOptions();
         pendingLines.Clear();
         nodeDict.Clear();
+
         nextNodeAfterLines = null;
+
         StopTypingImmediately();
         StopNextButtonBlink();
+
         currentFullLine = "";
         currentCategoryId = null;
 
@@ -929,6 +1365,7 @@ public class NPCDialogueUIManager : MonoBehaviour
         currentDialogueData = null;
         currentNode = null;
         currentState = DialogueState.None;
+
         waitTypingDelayForNextLine = false;
     }
 }

@@ -688,6 +688,8 @@ GameObject:
   m_Component:
   - component: {fileID: 7925225530620485894}
   - component: {fileID: 544208904355119364}
+  - component: {fileID: 3230897036081989645}
+  - component: {fileID: 7649955209653421215}
   m_Layer: 5
   m_Name: DoGam
   m_TagString: Untagged
@@ -743,6 +745,38 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tooltipObjects:
   - {fileID: 0}
+--- !u!114 &3230897036081989645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662765454311978276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebd6ca98968b04e4bb5a0fedf912b474, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 7925225530620485894}
+  canvasGroup: {fileID: 7649955209653421215}
+  startScale: 0.85
+  duration: 0.18
+  overshootScale: 1.04
+  fadeIn: 1
+  playOnEnable: 1
+  useUnscaledTime: 1
+--- !u!225 &7649955209653421215
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662765454311978276}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &977710197154540867
 GameObject:
   m_ObjectHideFlags: 0
