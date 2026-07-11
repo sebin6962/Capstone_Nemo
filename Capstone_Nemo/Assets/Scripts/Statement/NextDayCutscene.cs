@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class NextDayCutscene : MonoBehaviour
 {
@@ -30,6 +31,22 @@ public class NextDayCutscene : MonoBehaviour
 
     [SerializeField] private float textFadeInSeconds = 0.4f;
     [SerializeField] private float textFadeOutSeconds = 0.3f;
+
+    [Header("Subtitle Text Wave / Saved Effect")]
+    [SerializeField] private TMP_Text subtitleText; // subtitleTextObject에 붙은 TextMeshProUGUI
+    [SerializeField] private float textChangeDelaySeconds = 1.5f; // n초 뒤 변경
+    [SerializeField] private string savedMessage = "저장되었습니다";
+    [SerializeField] private Color savedMessageColor = new Color(0.35f, 1f, 0.35f, 1f);
+
+    [SerializeField] private float textChangeFadeSeconds = 0.25f;
+
+    [SerializeField] private float waveAmplitude = 6f;  // 위아래 흔들림 크기
+    [SerializeField] private float waveSpeed = 6f;      // 웨이브 속도
+    [SerializeField] private float waveSpacing = 0.45f; // 글자 간 웨이브 간격
+
+    private Coroutine subtitleWaveCoroutine;
+    private string defaultSubtitleText;
+    private Color defaultSubtitleColor = Color.white;
 
     private CanvasGroup gradientGroup;
     private CanvasGroup subtitleTextGroup;
@@ -89,6 +106,19 @@ public class NextDayCutscene : MonoBehaviour
 
                 subtitleTextGroup.alpha = 0f;
                 subtitleTextObject.SetActive(false);
+
+                if (subtitleText == null)
+                    subtitleText = subtitleTextObject.GetComponent<TMP_Text>();
+
+                if (subtitleText != null)
+                {
+                    defaultSubtitleText = subtitleText.text;
+                    defaultSubtitleColor = subtitleText.color;
+                }
+                else
+                {
+                    Debug.LogWarning("[NextDayCutscene] subtitleTextObject에 TMP_Text(TextMeshProUGUI)가 없습니다.");
+                }
             }
         }
     }
@@ -140,8 +170,19 @@ public class NextDayCutscene : MonoBehaviour
                 subtitleTextObject.SetActive(true);
                 subtitleTextGroup.alpha = 0f;
 
-                // 서서히 0 → 1로
+                ResetSubtitleTextToDefault();
+
+                // 페이드가 시작되는 순간부터 바로 웨이브 시작
+                StartSubtitleWave();
+
+                // 서서히 0 → 1로 나타나는 동안에도 글자가 계속 움직임
                 yield return FadeCanvasGroup(subtitleTextGroup, 0f, 1f, textFadeInSeconds);
+
+                // n초 뒤 "저장되었습니다"로 자연스럽게 변경
+                if (textChangeDelaySeconds > 0f)
+                    yield return new WaitForSecondsRealtime(textChangeDelaySeconds);
+
+                yield return ChangeSubtitleToSavedMessage();
             }
         }
 
@@ -149,6 +190,8 @@ public class NextDayCutscene : MonoBehaviour
 
         if (subtitleTextObject != null && subtitleTextGroup != null)
         {
+            StopSubtitleWave();
+
             yield return FadeCanvasGroup(subtitleTextGroup, subtitleTextGroup.alpha, 0f, textFadeOutSeconds);
             subtitleTextObject.SetActive(false);
         }
@@ -195,6 +238,114 @@ public class NextDayCutscene : MonoBehaviour
         }
 
         cg.alpha = to;
+    }
+
+    private void ResetSubtitleTextToDefault()
+    {
+        StopSubtitleWave();
+
+        if (subtitleText == null)
+            return;
+
+        subtitleText.text = defaultSubtitleText;
+        subtitleText.color = defaultSubtitleColor;
+        subtitleText.ForceMeshUpdate();
+    }
+
+    private void StartSubtitleWave()
+    {
+        StopSubtitleWave();
+
+        if (subtitleText == null)
+            return;
+
+        subtitleWaveCoroutine = StartCoroutine(SubtitleWaveCoroutine());
+    }
+
+    private void StopSubtitleWave()
+    {
+        if (subtitleWaveCoroutine != null)
+        {
+            StopCoroutine(subtitleWaveCoroutine);
+            subtitleWaveCoroutine = null;
+        }
+
+        if (subtitleText != null)
+        {
+            subtitleText.ForceMeshUpdate();
+            subtitleText.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
+        }
+    }
+
+    private IEnumerator SubtitleWaveCoroutine()
+    {
+        if (subtitleText == null)
+            yield break;
+
+        while (true)
+        {
+            subtitleText.ForceMeshUpdate();
+
+            TMP_TextInfo textInfo = subtitleText.textInfo;
+
+            for (int i = 0; i < textInfo.characterCount; i++)
+            {
+                TMP_CharacterInfo charInfo = textInfo.characterInfo[i];
+
+                if (!charInfo.isVisible)
+                    continue;
+
+                int materialIndex = charInfo.materialReferenceIndex;
+                int vertexIndex = charInfo.vertexIndex;
+
+                Vector3[] vertices = textInfo.meshInfo[materialIndex].vertices;
+
+                float wave = Mathf.Sin(Time.unscaledTime * waveSpeed + i * waveSpacing) * waveAmplitude;
+                Vector3 offset = new Vector3(0f, wave, 0f);
+
+                vertices[vertexIndex + 0] += offset;
+                vertices[vertexIndex + 1] += offset;
+                vertices[vertexIndex + 2] += offset;
+                vertices[vertexIndex + 3] += offset;
+            }
+
+            for (int i = 0; i < textInfo.meshInfo.Length; i++)
+            {
+                textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
+                subtitleText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
+            }
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator ChangeSubtitleToSavedMessage()
+    {
+        if (subtitleText == null || subtitleTextGroup == null)
+            yield break;
+
+        StopSubtitleWave();
+
+        // 기존 문구 살짝 사라짐
+        yield return FadeCanvasGroup(
+            subtitleTextGroup,
+            subtitleTextGroup.alpha,
+            0f,
+            textChangeFadeSeconds
+        );
+
+        // 문구와 색상 변경
+        subtitleText.text = savedMessage;
+        subtitleText.color = savedMessageColor;
+        subtitleText.ForceMeshUpdate();
+
+        // 새 문구 자연스럽게 등장
+        yield return FadeCanvasGroup(
+            subtitleTextGroup,
+            0f,
+            1f,
+            textChangeFadeSeconds
+        );
     }
 
     private Sprite MakeVerticalGradientSprite(int width, int height, Color top, Color bottom)

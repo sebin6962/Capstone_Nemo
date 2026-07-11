@@ -15,6 +15,19 @@ public class NPCDialogueUIManager : MonoBehaviour
         Choice
     }
 
+    [Header("Dialogue Open Animation")]
+    [SerializeField] private RectTransform dialoguePanelRect;
+    [SerializeField] private float panelStartOffsetX = -900f;
+    [SerializeField] private float panelSlideDuration = 0.28f;
+
+    [SerializeField] private float portraitStartOffsetY = -180f;
+    [SerializeField] private float portraitPopDuration = 0.25f;
+    [SerializeField] private float portraitOvershootY = 18f;
+
+    private Vector2 defaultPanelPosition;
+    private Coroutine openAnimationCoroutine;
+    private bool isOpeningAnimation = false;
+
     [Header("UI")]
     [SerializeField] private GameObject dialoguePanel;
     [SerializeField] private TMP_Text npcNameText;
@@ -31,11 +44,12 @@ public class NPCDialogueUIManager : MonoBehaviour
     [SerializeField] private float firstLineTypingStartDelay = 0.4f;
     private bool waitTypingDelayForNextLine = false;
 
-    [Header("Next Button Blink")]
-    [SerializeField] private float nextButtonBlinkInterval = 0.45f;
+    [Header("Next Button Move Effect")]
+    [SerializeField] private float nextButtonMoveDistance = 8f;
+    [SerializeField] private float nextButtonMoveDuration = 0.35f;
     [SerializeField] private bool hideNextButtonWhileTyping = false;
-    [SerializeField] private float blinkMinAlpha = 0.25f;
-    [SerializeField] private float blinkMaxAlpha = 1f;
+
+    private Vector2 defaultNextButtonPosition;
 
     [SerializeField] private List<PortraitDisplaySetting> portraitSettings;
     private Vector3 defaultPortraitScale;
@@ -99,6 +113,10 @@ public class NPCDialogueUIManager : MonoBehaviour
         {
             nextButton.onClick.RemoveAllListeners();
             nextButton.onClick.AddListener(OnClickNextButton);
+
+            RectTransform nextButtonRect = nextButton.GetComponent<RectTransform>();
+            if (nextButtonRect != null)
+                defaultNextButtonPosition = nextButtonRect.anchoredPosition;
         }
 
         if (portraitImage != null)
@@ -106,11 +124,23 @@ public class NPCDialogueUIManager : MonoBehaviour
             defaultPortraitScale = portraitImage.transform.localScale;
             defaultPortraitPosition = portraitImage.rectTransform.anchoredPosition;
         }
+
+        if (dialoguePanel != null)
+        {
+            if (dialoguePanelRect == null)
+                dialoguePanelRect = dialoguePanel.GetComponent<RectTransform>();
+
+            if (dialoguePanelRect != null)
+                defaultPanelPosition = dialoguePanelRect.anchoredPosition;
+        }
     }
 
     private void Update()
     {
         if (dialoguePanel == null || !dialoguePanel.activeSelf)
+            return;
+
+        if (isOpeningAnimation)
             return;
 
         // 선택지 상태에서는 E로 넘기지 않음
@@ -148,6 +178,111 @@ public class NPCDialogueUIManager : MonoBehaviour
                 return;
             }
         }
+    }
+
+    private void StartOpenAnimation(System.Action onFinished)
+    {
+        if (openAnimationCoroutine != null)
+            StopCoroutine(openAnimationCoroutine);
+
+        openAnimationCoroutine = StartCoroutine(OpenAnimationCoroutine(onFinished));
+    }
+
+    private IEnumerator OpenAnimationCoroutine(System.Action onFinished)
+    {
+        isOpeningAnimation = true;
+
+        StopNextButtonBlink();
+        SetNextButton(false, "다음");
+
+        if (dialogueText != null)
+        {
+            dialogueText.text = "";
+            dialogueText.maxVisibleCharacters = 0;
+        }
+
+        if (dialoguePanel != null)
+            dialoguePanel.SetActive(true);
+
+        if (dialoguePanelRect != null)
+            dialoguePanelRect.anchoredPosition = defaultPanelPosition + new Vector2(panelStartOffsetX, 0f);
+
+        bool hasPortrait = portraitImage != null && portraitImage.sprite != null;
+
+        if (hasPortrait)
+        {
+            portraitImage.gameObject.SetActive(false);
+            portraitImage.rectTransform.anchoredPosition =
+                defaultPortraitPosition + new Vector2(0f, portraitStartOffsetY);
+        }
+
+        // 1) 대화창 패널: 왼쪽에서 들어오기
+        float t = 0f;
+
+        while (t < panelSlideDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            float p = Mathf.Clamp01(t / panelSlideDuration);
+            float eased = EaseOutCubic(p);
+
+            if (dialoguePanelRect != null)
+            {
+                dialoguePanelRect.anchoredPosition = Vector2.Lerp(
+                    defaultPanelPosition + new Vector2(panelStartOffsetX, 0f),
+                    defaultPanelPosition,
+                    eased
+                );
+            }
+
+            yield return null;
+        }
+
+        if (dialoguePanelRect != null)
+            dialoguePanelRect.anchoredPosition = defaultPanelPosition;
+
+        // 2) 초상화: 대화창 밑에서 뿅 올라오기
+        if (hasPortrait)
+        {
+            portraitImage.gameObject.SetActive(true);
+
+            Vector2 hiddenPos = defaultPortraitPosition + new Vector2(0f, portraitStartOffsetY);
+            Vector2 overshootPos = defaultPortraitPosition + new Vector2(0f, portraitOvershootY);
+
+            t = 0f;
+
+            while (t < portraitPopDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / portraitPopDuration);
+
+                if (p < 0.72f)
+                {
+                    float subP = p / 0.72f;
+                    portraitImage.rectTransform.anchoredPosition =
+                        Vector2.Lerp(hiddenPos, overshootPos, EaseOutCubic(subP));
+                }
+                else
+                {
+                    float subP = (p - 0.72f) / 0.28f;
+                    portraitImage.rectTransform.anchoredPosition =
+                        Vector2.Lerp(overshootPos, defaultPortraitPosition, EaseOutCubic(subP));
+                }
+
+                yield return null;
+            }
+
+            portraitImage.rectTransform.anchoredPosition = defaultPortraitPosition;
+        }
+
+        isOpeningAnimation = false;
+        openAnimationCoroutine = null;
+
+        onFinished?.Invoke();
+    }
+
+    private float EaseOutCubic(float x)
+    {
+        return 1f - Mathf.Pow(1f - x, 3f);
     }
 
     public bool IsDialogueOpen
@@ -201,8 +336,8 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         BuildNodeDictionary(currentDialogueData);
 
-        if (dialoguePanel != null)
-            dialoguePanel.SetActive(true);
+        //if (dialoguePanel != null)
+            //dialoguePanel.SetActive(true);
 
         waitTypingDelayForNextLine = true;
 
@@ -219,7 +354,11 @@ public class NPCDialogueUIManager : MonoBehaviour
             return;
         }
 
-        MoveToNode(entryNodeId);
+        //MoveToNode(entryNodeId);
+        StartOpenAnimation(() =>
+        {
+            MoveToNode(entryNodeId);
+        });
     }
 
     //튜토리얼용
@@ -623,11 +762,15 @@ public class NPCDialogueUIManager : MonoBehaviour
         {
             nextButton.gameObject.SetActive(true);
 
+            RectTransform rt = nextButton.GetComponent<RectTransform>();
+            if (rt != null)
+                rt.anchoredPosition = defaultNextButtonPosition;
+
             Image img = nextButton.GetComponent<Image>();
             if (img != null)
             {
                 Color c = img.color;
-                c.a = blinkMaxAlpha;
+                c.a = 1f;
                 img.color = c;
             }
         }
@@ -635,24 +778,56 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     private IEnumerator BlinkNextButtonCoroutine()
     {
-        Image img = nextButton != null ? nextButton.GetComponent<Image>() : null;
-
-        if (img == null)
+        if (nextButton == null)
             yield break;
+
+        RectTransform rt = nextButton.GetComponent<RectTransform>();
+
+        if (rt == null)
+            yield break;
+
+        Vector2 upPos = defaultNextButtonPosition;
+        Vector2 downPos = defaultNextButtonPosition + new Vector2(0f, -nextButtonMoveDistance);
 
         while (true)
         {
-            Color c = img.color;
-            c.a = blinkMinAlpha;
-            img.color = c;
+            float t = 0f;
 
-            yield return new WaitForSeconds(nextButtonBlinkInterval);
+            // 아래로 살짝 내려가기
+            while (t < nextButtonMoveDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / nextButtonMoveDuration);
+                float eased = EaseInOutSine(p);
 
-            c.a = blinkMaxAlpha;
-            img.color = c;
+                rt.anchoredPosition = Vector2.Lerp(upPos, downPos, eased);
 
-            yield return new WaitForSeconds(nextButtonBlinkInterval);
+                yield return null;
+            }
+
+            rt.anchoredPosition = downPos;
+
+            t = 0f;
+
+            // 다시 원래 위치로 올라오기
+            while (t < nextButtonMoveDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / nextButtonMoveDuration);
+                float eased = EaseInOutSine(p);
+
+                rt.anchoredPosition = Vector2.Lerp(downPos, upPos, eased);
+
+                yield return null;
+            }
+
+            rt.anchoredPosition = upPos;
         }
+    }
+
+    private float EaseInOutSine(float x)
+    {
+        return -(Mathf.Cos(Mathf.PI * x) - 1f) / 2f;
     }
 
     private void StopTypingImmediately()
@@ -721,6 +896,20 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     public void CloseDialogue()
     {
+        if (openAnimationCoroutine != null)
+        {
+            StopCoroutine(openAnimationCoroutine);
+            openAnimationCoroutine = null;
+        }
+
+        isOpeningAnimation = false;
+
+        if (dialoguePanelRect != null)
+            dialoguePanelRect.anchoredPosition = defaultPanelPosition;
+
+        if (portraitImage != null)
+            portraitImage.rectTransform.anchoredPosition = defaultPortraitPosition;
+
         ClearOptions();
         pendingLines.Clear();
         nodeDict.Clear();

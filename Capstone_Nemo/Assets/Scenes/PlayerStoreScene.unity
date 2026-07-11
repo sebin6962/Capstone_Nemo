@@ -1267,6 +1267,7 @@ GameObject:
   - component: {fileID: 22123426}
   - component: {fileID: 22123429}
   - component: {fileID: 22123428}
+  - component: {fileID: 22123430}
   m_Layer: 11
   m_Name: Cutting
   m_TagString: Cutting
@@ -1435,6 +1436,29 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &22123430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 22123424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 22123426}
+  targetRenderer: {fileID: 22123429}
+  idleSprite: {fileID: 21300000, guid: f1896e4d0e90ecc4bae5ab07c93bea52, type: 3}
+  craftingFrames:
+  - {fileID: -1495278703, guid: 241fb9555a866fe4e80411cb41230f20, type: 3}
+  - {fileID: 385786896, guid: 241fb9555a866fe4e80411cb41230f20, type: 3}
+  - {fileID: 1453995014, guid: 241fb9555a866fe4e80411cb41230f20, type: 3}
+  - {fileID: -646116531, guid: 241fb9555a866fe4e80411cb41230f20, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &24188735
 GameObject:
   m_ObjectHideFlags: 0
@@ -1633,6 +1657,7 @@ GameObject:
   - component: {fileID: 27338056}
   - component: {fileID: 27338058}
   - component: {fileID: 27338059}
+  - component: {fileID: 27338060}
   m_Layer: 10
   m_Name: Fryolator
   m_TagString: Untagged
@@ -1846,6 +1871,29 @@ MonoBehaviour:
   craftShaderMoveAmount: 0.04
   craftShaderMoveSpeed: 9
   craftShaderTopStart: 0.6
+--- !u!114 &27338060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 27338052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 27338059}
+  targetRenderer: {fileID: 27338054}
+  idleSprite: {fileID: 21300000, guid: 8383b3991a9453f4b9a3a78e843b2daa, type: 3}
+  craftingFrames:
+  - {fileID: 1999201160, guid: ed9090ac89ebcd340921a4bb6a7c0bd5, type: 3}
+  - {fileID: 2026758559, guid: ed9090ac89ebcd340921a4bb6a7c0bd5, type: 3}
+  - {fileID: 141784824, guid: ed9090ac89ebcd340921a4bb6a7c0bd5, type: 3}
+  - {fileID: -1892300815, guid: ed9090ac89ebcd340921a4bb6a7c0bd5, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &28908110
 GameObject:
   m_ObjectHideFlags: 0
@@ -4263,6 +4311,7 @@ GameObject:
   - component: {fileID: 108120271}
   - component: {fileID: 108120270}
   - component: {fileID: 108120272}
+  - component: {fileID: 108120274}
   m_Layer: 0
   m_Name: Sieve01
   m_TagString: Untagged
@@ -4430,6 +4479,29 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &108120274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 108120268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 108120270}
+  targetRenderer: {fileID: 108120273}
+  idleSprite: {fileID: 21300000, guid: 426d6973d6bc72647bf378b5cd5e6097, type: 3}
+  craftingFrames:
+  - {fileID: -1529013482, guid: 17cc1255351871f438cfe2988fc7c14b, type: 3}
+  - {fileID: 604859952, guid: 17cc1255351871f438cfe2988fc7c14b, type: 3}
+  - {fileID: -1117072915, guid: 17cc1255351871f438cfe2988fc7c14b, type: 3}
+  - {fileID: 760249594, guid: 17cc1255351871f438cfe2988fc7c14b, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!4 &108461629 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1857283707671798005, guid: 140ae209f5d86e845a5768782f2db399, type: 3}
@@ -4524,6 +4596,7 @@ GameObject:
   - component: {fileID: 122247044}
   - component: {fileID: 122247047}
   - component: {fileID: 122247046}
+  - component: {fileID: 122247048}
   m_Layer: 11
   m_Name: maker_steamer_opened
   m_TagString: Steamer
@@ -4709,6 +4782,29 @@ MonoBehaviour:
   openPotSprite: {fileID: 21300000, guid: 5ae988142dd94fa45aadc5ea0d9a6c39, type: 3}
   closedPotSprite: {fileID: 21300000, guid: c70bf2af28a53ec48b1e6680cc9f9e5b, type: 3}
   setOpenSpriteOnEnable: 1
+--- !u!114 &122247048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 122247040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 122247045}
+  targetRenderer: {fileID: 122247042}
+  idleSprite: {fileID: 21300000, guid: 5ae988142dd94fa45aadc5ea0d9a6c39, type: 3}
+  craftingFrames:
+  - {fileID: 352425915, guid: 7b90c6d5ac3db484495d0fc0acc70436, type: 3}
+  - {fileID: 655982634, guid: 7b90c6d5ac3db484495d0fc0acc70436, type: 3}
+  - {fileID: 242619960, guid: 7b90c6d5ac3db484495d0fc0acc70436, type: 3}
+  - {fileID: 165673480, guid: 7b90c6d5ac3db484495d0fc0acc70436, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &126094558
 GameObject:
   m_ObjectHideFlags: 0
@@ -7873,6 +7969,7 @@ GameObject:
   - component: {fileID: 222526897}
   - component: {fileID: 222526899}
   - component: {fileID: 222526898}
+  - component: {fileID: 222526900}
   m_Layer: 0
   m_Name: Sink
   m_TagString: Untagged
@@ -8060,6 +8157,25 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.21521258, y: 0.9889095}
   m_EdgeRadius: 0
+--- !u!114 &222526900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 222526894}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 0}
+  targetRenderer: {fileID: 222526895}
+  idleSprite: {fileID: 0}
+  craftingFrames: []
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &231565557
 GameObject:
   m_ObjectHideFlags: 0
@@ -10171,6 +10287,7 @@ GameObject:
   - component: {fileID: 287504216}
   - component: {fileID: 287504219}
   - component: {fileID: 287504218}
+  - component: {fileID: 287504220}
   m_Layer: 11
   m_Name: Grinder
   m_TagString: Grinder
@@ -10339,6 +10456,29 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &287504220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 287504214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 287504216}
+  targetRenderer: {fileID: 287504219}
+  idleSprite: {fileID: 21300000, guid: 350a0a7840eff8d489b3a1e690fbcc49, type: 3}
+  craftingFrames:
+  - {fileID: -244246730, guid: 24246f6b44200d44ab35ba53ae2c261d, type: 3}
+  - {fileID: -1936393921, guid: 24246f6b44200d44ab35ba53ae2c261d, type: 3}
+  - {fileID: -1812656668, guid: 24246f6b44200d44ab35ba53ae2c261d, type: 3}
+  - {fileID: -664433794, guid: 24246f6b44200d44ab35ba53ae2c261d, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &287646745
 GameObject:
   m_ObjectHideFlags: 0
@@ -18306,6 +18446,7 @@ GameObject:
   - component: {fileID: 383877122}
   - component: {fileID: 383877121}
   - component: {fileID: 383877123}
+  - component: {fileID: 383877124}
   m_Layer: 0
   m_Name: TeaMaker
   m_TagString: TeaMaker
@@ -18533,6 +18674,29 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.20509863, y: 1.7581434}
   m_EdgeRadius: 0
+--- !u!114 &383877124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 383877116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 383877122}
+  targetRenderer: {fileID: 383877118}
+  idleSprite: {fileID: 21300000, guid: d1eb34a3f610b8a43981facdd13af993, type: 3}
+  craftingFrames:
+  - {fileID: -1390117268, guid: cc8fc340c6b92214d94a8042eb09ea13, type: 3}
+  - {fileID: 135234565, guid: cc8fc340c6b92214d94a8042eb09ea13, type: 3}
+  - {fileID: 678399090, guid: cc8fc340c6b92214d94a8042eb09ea13, type: 3}
+  - {fileID: -1104078003, guid: cc8fc340c6b92214d94a8042eb09ea13, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &384903426
 GameObject:
   m_ObjectHideFlags: 0
@@ -20826,6 +20990,7 @@ GameObject:
   - component: {fileID: 476890998}
   - component: {fileID: 476891001}
   - component: {fileID: 476891000}
+  - component: {fileID: 476891002}
   m_Layer: 11
   m_Name: ShapeMaker
   m_TagString: ShapeMaker
@@ -20994,6 +21159,29 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &476891002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 476890996}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 476890998}
+  targetRenderer: {fileID: 476891001}
+  idleSprite: {fileID: 21300000, guid: 6cbe2e6871cb530468c925cfb67a5ee4, type: 3}
+  craftingFrames:
+  - {fileID: -1927169051, guid: 7f10863e03ccb4c4786735a8f78a2207, type: 3}
+  - {fileID: -1725948197, guid: 7f10863e03ccb4c4786735a8f78a2207, type: 3}
+  - {fileID: 1129731273, guid: 7f10863e03ccb4c4786735a8f78a2207, type: 3}
+  - {fileID: 370784887, guid: 7f10863e03ccb4c4786735a8f78a2207, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &480116684
 GameObject:
   m_ObjectHideFlags: 0
@@ -25103,6 +25291,7 @@ GameObject:
   - component: {fileID: 596998104}
   - component: {fileID: 596998101}
   - component: {fileID: 596998105}
+  - component: {fileID: 596998106}
   m_Layer: 0
   m_Name: Dryor
   m_TagString: Drying
@@ -25316,6 +25505,29 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.037108064, y: 1.1105931}
   m_EdgeRadius: 0
+--- !u!114 &596998106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596998098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 596998104}
+  targetRenderer: {fileID: 596998099}
+  idleSprite: {fileID: 21300000, guid: 9b936adff4e612b4fbb29d8f8bd8f8a8, type: 3}
+  craftingFrames:
+  - {fileID: 109148527, guid: fe8578ed5dd7bba428a73187808dc5d8, type: 3}
+  - {fileID: -1612914643, guid: fe8578ed5dd7bba428a73187808dc5d8, type: 3}
+  - {fileID: 1250789143, guid: fe8578ed5dd7bba428a73187808dc5d8, type: 3}
+  - {fileID: -1203508507, guid: fe8578ed5dd7bba428a73187808dc5d8, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1001 &598677072
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -34922,6 +35134,7 @@ GameObject:
   - component: {fileID: 858598181}
   - component: {fileID: 858598184}
   - component: {fileID: 858598183}
+  - component: {fileID: 858598185}
   m_Layer: 11
   m_Name: maker_steamer_closed
   m_TagString: Steamer
@@ -35106,6 +35319,29 @@ MonoBehaviour:
   openPotSprite: {fileID: 21300000, guid: 5ae988142dd94fa45aadc5ea0d9a6c39, type: 3}
   closedPotSprite: {fileID: 21300000, guid: c70bf2af28a53ec48b1e6680cc9f9e5b, type: 3}
   setOpenSpriteOnEnable: 1
+--- !u!114 &858598185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 858598177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 858598182}
+  targetRenderer: {fileID: 858598179}
+  idleSprite: {fileID: 21300000, guid: 5ae988142dd94fa45aadc5ea0d9a6c39, type: 3}
+  craftingFrames:
+  - {fileID: 352425915, guid: 7b90c6d5ac3db484495d0fc0acc70436, type: 3}
+  - {fileID: 655982634, guid: 7b90c6d5ac3db484495d0fc0acc70436, type: 3}
+  - {fileID: 242619960, guid: 7b90c6d5ac3db484495d0fc0acc70436, type: 3}
+  - {fileID: 165673480, guid: 7b90c6d5ac3db484495d0fc0acc70436, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &860612237
 GameObject:
   m_ObjectHideFlags: 0
@@ -49015,6 +49251,7 @@ GameObject:
   - component: {fileID: 1208407338}
   - component: {fileID: 1208407337}
   - component: {fileID: 1208407336}
+  - component: {fileID: 1208407339}
   m_Layer: 0
   m_Name: Sieve02
   m_TagString: Untagged
@@ -49170,6 +49407,29 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1208407339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1208407334}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 1208407336}
+  targetRenderer: {fileID: 1208407338}
+  idleSprite: {fileID: 21300000, guid: 426d6973d6bc72647bf378b5cd5e6097, type: 3}
+  craftingFrames:
+  - {fileID: -1529013482, guid: 17cc1255351871f438cfe2988fc7c14b, type: 3}
+  - {fileID: 604859952, guid: 17cc1255351871f438cfe2988fc7c14b, type: 3}
+  - {fileID: -1117072915, guid: 17cc1255351871f438cfe2988fc7c14b, type: 3}
+  - {fileID: 760249594, guid: 17cc1255351871f438cfe2988fc7c14b, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &1215283596
 GameObject:
   m_ObjectHideFlags: 0
@@ -49786,6 +50046,7 @@ GameObject:
   - component: {fileID: 1234717145}
   - component: {fileID: 1234717147}
   - component: {fileID: 1234717146}
+  - component: {fileID: 1234717148}
   m_Layer: 10
   m_Name: Trashcan
   m_TagString: Untagged
@@ -49976,6 +50237,27 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.07404423, y: 0.73283625}
   m_EdgeRadius: 0
+--- !u!114 &1234717148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1234717141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 0}
+  targetRenderer: {fileID: 1234717143}
+  idleSprite: {fileID: 21300000, guid: a865a506d6ecbbd48b79c9e00a11dc4b, type: 3}
+  craftingFrames:
+  - {fileID: -724825440, guid: a9be1caeea7b39a488baadbb467fe5e4, type: 3}
+  - {fileID: 1761949219, guid: a9be1caeea7b39a488baadbb467fe5e4, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &1245228294
 GameObject:
   m_ObjectHideFlags: 0
@@ -51423,6 +51705,7 @@ GameObject:
   - component: {fileID: 1292341642}
   - component: {fileID: 1292341644}
   - component: {fileID: 1292341645}
+  - component: {fileID: 1292341646}
   m_Layer: 11
   m_Name: MIxing01
   m_TagString: Mixing
@@ -51590,6 +51873,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28de2de6b03b13744aa44f75627a420e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1292341646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1292341640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 1292341642}
+  targetRenderer: {fileID: 1292341644}
+  idleSprite: {fileID: 21300000, guid: a1441dde07e78614e8f6b80e6953d9b0, type: 3}
+  craftingFrames:
+  - {fileID: 421618419, guid: 5be50cf61d88a5044bdeb2657a5835f6, type: 3}
+  - {fileID: 941592465, guid: 5be50cf61d88a5044bdeb2657a5835f6, type: 3}
+  - {fileID: -2057814301, guid: 5be50cf61d88a5044bdeb2657a5835f6, type: 3}
+  - {fileID: 1536666023, guid: 5be50cf61d88a5044bdeb2657a5835f6, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &1294428956
 GameObject:
   m_ObjectHideFlags: 0
@@ -62429,6 +62735,7 @@ GameObject:
   - component: {fileID: 1464317031}
   - component: {fileID: 1464317035}
   - component: {fileID: 1464317034}
+  - component: {fileID: 1464317036}
   m_Layer: 11
   m_Name: maker_siru_opened
   m_TagString: Siru
@@ -62613,6 +62920,29 @@ MonoBehaviour:
   openPotSprite: {fileID: 21300000, guid: ba650b2683bf40d409dbbec3682d3028, type: 3}
   closedPotSprite: {fileID: 21300000, guid: a3babba69916b2342b123a77cd555de2, type: 3}
   setOpenSpriteOnEnable: 1
+--- !u!114 &1464317036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1464317029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 1464317032}
+  targetRenderer: {fileID: 1464317033}
+  idleSprite: {fileID: 21300000, guid: ba650b2683bf40d409dbbec3682d3028, type: 3}
+  craftingFrames:
+  - {fileID: -1545239117, guid: 97805fe05d5df954d8a1c405446b87ce, type: 3}
+  - {fileID: -241454394, guid: 97805fe05d5df954d8a1c405446b87ce, type: 3}
+  - {fileID: 190742696, guid: 97805fe05d5df954d8a1c405446b87ce, type: 3}
+  - {fileID: 1706175963, guid: 97805fe05d5df954d8a1c405446b87ce, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &1468210257
 GameObject:
   m_ObjectHideFlags: 0
@@ -64533,6 +64863,7 @@ GameObject:
   - component: {fileID: 1552437043}
   - component: {fileID: 1552437040}
   - component: {fileID: 1552437042}
+  - component: {fileID: 1552437044}
   m_Layer: 11
   m_Name: maker_siru_closed
   m_TagString: Siru
@@ -64717,6 +65048,29 @@ MonoBehaviour:
   openPotSprite: {fileID: 21300000, guid: ba650b2683bf40d409dbbec3682d3028, type: 3}
   closedPotSprite: {fileID: 21300000, guid: a3babba69916b2342b123a77cd555de2, type: 3}
   setOpenSpriteOnEnable: 1
+--- !u!114 &1552437044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1552437036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 1552437040}
+  targetRenderer: {fileID: 1552437038}
+  idleSprite: {fileID: 21300000, guid: ba650b2683bf40d409dbbec3682d3028, type: 3}
+  craftingFrames:
+  - {fileID: -1545239117, guid: 97805fe05d5df954d8a1c405446b87ce, type: 3}
+  - {fileID: -241454394, guid: 97805fe05d5df954d8a1c405446b87ce, type: 3}
+  - {fileID: 190742696, guid: 97805fe05d5df954d8a1c405446b87ce, type: 3}
+  - {fileID: 1706175963, guid: 97805fe05d5df954d8a1c405446b87ce, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &1552639095
 GameObject:
   m_ObjectHideFlags: 0
@@ -67298,6 +67652,7 @@ GameObject:
   - component: {fileID: 1622656961}
   - component: {fileID: 1622656960}
   - component: {fileID: 1622656962}
+  - component: {fileID: 1622656963}
   m_Layer: 0
   m_Name: ChungMaker
   m_TagString: ChungMaker
@@ -67525,6 +67880,29 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.22082138, y: 1.4891541}
   m_EdgeRadius: 0
+--- !u!114 &1622656963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1622656955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 1622656961}
+  targetRenderer: {fileID: 1622656957}
+  idleSprite: {fileID: 21300000, guid: 3b0217896a7a82342a2f1a284696f422, type: 3}
+  craftingFrames:
+  - {fileID: -433802443, guid: 2f8fb316a4e1c7f4da5ca071ad6c150b, type: 3}
+  - {fileID: -556627163, guid: 2f8fb316a4e1c7f4da5ca071ad6c150b, type: 3}
+  - {fileID: 1043748312, guid: 2f8fb316a4e1c7f4da5ca071ad6c150b, type: 3}
+  - {fileID: 765400806, guid: 2f8fb316a4e1c7f4da5ca071ad6c150b, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!1 &1624406506
 GameObject:
   m_ObjectHideFlags: 0
@@ -79697,6 +80075,7 @@ GameObject:
   - component: {fileID: 1808628575}
   - component: {fileID: 1808628578}
   - component: {fileID: 1808628577}
+  - component: {fileID: 1808628579}
   m_Layer: 11
   m_Name: Deco
   m_TagString: Deco
@@ -79865,6 +80244,29 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1808628579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1808628573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a06c9ca115a14d931bc6ced924dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  makerInfo: {fileID: 1808628575}
+  targetRenderer: {fileID: 1808628578}
+  idleSprite: {fileID: 21300000, guid: 30d057b5a56f88147a4491d477526f40, type: 3}
+  craftingFrames:
+  - {fileID: 1411664633, guid: 7c18ee984bd07bc47b3768f1a6af5b82, type: 3}
+  - {fileID: 1524052937, guid: 7c18ee984bd07bc47b3768f1a6af5b82, type: 3}
+  - {fileID: -802325106, guid: 7c18ee984bd07bc47b3768f1a6af5b82, type: 3}
+  - {fileID: -1883982813, guid: 7c18ee984bd07bc47b3768f1a6af5b82, type: 3}
+  frameInterval: 0.15
+  resetToIdleOnEnd: 1
+  playImmediatelyIfAlreadyProducing: 1
 --- !u!114 &1808950117 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7633401059042207902, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
@@ -81344,9 +81746,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.16034836
+    y: 0.034513444
     width: 1
-    height: 0.6793033
+    height: 0.9309731
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60

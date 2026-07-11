@@ -57,8 +57,8 @@ public class MakerInfo : MonoBehaviour
 
     private void SetMakerCraftVisuals(bool active)
     {
-        SetCraftShaderEffect(active);
-
+        // 셰이더 방식은 사용하지 않고,
+        // 제작대별 스프라이트 애니메이션 이벤트만 호출
         if (active)
             CraftVisualStarted?.Invoke();
         else
