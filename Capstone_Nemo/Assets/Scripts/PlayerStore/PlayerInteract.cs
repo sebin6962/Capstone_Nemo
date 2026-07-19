@@ -41,9 +41,17 @@ public class PlayerInteract : MonoBehaviour
     "JeolpyeonMold"// 보호 아이템: 버려지지 않음
 };
 
+    [Header("플레이어 제작 모션")]
+    [SerializeField]
+    private PlayerCraftResolverMotion craftMotion;
+
+
     private void Awake()
     {
         Instance = this;
+
+        if (craftMotion == null)
+            craftMotion = GetComponent<PlayerCraftResolverMotion>();
     }
 
     private static readonly HashSet<string> NonIngredientTools = new HashSet<string>
@@ -528,7 +536,10 @@ public class PlayerInteract : MonoBehaviour
                     currentMaker.DeactivateSlotUI();
 
                     Sprite fail = Resources.Load<Sprite>("Sprites/Ingredients/FailRiceCake_finish");
-                    StartCoroutine(currentMaker.ShowProgressAndSpawnItem(fail));
+
+                    craftMotion?.Play(currentMaker);
+                    //StartCoroutine(currentMaker.ShowProgressAndSpawnItem(fail));
+                    currentMaker.StartCraft(fail, 3f);
 
                     currentMaker.inputItemNames.Clear();
                     currentMaker.inputItemSprites.Clear();
@@ -546,7 +557,10 @@ public class PlayerInteract : MonoBehaviour
                     currentMaker.DeactivateSlotUI();
 
                     Sprite fail = Resources.Load<Sprite>("Sprites/Ingredients/FailRiceCake_finish");
-                    StartCoroutine(currentMaker.ShowProgressAndSpawnItem(fail));
+
+                    craftMotion?.Play(currentMaker);
+                    //StartCoroutine(currentMaker.ShowProgressAndSpawnItem(fail));
+                    currentMaker.StartCraft(fail, 3f);
 
                     currentMaker.inputItemNames.Clear();
                     currentMaker.inputItemSprites.Clear();
@@ -572,7 +586,12 @@ public class PlayerInteract : MonoBehaviour
                 if (currentMaker.slotUIManager != null)
                     currentMaker.slotUIManager.ClearSlots();
 
-                float duration = 3f; // 기존에 쓰던 제작 시간
+                float duration = 3f;
+
+                // 플레이어 제작 모션 한 번 재생
+                craftMotion?.Play(currentMaker);
+
+                // 실제 제작 시작
                 currentMaker.StartCraft(resultSprite, duration);
 
                 /*//튜토리얼 진행 트리거 2

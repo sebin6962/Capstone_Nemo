@@ -5,12 +5,21 @@ using UnityEngine.UI;
 
 using System.Linq;
 
+public enum CraftMotionType
+{
+    Up,
+    Side
+}
+
 public class MakerInfo : MonoBehaviour
 {
     public string makerId;
     public GameObject currentResultObject; // 결과 오브젝트 추적용
     public List<string> inputItemNames = new List<string>(4);
     public List<Sprite> inputItemSprites = new List<Sprite>(4);
+
+    [Header("플레이어 제작 모션")]
+    public CraftMotionType craftMotionType = CraftMotionType.Up;
 
     [Header("슬롯 UI 자동생성 관련")]
     public GameObject slotUIManagerPrefab;      // MakerSlotUI 프리팹

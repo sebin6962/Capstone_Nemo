@@ -104,6 +104,25 @@ public class VillageSpawnDirector : MonoBehaviour
             var pos = t.position; pos.z = 0f;
             player.transform.position = pos;
 
+            // 씬 전환 후 플레이어가 위쪽을 바라보게 설정
+            PlayerManager playerManager = player.GetComponent<PlayerManager>();
+
+            if (playerManager != null)
+            {
+                string currentScene = SceneManager.GetActiveScene().name;
+
+                if (currentScene == "VillageScene")
+                {
+                    // 마을 씬에서는 앞모습
+                    playerManager.SetFacing(PlayerManager.InitialFacing.Down);
+                }
+                else
+                {
+                    // 나머지 모든 씬에서는 뒷모습
+                    playerManager.SetFacing(PlayerManager.InitialFacing.Up);
+                }
+            }
+
             var vcam = FindObjectOfType<CinemachineVirtualCamera>();
             if (vcam) vcam.PreviousStateIsValid = false;
 

@@ -14311,6 +14311,33 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 6806807927186775286, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
   m_PrefabInstance: {fileID: 2699303985458678243}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &600734911 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2561373350557429846, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+  m_PrefabInstance: {fileID: 2699303985458678243}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 600734908}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7b8860cdfb795148b421d05a99f6c23, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &600734916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 600734908}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0834c1915e30f884b948196e9af11cb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  npcId: 
+  npcName: 
+  patrolRoute: {fileID: 600734911}
+  useDirectInteractKey: 1
 --- !u!1 &617064026
 GameObject:
   m_ObjectHideFlags: 0
@@ -53769,7 +53796,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -121.00397, y: -41.000854}
+  m_AnchoredPosition: {x: -121.00397, y: -41.000862}
   m_SizeDelta: {x: 918, y: 516}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1705025750
@@ -71087,9 +71114,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.08206776
+    y: 0.33111858
     width: 1
-    height: 0.8358645
+    height: 0.33776283
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -73800,7 +73827,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6806807927186775286, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 600734916}
   m_SourcePrefab: {fileID: 100100000, guid: ee77c4233649b8b4fbab9ac0ef905aca, type: 3}
 --- !u!224 &2749344091203446964
 RectTransform:

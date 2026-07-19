@@ -48,29 +48,7 @@ public class PlayerManager : MonoBehaviour
 
     void Start()
     {
-        // 초기 바라보는 방향을 enum 기준으로 설정
-        switch (initialFacing)
-        {
-            case InitialFacing.Up:
-                lastMoveDir = Vector2.up;
-                break;
-            case InitialFacing.Down:
-                lastMoveDir = Vector2.down;
-                break;
-            case InitialFacing.Left:
-                lastMoveDir = Vector2.left;
-                break;
-            case InitialFacing.Right:
-                lastMoveDir = Vector2.right;
-                break;
-        }
-
-        if (animator != null)
-        {
-            animator.SetBool("IsWalking", false);
-            animator.SetFloat("MoveX", lastMoveDir.x);
-            animator.SetFloat("MoveY", lastMoveDir.y);
-        }
+        SetFacing(initialFacing);
     }
 
     void Update()
@@ -230,5 +208,60 @@ public class PlayerManager : MonoBehaviour
         // 걷는 소리 정지
         if (SFXManager.Instance != null)
             SFXManager.Instance.StopPlayerWalkLoop();
+    }
+
+    public void SetFacing(InitialFacing facing)
+    {
+        initialFacing = facing;
+        movement = Vector2.zero;
+
+        switch (facing)
+        {
+            case InitialFacing.Up:
+                lastMoveDir = Vector2.up;
+                break;
+
+            case InitialFacing.Down:
+                lastMoveDir = Vector2.down;
+                break;
+
+            case InitialFacing.Left:
+                lastMoveDir = Vector2.left;
+                break;
+
+            case InitialFacing.Right:
+                lastMoveDir = Vector2.right;
+                break;
+        }
+
+        if (animator == null)
+            return;
+
+        animator.SetBool("IsWalking", false);
+        animator.SetFloat("MoveX", lastMoveDir.x);
+        animator.SetFloat("MoveY", lastMoveDir.y);
+
+        // 파라미터 변경만으로 Idle 상태가 전환되지 않으므로 직접 재생
+        switch (facing)
+        {
+            case InitialFacing.Up:
+                animator.Play("Idle_Back", 0, 0f);
+                break;
+
+            case InitialFacing.Down:
+                animator.Play("Idle_Front", 0, 0f);
+                break;
+
+            case InitialFacing.Left:
+                animator.Play("Idle_Left", 0, 0f);
+                break;
+
+            case InitialFacing.Right:
+                animator.Play("Idle_Right", 0, 0f);
+                break;
+        }
+
+        // 해당 프레임에 즉시 화면에 반영
+        animator.Update(0f);
     }
 }

@@ -46,6 +46,12 @@ public class PlayerSpwaner : MonoBehaviour
 
             Debug.Log($"[Spawner-Fallback] entranceID: {entrance}");
 
+            var playerManager = GetComponent<PlayerManager>();
+
+            if (playerManager != null)
+            {
+                playerManager.SetFacing(PlayerManager.InitialFacing.Up);
+            }
             // 방향 지정
             //if (entrance == "FromVillage(Store)") LookUp();
             //else if (entrance == "FromPlayerStore") LookDown();
