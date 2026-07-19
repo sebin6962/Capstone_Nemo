@@ -19,272 +19,307 @@ public class NewGamePopupManager : MonoBehaviour
         public float colorA = 1f;
     }
 
-    public TMP_InputField inputServerName;
-    public Button btnCreate, btnCancel;
+    [Header("이름 입력")]
+    public TMP_InputField inputServerName;   // 마을 이름 + 세이브 파일 구분용 이름
+    public TMP_InputField inputPlayerName;   // 캐릭터 이름
+
+    [SerializeField] private int maxServerNameLength = 6;
+    [SerializeField] private int maxPlayerNameLength = 6;
+
+    public Button btnCreate;
+    public Button btnCancel;
 
     [Header("이름 길이 초과 시 팝업 패널")]
-    public GameObject nameTooLongPanel; 
-    public CanvasGroup nameTooLongGroup; 
-    private Coroutine nameTooLongCo = null;
+    public GameObject nameTooLongPanel;
+    public CanvasGroup nameTooLongGroup;
 
-    private bool suppressWarnings = false;
+    private Coroutine nameTooLongCo;
+    private bool suppressWarnings;
 
     void OnEnable()
     {
         suppressWarnings = false;
 
-        // 경고 패널 초기 상태
-        if (nameTooLongPanel) nameTooLongPanel.SetActive(false);
-        if (nameTooLongGroup) nameTooLongGroup.alpha = 0f;
+        ResetWarningPanel();
+
+        ConfigureInputField(inputServerName);
+        ConfigureInputField(inputPlayerName);
 
         if (inputServerName != null)
         {
-            inputServerName.characterLimit = 0;
-
-            inputServerName.contentType = TMP_InputField.ContentType.Standard;
-            inputServerName.characterValidation = TMP_InputField.CharacterValidation.None;
-            inputServerName.inputType = TMP_InputField.InputType.Standard;
-
-            inputServerName.onValidateInput = null;
-
-            // 입력 초기화 (문자/캐럿/선택 모두 리셋)
-            inputServerName.SetTextWithoutNotify("");
-            inputServerName.caretPosition = 0;
-            inputServerName.selectionStringAnchorPosition = 0;
-            inputServerName.selectionStringFocusPosition = 0;
-            //inputServerName.DeactivateInputField();
-
-            // Validate 핸들러 재연결
-            //inputServerName.onValidateInput -= ValidateNameChar;
-            //inputServerName.onValidateInput += ValidateNameChar;
-
+            inputServerName.onValueChanged.RemoveListener(OnServerNameChanged);
+            inputServerName.onValueChanged.AddListener(OnServerNameChanged);
         }
 
-        // 경고 패널 리셋
-        //if (nameTooLongPanel) nameTooLongPanel.SetActive(false);
-        //if (nameTooLongGroup) nameTooLongGroup.alpha = 0f;
-
-        //inputServerName.characterLimit = 0; // TMP 내부 제한 비활성화
-
-        inputServerName.onValueChanged.RemoveAllListeners();
-        inputServerName.onValueChanged.AddListener(OnNameChanged);
-    }
-
-    //private void OnNameChanged(string text)
-    //{
-    //    if (!string.IsNullOrEmpty(Input.compositionString))
-    //        return;
-
-    //    if (text.Length > 6)
-    //    {
-    //        inputServerName.SetTextWithoutNotify(text.Substring(0, 6));
-    //        ShowNameTooLong();
-    //    }
-    //}
-
-    private void OnNameChanged(string text)
-    {
-        if (inputServerName == null) return;
-
-        string comp = Input.compositionString;
-
-        // 1) 한글 조합 중일 때
-        if (!string.IsNullOrEmpty(comp))
+        if (inputPlayerName != null)
         {
-            // 조합 문자열은 보통 맨 끝에 붙으므로
-            int committedLen = text.Length - comp.Length;
-
-            // 이미 커밋된 글자가 6글자면 더 못 치게 즉시 원복
-            if (committedLen >= 6)
-            {
-                string clipped = text.Substring(0, 6);
-
-                if (text != clipped)
-                {
-                    inputServerName.SetTextWithoutNotify(clipped);
-                    inputServerName.caretPosition = clipped.Length;
-                    ShowNameTooLong();
-                }
-            }
-            return; // 조합 중엔 여기서 끝
+            inputPlayerName.onValueChanged.RemoveListener(OnPlayerNameChanged);
+            inputPlayerName.onValueChanged.AddListener(OnPlayerNameChanged);
         }
-
-        // 2) 조합이 끝난(커밋된) 상태에서 6글자 초과면 컷
-        if (text.Length > 6)
-        {
-            inputServerName.SetTextWithoutNotify(text.Substring(0, 6));
-            inputServerName.caretPosition = 6;
-            ShowNameTooLong();
-        }
-    }
-
-    void OnDisable()
-    {
-        // 혹시 남은 것들 철거 (이중 안전망)
-        if (inputServerName != null)
-            inputServerName.onValidateInput -= ValidateNameChar;
-
-        if (nameTooLongCo != null) { StopCoroutine(nameTooLongCo); nameTooLongCo = null; }
-        if (nameTooLongGroup) nameTooLongGroup.alpha = 0f;
-        if (nameTooLongPanel) nameTooLongPanel.SetActive(false);
-
-        suppressWarnings = false;
     }
 
     void Start()
     {
-        // 6글자 제한
-        if (inputServerName != null)
-        {
-            inputServerName.characterLimit = 0;
-            inputServerName.onValidateInput = null;
-            //inputServerName.onValidateInput += ValidateNameChar;
-        }
+        if (btnCancel != null)
+            btnCancel.onClick.AddListener(CancelCreate);
 
-        btnCancel.onClick.AddListener(() =>
-        {
-            if (SFXManager.Instance != null)
-                SFXManager.Instance.PlayBtnClickSFX();
-
-            suppressWarnings = true;
-
-            // 2) Validate 해제 (이후 동작 중 onValidateInput이 끼어들지 못하게)
-            if (inputServerName != null)
-                inputServerName.onValidateInput -= ValidateNameChar;
-
-            // 3) 경고 연출 강제 종료
-            if (nameTooLongCo != null) { StopCoroutine(nameTooLongCo); nameTooLongCo = null; }
-            if (nameTooLongGroup) nameTooLongGroup.alpha = 0f;
-            if (nameTooLongPanel) nameTooLongPanel.SetActive(false);
-
-            // 4) 입력 완전 초기화 + 포커스 해제
-            if (inputServerName != null)
-            {
-                inputServerName.DeactivateInputField();
-                inputServerName.SetTextWithoutNotify("");
-                inputServerName.caretPosition = 0;
-                inputServerName.selectionStringAnchorPosition = 0;
-                inputServerName.selectionStringFocusPosition = 0;
-            }
-
-            // 5) 패널 닫기
-            gameObject.SetActive(false);
-        });
-
-        btnCreate.onClick.AddListener(() =>
-        {
-            if (SFXManager.Instance != null)
-                SFXManager.Instance.PlayBtnClickSFX();
-
-            string serverName = inputServerName.text.Trim();
-            if (string.IsNullOrEmpty(serverName)) return;
-
-            if (serverName.Length > 6)
-            {
-                inputServerName.text = serverName.Substring(0, 6);
-                //ShowNameTooLong();
-                return;
-            }
-
-            string profilePath = Application.persistentDataPath + "/profile_myuser.json";
-            Profile profile = File.Exists(profilePath) ?
-                JsonUtility.FromJson<Profile>(File.ReadAllText(profilePath)) :
-                new Profile { username = "myuser" };
-
-            if (profile.saves.Exists(x => x.serverName == serverName)) return;
-
-            profile.saves.Add(new SaveInfo
-            {
-                serverName = serverName,
-                created = DateTime.Now.ToString("s"),
-                lastPlayed = DateTime.Now.ToString("s")
-            });
-            File.WriteAllText(profilePath, JsonUtility.ToJson(profile, true));
-
-            File.WriteAllText(Application.persistentDataPath + $"/save_myuser_{serverName}.json", JsonUtility.ToJson(new SaveData { serverName = serverName }, true));
-            File.WriteAllText(Application.persistentDataPath + $"/playerStarData_{serverName}.json", "{\"starlight\":0}");
-            File.WriteAllText(Application.persistentDataPath + $"/player_level_data_{serverName}.json", "{\"Level\":1,\"Exp\":0}");
-            File.WriteAllText(Application.persistentDataPath + $"/dayData_{serverName}.json", "{\"day\":1,\"hour\":9,\"minute\":0}");
-
-            var defaultSkinData = new DefaultSkinSaveData();
-
-            File.WriteAllText(
-                Application.persistentDataPath + $"/playerSkin_{serverName}.json",
-                JsonUtility.ToJson(defaultSkinData, true)
-            );
-
-            PlayerPrefs.SetString("SelectedSave", serverName);
-            PlayerPrefs.Save();
-
-            // 새 파일 생성 직후 스킨 데이터를 새 세이브 기준으로 전환
-            if (PlayerSkinManager.Instance != null)
-            {
-                PlayerSkinManager.Instance.SwitchToSave(serverName);
-            }
-
-            // 별빛 데이터도 새 세이브 기준으로 다시 로드
-            if (StarDataManager.Instance != null)
-            {
-                StarDataManager.Instance.InitFromSelectedSave();
-            }
-
-
-            TutorialFlowManager.ForceResetInstance();
-
-            if (UnlockManager.Instance != null)
-            {
-                UnlockManager.Instance.SwitchToServer(serverName);
-            }
-
-            FadeManager.Instance.FadeToScene("CutScene");
-        });
+        if (btnCreate != null)
+            btnCreate.onClick.AddListener(CreateNewGame);
     }
 
-    System.Collections.IEnumerator ResetSuppressNextFrame()
+    void OnDisable()
     {
-        yield return null;
+        if (inputServerName != null)
+            inputServerName.onValueChanged.RemoveListener(OnServerNameChanged);
+
+        if (inputPlayerName != null)
+            inputPlayerName.onValueChanged.RemoveListener(OnPlayerNameChanged);
+
+        StopWarningRoutine();
+        ResetWarningPanel();
+
         suppressWarnings = false;
     }
 
-    private char ValidateNameChar(string text, int charIndex, char addedChar)
+    private void ConfigureInputField(TMP_InputField inputField)
     {
-        // 제어키(Backspace 등)는 허용
-        if (char.IsControl(addedChar))
-            return addedChar;
+        if (inputField == null)
+            return;
 
-        // 닫기/전환 중이면 차단(팝업 X)
-        if (suppressWarnings)
-            return '\0';
+        inputField.characterLimit = 0;
+        inputField.contentType = TMP_InputField.ContentType.Standard;
+        inputField.characterValidation = TMP_InputField.CharacterValidation.None;
+        inputField.inputType = TMP_InputField.InputType.Standard;
+        inputField.onValidateInput = null;
 
-        // 포커스가 아니면 그냥 통과
-        if (inputServerName == null || !inputServerName.isFocused)
-            return addedChar;
+        ResetInputField(inputField);
+    }
 
-        // "맨 뒤에 붙이기"인지 확인 (버그 포인트: 이 체크가 빠지면 닫기 시에도 경고 가능)
-        bool appendingAtEnd = (text != null) && (charIndex >= (text.Length));
+    private void ResetInputField(TMP_InputField inputField)
+    {
+        if (inputField == null)
+            return;
 
-        // 이미 6글자이고, 맨 뒤에 새 글자를 붙이려는 "실제 입력 시도"에서만 경고
-        if (appendingAtEnd && text != null && text.Length >= 6)
+        inputField.DeactivateInputField();
+        inputField.SetTextWithoutNotify("");
+        inputField.caretPosition = 0;
+        inputField.selectionStringAnchorPosition = 0;
+        inputField.selectionStringFocusPosition = 0;
+    }
+
+    private void OnServerNameChanged(string text)
+    {
+        LimitInputLength(inputServerName, text, maxServerNameLength);
+    }
+
+    private void OnPlayerNameChanged(string text)
+    {
+        LimitInputLength(inputPlayerName, text, maxPlayerNameLength);
+    }
+
+    private void LimitInputLength(TMP_InputField inputField, string text, int maxLength)
+    {
+        if (inputField == null)
+            return;
+
+        maxLength = Mathf.Max(1, maxLength);
+
+        // 현재 포커스된 입력창에서 한글이 조합 중인 경우
+        string composition = inputField.isFocused ? Input.compositionString : "";
+
+        if (!string.IsNullOrEmpty(composition))
         {
-            ShowNameTooLong();
-            return '\0';    // 추가 차단
+            int committedLength = Mathf.Max(0, text.Length - composition.Length);
+
+            // 이미 확정된 글자가 최대 길이에 도달했다면 추가 조합을 제거
+            if (committedLength >= maxLength && text.Length > maxLength)
+            {
+                string clipped = text.Substring(0, maxLength);
+                inputField.SetTextWithoutNotify(clipped);
+                inputField.caretPosition = clipped.Length;
+                ShowNameTooLong();
+            }
+
+            return;
         }
 
-        return addedChar;   // 정상 입력
+        // 영문, 숫자 또는 한글 조합이 끝난 뒤 최대 길이 초과 처리
+        if (text.Length > maxLength)
+        {
+            string clipped = text.Substring(0, maxLength);
+            inputField.SetTextWithoutNotify(clipped);
+            inputField.caretPosition = clipped.Length;
+            ShowNameTooLong();
+        }
     }
- 
-    void ShowNameTooLong()
+
+    private void CancelCreate()
     {
-        if (suppressWarnings || !isActiveAndEnabled) return;
-        if (nameTooLongCo != null) StopCoroutine(nameTooLongCo);
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayBtnClickSFX();
+
+        suppressWarnings = true;
+
+        StopWarningRoutine();
+        ResetWarningPanel();
+
+        ResetInputField(inputServerName);
+        ResetInputField(inputPlayerName);
+
+        gameObject.SetActive(false);
+    }
+
+    private void CreateNewGame()
+    {
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayBtnClickSFX();
+
+        if (inputServerName == null || inputPlayerName == null)
+        {
+            Debug.LogError("[NewGamePopupManager] 마을 이름 또는 캐릭터 이름 InputField가 연결되지 않았습니다.");
+            return;
+        }
+
+        string serverName = inputServerName.text.Trim();
+        string playerName = inputPlayerName.text.Trim();
+
+        // 두 이름을 모두 입력해야 생성 가능
+        if (string.IsNullOrEmpty(serverName) || string.IsNullOrEmpty(playerName))
+            return;
+
+        int serverNameLimit = Mathf.Max(1, maxServerNameLength);
+        int playerNameLimit = Mathf.Max(1, maxPlayerNameLength);
+
+        if (serverName.Length > serverNameLimit)
+        {
+            inputServerName.SetTextWithoutNotify(serverName.Substring(0, serverNameLimit));
+            inputServerName.caretPosition = inputServerName.text.Length;
+            ShowNameTooLong();
+            return;
+        }
+
+        if (playerName.Length > playerNameLimit)
+        {
+            inputPlayerName.SetTextWithoutNotify(playerName.Substring(0, playerNameLimit));
+            inputPlayerName.caretPosition = inputPlayerName.text.Length;
+            ShowNameTooLong();
+            return;
+        }
+
+        string profilePath = Path.Combine(Application.persistentDataPath, "profile_myuser.json");
+
+        Profile profile = File.Exists(profilePath)
+            ? JsonUtility.FromJson<Profile>(File.ReadAllText(profilePath))
+            : new Profile { username = "myuser" };
+
+        if (profile == null)
+            profile = new Profile { username = "myuser" };
+
+        if (profile.saves == null)
+            profile.saves = new System.Collections.Generic.List<SaveInfo>();
+
+        // 마을 이름은 파일명으로 사용되므로 중복 생성 금지
+        if (profile.saves.Exists(x => x.serverName == serverName))
+            return;
+
+        profile.saves.Add(new SaveInfo
+        {
+            serverName = serverName,
+            created = DateTime.Now.ToString("s"),
+            lastPlayed = DateTime.Now.ToString("s")
+        });
+
+        File.WriteAllText(profilePath, JsonUtility.ToJson(profile, true));
+
+        // 캐릭터 이름은 각 세이브의 SaveData에 함께 저장
+        SaveData newSaveData = new SaveData
+        {
+            serverName = serverName,
+            playerName = playerName
+        };
+
+        File.WriteAllText(
+            Path.Combine(Application.persistentDataPath, $"save_myuser_{serverName}.json"),
+            JsonUtility.ToJson(newSaveData, true)
+        );
+
+        File.WriteAllText(
+            Path.Combine(Application.persistentDataPath, $"playerStarData_{serverName}.json"),
+            "{\"starlight\":0}"
+        );
+
+        File.WriteAllText(
+            Path.Combine(Application.persistentDataPath, $"player_level_data_{serverName}.json"),
+            "{\"Level\":1,\"Exp\":0}"
+        );
+
+        File.WriteAllText(
+            Path.Combine(Application.persistentDataPath, $"dayData_{serverName}.json"),
+            "{\"day\":1,\"hour\":9,\"minute\":0}"
+        );
+
+        var defaultSkinData = new DefaultSkinSaveData();
+
+        File.WriteAllText(
+            Path.Combine(Application.persistentDataPath, $"playerSkin_{serverName}.json"),
+            JsonUtility.ToJson(defaultSkinData, true)
+        );
+
+        PlayerPrefs.SetString("SelectedSave", serverName);
+        PlayerPrefs.Save();
+
+        // 새 파일 생성 직후 스킨 데이터를 새 세이브 기준으로 전환
+        if (PlayerSkinManager.Instance != null)
+            PlayerSkinManager.Instance.SwitchToSave(serverName);
+
+        // 별빛 데이터도 새 세이브 기준으로 다시 로드
+        if (StarDataManager.Instance != null)
+            StarDataManager.Instance.InitFromSelectedSave();
+
+        TutorialFlowManager.ForceResetInstance();
+
+        if (UnlockManager.Instance != null)
+            UnlockManager.Instance.SwitchToServer(serverName);
+
+        FadeManager.Instance.FadeToScene("CutScene");
+    }
+
+    private void ShowNameTooLong()
+    {
+        if (suppressWarnings || !isActiveAndEnabled)
+            return;
+
+        if (nameTooLongCo != null)
+            StopCoroutine(nameTooLongCo);
+
         nameTooLongCo = StartCoroutine(NameTooLongRoutine());
     }
 
-    System.Collections.IEnumerator NameTooLongRoutine()
+    private void StopWarningRoutine()
     {
-        if (nameTooLongPanel == null || nameTooLongGroup == null) yield break;
+        if (nameTooLongCo == null)
+            return;
+
+        StopCoroutine(nameTooLongCo);
+        nameTooLongCo = null;
+    }
+
+    private void ResetWarningPanel()
+    {
+        if (nameTooLongGroup != null)
+            nameTooLongGroup.alpha = 0f;
+
+        if (nameTooLongPanel != null)
+            nameTooLongPanel.SetActive(false);
+    }
+
+    private System.Collections.IEnumerator NameTooLongRoutine()
+    {
+        if (nameTooLongPanel == null || nameTooLongGroup == null)
+            yield break;
 
         nameTooLongPanel.SetActive(true);
+
         float duration = 0.5f;
         float elapsed = 0f;
 
@@ -295,6 +330,7 @@ public class NewGamePopupManager : MonoBehaviour
             nameTooLongGroup.alpha = Mathf.Lerp(0f, 1f, elapsed / duration);
             yield return null;
         }
+
         nameTooLongGroup.alpha = 1f;
 
         // Hold
@@ -302,17 +338,16 @@ public class NewGamePopupManager : MonoBehaviour
 
         // Fade Out
         elapsed = 0f;
+
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
             nameTooLongGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
             yield return null;
         }
-        nameTooLongGroup.alpha = 0f;
 
+        nameTooLongGroup.alpha = 0f;
         nameTooLongPanel.SetActive(false);
         nameTooLongCo = null;
     }
-
-
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -21,7 +20,10 @@ public class Profile
 [Serializable]
 public class SaveData
 {
+    // 세이브 파일을 구분하는 마을 이름
     public string serverName;
+
+    // 해당 세이브에서 사용하는 캐릭터 이름
     public string playerName;
 
     // ① 별빛(재화)
@@ -30,14 +32,14 @@ public class SaveData
     // ② 날짜
     public int day;
 
-    // ③ 경험치/레벨 (처음엔 0, 레벨업 구조와 분리 가능)
+    // ③ 경험치/레벨
     public int exp;
     public int level;
 
     // ④ 나무 해금 현황
-    public int currentUnlockedTreeLevel;  // (TreeUnlockData.currentUnlockedLevel)
+    public int currentUnlockedTreeLevel;
 
-    // ⑤ 아이템 재고 (이름, 수량)
+    // ⑤ 아이템 재고
     public List<StorageEntry> storageItems;
 
     public float playerPosX;
@@ -50,25 +52,35 @@ public class SaveData
     public string dailyQuestRealDate;
     public List<string> dailyQuestIds;
 
-    // 생성자: 새 게임 생성시 0으로 초기화
+    // 새 게임 생성 시 기본값
     public SaveData()
     {
+        serverName = "";
+        playerName = "";
+
         starlight = 0;
-        day = 1;                // 날짜 1일차부터 시작
+        day = 1;
         exp = 0;
         level = 1;
         currentUnlockedTreeLevel = 0;
+
         storageItems = new List<StorageEntry>();
         acceptedQuestIds = new List<string>();
 
         dailyQuestRealDate = "";
         dailyQuestIds = new List<string>();
 
-        storageItems.Add(new StorageEntry { name = "Mepssalgaru", amount = 50 });
+        storageItems.Add(new StorageEntry
+        {
+            name = "Mepssalgaru",
+            amount = 50
+        });
 
-        // 위치/방향 기본값(0)
-        playerPosX = 0f; playerPosY = 0f;
-        moveDirX = 0f; moveDirY = 1f;
+        // 위치/방향 기본값
+        playerPosX = 0f;
+        playerPosY = 0f;
+        moveDirX = 0f;
+        moveDirY = 1f;
     }
 }
 

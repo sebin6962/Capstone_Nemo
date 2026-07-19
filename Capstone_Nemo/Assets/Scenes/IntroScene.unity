@@ -1122,7 +1122,7 @@ RectTransform:
   m_GameObject: {fileID: 480295560}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 371427701}
@@ -2576,10 +2576,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.017426282
-    y: 0
-    width: 0.96514744
-    height: 1
+    x: 0
+    y: 0.1438376
+    width: 1
+    height: 0.7123248
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -2932,6 +2932,7 @@ MonoBehaviour:
   nightBGM: {fileID: 8300000, guid: 09264160cb1478f4cb2ffda3b4e1c359, type: 3}
   nightStartHour: 20
   dialogueBGM: {fileID: 8300000, guid: 6e685f8ae2496a74fa9692da65db86dc, type: 3}
+  dialogueTargetVolume: 0.9
   fadeDuration: 1.5
   targetVolume: 0.6
 --- !u!82 &1579875989
@@ -3040,6 +3041,55 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 504.7165, y: 276.70154, z: 2.4397292}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1796521485
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1796521487}
+  - component: {fileID: 1796521486}
+  m_Layer: 0
+  m_Name: CustomCusorManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1796521486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1796521485}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a840683e50ad14d84bc18181bd7e90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultCursor: {fileID: 2800000, guid: 232d87ff5a869fe42acc5a6dc4e30f26, type: 3}
+  defaultHotspot: {x: 0, y: 0}
+  handCursor: {fileID: 2800000, guid: 153769e8a89129244abde01dff42d6ef, type: 3}
+  handHotspot: {x: 0, y: 0}
+  cursorMode: 0
+--- !u!4 &1796521487
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1796521485}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -14.58708, y: -5.934287, z: 1719.2692}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3597,3 +3647,4 @@ SceneRoots:
   - {fileID: 259708889}
   - {fileID: 2084235211}
   - {fileID: 59658224}
+  - {fileID: 1796521487}

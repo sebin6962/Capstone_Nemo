@@ -83,6 +83,13 @@ public class PauseManager : MonoBehaviour
 
     private bool CanUsePause()
     {
+        // NPC 대화창이 열려 있으면 일시정지 사용 불가
+        if (NPCDialogueUIManager.Instance != null &&
+            NPCDialogueUIManager.Instance.IsDialogueOpen)
+        {
+            return false;
+        }
+
         return true;
     }
 
@@ -130,6 +137,10 @@ public class PauseManager : MonoBehaviour
 
     public void PauseGame()
     {
+        // 대화 중에는 Pause 버튼 클릭도 무시
+        if (!CanUsePause())
+            return;
+
         if (isPaused || isSceneChanging)
             return;
 
