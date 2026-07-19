@@ -3850,6 +3850,7 @@ GameObject:
   - component: {fileID: 2692580835563867374}
   - component: {fileID: 6476800199685998724}
   - component: {fileID: 5884592687819882810}
+  - component: {fileID: 3923420860789990704}
   m_Layer: 5
   m_Name: OpenStorageBtn
   m_TagString: Untagged
@@ -3866,7 +3867,7 @@ RectTransform:
   m_GameObject: {fileID: 3968825572727184618}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.95, y: 0.95, z: 1}
+  m_LocalScale: {x: 0.9, y: 0.9, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2009026677044869344}
@@ -3989,6 +3990,19 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.59607846}
   m_EffectDistance: {x: 1, y: -10.61}
   m_UseGraphicAlpha: 1
+--- !u!114 &3923420860789990704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3968825572727184618}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f52d73e3342f4b43866f625636fd0fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onlyWhenInteractable: 1
 --- !u!1 &4211752174782687524
 GameObject:
   m_ObjectHideFlags: 0

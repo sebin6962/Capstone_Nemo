@@ -22,6 +22,7 @@ public class NPCDialogueUIManager : MonoBehaviour
     [SerializeField] private Transform optionParent;
     [SerializeField] private GameObject optionButtonPrefab;
     [SerializeField] private Button nextButton;
+    [SerializeField] private Button closeButton;
     [SerializeField] private TMP_Text nextButtonText;
     [SerializeField] private Image portraitImage;
 
@@ -126,6 +127,12 @@ public class NPCDialogueUIManager : MonoBehaviour
             if (nextButtonRect != null)
                 defaultNextButtonPosition =
                     nextButtonRect.anchoredPosition;
+        }
+
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveAllListeners();
+            closeButton.onClick.AddListener(OnClickCloseButton);
         }
 
         if (portraitImage != null)
@@ -914,6 +921,25 @@ public class NPCDialogueUIManager : MonoBehaviour
         }
 
         ShowNextLine();
+    }
+
+    public void OnClickCloseButton()
+    {
+        if (dialoguePanel == null ||
+            !dialoguePanel.activeSelf)
+        {
+            return;
+        }
+
+        // 튜토리얼 대화일 경우
+        if (isTutorialDialogueMode)
+        {
+            CloseTutorialDialogue();
+            return;
+        }
+
+        // 일반 NPC 대화일 경우
+        CloseDialogue();
     }
 
     private void CloseTutorialDialogue()
