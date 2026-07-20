@@ -8,7 +8,8 @@ using System.Linq;
 public enum CraftMotionType
 {
     Up,
-    Side
+    Side,
+    Down
 }
 
 public class MakerInfo : MonoBehaviour

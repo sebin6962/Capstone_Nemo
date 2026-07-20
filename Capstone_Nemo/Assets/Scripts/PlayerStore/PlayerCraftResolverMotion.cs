@@ -104,7 +104,10 @@ public class PlayerCraftResolverMotion : MonoBehaviour
         if (maker.craftMotionType == CraftMotionType.Up)
             return "Up";
 
-        // Side 제작대는 제작대 위치를 기준으로 좌우 결정
+        if (maker.craftMotionType == CraftMotionType.Down)
+            return "Down";
+
+        // Side는 제작대 위치에 따라 좌우 결정
         float differenceX =
             maker.transform.position.x - transform.position.x;
 
