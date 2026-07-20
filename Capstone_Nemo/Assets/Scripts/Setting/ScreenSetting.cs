@@ -13,6 +13,7 @@ public class ScreenSetting : MonoBehaviour
     {
         if (brightnessSlider != null)
         {
+            brightnessSlider.onValueChanged.RemoveListener(SetBrightness);
             brightnessSlider.onValueChanged.AddListener(SetBrightness);
         }
 
@@ -107,5 +108,29 @@ public class ScreenSetting : MonoBehaviour
         {
             applier.Apply(value);
         }
+    }
+
+    private void OnEnable()
+    {
+        SyncBrightnessSlider();
+    }
+
+    private void SyncBrightnessSlider()
+    {
+        if (brightnessSlider == null)
+            return;
+
+        float savedBrightness = 1f;
+
+        if (SettingsManager.Instance != null)
+        {
+            savedBrightness = SettingsManager.Instance.brightness;
+        }
+        else
+        {
+            savedBrightness = PlayerPrefs.GetFloat("Brightness", 1f);
+        }
+
+        brightnessSlider.SetValueWithoutNotify(savedBrightness);
     }
 }
