@@ -20,6 +20,12 @@ public class PauseButtonProxy : MonoBehaviour
             PauseManager.Instance.OpenSettings();
     }
 
+    public void OnClickCloseSettingsAndBackToMenu()
+    {
+        if (PauseManager.Instance != null)
+            PauseManager.Instance.CloseSettingsAndBackToMenu();
+    }
+
     public void OnClickBackToMenu(string sceneName)
     {
         if (PauseManager.Instance != null)
