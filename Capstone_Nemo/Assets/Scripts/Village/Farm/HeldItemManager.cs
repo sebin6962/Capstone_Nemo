@@ -10,6 +10,10 @@ public class HeldItemManager : MonoBehaviour
     public Image heldItemImage; // UI Image 오브젝트 (플레이어 머리 위)
     public Transform player;    // 플레이어 Transform
 
+    [Header("Held Item Position")]
+    [Tooltip("Player 위치를 기준으로 든 아이템의 위치를 조절합니다. Y 값을 낮추면 아이템이 아래로 내려갑니다.")]
+    [SerializeField] private Vector2 heldItemPositionOffset = new Vector2(0f, 1.5f);
+
     private Sprite currentHeldSprite;
     private string heldItemName;
 
@@ -42,17 +46,21 @@ public class HeldItemManager : MonoBehaviour
 
         if (heldItemImage.enabled)
         {
-            Vector3 offset = new Vector3(0, 1.5f, 0);
+            Vector3 offset = new Vector3(
+                heldItemPositionOffset.x,
+                heldItemPositionOffset.y,
+                0f
+            );
             // 월드 스페이스 캔버스니까 그냥 월드 좌표를 씀
             heldItemImage.rectTransform.position = player.position + offset;
 
             //village2 튜토리얼 진행 트리거 3
             var tm = FindObjectOfType<TutorialManager>();
             if (tm != null &&
-                tm.IsCurrentStep(VillageSecondStep.PickUpSeed) &&  
+                tm.IsCurrentStep(VillageSecondStep.PickUpSeed) &&
                 HeldItemManager.Instance.GetHeldItemName() == "Danhobak_seedBag")
             {
-                tm.GoToNextVillageSecondStep(); 
+                tm.GoToNextVillageSecondStep();
             }
 
             var st = StoreTutorialManager.Instance;

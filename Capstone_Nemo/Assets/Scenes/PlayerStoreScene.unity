@@ -17013,6 +17013,8 @@ GameObject:
   - component: {fileID: 325819353}
   - component: {fileID: 325819352}
   - component: {fileID: 325819351}
+  - component: {fileID: 325819355}
+  - component: {fileID: 325819354}
   m_Layer: 5
   m_Name: Popup_InventoryUI
   m_TagString: Untagged
@@ -17105,6 +17107,38 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 325819349}
   m_CullTransparentMesh: 1
+--- !u!225 &325819354
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 325819349}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!114 &325819355
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 325819349}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebd6ca98968b04e4bb5a0fedf912b474, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 325819350}
+  canvasGroup: {fileID: 325819354}
+  startScale: 0.85
+  duration: 0.18
+  overshootScale: 1.04
+  fadeIn: 1
+  playOnEnable: 1
+  useUnscaledTime: 1
 --- !u!1 &329818467
 GameObject:
   m_ObjectHideFlags: 0
@@ -19831,7 +19865,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: NaN, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 400, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &419039157
@@ -39101,6 +39135,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8031702821992038735, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1738556692}
+    - targetCorrespondingSourceObject: {fileID: 8031702821992038735, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1738556693}
   m_SourcePrefab: {fileID: 100100000, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
 --- !u!114 &993036455 stripped
 MonoBehaviour:
@@ -74157,6 +74194,24 @@ MonoBehaviour:
   categoryName: Body
   frameCount: 4
   frameInterval: 0.1
+--- !u!114 &1738556693
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1738556668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f630faf06bc5c5418a9d257bf67c5db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerManager: {fileID: 0}
+  playerAnimator: {fileID: 993036456}
+  spriteResolver: {fileID: 993036455}
+  categoryName: Body
+  walkFrameCount: 6
+  walkFrameInterval: 0.12
 --- !u!1 &1739323861
 GameObject:
   m_ObjectHideFlags: 0
@@ -83058,9 +83113,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.011057705
+    y: 0.15241092
     width: 1
-    height: 0.9778846
+    height: 0.69517815
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -90931,6 +90986,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   heldItemImage: {fileID: 1903286025}
   player: {fileID: 1738556680}
+  heldItemPositionOffset: {x: 0, y: 1}
 --- !u!1 &2129315258
 GameObject:
   m_ObjectHideFlags: 0

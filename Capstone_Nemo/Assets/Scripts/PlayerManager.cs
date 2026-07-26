@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,6 +20,11 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private InitialFacing initialFacing = InitialFacing.Down;
 
     private bool isActionLocked = false;
+
+    // PlayerHoldingResolverMotion에서 현재 방향/이동 상태를 읽기 위한 값
+    public Vector2 LastMoveDirection => lastMoveDir;
+    public bool IsMoving => movement.sqrMagnitude > 0.001f;
+    public bool IsActionLocked => isActionLocked;
 
     public void SetActionLocked(bool locked)
     {

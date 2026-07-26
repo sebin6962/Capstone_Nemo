@@ -11947,6 +11947,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   heldItemImage: {fileID: 1691223743}
   player: {fileID: 1577133727}
+  heldItemPositionOffset: {x: 0, y: 1}
 --- !u!4 &521036008
 Transform:
   m_ObjectHideFlags: 0
@@ -15485,7 +15486,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 245.43994, y: -21.339539}
+  m_AnchoredPosition: {x: 245.43994, y: -21.339722}
   m_SizeDelta: {x: 2337.72, y: 1532.38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &641036183
@@ -53979,7 +53980,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -121.00394, y: -41.000916}
+  m_AnchoredPosition: {x: -121.00394, y: -41.000977}
   m_SizeDelta: {x: 918, y: 516}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1705025750
@@ -56017,7 +56018,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -671.9998, y: 326}
+  m_AnchoredPosition: {x: -671.99976, y: 326}
   m_SizeDelta: {x: -1423.4169, y: -719.6829}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1757436636
@@ -71297,9 +71298,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.12156844
+    y: 0.15241092
     width: 1
-    height: 0.7568631
+    height: 0.69517815
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -71337,7 +71338,7 @@ Transform:
   m_GameObject: {fileID: 2130387756}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -13.109021, y: 7.9305196, z: -10}
+  m_LocalPosition: {x: -11.637193, y: 7.93219, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -76666,6 +76667,9 @@ PrefabInstance:
       insertIndex: 7
       addedObject: {fileID: 8625244720612140952}
     - targetCorrespondingSourceObject: {fileID: 8031702821992038735, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
+      insertIndex: 8
+      addedObject: {fileID: 8625244720612140957}
+    - targetCorrespondingSourceObject: {fileID: 8031702821992038735, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1577133728}
   m_SourcePrefab: {fileID: 100100000, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
@@ -76717,6 +76721,24 @@ MonoBehaviour:
   categoryName: Body
   frameCount: 6
   frameInterval: 0.1
+--- !u!114 &8625244720612140957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577133722}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f630faf06bc5c5418a9d257bf67c5db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerManager: {fileID: 8625244720612140945}
+  playerAnimator: {fileID: 8625244720612140946}
+  spriteResolver: {fileID: 8625244720612140947}
+  categoryName: Body
+  walkFrameCount: 6
+  walkFrameInterval: 0.12
 --- !u!4 &8700525042266721630
 Transform:
   m_ObjectHideFlags: 0
