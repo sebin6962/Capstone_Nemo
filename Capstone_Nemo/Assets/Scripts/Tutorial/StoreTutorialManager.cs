@@ -158,6 +158,8 @@ public class StoreTutorialManager : MonoBehaviour
 
     void ShowStepWithOptionalDialogue(StoreTutorialStep step)
     {
+        ClearCurrentStepUI();
+
         switch (step)
         {
             case StoreTutorialStep.NextOrder:
@@ -167,7 +169,7 @@ public class StoreTutorialManager : MonoBehaviour
                 }, afterSiruFinishDialogues);
                 break;
 
-            case StoreTutorialStep.DogamCheck:
+            case StoreTutorialStep.StoreFirst_Finish:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
@@ -338,6 +340,18 @@ public class StoreTutorialManager : MonoBehaviour
 
         ShowStepWithOptionalDialogue(currentStep);
     }
+
+    private void ClearCurrentStepUI()
+    {
+        if (showStepPanelRoutine != null)
+        {
+            StopCoroutine(showStepPanelRoutine);
+            showStepPanelRoutine = null;
+        }
+
+        HideAllPanels();
+    }
+
 
     public void CompleteStoreTutorial()
     {
