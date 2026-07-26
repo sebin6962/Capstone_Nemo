@@ -316,7 +316,7 @@ public class TreeLevelUnlocker : MonoBehaviour
         }
 
         tooltipPanel.SetActive(true);
-        tooltipText.text = $"{starlightNeededForLevel[levelIdx]} °³ÀÇ º°ºû";
+        tooltipText.text = $"{starlightNeededForLevel[levelIdx]}";
 
         RectTransform buttonRect = levelButtons[levelIdx].GetComponent<RectTransform>();
         Vector3 screenPos = RectTransformUtility.WorldToScreenPoint(null, buttonRect.position);

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class TreeInteract : MonoBehaviour
@@ -7,45 +5,80 @@ public class TreeInteract : MonoBehaviour
     public static TreeInteract Instance;
 
     private bool isPlayerNear = false;
-    public GameObject popupUI; // 팝업창 오브젝트
-    //private PlayerManager playerManager; // 이동 관리 스크립트 참조
+
+    [Header("나무 해금 패널")]
+    public GameObject popupUI;
+
+    [Header("패널 등장 별빛 효과")]
+    public GameObject panelOpenEffectRoot;
 
     private void Awake()
     {
-        Instance = this; // 싱글턴 인스턴스 지정
+        Instance = this;
     }
 
     void Update()
     {
         if (isPlayerNear && Input.GetKeyDown(KeyCode.E))
         {
-            //해금 컷신 진행중이라면 입력 무시
             if (TreeLevelUnlocker.Instance != null &&
-           TreeLevelUnlocker.Instance.IsPlayingUnlockSequence)
+                TreeLevelUnlocker.Instance.IsPlayingUnlockSequence)
             {
-                return; 
+                return;
             }
 
             TogglePopup();
         }
     }
+
     private void TogglePopup()
     {
-        if (SFXManager.Instance) SFXManager.Instance.PlayTreeInterectSFX();
-        bool isActive = popupUI.activeSelf;
-        popupUI.SetActive(!isActive);
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayTreeInterectSFX();
 
-        if (!isActive && TreeLevelUnlocker.Instance != null)
+        bool isActive = popupUI.activeSelf;
+        bool willOpen = !isActive;
+
+        popupUI.SetActive(willOpen);
+
+        if (willOpen)
         {
-            TreeLevelUnlocker.Instance.ApplyPanelSprite(); // 팝업 오픈 시 최신 스프라이트 반영
+            if (TreeLevelUnlocker.Instance != null)
+            {
+                // 패널이 열릴 때 최신 해금 상태 반영
+                TreeLevelUnlocker.Instance.ApplyPanelSprite();
+            }
+
+            PlayPanelOpenEffect();
         }
     }
+
+    private void PlayPanelOpenEffect()
+    {
+        if (panelOpenEffectRoot == null)
+            return;
+
+        panelOpenEffectRoot.SetActive(true);
+
+        ParticleSystem[] particles =
+            panelOpenEffectRoot.GetComponentsInChildren<ParticleSystem>(true);
+
+        foreach (ParticleSystem particle in particles)
+        {
+            // 이전에 남아 있던 파티클 제거
+            particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            // 처음부터 다시 재생
+            particle.Play(true);
+        }
+    }
+
     public void ClosePopup()
     {
         if (SFXManager.Instance != null)
             SFXManager.Instance.PlayFileSelectSFX();
+
         popupUI.SetActive(false);
-        // 필요하면 플레이어 이동 잠금 해제
     }
 
     void OnTriggerEnter2D(Collider2D other)

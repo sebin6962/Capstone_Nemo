@@ -35,6 +35,30 @@ public class VillageSpawnDirector : MonoBehaviour
         // 한 프레임 여유(카메라/콜라이더 초기화)
         yield return null;
 
+        // 씬 전환 후 플레이어가 위쪽을 바라보게 설정
+        PlayerManager playerManager = player.GetComponent<PlayerManager>();
+
+        if (playerManager != null)
+        {
+            string currentScene = SceneManager.GetActiveScene().name;
+
+            if (currentScene == "VillageScene")
+            {
+                // 마을 씬에서는 앞모습
+                playerManager.SetFacing(PlayerManager.InitialFacing.Down);
+            }
+            else if (currentScene == "TreeScene")
+            {
+                // 계수나무 씬만 뒷모습
+                playerManager.SetFacing(PlayerManager.InitialFacing.Up);
+            }
+            else
+            {
+                // 나머지 모든 씬에서는 뒷모습
+                playerManager.SetFacing(PlayerManager.InitialFacing.Up);
+            }
+        }
+
         // 2) entranceID 확보 (SceneTransitionInfo 우선, 없으면 PlayerPrefs 폴백)
         string id = null;
         SceneTransitionInfo info = null;
@@ -104,24 +128,6 @@ public class VillageSpawnDirector : MonoBehaviour
             var pos = t.position; pos.z = 0f;
             player.transform.position = pos;
 
-            // 씬 전환 후 플레이어가 위쪽을 바라보게 설정
-            PlayerManager playerManager = player.GetComponent<PlayerManager>();
-
-            if (playerManager != null)
-            {
-                string currentScene = SceneManager.GetActiveScene().name;
-
-                if (currentScene == "VillageScene")
-                {
-                    // 마을 씬에서는 앞모습
-                    playerManager.SetFacing(PlayerManager.InitialFacing.Down);
-                }
-                else
-                {
-                    // 나머지 모든 씬에서는 뒷모습
-                    playerManager.SetFacing(PlayerManager.InitialFacing.Up);
-                }
-            }
 
             var vcam = FindObjectOfType<CinemachineVirtualCamera>();
             if (vcam) vcam.PreviousStateIsValid = false;
