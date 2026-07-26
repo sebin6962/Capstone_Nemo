@@ -145,7 +145,7 @@ public class BGMPlayer : MonoBehaviour
 
             case "TreeScene":
                 sceneDayBGM = treeBGM;
-                usesDayNightBGM = true;
+                usesDayNightBGM = false;
                 break;
         }
 
