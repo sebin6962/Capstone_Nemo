@@ -163,7 +163,14 @@ public class NPCDialogueUIManager : MonoBehaviour
         if (isPortraitOpeningAnimation)
             return;
 
-        // 선택지 상태에서는 E키로 넘기지 않음
+        // 선택지가 표시된 상태
+        if (currentState == DialogueState.Choice)
+        {
+            HandleChoiceNumberInput();
+            return;
+        }
+
+        // 일반 대사가 아니면 입력하지 않음
         if (currentState != DialogueState.Line)
             return;
 
@@ -171,6 +178,46 @@ public class NPCDialogueUIManager : MonoBehaviour
             Input.GetKeyDown(KeyCode.Space))
         {
             OnClickNextButton();
+        }
+    }
+
+    private void HandleChoiceNumberInput()
+    {
+        // 숫자키 1~9까지만 사용
+        int optionCount =
+            Mathf.Min(spawnedOptions.Count, 9);
+
+        for (int i = 0; i < optionCount; i++)
+        {
+            KeyCode numberKey =
+                (KeyCode)((int)KeyCode.Alpha1 + i);
+
+            KeyCode keypadKey =
+                (KeyCode)((int)KeyCode.Keypad1 + i);
+
+            if (!Input.GetKeyDown(numberKey) &&
+                !Input.GetKeyDown(keypadKey))
+            {
+                continue;
+            }
+
+            GameObject optionObject =
+                spawnedOptions[i];
+
+            if (optionObject == null)
+                return;
+
+            Button optionButton =
+                optionObject.GetComponent<Button>();
+
+            if (optionButton != null &&
+                optionButton.interactable)
+            {
+                // 마우스로 클릭했을 때와 같은 로직 실행
+                optionButton.onClick.Invoke();
+            }
+
+            return;
         }
     }
 
@@ -1287,9 +1334,9 @@ public class NPCDialogueUIManager : MonoBehaviour
     }
 
     private void CreateOption(
-        string text,
-        UnityEngine.Events.UnityAction callback
-    )
+    string text,
+    UnityEngine.Events.UnityAction callback
+)
     {
         if (optionButtonPrefab == null ||
             optionParent == null)
@@ -1306,28 +1353,65 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         spawnedOptions.Add(optionObject);
 
+        // 화면에 표시되는 순서대로 1, 2, 3...
+        int optionNumber = spawnedOptions.Count;
+
         RectTransform rectTransform =
-            optionObject
-                .GetComponent<RectTransform>();
+            optionObject.GetComponent<RectTransform>();
 
         if (rectTransform != null)
         {
-            rectTransform.localScale =
-                Vector3.one;
-
-            rectTransform.localRotation =
-                Quaternion.identity;
+            rectTransform.localScale = Vector3.one;
+            rectTransform.localRotation = Quaternion.identity;
         }
 
         Button button =
             optionObject.GetComponent<Button>();
 
-        TMP_Text textComponent =
-            optionObject
-                .GetComponentInChildren<TMP_Text>();
+        // 선택지 문장
+        Transform choiceTextTransform =
+            optionObject.transform.Find("ChoiceText");
 
-        if (textComponent != null)
-            textComponent.text = text;
+        if (choiceTextTransform != null)
+        {
+            TMP_Text choiceText =
+                choiceTextTransform.GetComponent<TMP_Text>();
+
+            if (choiceText != null)
+                choiceText.text = text;
+        }
+        else
+        {
+            Debug.LogWarning(
+                "[NPCDialogueUIManager] " +
+                "선택지 프리팹에서 ChoiceText를 찾지 못했습니다.",
+                optionObject
+            );
+        }
+
+        // 오른쪽 숫자 안내 텍스트
+        Transform numberTextTransform =
+            optionObject.transform.Find(
+                "NumberGuide/NumberText"
+            );
+
+        if (numberTextTransform != null)
+        {
+            TMP_Text numberText =
+                numberTextTransform.GetComponent<TMP_Text>();
+
+            if (numberText != null)
+                numberText.text = optionNumber.ToString();
+        }
+        else
+        {
+            Debug.LogWarning(
+                "[NPCDialogueUIManager] " +
+                "선택지 프리팹에서 " +
+                "NumberGuide/NumberText를 찾지 못했습니다.",
+                optionObject
+            );
+        }
 
         if (button != null)
         {

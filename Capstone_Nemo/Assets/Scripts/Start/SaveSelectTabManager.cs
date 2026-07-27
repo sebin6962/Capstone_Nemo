@@ -214,7 +214,15 @@ public class SaveSelectTabManager : MonoBehaviour
 
         Button activeButton = GetButtonByTabName(tab);
 
-        MoveSelectedMarker(activeButton);
+        if (tab == "About")
+        {
+            if (selectedTabMarker != null)
+                selectedTabMarker.gameObject.SetActive(false);
+        }
+        else
+        {
+            MoveSelectedMarker(activeButton);
+        }
 
         if (EventSystem.current != null && activeButton != null)
         {
