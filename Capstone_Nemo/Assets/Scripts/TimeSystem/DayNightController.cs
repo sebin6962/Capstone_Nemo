@@ -12,7 +12,7 @@ public class DayNightController : MonoBehaviour
 
     [Header("Global Light")]
     [Range(0f, 2f)] public float dayIntensity = 1f;
-    [Range(0f, 2f)] public float nightIntensity = 0.22f;
+    [Range(0f, 2f)] public float nightIntensity = 0.6f;
 
     [Header("Street Lamp Lights")]
     public Light2D[] streetLampLights;   // 가로등 Spot Light 2D들 넣기

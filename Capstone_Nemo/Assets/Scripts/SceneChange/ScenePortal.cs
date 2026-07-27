@@ -47,6 +47,14 @@ public class ScenePortal : MonoBehaviour
         if (!isInTrigger) return;
         if (!Input.GetKeyDown(KeyCode.E)) return;
 
+        // 아이템을 들고 있으면 씬 이동과 효과음을 모두 실행하지 않는다.
+        if (HeldItemManager.Instance != null &&
+            HeldItemManager.Instance.IsHoldingItem())
+        {
+            Debug.Log("[Portal] 아이템을 내려놓아야 이동할 수 있습니다.");
+            return;
+        }
+
         var flow = TutorialFlowManager.Instance;
 
         string currentScene = SceneManager.GetActiveScene().name;
@@ -58,9 +66,9 @@ public class ScenePortal : MonoBehaviour
 
             if (flow != null &&
                 tutMgr != null &&
-                flow.currentStep == GlobalTutorialStep.Village_Second &&           
-                tutMgr.IsVillageSecondTutorialRunning &&                           
-                tutMgr.IsCurrentStep(VillageSecondStep.GoToMill))                 
+                flow.currentStep == GlobalTutorialStep.Village_Second &&
+                tutMgr.IsVillageSecondTutorialRunning &&
+                tutMgr.IsCurrentStep(VillageSecondStep.GoToMill))
             {
                 Debug.Log("VillageSecond 튜토리얼 완료");
                 tutMgr.CompleteVillageSecondTutorial();
@@ -125,7 +133,7 @@ public class ScenePortal : MonoBehaviour
 
         //Debug.Log($"[Portal] to={targetScene}, id={entranceID}");
         //FadeManager.Instance.FadeToScene(targetScene, 0.5f);
-        
+
     }
 
     private IEnumerator PlaySfxThenFade()
@@ -138,7 +146,7 @@ public class ScenePortal : MonoBehaviour
 
             if (targetScene == "TreeScene" || fromScene == "TreeScene")
             {
-                SFXManager.Instance.PlayTreeEnterSFX(); 
+                SFXManager.Instance.PlayTreeEnterSFX();
             }
             else
             {

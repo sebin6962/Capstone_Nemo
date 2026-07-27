@@ -47,6 +47,10 @@ public class NPCDialogueSetData
     public string title;                   // 예: 안부
     public string categoryId;              // 예: daily_talk
     public string startNodeId;             // 실제 시작 노드
+
+    // true인 경우 계수나무 해금 단계에 따라 대화를 제한
+    public bool useTreeLevel;
+    public int treeLevel;
 }
 
 [Serializable]
@@ -54,6 +58,10 @@ public class NPCDialogueData
 {
     public string npcId;
     public string npcName;
+
+    // 첫 만남 대화 이후 계수나무 해금 단계에 맞는 대화 세트를
+    // 곧바로 선택하려면 true
+    public bool useTreeLevelDialogue;
 
     // NPC와 첫 상호작용일 때만 실행할 전용 시작 노드
     public string firstInteractionStartNodeId;

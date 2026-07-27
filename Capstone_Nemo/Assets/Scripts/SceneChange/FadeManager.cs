@@ -70,7 +70,16 @@ public class FadeManager : MonoBehaviour
     /// </summary>
     public void FadeToScene(string sceneName, float delay = 0f)
     {
+        // 아이템을 들고 있으면 씬 이동 차단
+        if (HeldItemManager.Instance != null &&
+            HeldItemManager.Instance.IsHoldingItem())
+        {
+            Debug.LogWarning("[FadeManager] 아이템을 내려놓아야 이동할 수 있습니다.");
+            return;
+        }
+
         if (isFading) return;
+
         StartCoroutine(FadeAndSwitchScenes(sceneName, delay));
     }
 

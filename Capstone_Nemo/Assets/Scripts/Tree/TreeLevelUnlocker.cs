@@ -119,6 +119,38 @@ public class TreeLevelUnlocker : MonoBehaviour
         savePath = Path.Combine(Application.persistentDataPath, $"treeUnlock_{serverName}.json");
     }
 
+    public static int GetSavedCurrentLevel()
+    {
+        // 현재 활성화된 TreeLevelUnlocker가 있으면 메모리의 최신 값을 사용한다.
+        if (Instance != null)
+            return Mathf.Max(0, Instance.currentUnlockedLevel);
+
+        // 계수나무 씬이 아닌 다른 씬에서도 NPC가 정확한 대화를 고를 수 있도록
+        // 현재 세이브의 계수나무 해금 파일을 직접 읽는다.
+        string serverName = PlayerPrefs.GetString("SelectedSave", string.Empty);
+        if (string.IsNullOrEmpty(serverName))
+            return Mathf.Max(0, CurrentLevel);
+
+        string selectedSavePath = Path.Combine(
+            Application.persistentDataPath,
+            $"treeUnlock_{serverName}.json");
+
+        if (!File.Exists(selectedSavePath))
+            return 0;
+
+        try
+        {
+            string json = File.ReadAllText(selectedSavePath);
+            TreeUnlockData savedData = JsonUtility.FromJson<TreeUnlockData>(json);
+            return savedData != null ? Mathf.Max(0, savedData.currentUnlockedLevel) : 0;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[TreeLevelUnlocker] Failed to read saved level: {e.Message}");
+            return Mathf.Max(0, CurrentLevel);
+        }
+    }
+
     void Start()
     {
         // 카메라 원위치 저장
