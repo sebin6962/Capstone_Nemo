@@ -2359,7 +2359,7 @@
     {
       "npcId": "npc_bori_rabbit",
       "npcName": "보리",
-      "firstInteractionStartNodeId": "",
+      "firstInteractionStartNodeId": "bori_first_interaction_start",
       "startNodeId": "bori_daily_01_start",
       "randomGreetingNodeIds": [],
       "defaultCategoryId": "daily_talk",
@@ -2466,6 +2466,38 @@
         }
       ],
       "nodes": [
+        {
+          "nodeId": "bori_first_interaction_start",
+          "type": "line",
+          "lines": [
+            "안녕하세요, (플레이어 이름) 사장님.",
+            "저는 보리라고 해요.\n동생이랑은 이미 만났다고 들었어요."
+          ],
+          "nextNodeId": "bori_first_interaction_choice"
+        },
+        {
+          "nodeId": "bori_first_interaction_choice",
+          "type": "choice",
+          "options": [
+            {
+              "text": "안녕, 보리야.",
+              "nextNodeId": "bori_first_interaction_reply_a"
+            },
+            {
+              "text": "앞으로 잘 부탁해.",
+              "nextNodeId": "bori_first_interaction_reply_a"
+            }
+          ]
+        },
+        {
+          "nodeId": "bori_first_interaction_reply_a",
+          "type": "line",
+          "lines": [
+            "네. 저도 옷가게를 하는데, 앞으로 많이 만나겠네요.",
+            "잘 부탁 드립니다."
+          ],
+          "nextNodeId": "end_node"
+        },
         {
           "nodeId": "bori_daily_01_start",
           "type": "line",
@@ -2689,7 +2721,7 @@
           "nodeId": "bori_relation_02_a",
           "type": "line",
           "lines": [
-            "서로 다른 극끼리 끌린다는 말이 딱 맞죠. 두 분을 보면 저도 가끔은 완벽한 파트너를 찾고 싶어진다니까요?"
+            "서로 다른 극끼리 끌린다는 말이 딱 맞죠. 달 마을 공식 잉꼬부부 답네요."
           ],
           "nextNodeId": "end_node"
         },
@@ -2697,7 +2729,7 @@
           "nodeId": "bori_relation_02_b",
           "type": "line",
           "lines": [
-            "무서워 마세요. 가람 씨는 에너지를 효율적으로 쓰는 것뿐이에요. 솜이 씨가 리드를 잘해주니 걱정 없어요."
+            "무서워 마세요.\n솜이 씨가 잘 조종하는 로봇 정도로 생각하면 되겠죠."
           ],
           "nextNodeId": "end_node"
         },
@@ -2705,7 +2737,7 @@
           "nodeId": "bori_daily_05_start",
           "type": "line",
           "lines": [
-            "외계인들이 지불하는 별빛 조각들, 그게 단순한 화폐가 아니라는 건 아시죠?\n우주의 순수한 에너지가 응축된 결정체예요.",
+            "외계인들이 지불하는 별빛 조각들,\n그게 단순한 화폐가 아니라는 건 아시죠?\n우주의 순수한 에너지가 응축된 결정체예요.",
             "제가 그 별빛으로 옷을 짓는 건,\n입는 사람의 정신을 별빛 에너지가 감싸주기 때문이죠."
           ],
           "nextNodeId": "bori_daily_05_choice"
@@ -3988,6 +4020,338 @@
             "아, 내가 부탁했던 일을 신경 써줬구나.",
             "덕분에 가게 일을 훨씬 수월하게 마무리할 수 있었어.",
             "정말 고마워. 다음에 필요한 게 있으면 내가 도와줄게."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "end_node",
+          "type": "end"
+        }
+      ],
+      "useTreeLevelDialogue": true
+    },
+    {
+      "npcId": "npc_grandma_rabbit",
+      "npcName": "든해",
+      "firstInteractionStartNodeId": "",
+      "startNodeId": "grandma_level_0_01_start",
+      "randomGreetingNodeIds": [],
+      "defaultCategoryId": "tree_talk",
+      "categories": [
+        {
+          "categoryId": "tree_talk",
+          "categoryName": "계수나무와 다과점 이야기",
+          "firstSetId": "grandma_level_0_01",
+          "useNonRepeatingRandom": true,
+          "setIds": [
+            "grandma_level_0_01",
+            "grandma_level_0_02",
+            "grandma_level_1_01",
+            "grandma_level_1_02",
+            "grandma_level_2_01",
+            "grandma_level_2_02",
+            "grandma_level_3_01",
+            "grandma_level_3_02",
+            "grandma_level_4_01",
+            "grandma_level_4_02",
+            "grandma_level_5_01",
+            "grandma_level_5_02",
+            "grandma_level_6_01",
+            "grandma_level_6_02",
+            "grandma_level_7_01",
+            "grandma_level_7_02"
+          ]
+        }
+      ],
+      "dialogueSets": [
+        {
+          "setId": "grandma_level_0_01",
+          "title": "빛을 잃은 계수나무",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_0_01_start",
+          "useTreeLevel": true,
+          "treeLevel": 0
+        },
+        {
+          "setId": "grandma_level_0_02",
+          "title": "처음 문을 연 다과점",
+          "categoryId": null,
+          "treeId": "_talk\",",
+          "startNodeId": "grandma_level_0_02_start",
+          "useTreeLevel": true,
+          "treeLevel": 0
+        },
+        {
+          "setId": "grandma_level_1_01",
+          "title": "희미한 온기",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_1_01_start",
+          "useTreeLevel": true,
+          "treeLevel": 1
+        },
+        {
+          "setId": "grandma_level_1_02",
+          "title": "첫 손님들",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_1_02_start",
+          "useTreeLevel": true,
+          "treeLevel": 1
+        },
+        {
+          "setId": "grandma_level_2_01",
+          "title": "잎 끝의 빛",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_2_01_start",
+          "useTreeLevel": true,
+          "treeLevel": 2
+        },
+        {
+          "setId": "grandma_level_2_02",
+          "title": "가게의 향기",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_2_02_start",
+          "useTreeLevel": true,
+          "treeLevel": 2
+        },
+        {
+          "setId": "grandma_level_3_01",
+          "title": "돌아오는 별빛",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_3_01_start",
+          "useTreeLevel": true,
+          "treeLevel": 3
+        },
+        {
+          "setId": "grandma_level_3_02",
+          "title": "웃음이 늘어난 가게",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_3_02_start",
+          "useTreeLevel": true,
+          "treeLevel": 3
+        },
+        {
+          "setId": "grandma_level_4_01",
+          "title": "깨어나는 가지",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_4_01_start",
+          "useTreeLevel": true,
+          "treeLevel": 4
+        },
+        {
+          "setId": "grandma_level_4_02",
+          "title": "늘어난 솜씨",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_4_02_start",
+          "useTreeLevel": true,
+          "treeLevel": 4
+        },
+        {
+          "setId": "grandma_level_5_01",
+          "title": "대답하는 계수나무",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_5_01_start",
+          "useTreeLevel": true,
+          "treeLevel": 5
+        },
+        {
+          "setId": "grandma_level_5_02",
+          "title": "기특한 제자",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_5_02_start",
+          "useTreeLevel": true,
+          "treeLevel": 5
+        },
+        {
+          "setId": "grandma_level_6_01",
+          "title": "별빛을 머금은 나무",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_6_01_start",
+          "useTreeLevel": true,
+          "treeLevel": 6
+        },
+        {
+          "setId": "grandma_level_6_02",
+          "title": "기대를 넘어선 아이",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_6_02_start",
+          "useTreeLevel": true,
+          "treeLevel": 6
+        },
+        {
+          "setId": "grandma_level_7_01",
+          "title": "되찾은 빛",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_7_01_start",
+          "useTreeLevel": true,
+          "treeLevel": 7
+        },
+        {
+          "setId": "grandma_level_7_02",
+          "title": "마을의 새로운 빛",
+          "categoryId": "tree_talk",
+          "startNodeId": "grandma_level_7_02_start",
+          "useTreeLevel": true,
+          "treeLevel": 7
+        }
+      ],
+      "nodes": [
+        {
+          "nodeId": "grandma_level_0_01_start",
+          "type": "line",
+          "lines": [
+            "계수나무가 이토록 잠잠한 건 처음 보는구나.",
+            "가지마다 머물던 별빛이 사라지고 있으니, 마을의 모두가 걱정할 수밖에.",
+            "그래도 너무 겁먹지는 말거라. 작은 빛 하나가 다시 나무를 깨울 때도 있는 법이란다."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_0_02_start",
+          "type": "line",
+          "lines": [
+            "(플레이어 이름), 다과점 문을 연 뒤로는 어떠하니?",
+            "낯선 손님을 맞고 혼자 가게를 꾸리는 일이 생각보다 쉽지는 않을 게다.",
+            "손님들이 네 다과를 먹고 어떤 표정을 짓는지, 다음에 할미에게도 들려주렴."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_1_01_start",
+          "type": "line",
+          "lines": [
+            "오늘은 나무 곁의 공기가 아주 조금 따뜻해졌구나.",
+            "눈에 잘 보이지 않아도 네가 모아 온 별빛이 뿌리까지 닿고 있다는 뜻이란다.",
+            "서두르지 말고 지금처럼 한 걸음씩 해 보자꾸나."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_1_02_start",
+          "type": "line",
+          "lines": [
+            "요즘은 가게에 어떤 손님들이 찾아오니?",
+            "입맛도 사는 곳도 제각각인 이들이 네 다과 앞에 함께 앉는 모습을 한번 보고 싶구나.",
+            "힘든 일이 생기면 혼자 끙끙 앓지 말고 할미에게 말하거라."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_2_01_start",
+          "type": "line",
+          "lines": [
+            "저 잎 끝을 보렴. 전에는 없던 빛이 가늘게 맺혀 있지?",
+            "계수나무가 오랜 잠 속에서도 네 정성을 알아듣고 있는 게야.",
+            "아직은 여린 빛이니, 꺼지지 않도록 잘 지켜보자꾸나."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_2_02_start",
+          "type": "line",
+          "lines": [
+            "마을 어귀까지 달콤한 냄새가 퍼지더구나. 오늘도 가게가 바빴나 보지?",
+            "손님이 늘어 기쁜 것도 좋지만, 네 몸을 돌보는 일도 장사의 일부란다.",
+            "지치면 잠시 쉬어 가렴. 오래 이어 가는 마음이 무엇보다 중요하니까."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_3_01_start",
+          "type": "line",
+          "lines": [
+            "이제는 줄기를 타고 별빛이 흐르는 게 할미 눈에도 보이는구나.",
+            "빛을 잃은 뒤로 차갑기만 하던 나무가 다시 숨을 쉬기 시작했어.",
+            "(플레이어 이름), 네가 해낸 일이란다."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_3_02_start",
+          "type": "line",
+          "lines": [
+            "요즘 네 가게를 나서는 손님들의 얼굴이 한결 환하더구나.",
+            "다과 한 접시가 배만 채우는 게 아니라 마음까지 달래 준다는 걸 네가 보여 주고 있어.",
+            "할미가 가르친 것보다 더 따뜻한 가게가 되어 가는구나."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_4_01_start",
+          "type": "line",
+          "lines": [
+            "가지를 따라 번지는 빛이 제법 또렷해졌구나.",
+            "아주 오래전, 별빛이 마을 위로 비처럼 내리던 때의 모습과 조금씩 닮아 가고 있어.",
+            "다시 그 광경을 보게 될지도 모르겠구나."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_4_02_start",
+          "type": "line",
+          "lines": [
+            "처음 반죽을 빚던 때와 비교하면 네 손끝이 참 야무져졌어.",
+            "새로운 다과를 익히면서도 손님 한 명 한 명을 살피는 걸 잊지 않았더구나.",
+            "그 마음이 계수나무의 빛을 이만큼 되돌린 게야. 참 기특하구나."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_5_01_start",
+          "type": "line",
+          "lines": [
+            "바람이 불 때마다 잎들이 맑은 소리를 내는구나.",
+            "이제 계수나무가 별빛에 분명히 대답하고 있어.",
+            "마을도 예전의 온기를 되찾고 있으니, 네 노력이 헛되지 않았단다."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_5_02_start",
+          "type": "line",
+          "lines": [
+            "(플레이어 이름), 가게를 이렇게 훌륭히 꾸려 갈 줄은 알았지만 할미의 생각보다도 더 잘해 주었구나.",
+            "바쁜 와중에도 다과에 담는 정성은 조금도 흐트러지지 않았어.",
+            "네가 내 제자라는 게 참 자랑스럽단다."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_6_01_start",
+          "type": "line",
+          "lines": [
+            "이제 밤이 되면 가지 사이로 별빛 조각이 맺히는구나.",
+            "조금만 더 힘을 되찾으면 이 나무가 다시 마을 전체를 환히 비춰 줄 게야.",
+            "여기까지 올 수 있었던 건 네가 모은 마음들이 나무에 닿았기 때문이란다."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_6_02_start",
+          "type": "line",
+          "lines": [
+            "어린 네게 다과 만드는 법을 가르치던 날이 엊그제 같은데, 이제는 할미보다 더 많은 이의 마음을 돌보고 있구나.",
+            "가게도 계수나무도 네 손길을 따라 제자리를 찾아가고 있어.",
+            "정말 장하고 기특하다, (플레이어 이름)."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_7_01_start",
+          "type": "line",
+          "lines": [
+            "보이니? 계수나무가 마침내 제 빛을 되찾았구나.",
+            "다시는 이 모습을 볼 수 없을까 두려웠는데, 네가 할미의 오랜 걱정을 거두어 주었어.",
+            "고맙다, (플레이어 이름). 정말 고맙구나."
+          ],
+          "nextNodeId": "end_node"
+        },
+        {
+          "nodeId": "grandma_level_7_02_start",
+          "type": "line",
+          "lines": [
+            "이제 네 다과점은 단순히 다과를 파는 곳이 아니란다.",
+            "서로 다른 별에서 온 마음들이 쉬어 가고, 그 마음이 다시 계수나무와 마을을 밝히는 곳이 되었지.",
+            "할미가 시작한 이야기를 네가 이렇게 아름답게 이어 주었구나. 네가 참 자랑스럽다."
           ],
           "nextNodeId": "end_node"
         },

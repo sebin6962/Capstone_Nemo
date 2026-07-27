@@ -25,6 +25,7 @@ public class NPCDialogueUIManager : MonoBehaviour
     [SerializeField] private Button closeButton;
     [SerializeField] private TMP_Text nextButtonText;
     [SerializeField] private Image portraitImage;
+    [SerializeField] private GameObject eKeyGuideImage;
 
     [Header("Portrait Open Animation")]
     [SerializeField] private float portraitStartDelay = 0.28f;
@@ -115,6 +116,8 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         if (dialoguePanel != null)
             dialoguePanel.SetActive(false);
+
+        SetEKeyGuideVisible(false);
 
         if (nextButton != null)
         {
@@ -747,6 +750,8 @@ public class NPCDialogueUIManager : MonoBehaviour
         currentState =
             DialogueState.Choice;
 
+        // 선택지가 표시될 때만 E키 안내 숨김
+        SetEKeyGuideVisible(false);
         SetNextButton(false, "다음");
 
         if (node.options == null ||
@@ -948,6 +953,7 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         StopTypingImmediately();
         StopNextButtonBlink();
+        SetEKeyGuideVisible(false);
 
         if (dialoguePanel != null)
             dialoguePanel.SetActive(false);
@@ -984,6 +990,7 @@ public class NPCDialogueUIManager : MonoBehaviour
     {
         StopTypingImmediately();
         StopNextButtonBlink();
+        SetEKeyGuideVisible(false);
 
         currentFullLine = line;
 
@@ -1006,6 +1013,8 @@ public class NPCDialogueUIManager : MonoBehaviour
             if (nextButton != null)
                 nextButton.interactable = false;
         }
+
+        SetEKeyGuideVisible(true);
 
         float startDelay =
             waitTypingDelayForNextLine
@@ -1104,6 +1113,7 @@ public class NPCDialogueUIManager : MonoBehaviour
         if (nextButton != null)
             nextButton.interactable = true;
 
+        SetEKeyGuideVisible(true);
         StartNextButtonBlink();
     }
 
@@ -1359,6 +1369,12 @@ public class NPCDialogueUIManager : MonoBehaviour
             nextButtonText.text = text;
     }
 
+    private void SetEKeyGuideVisible(bool visible)
+    {
+        if (eKeyGuideImage != null)
+            eKeyGuideImage.SetActive(visible);
+    }
+
     public void CloseDialogue()
     {
         if (BGMPlayer.Instance != null)
@@ -1377,6 +1393,7 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         StopTypingImmediately();
         StopNextButtonBlink();
+        SetEKeyGuideVisible(false);
 
         currentFullLine = "";
         currentCategoryId = null;
