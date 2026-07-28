@@ -14,9 +14,46 @@ public class NextDayCutscene : MonoBehaviour
     [Header("타이밍")]
     [SerializeField] private float holdSeconds = 3f;   // 컷 유지 시간
     [SerializeField] private float fadeSeconds = 1.5f; // 컷 페이드 인 시간
+    [SerializeField] private float blackHoldSeconds = 0.35f; // 완전히 검어진 상태 유지 시간
 
     [Header("시작 방식")]
     [SerializeField] private bool playOnStart = false;
+
+    [Header("랜덤 세계관 정보")]
+    [Tooltip("컷신이 활성화될 때 함께 표시할 TextMeshPro 오브젝트")]
+    [SerializeField] private GameObject randomInfoTextObject;
+
+    [Tooltip("Random Info Text Object에 붙어 있는 TextMeshProUGUI")]
+    [SerializeField] private TMP_Text randomInfoText;
+
+    [Tooltip("랜덤 정보 텍스트가 사라지는 데 걸리는 시간")]
+    [SerializeField] private float randomInfoFadeOutSeconds = 0.5f;
+
+    [TextArea(2, 4)]
+    [SerializeField]
+    private string[] randomInfoMessages =
+    {
+        "달마을의 토끼들은 척박한 달을 오랫동안 가꾸어 지금의 마을을 만들었습니다.",
+        "달마을의 불빛과 시설은 계수나무에서 얻은 별빛으로 움직입니다.",
+        "한때 찬란했던 계수나무는 어느 날부터 조금씩 빛을 잃기 시작했습니다.",
+        "토끼들은 계수나무의 빛을 마을을 움직이는 소중한 자원으로 사용해 왔습니다.",
+        "계수나무가 약해지자 달마을의 밤도 전보다 조금 더 어두워졌습니다.",
+        "사장님의 다과가 외계 손님을 행복하게 할수록 더 많은 별빛이 달마을에 모입니다.",
+        "외계 손님이 건네는 별빛에는 다과를 맛본 기쁨과 고마움이 담겨 있습니다.",
+        "먼 지구별의 작은 나라, 한국에는 마음과 계절을 담아 만든 전통 다과가 있습니다.",
+        "달다담의 다과는 지구의 전통을 달의 재료와 토끼들의 방식으로 이어 만든 음식입니다.",
+        "다과를 팔아 모은 별빛은 계수나무에 바쳐져, 잃어버린 빛을 조금씩 되찾게 합니다.",
+        "계수나무 광장은 달마을에서 가장 오래된 장소이자 토끼들이 가장 아끼는 공간입니다.",
+        "분화구 농장은 메마른 달의 흙을 토끼들이 오랜 시간 가꾸어 만든 밭입니다.",
+        "마을의 별등은 계수나무의 빛이 강할수록 더 따뜻하고 환하게 빛납니다.",
+        "계수나무의 잎은 빛의 상태에 따라 색과 반짝임이 조금씩 달라집니다.",
+        "든해 할머니는 오래전부터 계수나무와 달마을을 지켜봐 왔습니다.",
+        "보리는 계수나무 잎의 색과 별빛의 흐름에서 작은 변화도 금세 알아챕니다.",
+        "인쇄 종족 하린은 말 대신 무늬로 마음을 전하며, 수와 복 문양이 찍힌 다식을 좋아합니다.",
+        "다식의 수(壽) 문양에는 건강과 장수를, 복(福) 문양에는 행운을 바라는 마음을 담습니다.",
+        "말이 통하지 않는 외계 손님에게도 정성껏 만든 다과의 마음은 전해집니다.",
+        "오늘 모은 작은 별빛 하나가 계수나무와 달마을의 내일을 밝힙니다."
+    };
 
     [Header("Subtitle Gradient")]
     [SerializeField] private Image gradientOverlay;          // 하단 검은 그라디언트 이미지
@@ -51,6 +88,9 @@ public class NextDayCutscene : MonoBehaviour
     private CanvasGroup gradientGroup;
     private CanvasGroup subtitleTextGroup;
     private CanvasGroup cutCanvasGroup;
+    private CanvasGroup randomInfoTextGroup;
+
+    private static int lastRandomInfoIndex = -1;
 
     private void Awake()
     {
@@ -73,6 +113,8 @@ public class NextDayCutscene : MonoBehaviour
             fadeImage.gameObject.SetActive(false);
         }
 
+        SetupRandomInfoText();
+
         if (gradientOverlay != null)
         {
             var grt = gradientOverlay.rectTransform;
@@ -84,8 +126,8 @@ public class NextDayCutscene : MonoBehaviour
             gradientGroup = gradientOverlay.GetComponent<CanvasGroup>();
             if (gradientGroup == null)
                 gradientGroup = gradientOverlay.gameObject.AddComponent<CanvasGroup>();
-            gradientGroup.alpha = 0f;                
-            gradientOverlay.raycastTarget = false;    
+            gradientGroup.alpha = 0f;
+            gradientOverlay.raycastTarget = false;
 
             if (gradientOverlay.sprite == null)
             {
@@ -142,8 +184,8 @@ public class NextDayCutscene : MonoBehaviour
             yield break;
         }
 
-        // 컷 패널 켜고 투명 상태에서 시작
-        cutPanel.SetActive(true);
+        // 컷 패널은 검은 화면 뒤에서 켜질 수 있도록 일단 숨겨 둔다.
+        cutPanel.SetActive(false);
         cutCanvasGroup.alpha = 0f;
 
         if (gradientOverlay != null && gradientGroup != null)
@@ -152,7 +194,36 @@ public class NextDayCutscene : MonoBehaviour
             gradientGroup.alpha = 0f;
         }
 
-        yield return FadeCanvasGroup(cutCanvasGroup, 0f, 1f, fadeSeconds);
+        if (fadeImage != null)
+        {
+            // 명세서 화면 위를 검게 덮는다.
+            fadeImage.gameObject.SetActive(true);
+            fadeImage.transform.SetAsLastSibling();
+            fadeImage.raycastTarget = true;
+
+            yield return FadeImageAlpha(fadeImage, 0f, 1f, fadeSeconds);
+
+            // 완전히 검어진 뒤에만 컷신 패널을 활성화한다.
+            cutPanel.SetActive(true);
+            cutCanvasGroup.alpha = 1f;
+            ShowRandomInfoText();
+
+            if (blackHoldSeconds > 0f)
+                yield return new WaitForSecondsRealtime(blackHoldSeconds);
+
+            // 검은 화면이 걷히면서 컷신이 보이게 한다.
+            yield return FadeImageAlpha(fadeImage, 1f, 0f, fadeSeconds);
+
+            fadeImage.raycastTarget = false;
+            fadeImage.gameObject.SetActive(false);
+        }
+        else
+        {
+            // fadeImage가 연결되지 않았을 때 기존 방식으로 재생한다.
+            cutPanel.SetActive(true);
+            ShowRandomInfoText();
+            yield return FadeCanvasGroup(cutCanvasGroup, 0f, 1f, fadeSeconds);
+        }
 
         if (gradientOverlay != null && gradientGroup != null)
         {
@@ -202,7 +273,82 @@ public class NextDayCutscene : MonoBehaviour
             gradientOverlay.gameObject.SetActive(false);
         }
 
+        yield return HideRandomInfoText();
+
         yield return TransitionToVillage();
+    }
+
+    private void SetupRandomInfoText()
+    {
+        if (randomInfoText == null && randomInfoTextObject != null)
+            randomInfoText = randomInfoTextObject.GetComponent<TMP_Text>();
+
+        if (randomInfoTextObject == null && randomInfoText != null)
+            randomInfoTextObject = randomInfoText.gameObject;
+
+        if (randomInfoTextObject != null)
+        {
+            randomInfoTextGroup = randomInfoTextObject.GetComponent<CanvasGroup>();
+            if (randomInfoTextGroup == null)
+                randomInfoTextGroup = randomInfoTextObject.AddComponent<CanvasGroup>();
+
+            randomInfoTextGroup.alpha = 0f;
+            randomInfoTextGroup.interactable = false;
+            randomInfoTextGroup.blocksRaycasts = false;
+            randomInfoTextObject.SetActive(false);
+        }
+    }
+
+    private void ShowRandomInfoText()
+    {
+        if (randomInfoTextObject == null || randomInfoText == null)
+            return;
+
+        if (randomInfoMessages == null || randomInfoMessages.Length == 0)
+        {
+            Debug.LogWarning("[NextDayCutscene] Random Info Messages가 비어 있습니다.");
+            randomInfoTextObject.SetActive(false);
+            return;
+        }
+
+        int randomIndex;
+
+        if (randomInfoMessages.Length == 1)
+        {
+            randomIndex = 0;
+        }
+        else
+        {
+            do
+            {
+                randomIndex = Random.Range(0, randomInfoMessages.Length);
+            }
+            while (randomIndex == lastRandomInfoIndex);
+        }
+
+        lastRandomInfoIndex = randomIndex;
+        randomInfoText.text = randomInfoMessages[randomIndex];
+        randomInfoTextObject.SetActive(true);
+        randomInfoTextGroup.alpha = 1f;
+        randomInfoText.ForceMeshUpdate();
+    }
+
+    private IEnumerator HideRandomInfoText()
+    {
+        if (randomInfoTextObject == null)
+            yield break;
+
+        if (randomInfoTextGroup != null)
+        {
+            yield return FadeCanvasGroup(
+                randomInfoTextGroup,
+                randomInfoTextGroup.alpha,
+                0f,
+                randomInfoFadeOutSeconds
+            );
+        }
+
+        randomInfoTextObject.SetActive(false);
     }
 
     private IEnumerator TransitionToVillage()
@@ -238,6 +384,32 @@ public class NextDayCutscene : MonoBehaviour
         }
 
         cg.alpha = to;
+    }
+
+    private IEnumerator FadeImageAlpha(Image image, float from, float to, float seconds)
+    {
+        float t = 0f;
+        Color color = image.color;
+        color.a = from;
+        image.color = color;
+
+        if (seconds <= 0f)
+        {
+            color.a = to;
+            image.color = color;
+            yield break;
+        }
+
+        while (t < seconds)
+        {
+            t += Time.unscaledDeltaTime;
+            color.a = Mathf.Lerp(from, to, Mathf.Clamp01(t / seconds));
+            image.color = color;
+            yield return null;
+        }
+
+        color.a = to;
+        image.color = color;
     }
 
     private void ResetSubtitleTextToDefault()
