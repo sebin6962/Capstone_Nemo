@@ -20,6 +20,10 @@ public class SpriteSensor : MonoBehaviour
     // 중앙 시스템 또는 직접 감지에서 "켜라/꺼라" 요청한 상태 저장
     private bool requestedOutline = false;
 
+    // FarmManager 등 다른 상호작용 스크립트도
+    // 아웃라인과 동일한 센서 범위를 사용할 수 있도록 공개
+    public bool IsPlayerInside => enabled && _inside.Count > 0;
+
     void Awake()
     {
         var col = GetComponent<Collider2D>();
@@ -127,6 +131,15 @@ public class SpriteSensor : MonoBehaviour
             usingCentral = false;
             SetOutline(true);
         }
+    }
+
+    void OnTriggerStay2D(Collider2D other)
+    {
+        // 플레이어가 이미 센서 안에 있는 상태에서 센서가 활성화된 경우에도
+        // 다음 물리 프레임에 정상적으로 감지되도록 보완
+        if (!IsPlayer(other) || _inside.Contains(other)) return;
+
+        OnTriggerEnter2D(other);
     }
 
     void OnTriggerExit2D(Collider2D other)

@@ -253,6 +253,7 @@ public class FarmManager : MonoBehaviour
         }
 
         HandleTreeLevelWarningByInput();
+        RefreshCropInteractionStates();
         HandleRightClickHarvest();
 
         // 같은 툴팁 패널을 쓰기때문에 나무 먼저, 작물은 그 다음
@@ -284,7 +285,7 @@ public class FarmManager : MonoBehaviour
                 autoRegrow = autoGrowingTrees.Contains(pos)   // 추가
             });
 
-            
+
         }
 
         // 2) 젖은 흙 저장
@@ -404,6 +405,7 @@ public class FarmManager : MonoBehaviour
             if (cropData.isTree)
             {
                 SetupTreeComponents(overlay);
+                SetupTreeClickArea(overlay);
                 SetupTreeTooltip(overlay, cropData);
             }
 
@@ -465,9 +467,12 @@ public class FarmManager : MonoBehaviour
         int clampedStage = Mathf.Clamp(startStage, 0, treeData.stages.Count - 1);
         sr.sprite = treeData.stages[clampedStage].sprite;
 
+        SetupCropSensor(overlay, treeData);
+
         if (treeData.isTree)
         {
             SetupTreeComponents(overlay);
+            SetupTreeClickArea(overlay);
             SetupTreeTooltip(overlay, treeData);
         }
 
@@ -479,6 +484,7 @@ public class FarmManager : MonoBehaviour
             isWatered = false
         };
         growingTiles.Add(cellPos, tile);
+        UpdateCropOutlineState(tile);
     }
 
     private void SetupTreeComponents(GameObject overlay)
@@ -508,6 +514,62 @@ public class FarmManager : MonoBehaviour
         // 3) 레이어(오타 수정): 필요 시 프로젝트에서 "Interactable" or "Obstacle" 사용
         int layer = LayerMask.NameToLayer("Interactable"); // ← 존재하는 레이어명으로
         if (layer != -1) overlay.layer = layer;
+    }
+
+    private const string TreeClickAreaName = "TreeClickArea";
+
+    // 줄기 충돌 콜라이더는 유지하고, 나무 스프라이트 클릭 전용 콜라이더를 별도로 만든다.
+    private GameObject SetupTreeClickArea(GameObject overlay)
+    {
+        if (overlay == null) return null;
+
+        Transform clickAreaTransform = overlay.transform.Find(TreeClickAreaName);
+        GameObject clickArea;
+
+        if (clickAreaTransform == null)
+        {
+            clickArea = new GameObject(TreeClickAreaName);
+            clickArea.transform.SetParent(overlay.transform, false);
+        }
+        else
+        {
+            clickArea = clickAreaTransform.gameObject;
+        }
+
+        clickArea.layer = overlay.layer;
+
+        var clickCollider = clickArea.GetComponent<BoxCollider2D>();
+        if (clickCollider == null)
+            clickCollider = clickArea.AddComponent<BoxCollider2D>();
+
+        clickCollider.isTrigger = true;
+
+        var treeRenderer = overlay.GetComponent<SpriteRenderer>();
+        if (treeRenderer != null && treeRenderer.sprite != null)
+        {
+            Bounds spriteBounds = treeRenderer.sprite.bounds;
+            clickCollider.size = new Vector2(
+                Mathf.Max(spriteBounds.size.x, 0.1f),
+                Mathf.Max(spriteBounds.size.y, 0.1f)
+            );
+            clickCollider.offset = spriteBounds.center;
+        }
+
+        if (clickArea.GetComponent<WorldHandCursor>() == null)
+            clickArea.AddComponent<WorldHandCursor>();
+
+        return clickArea;
+    }
+
+    private GameObject GetInteractionObject(CropTile tile)
+    {
+        if (tile == null || tile.cropOverlayObject == null)
+            return null;
+
+        if (tile.cropData != null && tile.cropData.isTree)
+            return SetupTreeClickArea(tile.cropOverlayObject);
+
+        return tile.cropOverlayObject;
     }
 
 
@@ -680,6 +742,7 @@ public class FarmManager : MonoBehaviour
 
             overlayTilemap.SetTile(pos, null);
             wateredTiles.Remove(pos);
+
         }
         else
         {
@@ -703,48 +766,91 @@ public class FarmManager : MonoBehaviour
         }
     }
 
-    //수확 처리 함수
+    // 수확 처리 함수
     private void HandleRightClickHarvest()
     {
+        if (!Input.GetMouseButtonDown(0))
+            return;
 
-        if (Input.GetMouseButtonDown(0)) // 좌클릭
+        // 물뿌리개를 들고 있으면 수확 금지
+        if (IsHoldingWateringCan())
+            return;
+
+        Camera cam = Camera.main;
+        if (cam == null)
+            return;
+
+        Vector3 mouseWorldPos =
+            cam.ScreenToWorldPoint(Input.mousePosition);
+
+        Vector2 clickPoint =
+            new Vector2(mouseWorldPos.x, mouseWorldPos.y);
+
+        // 마우스 위치에 존재하는 실제 Collider2D들을 검사
+        Collider2D[] clickedColliders =
+            Physics2D.OverlapPointAll(clickPoint);
+
+        foreach (Collider2D clickedCollider in clickedColliders)
         {
-            // 물뿌리개 들고 있으면 수확 금지
-            if (IsHoldingWateringCan())
-                return;
+            if (clickedCollider == null)
+                continue;
 
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector3Int cellPos = fieldTilemap.WorldToCell(worldPos);
-
-            if (growingTiles.TryGetValue(cellPos, out var tile))
+            foreach (var pair in growingTiles)
             {
-                bool isFullyGrown = tile.currentStage == tile.cropData.stages.Count - 1;
+                Vector3Int cellPos = pair.Key;
+                CropTile tile = pair.Value;
 
-                if (isFullyGrown)
+                if (tile == null ||
+                    tile.cropData == null ||
+                    tile.cropOverlayObject == null)
+                    continue;
+
+                Transform cropTransform =
+                    tile.cropOverlayObject.transform;
+
+                // 클릭한 콜라이더가 작물 루트 또는 작물의 자식인지 확인
+                bool clickedThisCrop =
+                    clickedCollider.transform == cropTransform ||
+                    clickedCollider.transform.IsChildOf(cropTransform);
+
+                if (!clickedThisCrop)
+                    continue;
+
+                bool isFullyGrown =
+                    tile.currentStage >=
+                    tile.cropData.stages.Count - 1;
+
+                if (!isFullyGrown)
+                    return;
+
+                // 아웃라인과 똑같이 Sensor 콜라이더 범위 안에서만 수확 가능
+                var sensor =
+                    tile.cropOverlayObject.GetComponentInChildren<SpriteSensor>(true);
+
+                if (sensor == null || !sensor.IsPlayerInside)
+                    return;
+
+                if (tile.cropData.isTree && IsTreeLocked(tile.cropData))
                 {
-                    //HarvestCrop(cellPos, tile.cropData.cropName);
-
-                    if (player != null)
-                    {
-                        Vector3 tileCenter = fieldTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0f);
-
-                        float dist = Vector2.Distance(player.position, tileCenter);
-                        if (dist > interactRadius)
-                        {
-                            Debug.Log($"수확 범위 밖입니다. 거리: {dist}, 허용 거리: {interactRadius}");
-                            return;
-                        }
-                    }
-
-                    //튜토리얼 작물 키우기 단계에서 수확 못하게
-                    if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.CropGrowing))
-                    {
-                        return;
-                    }
-
-                    // 범위 안이면 수확 진행
-                    HarvestCrop(cellPos, tile.cropData.cropName);
+                    ShowLevelTooLowByInput();
+                    return;
                 }
+
+                // 작물 성장 튜토리얼 중에는 수확 금지
+                if (TutorialManager.Instance != null &&
+                    TutorialManager.Instance.IsCurrentStep(
+                        VillageSecondStep.CropGrowing))
+                {
+                    return;
+                }
+
+                HarvestCrop(
+                    cellPos,
+                    tile.cropData.cropName
+                );
+
+                // 한 번 클릭으로 여러 작물이 수확되는 것 방지
+                return;
             }
         }
     }
@@ -827,6 +933,9 @@ public class FarmManager : MonoBehaviour
 
             overlayTilemap.SetTile(pos, null);
             wateredTiles.Remove(pos);
+
+            // 수확 직후에는 최종 단계가 아니므로 나무 클릭 영역과 손 커서를 즉시 끈다.
+            UpdateCropOutlineState(tile);
         }
         else
         {
@@ -1070,7 +1179,7 @@ public class FarmManager : MonoBehaviour
 
         if (col != null)
         {
-            TreeTooltip tt = col.GetComponent<TreeTooltip>();
+            TreeTooltip tt = col.GetComponentInParent<TreeTooltip>();
             if (tt != null)
             {
                 // 플레이어와의 거리 체크
@@ -1101,7 +1210,7 @@ public class FarmManager : MonoBehaviour
                 return;
             }
         }
-    
+
 
         // 나무 위에 마우스가 없는 상태
         if (currentHoverTree != null)
@@ -1114,7 +1223,6 @@ public class FarmManager : MonoBehaviour
     //아웃라인
     private void SetupCropSensor(GameObject overlay, CropData data)
     {
-        if (data != null && data.isTree) return;
         if (overlay == null) return;
 
         Transform sensorTr = overlay.transform.Find("Sensor");
@@ -1124,8 +1232,8 @@ public class FarmManager : MonoBehaviour
         var outlineSR = outlineTr.GetComponent<SpriteRenderer>();
         if (outlineSR != null)
         {
-            outlineSR.sprite = data != null ? data.outlineSprite : null; 
-            outlineSR.enabled = false;                                 
+            outlineSR.sprite = data != null ? data.outlineSprite : null;
+            outlineSR.enabled = false;
         }
 
         var sensor = sensorTr.GetComponent<SpriteSensor>();
@@ -1133,29 +1241,134 @@ public class FarmManager : MonoBehaviour
 
         sensor.spriteRenderer = outlineSR;
         sensor.playerLayer = LayerMask.GetMask("Player");
-        sensor.enabled = false;            
+        sensor.enabled = false;
         sensor.SetOutline(false);
     }
 
     //최종 단계일 때만 활성화
     private void UpdateCropOutlineState(CropTile tile)
     {
-        if (tile == null || tile.cropOverlayObject == null || tile.cropData == null) return;
+        if (tile == null ||
+            tile.cropOverlayObject == null ||
+            tile.cropData == null)
+            return;
 
-        if (tile.cropData.isTree) return;
+        bool isFinalStage =
+            tile.currentStage >= tile.cropData.stages.Count - 1;
 
-        var sensor = tile.cropOverlayObject.GetComponentInChildren<SpriteSensor>(true);
-        if (sensor == null) return;
+        // 기존 아웃라인 센서 처리
+        var sensor =
+            tile.cropOverlayObject.GetComponentInChildren<SpriteSensor>(true);
 
-        bool isFinalStage = tile.currentStage >= tile.cropData.stages.Count - 1;
-
-        sensor.enabled = isFinalStage;
-
-        if (!isFinalStage)
+        if (sensor != null)
         {
-            sensor.SetOutline(false);
+            sensor.enabled = isFinalStage;
+
+            if (!isFinalStage)
+                sensor.SetOutline(false);
         }
-        Debug.Log($"[Outline] {tile.cropData.cropName} stage={tile.currentStage}/{tile.cropData.stages.Count - 1} final={isFinalStage} sensorEnabled={sensor.enabled}");
+
+        // 손 모양 커서 처리
+        GameObject interactionObject = GetInteractionObject(tile);
+        if (interactionObject == null)
+            return;
+
+        var handCursor =
+            interactionObject.GetComponent<WorldHandCursor>();
+
+        if (handCursor == null)
+        {
+            handCursor =
+                interactionObject.AddComponent<WorldHandCursor>();
+        }
+
+        var collider = interactionObject.GetComponent<BoxCollider2D>();
+
+        if (collider == null)
+        {
+            collider = interactionObject.AddComponent<BoxCollider2D>();
+        }
+
+        collider.isTrigger = true;
+
+        // 현재 작물 스프라이트 크기에 맞춰 콜라이더 설정
+        SpriteRenderer cropRenderer =
+            tile.cropOverlayObject.GetComponent<SpriteRenderer>();
+
+        if (cropRenderer != null && cropRenderer.sprite != null)
+        {
+            Bounds spriteBounds = cropRenderer.sprite.bounds;
+
+            collider.size = new Vector2(
+                Mathf.Max(spriteBounds.size.x, 0.1f),
+                Mathf.Max(spriteBounds.size.y, 0.1f)
+            );
+
+            collider.offset = new Vector2(
+                spriteBounds.center.x,
+                spriteBounds.center.y
+            );
+        }
+
+        // 최종 성장 단계이면서 플레이어가 아웃라인 Sensor 범위 안에 있을 때만
+        // 클릭 콜라이더와 손 모양 커서를 활성화한다.
+        bool canInteract =
+            isFinalStage &&
+            sensor != null &&
+            sensor.IsPlayerInside;
+
+        collider.enabled = canInteract;
+        handCursor.enabled = canInteract;
+
+        Debug.Log(
+            $"[Crop Cursor] {tile.cropData.cropName} " +
+            $"final={isFinalStage}, " +
+            $"sensorInside={sensor != null && sensor.IsPlayerInside}, " +
+            $"cursor={handCursor.enabled}, " +
+            $"collider={collider.enabled}"
+        );
+    }
+
+    // 플레이어가 Sensor 범위에 들어오거나 나갈 때
+    // 손 커서와 클릭 수확 범위도 아웃라인 범위와 계속 동기화
+    private void RefreshCropInteractionStates()
+    {
+        foreach (var pair in growingTiles)
+        {
+            CropTile tile = pair.Value;
+
+            if (tile == null ||
+                tile.cropData == null ||
+                tile.cropOverlayObject == null)
+                continue;
+
+            bool isFinalStage =
+                tile.currentStage >= tile.cropData.stages.Count - 1;
+
+            var sensor =
+                tile.cropOverlayObject.GetComponentInChildren<SpriteSensor>(true);
+
+            bool canInteract =
+                isFinalStage &&
+                sensor != null &&
+                sensor.IsPlayerInside;
+
+            GameObject interactionObject = GetInteractionObject(tile);
+            if (interactionObject == null)
+                continue;
+
+            var collider =
+                interactionObject.GetComponent<BoxCollider2D>();
+
+            if (collider != null)
+                collider.enabled = canInteract;
+
+            var handCursor =
+                interactionObject.GetComponent<WorldHandCursor>();
+
+            if (handCursor != null)
+                handCursor.enabled = canInteract;
+        }
     }
 
     private void HandleGrowingCropTooltip()
@@ -1227,7 +1440,7 @@ public class FarmManager : MonoBehaviour
         string cropName = GetCropDisplayName(tile.cropData);
         float remain = GetRemainingTimeToFinalStage(tile);
 
-            return $"{cropName}\n{FormatTime(remain)}";
+        return $"{cropName}\n{FormatTime(remain)}";
     }
 
     private string GetCropDisplayName(CropData data)
