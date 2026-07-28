@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class IntroSceneManager : MonoBehaviour
 {
@@ -122,25 +123,27 @@ public class IntroSceneManager : MonoBehaviour
         // 마우스 왼쪽 클릭 체크
         if (!clicked && Input.GetMouseButtonDown(0))
         {
-            
-
-            if (!canClick && !textStarted)
+            // 안내 문구가 활성화된 뒤에는 첫 클릭으로 바로 씬 전환
+            if (canClick)
             {
-                SFXManager.Instance.PlayIntroClickSFX();
-                // 로고가 다 뜬 이후에만 텍스트 바로 등장 허용
-                if (allowSkipToText)
-                {
-                    ForceStartTextStage();
-                }
-            }
-            // 텍스트가 이미 다 뜬 상태면 다음 씬으로 이동
-            else if (canClick)
-            {
-                SFXManager.Instance.PlayIntroClickSFX();
                 clicked = true;
-                //if (SFXManager.Instance != null)
-                //    SFXManager.Instance.PlayIntroClickSFX();
-                FadeManager.Instance.FadeToScene("SaveSelectScene");
+                blinking = false;
+
+                if (SFXManager.Instance != null)
+                    SFXManager.Instance.PlayIntroClickSFX();
+
+                if (FadeManager.Instance != null)
+                    FadeManager.Instance.FadeToScene("SaveSelectScene");
+                else
+                    SceneManager.LoadScene("SaveSelectScene");
+            }
+            // 로고 연출이 끝난 뒤 클릭하면 남은 대기 시간을 건너뜀
+            else if (!textStarted && allowSkipToText)
+            {
+                if (SFXManager.Instance != null)
+                    SFXManager.Instance.PlayIntroClickSFX();
+
+                ForceStartTextStage();
             }
         }
 
@@ -150,10 +153,10 @@ public class IntroSceneManager : MonoBehaviour
             Vector2 ap = spaceshipUI.anchoredPosition;
 
             // x: 등속 이동 (픽셀/초)
-            ap.x += shipPxPerSec * Time.deltaTime;
+            ap.x += shipPxPerSec * Time.unscaledDeltaTime;
 
             // y: 사인 웨이브
-            float t = Time.time - moveStartTime;
+            float t = Time.unscaledTime - moveStartTime;
             float phaseRad = wavePhaseDegrees * Mathf.Deg2Rad;
             ap.y = baseAnchoredY + waveAmplitudePx * Mathf.Sin(2f * Mathf.PI * waveFrequency * t + phaseRad);
 
@@ -177,7 +180,7 @@ public class IntroSceneManager : MonoBehaviour
     IEnumerator FlowSequence()
     {
         // 1 로고 등장
-        yield return new WaitForSeconds(delayBeforeLogo);
+        yield return new WaitForSecondsRealtime(delayBeforeLogo);
 
         // 로고 등장과 동시에 우주선 이동 시작
         StartShipOnce();
@@ -193,7 +196,7 @@ public class IntroSceneManager : MonoBehaviour
         // 2 텍스트 등장
         if (!textStarted)
         {
-            yield return new WaitForSeconds(delayBeforeText);
+            yield return new WaitForSecondsRealtime(delayBeforeText);
             yield return StartCoroutine(StartTextStage());
         }
     }
@@ -201,12 +204,17 @@ public class IntroSceneManager : MonoBehaviour
     // 텍스트 등장 + 깜빡임 + 클릭 허용까지 한 번에 처리
     private IEnumerator StartTextStage()
     {
+        if (textStarted)
+            yield break;
+
         textStarted = true;
 
         clickTextUI.gameObject.SetActive(true);
-        yield return StartCoroutine(FadeCanvasGroup(clickTextUI, 0, 1, textFadeDuration));
 
+        // 문구가 켜지는 순간부터 클릭 허용
         canClick = true;
+
+        yield return StartCoroutine(FadeCanvasGroup(clickTextUI, 0, 1, textFadeDuration));
 
         blinking = true;
         StartCoroutine(BlinkText());
@@ -224,8 +232,6 @@ public class IntroSceneManager : MonoBehaviour
     {
         if (textStarted) return;   // 이미 시작했으면 무시
 
-        textStarted = true;
-
         // 메인 흐름 중단
         if (flowCoroutine != null)
         {
@@ -242,11 +248,20 @@ public class IntroSceneManager : MonoBehaviour
 
     IEnumerator FadeCanvasGroup(CanvasGroup cg, float from, float to, float duration)
     {
+        if (cg == null)
+            yield break;
+
+        if (duration <= 0f)
+        {
+            cg.alpha = to;
+            yield break;
+        }
+
         float t = 0f;
         cg.alpha = from;
         while (t < duration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             cg.alpha = Mathf.Lerp(from, to, t / duration);
             yield return null;
         }
@@ -259,7 +274,7 @@ public class IntroSceneManager : MonoBehaviour
         Image img = clickTextUI.GetComponent<Image>();
         while (blinking && clickText != null)
         {
-            float alpha = (Mathf.Sin(Time.time * blinkSpeed * Mathf.PI) + 1f) / 2f; // 0~1 반복
+            float alpha = (Mathf.Sin(Time.unscaledTime * blinkSpeed * Mathf.PI) + 1f) / 2f; // 0~1 반복
             Color c = clickText.color;
             c.a = alpha;
             clickText.color = c;
@@ -332,7 +347,7 @@ public class IntroSceneManager : MonoBehaviour
         spaceshipUI.anchoredPosition = new Vector2(startX, baseAnchoredY);
 
         // 5) 웨이브 기준 시간 초기화 후 이동 시작
-        moveStartTime = Time.time;
+        moveStartTime = Time.unscaledTime;
         moveShip = true;
     }
 
@@ -365,7 +380,7 @@ public class IntroSceneManager : MonoBehaviour
         // 1) 위에서 내려옴
         while (t < logoDropDuration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             float p = Mathf.Clamp01(t / logoDropDuration);
 
             float eased = EaseInQuad(p);
@@ -380,7 +395,7 @@ public class IntroSceneManager : MonoBehaviour
         t = 0f;
         while (t < logoBounceUpDuration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             float p = Mathf.Clamp01(t / logoBounceUpDuration);
 
             float eased = EaseOutCubic(p);
@@ -395,7 +410,7 @@ public class IntroSceneManager : MonoBehaviour
         t = 0f;
         while (t < logoSettleDuration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             float p = Mathf.Clamp01(t / logoSettleDuration);
 
             float eased = EaseInOutSine(p);

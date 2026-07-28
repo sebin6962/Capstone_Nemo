@@ -23,8 +23,8 @@ public class NewGamePopupManager : MonoBehaviour
     public TMP_InputField inputServerName;   // 마을 이름 + 세이브 파일 구분용 이름
     public TMP_InputField inputPlayerName;   // 캐릭터 이름
 
-    [SerializeField] private int maxServerNameLength = 6;
-    [SerializeField] private int maxPlayerNameLength = 6;
+    [SerializeField] private int maxServerNameLength = 5;
+    [SerializeField] private int maxPlayerNameLength = 5;
 
     public Button btnCreate;
     public Button btnCancel;
