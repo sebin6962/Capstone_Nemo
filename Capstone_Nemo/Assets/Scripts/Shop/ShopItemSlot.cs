@@ -76,6 +76,6 @@ public class ShopItemSlot : MonoBehaviour
     public void UpdateOwnedDisplay(int ownedCount)
     {
         if (ownedText != null)
-            ownedText.text = $"º¸À¯ {ownedCount}";
+            ownedText.text = $"{ownedCount}";
     }
 }
