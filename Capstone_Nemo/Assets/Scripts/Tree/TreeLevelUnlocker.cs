@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 using System.IO;
 
 public class TreeLevelUnlocker : MonoBehaviour
@@ -73,6 +74,10 @@ public class TreeLevelUnlocker : MonoBehaviour
     [Header("카메라 투어(복귀 포함)")]
     public float cameraReturnDuration = 2.5f;
 
+    [Header("파티클 종료 후 카메라 복귀")]
+    [FormerlySerializedAs("gameplayReturnDelay")]
+    [Min(0f)] public float particleEndCameraReturnDelay = 0.5f;
+
     public MonoBehaviour[] cameraControllersToDisable;
 
     public bool IsPlayingUnlockSequence
@@ -87,6 +92,12 @@ public class TreeLevelUnlocker : MonoBehaviour
     public float auroraFadeInDuration = 0.8f;   // 서서히 밝아짐
     public float auroraStayDuration = 1.6f;     // 은은하게 유지
     public float auroraFadeOutDuration = 0.9f;
+
+    [Header("계수나무 해금 파티클")]
+    public GameObject treeUnlockVFXRoot;        // TreeUnlockVFX 루트 오브젝트
+    [Min(0f)] public float treeUnlockVFXPlayDelay = 0f;
+
+    private Coroutine treeUnlockVFXPlayCoroutine;
 
     [Header("계수나무 스프라이트 페이드")]
     public float treeSpriteFadeDuration = 0.8f;
@@ -153,6 +164,9 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     void Start()
     {
+        // 컷신 시작 전에는 이전 재생 흔적이 남지 않도록 완전히 정지한다.
+        StopAndClearTreeUnlockVFX();
+
         // 카메라 원위치 저장
         if (targetCamera != null)
         {
@@ -583,6 +597,8 @@ public class TreeLevelUnlocker : MonoBehaviour
         if (isPlayingUnlockSequence) yield break;
         isPlayingUnlockSequence = true;
 
+        StopAndClearTreeUnlockVFX();
+
         if (targetCamera == null || cameraStartPoint == null || cameraEndPoint == null)
         {
             Debug.LogWarning("[TreeLevelUnlocker] Camera refs missing.");
@@ -626,6 +642,13 @@ public class TreeLevelUnlocker : MonoBehaviour
         // 7.5) 도착 후 잠시 멈춤 + 오로라 연출
         yield return PlayTreeAuroraSequence();
 
+        // 파티클 연출이 끝난 화면을 유지한 뒤 카메라를 복귀시킨다.
+        if (particleEndCameraReturnDelay > 0f)
+            yield return new WaitForSeconds(particleEndCameraReturnDelay);
+
+        // 카메라가 돌아가기 전에 파티클과 남은 잔상을 정리한다.
+        StopAndClearTreeUnlockVFX();
+
         // 8) 카메라 end → "해금 버튼 누른 그 순간 위치"로 복귀
         yield return CameraPanTo(clickCamPos, cameraReturnDuration);
 
@@ -663,14 +686,19 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         if (auroraEffectPrefab == null)
         {
+            PlayTreeUnlockVFX();
             yield return new WaitForSeconds(auroraFadeInDuration + auroraStayDuration + auroraFadeOutDuration);
             yield return FadeToCurrentMapSprite();
+            StopAndClearTreeUnlockVFX();
             yield break;
         }
 
         // 카메라가 도착한 뒤 잠깐 멈춤
         if (auroraHoldDuration > 0f)
             yield return new WaitForSeconds(auroraHoldDuration);
+
+        // 자식 파티클의 Start Delay를 유지한 채 전체 이펙트를 처음부터 재생한다.
+        PlayTreeUnlockVFX();
 
         GameObject fx = null;
         TreeAuroraEffect aura = null;
@@ -714,6 +742,87 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         if (fx != null)
             Destroy(fx);
+
+        StopAndClearTreeUnlockVFX();
+    }
+
+    private void PlayTreeUnlockVFX()
+    {
+        StopAndClearTreeUnlockVFX();
+
+        if (treeUnlockVFXRoot == null)
+            return;
+
+        if (treeUnlockVFXPlayDelay > 0f)
+        {
+            treeUnlockVFXPlayCoroutine = StartCoroutine(PlayTreeUnlockVFXAfterDelay());
+            return;
+        }
+
+        PlayTreeUnlockVFXNow();
+    }
+
+    private IEnumerator PlayTreeUnlockVFXAfterDelay()
+    {
+        yield return new WaitForSeconds(treeUnlockVFXPlayDelay);
+        treeUnlockVFXPlayCoroutine = null;
+        PlayTreeUnlockVFXNow();
+    }
+
+    private void PlayTreeUnlockVFXNow()
+    {
+        if (treeUnlockVFXRoot == null)
+            return;
+
+        treeUnlockVFXRoot.SetActive(true);
+
+        ParticleSystem[] particleSystems =
+            treeUnlockVFXRoot.GetComponentsInChildren<ParticleSystem>(true);
+
+        foreach (ParticleSystem particle in particleSystems)
+        {
+            if (particle == null) continue;
+
+            // false를 사용해 각 자식 시스템을 한 번씩만 재생한다.
+            // 각 파티클 Main의 Start Delay도 그대로 유지된다.
+            particle.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+            particle.Clear(false);
+            particle.Play(false);
+        }
+    }
+
+    private void StopAndClearTreeUnlockVFX()
+    {
+        if (treeUnlockVFXPlayCoroutine != null)
+        {
+            StopCoroutine(treeUnlockVFXPlayCoroutine);
+            treeUnlockVFXPlayCoroutine = null;
+        }
+
+        if (treeUnlockVFXRoot == null)
+            return;
+
+        ParticleSystem[] particleSystems =
+            treeUnlockVFXRoot.GetComponentsInChildren<ParticleSystem>(true);
+
+        foreach (ParticleSystem particle in particleSystems)
+        {
+            if (particle == null) continue;
+
+            particle.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+            particle.Clear(false);
+        }
+
+        // 매니저 자신이 아닌 별도의 TreeUnlockVFX 루트를 연결해야 한다.
+        if (treeUnlockVFXRoot != gameObject)
+            treeUnlockVFXRoot.SetActive(false);
+        else
+            Debug.LogWarning("[TreeLevelUnlocker] Tree Unlock VFX Root에는 별도 오브젝트를 연결해야 합니다.");
+    }
+
+    private void OnDisable()
+    {
+        StopAndClearTreeUnlockVFX();
     }
 
     // 기존 PlayUnlockEffect를 "기다릴 수 있는" 루틴으로 감쌈
@@ -899,4 +1008,3 @@ public class TreeLevelUnlocker : MonoBehaviour
     }
 
 }
-
