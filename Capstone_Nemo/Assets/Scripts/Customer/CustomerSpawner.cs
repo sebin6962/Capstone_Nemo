@@ -52,7 +52,7 @@ public class CustomerSpawner : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
-        if (allowNewCustomers)
+        if (!tutorialMode && allowNewCustomers)
         {
             TrySpawnCustomer();
         }
