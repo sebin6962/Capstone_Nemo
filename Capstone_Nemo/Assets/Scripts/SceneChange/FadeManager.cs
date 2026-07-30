@@ -233,4 +233,15 @@ public class FadeManager : MonoBehaviour
         if (fadeGroup != null) { fadeGroup.blocksRaycasts = false; fadeGroup.interactable = false; }
         fadeImage.gameObject.SetActive(false); // 검은 화면 꺼주기
     }
+
+    /// <summary>
+    /// 아이템 보유 여부와 관계없이 시스템 연출로 씬 전환
+    /// </summary>
+    public void FadeToSceneForced(string sceneName, float delay = 0f)
+    {
+        if (isFading)
+            return;
+
+        StartCoroutine(FadeAndSwitchScenes(sceneName, delay));
+    }
 }

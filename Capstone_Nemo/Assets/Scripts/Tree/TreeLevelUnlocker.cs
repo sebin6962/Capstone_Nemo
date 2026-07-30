@@ -115,6 +115,11 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     private bool endingTimelinePlayed;
 
+    [Header("엔딩 씬 전환")]
+    [SerializeField] private string endingSceneName = "EndingScene";
+
+    private bool isEndingSceneTransitioning;
+
     void Awake()
     {
         Instance = this;
@@ -1036,6 +1041,27 @@ public class TreeLevelUnlocker : MonoBehaviour
         endingTreeTimeline.time = 0;
         endingTreeTimeline.Evaluate();
         endingTreeTimeline.Play();
+    }
+
+    /// <summary>
+    /// 엔딩 Timeline 마지막 Signal에서 호출
+    /// </summary>
+    public void GoToEndingScene()
+    {
+        if (isEndingSceneTransitioning)
+            return;
+
+        if (FadeManager.Instance == null)
+        {
+            Debug.LogError(
+                "[TreeLevelUnlocker] FadeManager.Instance가 없어 EndingScene으로 이동할 수 없습니다."
+            );
+            return;
+        }
+
+        isEndingSceneTransitioning = true;
+
+        FadeManager.Instance.FadeToSceneForced(endingSceneName);
     }
 
 }

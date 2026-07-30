@@ -22764,7 +22764,7 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 0.70754707, g: 1, b: 0.99736637, a: 1}
-  m_Intensity: 1.28
+  m_Intensity: 0.69
   m_LightVolumeIntensity: 1
   m_LightVolumeIntensityEnabled: 0
   m_ApplyToSortingLayers: 00000000cd2716b9619938c77f3814039d5d2752257e463b
@@ -42288,6 +42288,7 @@ GameObject:
   - component: {fileID: 639058961}
   - component: {fileID: 639058960}
   - component: {fileID: 639058962}
+  - component: {fileID: 639058963}
   m_Layer: 0
   m_Name: TreeLevelUnlocker
   m_TagString: Untagged
@@ -42421,6 +42422,7 @@ MonoBehaviour:
   changeSpriteAtAuroraStart: 1
   motionTimeProperty: _MotionTime
   endingTreeTimeline: {fileID: 1161586019}
+  endingSceneName: EndingScene
 --- !u!4 &639058961
 Transform:
   m_ObjectHideFlags: 0
@@ -42488,6 +42490,36 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &639058963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 639058959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e52de21a22b6dd44c9cc19f810c65059, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Events:
+    m_Signals:
+    - {fileID: 11400000, guid: 0208af5f19ccbad42b298bc3d8071e8f, type: 2}
+    m_Events:
+    - m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 639058960}
+          m_TargetAssemblyTypeName: TreeLevelUnlocker, Assembly-CSharp
+          m_MethodName: GoToEndingScene
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
 --- !u!1 &640734349
 GameObject:
   m_ObjectHideFlags: 0
@@ -46489,9 +46521,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.00020697713
+    y: 0.00010082126
     width: 1
-    height: 0.99958605
+    height: 0.99979836
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -46521,7 +46553,7 @@ Transform:
   m_GameObject: {fileID: 913648120}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.08134053, y: 1.2549601, z: -10}
+  m_LocalPosition: {x: 0.08134052, y: 1.2549601, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -73290,6 +73322,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 280211927724648712, guid: 92b5b9e43928dc44b94469ecac1a7147, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1822946643365814696, guid: 92b5b9e43928dc44b94469ecac1a7147, type: 3}
       propertyPath: m_Name
       value: EndingCutscene_Tree
@@ -73336,7 +73372,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8888728628426205045, guid: 92b5b9e43928dc44b94469ecac1a7147, type: 3}
       propertyPath: m_SceneBindings.Array.size
-      value: 6
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 8888728628426205045, guid: 92b5b9e43928dc44b94469ecac1a7147, type: 3}
       propertyPath: m_SceneBindings.Array.data[2].key
@@ -73354,6 +73390,10 @@ PrefabInstance:
       propertyPath: m_SceneBindings.Array.data[5].key
       value: 
       objectReference: {fileID: -8054269920074701895, guid: efe33b22536c61e42bf80e0ca0abb810, type: 2}
+    - target: {fileID: 8888728628426205045, guid: 92b5b9e43928dc44b94469ecac1a7147, type: 3}
+      propertyPath: m_SceneBindings.Array.data[6].key
+      value: 
+      objectReference: {fileID: 711917418640159463, guid: efe33b22536c61e42bf80e0ca0abb810, type: 2}
     - target: {fileID: 8888728628426205045, guid: 92b5b9e43928dc44b94469ecac1a7147, type: 3}
       propertyPath: m_SceneBindings.Array.data[0].value
       value: 
@@ -73378,6 +73418,10 @@ PrefabInstance:
       propertyPath: m_SceneBindings.Array.data[5].value
       value: 
       objectReference: {fileID: 658260363}
+    - target: {fileID: 8888728628426205045, guid: 92b5b9e43928dc44b94469ecac1a7147, type: 3}
+      propertyPath: m_SceneBindings.Array.data[6].value
+      value: 
+      objectReference: {fileID: 639058963}
     - target: {fileID: 8888728628426205045, guid: 92b5b9e43928dc44b94469ecac1a7147, type: 3}
       propertyPath: m_ExposedReferences.m_References.Array.size
       value: 11
@@ -113117,6 +113161,112 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   onlyWhenInteractable: 1
+--- !u!1 &1543395163
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1543395166}
+  - component: {fileID: 1543395165}
+  - component: {fileID: 1543395164}
+  m_Layer: 0
+  m_Name: Sky
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!95 &1543395164
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1543395163}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: a730311fab41d8746934f57e43c89054, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!212 &1543395165
+SpriteRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1543395163}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: -1189730355
+  m_SortingLayer: 1
+  m_SortingOrder: -110
+  m_Sprite: {fileID: 21300000, guid: 1efc14524702f8c4694fc4697517592f, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 1, y: 1}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_MaskInteraction: 0
+  m_SpriteSortPoint: 0
+--- !u!4 &1543395166
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1543395163}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.07, y: 39.95, z: 0}
+  m_LocalScale: {x: 2, y: 2, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1550006357 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7759495458947039924, guid: ba4aaa62b40f54b46931ca4f09720777, type: 3}
@@ -141615,6 +141765,7 @@ SceneRoots:
   - {fileID: 3083262612558165343}
   - {fileID: 885537801}
   - {fileID: 1085403687}
+  - {fileID: 1543395166}
   - {fileID: 1596544761}
   - {fileID: 1231517262}
   - {fileID: 1922864293}

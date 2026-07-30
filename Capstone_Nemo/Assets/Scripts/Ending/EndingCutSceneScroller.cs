@@ -84,6 +84,21 @@ public class EndingCutSceneScroller : MonoBehaviour
     [Header("엔딩 컷신 파티클들")]
     public ParticleSystem[] cutsceneParticles;
 
+    [Header("크레딧 전 컷씬 패널")]
+    [SerializeField] private GameObject openingCutscenePanel;
+
+    [SerializeField] private CanvasGroup openingCutsceneCanvasGroup;
+
+    [SerializeField] private float openingFadeInDuration = 0.8f;
+
+    [SerializeField] private float openingDisplayDuration = 3f;
+
+    [SerializeField] private float openingFadeOutDuration = 0.8f;
+
+    [Header("크레딧 콘텐츠")]
+    [Tooltip("크레딧 그림과 텍스트만 포함합니다. 카메라와 이 스크립트 오브젝트는 넣지 마세요.")]
+    [SerializeField] private GameObject creditsRoot;
+
     public void LoadNextScene()
     {
         // 현재 선택된 서버 이름 가져오기
@@ -99,27 +114,40 @@ public class EndingCutSceneScroller : MonoBehaviour
         FadeManager.Instance.FadeToScene(nextSceneName);
     }
 
-    void Start()
+    private void Start()
     {
         if (targetCamera == null)
             targetCamera = Camera.main;
 
-        if (blackImage != null)
+        canStartScroll = false;
+        isEnding = false;
+
+        if (creditsRoot != null)
+            creditsRoot.SetActive(false);
+
+        if (openingCutscenePanel != null)
         {
-            if (fadeInFromBlackOnStart)
+            openingCutscenePanel.SetActive(false);
+
+            if (openingCutsceneCanvasGroup == null)
             {
-                // 엔딩씬 시작 시: 화면을 완전히 검게 만든 뒤
-                var c = blackImage.color;
-                c.a = 1f;
-                blackImage.color = c;
-                blackImage.gameObject.SetActive(true);
-
-                canStartScroll = false;
-
-                // 잠깐 유지 후 서서히 밝아지도록 코루틴 실행
-                StartCoroutine(SceneStartFadeInRoutine());
+                openingCutsceneCanvasGroup =
+                    openingCutscenePanel.GetComponent<CanvasGroup>();
             }
         }
+
+        if (openingCutsceneCanvasGroup != null)
+            openingCutsceneCanvasGroup.alpha = 0f;
+
+        if (blackImage != null)
+        {
+            Color color = blackImage.color;
+            color.a = fadeInFromBlackOnStart ? 1f : 0f;
+            blackImage.color = color;
+            blackImage.gameObject.SetActive(fadeInFromBlackOnStart);
+        }
+
+        StartCoroutine(SceneStartSequenceRoutine());
     }
 
     private void PlayCutsceneParticles()
@@ -146,19 +174,67 @@ public class EndingCutSceneScroller : MonoBehaviour
         }
     }
 
-    private IEnumerator SceneStartFadeInRoutine()
+    private IEnumerator SceneStartSequenceRoutine()
     {
-        // 씬 로드 후, 완전히 검은 화면을 잠깐 유지
-        if (startBlackStaySeconds > 0f)
-            yield return new WaitForSeconds(startBlackStaySeconds);
-
-        // 알파1에서 0으로 서서히 페이드
-        if (blackImage != null)
+        // 1. EndingScene 로딩 후 검은 화면에서 공개
+        if (fadeInFromBlackOnStart && blackImage != null)
         {
-            yield return StartCoroutine(FadeBlackImage(1f, 0f, startBlackFadeSeconds));
-            // 다 밝아진 뒤엔 굳이 켜둘 필요 없으면 끄기
+            if (startBlackStaySeconds > 0f)
+            {
+                yield return new WaitForSecondsRealtime(
+                    startBlackStaySeconds
+                );
+            }
+
+            yield return StartCoroutine(
+                FadeBlackImage(1f, 0f, startBlackFadeSeconds)
+            );
+
             blackImage.gameObject.SetActive(false);
         }
+
+        // 2. 컷씬 패널 한 장 표시
+        if (openingCutscenePanel != null)
+        {
+            openingCutscenePanel.SetActive(true);
+
+            if (openingCutsceneCanvasGroup != null)
+            {
+                yield return StartCoroutine(
+                    FadeCanvasGroup(
+                        openingCutsceneCanvasGroup,
+                        0f,
+                        1f,
+                        openingFadeInDuration
+                    )
+                );
+            }
+
+            if (openingDisplayDuration > 0f)
+            {
+                yield return new WaitForSecondsRealtime(
+                    openingDisplayDuration
+                );
+            }
+
+            if (openingCutsceneCanvasGroup != null)
+            {
+                yield return StartCoroutine(
+                    FadeCanvasGroup(
+                        openingCutsceneCanvasGroup,
+                        1f,
+                        0f,
+                        openingFadeOutDuration
+                    )
+                );
+            }
+
+            openingCutscenePanel.SetActive(false);
+        }
+
+        // 3. 크레딧 시작
+        if (creditsRoot != null)
+            creditsRoot.SetActive(true);
 
         PlayCutsceneParticles();
 
@@ -234,6 +310,40 @@ public class EndingCutSceneScroller : MonoBehaviour
 
         color.a = to;
         blackImage.color = color;
+    }
+
+    private IEnumerator FadeCanvasGroup(
+    CanvasGroup canvasGroup,
+    float from,
+    float to,
+    float duration)
+    {
+        if (canvasGroup == null)
+            yield break;
+
+        canvasGroup.alpha = from;
+
+        if (duration <= 0f)
+        {
+            canvasGroup.alpha = to;
+            yield break;
+        }
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+
+            float t = Mathf.Clamp01(elapsed / duration);
+            t = Mathf.SmoothStep(0f, 1f, t);
+
+            canvasGroup.alpha = Mathf.Lerp(from, to, t);
+
+            yield return null;
+        }
+
+        canvasGroup.alpha = to;
     }
 
     private IEnumerator SubtitleSequenceRoutine()
