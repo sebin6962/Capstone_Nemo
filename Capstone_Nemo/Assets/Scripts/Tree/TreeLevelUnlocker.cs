@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using System.IO;
+using UnityEngine.Playables;
 
 public class TreeLevelUnlocker : MonoBehaviour
 {
@@ -108,6 +109,11 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     private float sharedTreeMotionTime = 0f;
     private MaterialPropertyBlock treeMotionBlock;
+
+    [Header("엔딩 타임라인")]
+    [SerializeField] private PlayableDirector endingTreeTimeline;
+
+    private bool endingTimelinePlayed;
 
     void Awake()
     {
@@ -422,15 +428,6 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         //중간발표 대비 비활성화
         //ShowUnlockEffectPanel(currentUnlockedLevel);
-
-        if (levelIdx == levelButtons.Length - 1)
-        {
-            // FadeManager 싱글톤이 살아 있다면 페이드 전환
-            if (FadeManager.Instance != null)
-            {
-                FadeManager.Instance.FadeToScene("EndingScene");
-            }
-        }
     }
 
     public void SaveUnlockData()
@@ -639,34 +636,50 @@ public class TreeLevelUnlocker : MonoBehaviour
         endPos.z = clickCamPos.z;
         yield return CameraPanTo(endPos, cameraPanDuration);
 
-        // 7.5) 도착 후 잠시 멈춤 + 오로라 연출
+        // 7.5) 나무 연출 + 오로라/해금 파티클
         yield return PlayTreeAuroraSequence();
 
-        // 파티클 연출이 끝난 화면을 유지한 뒤 카메라를 복귀시킨다.
+        // 오로라/파티클 연출 종료 후 설정된 딜레이
         if (particleEndCameraReturnDelay > 0f)
             yield return new WaitForSeconds(particleEndCameraReturnDelay);
 
-        // 카메라가 돌아가기 전에 파티클과 남은 잔상을 정리한다.
+        // 기존 해금 파티클 잔상 정리
         StopAndClearTreeUnlockVFX();
 
-        // 8) 카메라 end → "해금 버튼 누른 그 순간 위치"로 복귀
+        bool isFinalLevel = levelIdx == levelButtons.Length - 1;
+
+        if (isFinalLevel)
+        {
+            // 꺼두었던 기존 Virtual Camera와 Cinemachine Brain 활성화
+            SetCameraControllersEnabled(true);
+
+            // CameraPanTo(clickCamPos)는 실행하지 않음
+            PlayEndingTreeTimeline();
+
+            isPlayingUnlockSequence = false;
+            yield break;
+        }
+
+        // 아래부터는 마지막 단계가 아닐 때만 실행된다.
+
+        // 8) 카메라 end → 해금 버튼을 눌렀던 기존 위치로 복귀
         yield return CameraPanTo(clickCamPos, cameraReturnDuration);
 
-        // 9) 다시 검은 화면 페이드 인
+        // 9) 검은 화면으로 페이드 인
         yield return FadeSimple(0f, 1f, fadeInDuration);
 
-        // 10) 검은 화면일 때 패널 다시 활성화 + 카메라 원위치 확정
+        // 10) 검은 화면인 동안 패널과 카메라 원위치 복구
         targetCamera.transform.position = clickCamPos;
         targetCamera.orthographicSize = clickCamSize;
         SetUnlockUIVisible(true);
 
-        // 11) 다시 밝아지게 페이드 아웃
+        // 11) 다시 게임 화면으로 페이드 아웃
         yield return FadeSimple(1f, 0f, fadeOutDuration);
 
-        // 12) 카메라 컨트롤러 다시 켜기
+        // 12) 기존 카메라 컨트롤러 다시 활성화
         SetCameraControllersEnabled(true);
 
-        // 13) UI 클릭 복구
+        // 13) UI 클릭 다시 허용
         SetUnlockUIInteractable(true);
 
         isPlayingUnlockSequence = false;
@@ -1005,6 +1018,24 @@ public class TreeLevelUnlocker : MonoBehaviour
         {
             UpdateLevelButtons();
         }
+    }
+
+    private void PlayEndingTreeTimeline()
+    {
+        if (endingTimelinePlayed)
+            return;
+
+        if (endingTreeTimeline == null)
+        {
+            Debug.LogWarning("[TreeLevelUnlocker] 엔딩 Timeline이 연결되지 않았습니다.");
+            return;
+        }
+
+        endingTimelinePlayed = true;
+
+        endingTreeTimeline.time = 0;
+        endingTreeTimeline.Evaluate();
+        endingTreeTimeline.Play();
     }
 
 }

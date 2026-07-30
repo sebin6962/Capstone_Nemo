@@ -17,6 +17,8 @@ public class FadeManager : MonoBehaviour
 
     private bool isFading = false;
 
+    public bool IsFading => isFading;
+
     Canvas overlayCanvas;
     CanvasGroup fadeGroup;
 

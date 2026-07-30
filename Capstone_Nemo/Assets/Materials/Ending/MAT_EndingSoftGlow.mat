@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-4370810946005046409
+--- !u!114 &-317141290575710141
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
@@ -20,8 +20,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_GlowSoft_Additive
-  m_Shader: {fileID: -6465566751694194690, guid: 3d39084d5d522a7468f9d0afc0d9e5cf, type: 3}
+  m_Name: MAT_EndingSoftGlow
+  m_Shader: {fileID: -6465566751694194690, guid: 3e82d335cf256d54cad133b88fcdc14d, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -42,10 +42,6 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTexture:
-        m_Texture: {fileID: 2800000, guid: 20c5d0e377db81a44b6b55bb692585c6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskTex:
@@ -70,12 +66,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Alpha: 1
     - _EnableExternalAlpha: 0
+    - _Intensity: 2
     - _QueueControl: 0
     - _QueueOffset: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _EmissionColor: {r: 7.4642644, g: 6.9744296, b: 3.1687906, a: 0}
     - _Flip: {r: 1, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Tint: {r: 1, g: 0.9481112, b: 0.6572326, a: 0}
   m_BuildTextureStacks: []
