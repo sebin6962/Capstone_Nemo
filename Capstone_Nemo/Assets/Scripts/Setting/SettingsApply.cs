@@ -39,11 +39,22 @@ public class SettingsApply : MonoBehaviour
         if (bgmVolumeSlider) bgmVolumeSlider.value = sm.bgmVolume;
         if (sfxVolumeSlider) sfxVolumeSlider.value = sm.sfxVolume;
 
-        if (brightnessSlider) brightnessSlider.value = sm.brightness; 
+        if (brightnessSlider) brightnessSlider.value = sm.brightness;
 
-        if (masterMuteToggle) masterMuteToggle.isOn = sm.masterMute;
-        if (bgmMuteToggle) bgmMuteToggle.isOn = sm.bgmMute;
-        if (sfxMuteToggle) sfxMuteToggle.isOn = sm.sfxMute;
+        if (masterMuteToggle)
+        {
+            masterMuteToggle.SetIsOnWithoutNotify(sm.masterMute);
+        }
+
+        if (bgmMuteToggle)
+        {
+            bgmMuteToggle.SetIsOnWithoutNotify(sm.bgmMute);
+        }
+
+        if (sfxMuteToggle)
+        {
+            sfxMuteToggle.SetIsOnWithoutNotify(sm.sfxMute);
+        }
     }
 
     public void OnApplySettingsPressed()
@@ -62,7 +73,7 @@ public class SettingsApply : MonoBehaviour
         if (bgmMuteToggle) sm.bgmMute = bgmMuteToggle.isOn;
         if (sfxMuteToggle) sm.sfxMute = sfxMuteToggle.isOn;
 
-        //오디오에 적용)
+        //오디오에 적용
         sm.SendMessage("ApplyToAudio", SendMessageOptions.DontRequireReceiver);
 
         //저장

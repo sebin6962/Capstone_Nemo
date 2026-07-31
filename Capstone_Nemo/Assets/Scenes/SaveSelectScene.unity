@@ -1846,6 +1846,9 @@ MonoBehaviour:
   masterSlider: {fileID: 2012783975}
   bgmSlider: {fileID: 1739385245}
   sfxSlider: {fileID: 1338949654}
+  masterToggle: {fileID: 0}
+  bgmToggle: {fileID: 0}
+  sfxToggle: {fileID: 0}
 --- !u!1 &216891745
 GameObject:
   m_ObjectHideFlags: 0
@@ -4285,19 +4288,7 @@ MonoBehaviour:
   m_Group: {fileID: 0}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1565731775}
-        m_TargetAssemblyTypeName: AudioSetting, Assembly-CSharp
-        m_MethodName: SetSFXMute
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   m_IsOn: 0
 --- !u!114 &354508803
 MonoBehaviour:
@@ -19984,19 +19975,7 @@ MonoBehaviour:
   m_Group: {fileID: 0}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1565731775}
-        m_TargetAssemblyTypeName: AudioSetting, Assembly-CSharp
-        m_MethodName: SetBGMMute
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   m_IsOn: 0
 --- !u!114 &1269957762
 MonoBehaviour:
@@ -20983,6 +20962,7 @@ GameObject:
   - component: {fileID: 1396928446}
   - component: {fileID: 1396928448}
   - component: {fileID: 1396928447}
+  - component: {fileID: 1396928449}
   m_Layer: 5
   m_Name: Sound
   m_TagString: Untagged
@@ -21053,6 +21033,24 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1396928445}
   m_CullTransparentMesh: 1
+--- !u!114 &1396928449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1396928445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e1acd7f0a7afdd4785ac35419be2a84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterSlider: {fileID: 2012783975}
+  bgmSlider: {fileID: 1739385245}
+  sfxSlider: {fileID: 1338949654}
+  masterToggle: {fileID: 1869254960}
+  bgmToggle: {fileID: 1269957761}
+  sfxToggle: {fileID: 354508802}
 --- !u!1 &1399565391
 GameObject:
   m_ObjectHideFlags: 0
@@ -22555,9 +22553,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.068017036
+    y: 0.0055506825
     width: 1
-    height: 0.8639659
+    height: 0.98889863
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -26389,19 +26387,7 @@ MonoBehaviour:
   m_Group: {fileID: 0}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1565731775}
-        m_TargetAssemblyTypeName: AudioSetting, Assembly-CSharp
-        m_MethodName: SetMasterMute
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   m_IsOn: 0
 --- !u!114 &1869254961
 MonoBehaviour:
