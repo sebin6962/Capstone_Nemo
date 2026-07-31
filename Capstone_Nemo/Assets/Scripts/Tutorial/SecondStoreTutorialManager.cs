@@ -144,18 +144,35 @@ public class SecondStoreTutorialManager : MonoBehaviour
         showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, 0.3f));
     }
 
-    private IEnumerator ShowStepPanelAfterDelay(SecondStoreTutorialStep step, float delay)
+    private IEnumerator ShowStepPanelAfterDelay(
+    SecondStoreTutorialStep step,
+    float delay
+)
     {
-        yield return new WaitForSeconds(delay);
+        // 튜토리얼 중 시간이 정지되어도 동작하도록 Realtime 사용
+        yield return new WaitForSecondsRealtime(delay);
 
-        SFXManager.Instance.PlayTutorialSFX();
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayTutorialSFX();
+
         HideAllPanels();
 
         int index = (int)step;
-        if (stepPanels == null || index < 0 || index >= stepPanels.Length)
-            yield break;
 
-        if (stepPanels[index])
+        if (stepPanels == null ||
+            index < 0 ||
+            index >= stepPanels.Length)
+        {
+            Debug.LogWarning(
+                $"[SecondStoreTutorial] " +
+                $"stepPanels에 {step} 패널이 없습니다. index={index}"
+            );
+
+            showStepPanelRoutine = null;
+            yield break;
+        }
+
+        if (stepPanels[index] != null)
             stepPanels[index].SetActive(true);
 
         showStepPanelRoutine = null;
@@ -174,6 +191,46 @@ public class SecondStoreTutorialManager : MonoBehaviour
     public bool IsCurrentStep(SecondStoreTutorialStep step)
     {
         return IsStoreTutorialRunning && currentStep == step;
+    }
+
+    public bool CanConsumeTutorialMaterial(
+    params SecondStoreTutorialStep[] allowedSteps
+)
+    {
+        // 해당 튜토리얼 진행 중이 아니면 평소처럼 허용
+        if (!IsStoreTutorialRunning)
+            return true;
+
+        // 현재 단계가 허용된 단계 중 하나인지 검사
+        if (allowedSteps != null)
+        {
+            foreach (SecondStoreTutorialStep allowedStep in allowedSteps)
+            {
+                if (currentStep == allowedStep)
+                    return true;
+            }
+        }
+
+        Debug.LogWarning(
+            $"[SecondStoreTutorial] 잘못된 공정으로 인한 재료 유실 차단. " +
+            $"현재 단계={currentStep}"
+        );
+
+        ReShowCurrentStepPanel();
+
+        return false;
+    }
+
+    public void ReShowCurrentStepPanel()
+    {
+        if (!IsStoreTutorialRunning)
+            return;
+
+        // 현재 켜져 있는 패널을 먼저 끄고
+        HideAllPanels();
+
+        // 0.3초 후 현재 단계 패널을 다시 표시
+        ShowStepPanel(currentStep);
     }
 
     public void GoToNextStep()

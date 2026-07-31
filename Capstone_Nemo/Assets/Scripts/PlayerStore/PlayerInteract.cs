@@ -301,6 +301,12 @@ public class PlayerInteract : MonoBehaviour
                         return;
                     }
 
+                    //튜토리얼 아이템 유실방지
+                    if (!CanInsertForSecondStoreTutorial(currentMaker,heldItemName))
+                    {
+                        return;
+                    }
+
                     currentMaker.inputItemNames.Add(heldItemName);
                     currentMaker.inputItemSprites.Add(heldItemSprite);
 
@@ -646,6 +652,64 @@ public class PlayerInteract : MonoBehaviour
                 return;
             }
         }
+    }
+
+    //튜토리얼 아이템 유실 방어
+    private bool CanInsertForSecondStoreTutorial(MakerInfo maker,string itemName)
+    {
+        SecondStoreTutorialManager tutorial = SecondStoreTutorialManager.Instance;
+
+        //튜토리얼이 아니면 평소처럼 허용
+        if (tutorial == null ||
+            !tutorial.IsStoreTutorialRunning)
+        {
+            return true;
+        }
+
+        bool isCorrectProcess = false;
+
+        switch (tutorial.currentStep)
+        {
+            //단호박가루 넣는 단계
+            case SecondStoreTutorialStep.MixingInsert:
+                isCorrectProcess =
+                    maker.makerId == "MIxing01" && itemName == "Danhobakgaru";
+                break;
+
+            //물 넣는 단계
+            case SecondStoreTutorialStep.WaterInsert:
+                isCorrectProcess =
+                    maker.makerId == "MIxing01" && itemName == "Water";
+                break;
+
+            //완성된 단호박 반죽을 시루에 넣는 단계
+            case SecondStoreTutorialStep.SiruInsert:
+                isCorrectProcess =
+                    (maker.makerId == "Siru01" || maker.makerId == "Siru02") && itemName == "Mixing_Danhobak";
+                break;
+
+            //위 세 단계가 아니라면 제작기에 재료 투입 금지
+            default:
+                isCorrectProcess = false;
+                break;
+        }
+
+        if (isCorrectProcess)
+            return true;
+
+        Debug.LogWarning(
+            $"[SecondStoreTutorial] 잘못된 재료 투입 차단. " +
+            $"현재 단계={tutorial.currentStep}, " +
+            $"제작기={maker.makerId}, " +
+            $"아이템={itemName}"
+        );
+
+        tutorial.ReShowCurrentStepPanel();
+
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayBbyongSFX();
+
+        return false;
     }
 
     public void ShowStorageFull()
