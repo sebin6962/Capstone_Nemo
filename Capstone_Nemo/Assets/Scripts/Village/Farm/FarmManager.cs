@@ -880,6 +880,12 @@ public class FarmManager : MonoBehaviour
         // 3) 창고 공간 확인 (없으면 경고 패널만 띄우고 return)
         if (!StorageInventory.Instance.HasRoomFor(itemKey, amount))
         {
+            // 수확 가능한 작물을 클릭했다는 반응은 창고가 가득 차도 보여준다.
+            if (tile.cropOverlayObject != null)
+            {
+                StartCoroutine(PlayTreeHarvestShake(tile.cropOverlayObject.transform));
+            }
+
             ShowStorageFull();
             return;
         }
