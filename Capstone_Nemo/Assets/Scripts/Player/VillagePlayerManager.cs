@@ -22,7 +22,9 @@ public class VillagePlayerManager : MonoBehaviour
             }
         }
 
-        if (currentItem != null && Input.GetKeyDown(KeyCode.E))
+        if (currentItem != null &&
+            Input.GetKeyDown(KeyCode.E) &&
+            !NPCInteractable.HasInteractableNpcInRange)
         {
             //if (currentItem.name == "wateringCan")
             //    return;
