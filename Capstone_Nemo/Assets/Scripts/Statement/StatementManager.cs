@@ -1,213 +1,361 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 
 public class StatementManager : MonoBehaviour
 {
-    [SerializeField] private NextDayCutscene cutscene;
+    [SerializeField]
+    private NextDayCutscene cutscene;
 
     [Header("패널")]
-    [SerializeField] private GameObject statementPanel;       // 명세서 패널
-    [SerializeField] private LevelUpRevealPanel levelUpPanel; // 레벨업 패널
+    [SerializeField]
+    private GameObject statementPanel;
+
+    [SerializeField]
+    private LevelUpRevealPanel levelUpPanel;
 
     [Header("명세서 텍스트")]
-    [SerializeField] private TMP_Text txtNormalCount;
-    [SerializeField] private TMP_Text txtNormalStars;
-    [SerializeField] private TMP_Text txtQuestCount;
-    [SerializeField] private TMP_Text txtQuestStars;
-    [SerializeField] private TMP_Text txtTotalStars;
+    [SerializeField]
+    private TMP_Text txtNormalCount;
+
+    [SerializeField]
+    private TMP_Text txtNormalStars;
+
+    [SerializeField]
+    private TMP_Text txtTotalStars;
+
+    [Header("판매 다과 슬롯")]
+    [SerializeField]
+    private StatementDagwaSlot[] soldDagwaSlots;
 
     [Header("연출 타이밍")]
-    [SerializeField] private float firstDelay = 0.3f;   // 패널 켜진 뒤 첫 줄 나오기까지
-    [SerializeField] private float rowDelay = 0.35f;  // 각 줄 사이 간격
-    [SerializeField] private float fadeSec = 0.25f;  // 각 줄 페이드인 시간
-    [SerializeField] private float totalAnimSec = 0.6f; // 총 별빛 숫자 오르는 시간
+    [SerializeField]
+    private float firstDelay = 0.3f;
 
-    Coroutine _reportRoutine;
+    [SerializeField]
+    private float rowDelay = 0.35f;
 
-    private bool _nextDayButtonClicked = false;
+    [SerializeField]
+    private float fadeSec = 0.25f;
 
-    void Awake()
+    [SerializeField]
+    private float slotDelay = 0.12f;
+
+    [SerializeField]
+    private float slotAnimSec = 0.28f;
+
+    [SerializeField]
+    private float totalAnimSec = 0.6f;
+
+    private Coroutine reportRoutine;
+    private bool nextDayButtonClicked;
+
+    private void Awake()
     {
-        // 혹시 TimeManager 이벤트 순서가 씬 전환 뒤로 밀렸어도 안전하도록
+        // 이벤트 순서가 씬 전환 뒤로 밀린 경우를 대비
         UnlockManager.Instance?.ApplyScheduledUnlocksForNewDay();
-        
     }
 
-    void Start()
+    private void Start()
     {
-        // 어제 스냅샷
-        DayReport rep = StarDataManager.Instance != null
-    ? StarDataManager.Instance.GetYesterdayReport()
-    : default(DayReport);
+        DayReport report = StarDataManager.Instance != null
+            ? StarDataManager.Instance.GetYesterdayReport()
+            : default;
 
-        // 1) 처음엔 모두 숨김(알파 0)
         PrimeAlpha(txtNormalCount, 0f);
         PrimeAlpha(txtNormalStars, 0f);
-        PrimeAlpha(txtQuestCount, 0f);
-        PrimeAlpha(txtQuestStars, 0f);
         PrimeAlpha(txtTotalStars, 0f);
 
-        // 2) 순차 표시 코루틴 시작
-        if (_reportRoutine != null) StopCoroutine(_reportRoutine);
-        _reportRoutine = StartCoroutine(ShowReportSequence(rep));
+        HideAllDagwaSlots();
+
+        if (reportRoutine != null)
+        {
+            StopCoroutine(reportRoutine);
+        }
+
+        reportRoutine = StartCoroutine(
+            ShowReportSequence(report)
+        );
     }
 
     public void OnNextDayButtonClicked()
     {
-        if (_nextDayButtonClicked)
+        if (nextDayButtonClicked)
         {
-            // 이미 눌렀으면 아무 것도 안 하고 바로 리턴
             return;
         }
-        _nextDayButtonClicked = true;
+
+        nextDayButtonClicked = true;
 
         if (SFXManager.Instance != null)
+        {
             SFXManager.Instance.PlayFileSelectSFX();
+        }
 
         PlayerPrefs.SetFloat("SpawnX", -16f);
         PlayerPrefs.SetFloat("SpawnY", 5f);
         PlayerPrefs.SetFloat("SpawnZ", 0f);
 
-        // 다음날 플래그 저장
         PlayerPrefs.SetInt("NextDayFlag", 1);
 
-        var um = UnlockManager.Instance;
-        // 씬 전환은 컷신 종료 후에
-        //cutscene.onFinished.RemoveAllListeners();
-        //cutscene.onFinished.AddListener(() =>
-        //{
-        //    if (FadeManager.Instance != null)
-        //        FadeManager.Instance.FadeToScene("VillageScene", 0.5f);
-        //    else
-        //        SceneManager.LoadScene("VillageScene");
-        //});
+        UnlockManager unlockManager = UnlockManager.Instance;
 
-        // 전날 레벨업 여부 검사 (다음 날 적용 예약이 있으면 true)
-        if (um != null && um.HasLevelUpRevealToShow())  // ok
+        if (unlockManager != null &&
+            unlockManager.HasLevelUpRevealToShow())
         {
-            int newLevel = um.GetLevelUpRevealLevel();        // 표시용 레벨
-            var finishKeys = um.GetLevelUpRevealFinishKeys();   // 표시용 키들
+            int newLevel =
+                unlockManager.GetLevelUpRevealLevel();
 
-            if (statementPanel != null) statementPanel.SetActive(false);
+            var finishKeys =
+                unlockManager.GetLevelUpRevealFinishKeys();
+
+            if (statementPanel != null)
+            {
+                statementPanel.SetActive(false);
+            }
 
             if (levelUpPanel != null)
             {
-                levelUpPanel.Show(newLevel, finishKeys, () => {
-                    um.MarkLevelUpRevealShown();
-                    cutscene.Play();
-                });
+                levelUpPanel.Show(
+                    newLevel,
+                    finishKeys,
+                    () =>
+                    {
+                        unlockManager.MarkLevelUpRevealShown();
+
+                        if (cutscene != null)
+                        {
+                            cutscene.Play();
+                        }
+                    }
+                );
             }
             else
             {
-                Debug.LogWarning("[StatementManager] levelUpPanel 미지정 → 바로 컷신 진행");
-                cutscene.Play();
+                Debug.LogWarning(
+                    "[StatementManager] Level Up Panel이 연결되지 않아 " +
+                    "바로 컷신을 진행합니다."
+                );
+
+                if (cutscene != null)
+                {
+                    cutscene.Play();
+                }
             }
         }
         else
         {
-            cutscene.Play();
+            if (cutscene != null)
+            {
+                cutscene.Play();
+            }
         }
     }
 
-    //FadeManager.Instance.FadeToScene("VillageScene", 0.5f);
-
-    //// 하루 증가 및 저장!
-    //if (TimeManager.Instance != null)
-    //{
-    //    TimeManager.Instance.currentDay++;
-    //    TimeManager.Instance.hour = 9;
-    //    TimeManager.Instance.minute = 0;
-    //    TimeManager.Instance.SaveDayData();
-    //}
-
-    private IEnumerator ShowReportSequence(DayReport rep)
+    private IEnumerator ShowReportSequence(DayReport report)
     {
-        // 0) 첫 대기
         yield return new WaitForSecondsRealtime(firstDelay);
 
-        // 1) 일반 손님 수
+        // 1. 일반 손님 수
         if (txtNormalCount != null)
         {
-            if (SFXManager.Instance) SFXManager.Instance.PlayMoneyCountSFX();
-            txtNormalCount.text = $"{rep.normalCount:N0}";
-            yield return FadeTextIn(txtNormalCount, fadeSec);
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayMoneyCountSFX();
+            }
+
+            txtNormalCount.text = $"{report.normalCount:N0}";
+
+            yield return FadeTextIn(
+                txtNormalCount,
+                fadeSec
+            );
         }
+
         yield return new WaitForSecondsRealtime(rowDelay);
 
-        // 2) 일반 별빛
+        // 2. 일반 손님에게 받은 별빛
         if (txtNormalStars != null)
         {
-            if (SFXManager.Instance) SFXManager.Instance.PlayMoneyCountSFX();
-            txtNormalStars.text = $"{rep.normalStars:N0}";
-            yield return FadeTextIn(txtNormalStars, fadeSec);
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayMoneyCountSFX();
+            }
+
+            txtNormalStars.text = $"{report.normalStars:N0}";
+
+            yield return FadeTextIn(
+                txtNormalStars,
+                fadeSec
+            );
         }
+
         yield return new WaitForSecondsRealtime(rowDelay);
 
-        // 3) 특별 손님 수
-        if (txtQuestCount != null)
+        // 3. 판매한 다과 종류
+        int soldTypeCount = report.soldDagwaKeys != null
+            ? report.soldDagwaKeys.Count
+            : 0;
+
+        int slotCount = soldDagwaSlots != null
+            ? soldDagwaSlots.Length
+            : 0;
+
+        int visibleSlotCount = Mathf.Min(
+            soldTypeCount,
+            slotCount
+        );
+
+        for (int i = 0; i < visibleSlotCount; i++)
         {
-            if (SFXManager.Instance) SFXManager.Instance.PlayMoneyCountSFX();
-            txtQuestCount.text = $"{rep.questCount:N0}";
-            yield return FadeTextIn(txtQuestCount, fadeSec);
-        }
-        yield return new WaitForSecondsRealtime(rowDelay);
+            StatementDagwaSlot slot = soldDagwaSlots[i];
 
-        // 4) 특별 별빛
-        if (txtQuestStars != null)
+            if (slot == null)
+            {
+                continue;
+            }
+
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayMoneyCountSFX();
+            }
+
+            yield return slot.Show(
+                report.soldDagwaKeys[i],
+                slotAnimSec
+            );
+
+            yield return new WaitForSecondsRealtime(slotDelay);
+        }
+
+        if (soldTypeCount > visibleSlotCount)
         {
-            if (SFXManager.Instance) SFXManager.Instance.PlayMoneyCountSFX();
-            txtQuestStars.text = $"{rep.questStars:N0}";
-            yield return FadeTextIn(txtQuestStars, fadeSec);
+            Debug.LogWarning(
+                $"[StatementManager] 판매 다과 {soldTypeCount}종 중 " +
+                $"{visibleSlotCount}종만 표시됩니다. " +
+                "명세서 슬롯 수를 늘려주세요."
+            );
         }
+
         yield return new WaitForSecondsRealtime(rowDelay);
 
-        // 5) 총 별빛: 먼저 보이게 만들고, 숫자를 0→총합으로
+        // 4. 총 별빛
+        // 일반 손님 별빛과 특별 손님 별빛의 합계
         if (txtTotalStars != null)
         {
-            // 알파만 즉시 1로
-            yield return FadeTextIn(txtTotalStars, 0.01f);
+            yield return FadeTextIn(
+                txtTotalStars,
+                0.01f
+            );
 
-            if (SFXManager.Instance) SFXManager.Instance.PlayTotalMoneySFX();
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayTotalMoneySFX();
+            }
 
             int from = 0;
-            int to = rep.TotalStars;
-            float t = 0f;
-            while (t < totalAnimSec)
+            int to = report.TotalStars;
+
+            float elapsed = 0f;
+            float safeDuration = Mathf.Max(
+                0.01f,
+                totalAnimSec
+            );
+
+            while (elapsed < safeDuration)
             {
-                t += Time.unscaledDeltaTime;
-                float p = Mathf.Clamp01(t / totalAnimSec);
-                int v = (int)Mathf.Lerp(from, to, p);
-                txtTotalStars.text = $"{v:N0}";
+                elapsed += Time.unscaledDeltaTime;
+
+                float progress = Mathf.Clamp01(
+                    elapsed / safeDuration
+                );
+
+                int currentValue = Mathf.RoundToInt(
+                    Mathf.Lerp(from, to, progress)
+                );
+
+                txtTotalStars.text =
+                    $"{currentValue:N0}";
+
                 yield return null;
             }
+
             txtTotalStars.text = $"{to:N0}";
         }
 
-        _reportRoutine = null;
+        reportRoutine = null;
     }
 
-    private void PrimeAlpha(TMP_Text t, float a)
+    private void HideAllDagwaSlots()
     {
-        if (t == null) return;
-        var c = t.color; c.a = a; t.color = c;
-    }
-
-    private IEnumerator FadeTextIn(TMP_Text t, float sec)
-    {
-        if (t == null) yield break;
-        float el = 0f;
-        var c = t.color; float start = c.a;
-        while (el < sec)
+        if (soldDagwaSlots == null)
         {
-            el += Time.unscaledDeltaTime;
-            float p = Mathf.Clamp01(el / sec);
-            c.a = Mathf.SmoothStep(start, 1f, p);
-            t.color = c;
+            return;
+        }
+
+        foreach (StatementDagwaSlot slot in soldDagwaSlots)
+        {
+            if (slot != null)
+            {
+                slot.Hide();
+            }
+        }
+    }
+
+    private void PrimeAlpha(TMP_Text targetText, float alpha)
+    {
+        if (targetText == null)
+        {
+            return;
+        }
+
+        Color color = targetText.color;
+        color.a = alpha;
+
+        targetText.color = color;
+    }
+
+    private IEnumerator FadeTextIn(
+        TMP_Text targetText,
+        float duration
+    )
+    {
+        if (targetText == null)
+        {
+            yield break;
+        }
+
+        float safeDuration = Mathf.Max(
+            0.01f,
+            duration
+        );
+
+        float elapsed = 0f;
+
+        Color color = targetText.color;
+        float startAlpha = color.a;
+
+        while (elapsed < safeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+
+            float progress = Mathf.Clamp01(
+                elapsed / safeDuration
+            );
+
+            color.a = Mathf.SmoothStep(
+                startAlpha,
+                1f,
+                progress
+            );
+
+            targetText.color = color;
+
             yield return null;
         }
-        c.a = 1f; t.color = c;
+
+        color.a = 1f;
+        targetText.color = color;
     }
 }

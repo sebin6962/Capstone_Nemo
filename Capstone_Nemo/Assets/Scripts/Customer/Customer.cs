@@ -298,6 +298,12 @@ public class Customer : MonoBehaviour
             // 별빛 지급
             //StarDataManager.Instance?.AddStarlight(10);
             StarDataManager.Instance?.AddStarlightFromNormal(starAmount);
+
+            // 오늘 판매한 다과 종류 기록
+            StarDataManager.Instance?.RecordSoldDagwa(
+                orderedDagwa.Trim()
+            );
+
             SFXManager.Instance.PlayTotalMoneySFX();
 
             string koName;

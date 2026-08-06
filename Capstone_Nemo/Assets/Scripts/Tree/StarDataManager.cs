@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
@@ -7,33 +6,68 @@ using System.IO;
 public class PlayerData
 {
     public int starlight;
+    public DayReport todayReport;
+    public DayReport yesterdayReport;
 }
 
 [System.Serializable]
 public struct DayReport
 {
-    public int normalCount, normalStars;
-    public int questCount, questStars;
+    public int normalCount;
+    public int normalStars;
+
+    // 기존 특별 손님 데이터는 총 별빛 계산을 위해 유지
+    public int questCount;
+    public int questStars;
+
+    // 해당 날짜에 판매한 다과 종류
+    public List<string> soldDagwaKeys;
+
     public int TotalStars => normalStars + questStars;
 }
 
 public class StarDataManager : MonoBehaviour
 {
     public static StarDataManager Instance;
+
     public PlayerData playerData = new PlayerData();
 
     private string savePath;
 
-    private DayReport _today, _yesterday;
+    private DayReport _today;
+    private DayReport _yesterday;
 
-    void Awake()
+    private static DayReport CreateEmptyReport()
+    {
+        return new DayReport
+        {
+            normalCount = 0,
+            normalStars = 0,
+            questCount = 0,
+            questStars = 0,
+            soldDagwaKeys = new List<string>()
+        };
+    }
+
+    private static DayReport NormalizeReport(DayReport report)
+    {
+        // 기존 세이브 파일에는 soldDagwaKeys가 없기 때문에
+        // 불러왔을 때 null이 될 수 있음
+        if (report.soldDagwaKeys == null)
+        {
+            report.soldDagwaKeys = new List<string>();
+        }
+
+        return report;
+    }
+
+    private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // 서버 선택값으로 초기화 시도
             InitFromSelectedSave();
         }
         else
@@ -42,48 +76,105 @@ public class StarDataManager : MonoBehaviour
         }
     }
 
-    // 하루 끝(다음 날 시작 이벤트)에 스냅샷 전환
-    void OnEnable()
+    private void OnEnable()
     {
-        TimeManager.OnNewDayStarted += SnapshotAndReset; // TimeManager 이벤트가 이미 존재한다고 가정
+        TimeManager.OnNewDayStarted += SnapshotAndReset;
     }
-    void OnDisable()
+
+    private void OnDisable()
     {
         TimeManager.OnNewDayStarted -= SnapshotAndReset;
     }
 
+    /// <summary>
+    /// 다음 날이 시작될 때 오늘 데이터를 어제 데이터로 넘긴다.
+    /// </summary>
     private void SnapshotAndReset()
     {
-        _yesterday = _today;        // 어제 성과로 스냅샷
-        _today = new DayReport();   // 금일 집계 초기화
+        _yesterday = NormalizeReport(_today);
+        _today = CreateEmptyReport();
+
+        SaveStarData();
     }
 
-    // 외부에서 읽기 위한 getter
-    public DayReport GetYesterdayReport() => _yesterday;
+    /// <summary>
+    /// 명세서에서 표시할 어제 판매 결과를 반환한다.
+    /// </summary>
+    public DayReport GetYesterdayReport()
+    {
+        return NormalizeReport(_yesterday);
+    }
 
-    // 집계 + 총 별빛 반영 (정규 손님)
+    /// <summary>
+    /// 판매 완료된 다과 종류를 오늘 판매 목록에 기록한다.
+    /// 같은 다과를 여러 개 판매해도 한 번만 기록된다.
+    /// </summary>
+    public void RecordSoldDagwa(string dagwaKey)
+    {
+        if (string.IsNullOrWhiteSpace(dagwaKey))
+        {
+            return;
+        }
+
+        dagwaKey = dagwaKey.Trim();
+        _today = NormalizeReport(_today);
+
+        bool alreadyRecorded = _today.soldDagwaKeys.Exists(
+            savedKey => string.Equals(
+                savedKey,
+                dagwaKey,
+                System.StringComparison.OrdinalIgnoreCase
+            )
+        );
+
+        if (alreadyRecorded)
+        {
+            return;
+        }
+
+        _today.soldDagwaKeys.Add(dagwaKey);
+
+        SaveStarData();
+    }
+
+    /// <summary>
+    /// 일반 손님 판매 실적과 별빛을 추가한다.
+    /// </summary>
     public void AddStarlightFromNormal(int amount)
     {
+        _today = NormalizeReport(_today);
+
         _today.normalCount++;
         _today.normalStars += amount;
-        AddStarlight(amount); // 기존 총 별빛 저장/UI 갱신 로직 그대로 사용
-    }
 
-    // 집계 + 총 별빛 반영 (특별 손님)
-    public void AddStarlightFromQuest(int amount)
-    {
-        _today.questCount++;
-        _today.questStars += amount;
         AddStarlight(amount);
     }
+
     /// <summary>
-    /// SaveSelect/NewGame에서 이미 SelectedSave를 세팅함.
-    /// 씬 진입 시 여기서 경로/로드를 보장.
+    /// 특별 손님 판매 실적과 별빛을 추가한다.
+    /// 특별 손님 행은 명세서에 표시하지 않지만
+    /// 총 별빛 계산을 위해 데이터는 계속 유지한다.
+    /// </summary>
+    public void AddStarlightFromQuest(int amount)
+    {
+        _today = NormalizeReport(_today);
+
+        _today.questCount++;
+        _today.questStars += amount;
+
+        AddStarlight(amount);
+    }
+
+    /// <summary>
+    /// 현재 선택된 세이브에 맞춰 저장 경로를 설정하고 데이터를 불러온다.
     /// </summary>
     public void InitFromSelectedSave()
     {
-        // 서버명 없으면 기본값(임시)로 동작하지 않고, 0으로 메모리만 유지
-        var serverName = PlayerPrefs.GetString("SelectedSave", string.Empty);
+        string serverName = PlayerPrefs.GetString(
+            "SelectedSave",
+            string.Empty
+        );
+
         if (!string.IsNullOrEmpty(serverName))
         {
             SetServerName(serverName);
@@ -91,23 +182,35 @@ public class StarDataManager : MonoBehaviour
         }
         else
         {
-            // 경로 미설정. 필요 시 나중에 SetServerName() 호출 후 LoadStarData().
             playerData.starlight = 0;
+
+            _today = CreateEmptyReport();
+            _yesterday = CreateEmptyReport();
         }
     }
 
     public void SetServerName(string serverName)
     {
-        savePath = Application.persistentDataPath + $"/playerStarData_{serverName}.json";
+        savePath =
+            Application.persistentDataPath +
+            $"/playerStarData_{serverName}.json";
     }
 
     public void SaveStarData()
     {
         if (string.IsNullOrEmpty(savePath))
         {
-            Debug.LogError("[StarDataManager] savePath is null/empty. Call SetServerName() first.");
+            Debug.LogError(
+                "[StarDataManager] savePath가 설정되지 않았습니다. " +
+                "SetServerName()을 먼저 호출해야 합니다."
+            );
+
             return;
         }
+
+        playerData.todayReport = NormalizeReport(_today);
+        playerData.yesterdayReport = NormalizeReport(_yesterday);
+
         string json = JsonUtility.ToJson(playerData, true);
         File.WriteAllText(savePath, json);
     }
@@ -116,18 +219,37 @@ public class StarDataManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(savePath))
         {
-            Debug.LogError("[StarDataManager] savePath is null/empty. Call SetServerName() first.");
+            Debug.LogError(
+                "[StarDataManager] savePath가 설정되지 않았습니다. " +
+                "SetServerName()을 먼저 호출해야 합니다."
+            );
+
             return;
         }
 
         if (File.Exists(savePath))
         {
             string json = File.ReadAllText(savePath);
+
             playerData = JsonUtility.FromJson<PlayerData>(json);
+
+            if (playerData == null)
+            {
+                playerData = new PlayerData();
+            }
+
+            // 기존 세이브 데이터 호환 처리
+            _today = NormalizeReport(playerData.todayReport);
+            _yesterday = NormalizeReport(playerData.yesterdayReport);
         }
         else
         {
+            playerData = new PlayerData();
             playerData.starlight = 0;
+
+            _today = CreateEmptyReport();
+            _yesterday = CreateEmptyReport();
+
             SaveStarData();
         }
     }
@@ -135,25 +257,42 @@ public class StarDataManager : MonoBehaviour
     public void AddStarlight(int amount)
     {
         playerData.starlight += amount;
+
         SaveStarData();
-        var ui = FindObjectOfType<StarlightUI>();
-        if (ui != null) ui.UpdateStarlightUI();
+
+        StarlightUI ui = FindObjectOfType<StarlightUI>();
+
+        if (ui != null)
+        {
+            ui.UpdateStarlightUI();
+        }
     }
 
     public void SpendStarlight(int amount)
     {
         playerData.starlight -= amount;
+
         SaveStarData();
-        var ui = FindObjectOfType<StarlightUI>();
-        if (ui != null) ui.UpdateStarlightUI();
+
+        StarlightUI ui = FindObjectOfType<StarlightUI>();
+
+        if (ui != null)
+        {
+            ui.UpdateStarlightUI();
+        }
     }
 
     public void SetStarlight(int starlight)
     {
         playerData.starlight = starlight;
+
         SaveStarData();
-        var ui = FindObjectOfType<StarlightUI>();
-        if (ui != null) ui.UpdateStarlightUI();
+
+        StarlightUI ui = FindObjectOfType<StarlightUI>();
+
+        if (ui != null)
+        {
+            ui.UpdateStarlightUI();
+        }
     }
 }
-

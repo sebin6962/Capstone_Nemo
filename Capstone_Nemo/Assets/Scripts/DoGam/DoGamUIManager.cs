@@ -369,27 +369,82 @@ public class DoGamUIManager : MonoBehaviour
 
     private void Update()
     {
-        if (!Input.GetKeyDown(KeyCode.F))
-            return;
-
-        // 이미 열려 있으면 버튼 상태와 상관없이 닫기 허용
+        // 도감이 열려 있으면 A/D 키로 페이지 이동
         if (IsOpen())
         {
-            CloseDoGam();
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                ClickPageButton(GetCurrentPrevButton());
+            }
+            else if (Input.GetKeyDown(KeyCode.D))
+            {
+                ClickPageButton(GetCurrentNextButton());
+            }
+
+            // F키로 도감 닫기
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                CloseDoGam();
+            }
+
             return;
         }
 
-        // 대화창 열려 있으면 도감 열기 금지
+        // 도감이 닫혀 있을 때 F키로 열기
+        if (!Input.GetKeyDown(KeyCode.F))
+            return;
+
+        // 대화창이 열려 있으면 도감을 열지 않음
         if (IsDialogueOpen())
             return;
 
-        // 닫혀 있을 때만 버튼이 실제로 사용 가능한 상태인지 검사
         if (openButton == null ||
             !openButton.gameObject.activeInHierarchy ||
             !openButton.interactable)
             return;
 
         OnOpenButtonClicked();
+    }
+
+    private Button GetCurrentPrevButton()
+    {
+        // 게임 방법 탭
+        if (howToRoot != null && howToRoot.activeSelf)
+            return howToPrevButton;
+
+        // 제작대 설명 탭
+        if (makerRoot != null && makerRoot.activeSelf)
+            return makerPrevButton;
+
+        // 레시피 탭
+        return prevButton;
+    }
+
+    private Button GetCurrentNextButton()
+    {
+        // 게임 방법 탭
+        if (howToRoot != null && howToRoot.activeSelf)
+            return howToNextButton;
+
+        // 제작대 설명 탭
+        if (makerRoot != null && makerRoot.activeSelf)
+            return makerNextButton;
+
+        // 레시피 탭
+        return nextButton;
+    }
+
+    private void ClickPageButton(Button button)
+    {
+        if (button == null ||
+            !button.gameObject.activeInHierarchy ||
+            !button.interactable)
+        {
+            return;
+        }
+
+        // 실제 버튼을 클릭한 것과 동일한 로직 실행
+        button.onClick.Invoke();
     }
 
     // ===================== 공통 토글 =====================
