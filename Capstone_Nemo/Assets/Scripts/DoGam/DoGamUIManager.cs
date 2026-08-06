@@ -148,28 +148,35 @@ public class DoGamUIManager : MonoBehaviour
     [Header("Workbench (제작대 정보)")]
     public GameObject makerRoot;          // 제작대 탭 루트
     public Button makerButton;            // 상단 "제작대 정보" 탭 버튼
-    public Button makerPrevButton;        // 스프레드 이전
-    public Button makerNextButton;        // 스프레드 다음
+    public Button makerPrevButton;        // 상세 페이지에서 목록으로 돌아가기
+    public Button makerNextButton;        // 현재 구조에서는 사용하지 않음
 
+    [Header("Workbench Page 1 - Grid")]
+    [Tooltip("제작대 스프라이트 목록 페이지")]
+    [SerializeField] private GameObject makerListPage;
 
+    [Tooltip("GridLayoutGroup이 붙어 있는 제작대 버튼 생성 부모")]
+    [SerializeField] private Transform makerGridParent;
 
-    [Tooltip("왼쪽 페이지(2개) 부모")]
-    public Transform makerLeftPageParent;
+    [Tooltip("루트에 Button, 자식에 Icon(Image)이 있는 제작대 버튼 프리팹")]
+    [SerializeField] private GameObject makerItemPrefab;
 
-    [Tooltip("오른쪽 페이지(2개) 부모")]
-    public Transform makerRightPageParent;
+    [Header("Workbench Page 2 - Detail")]
+    [Tooltip("선택한 제작대의 상세 정보 페이지")]
+    [SerializeField] private GameObject makerDetailPage;
 
-    [Tooltip("카드 프리팹(Icon(Image), Body(TMP)) - HowTo용과 동일 프리팹 재사용 가능")]
-    public GameObject makerItemPrefab;
+    [SerializeField] private Image makerDetailImage;
+    [SerializeField] private TextMeshProUGUI makerDetailNameText;
+    [SerializeField] private TextMeshProUGUI makerDetailDescriptionText;
 
-    [Tooltip("스프레드당 항목 수(왼쪽 2 + 오른쪽 2 = 4)")]
-    public int makerItemsPerSpread = 4;
+    [SerializeField]
+    private MakerDetailImageAnimator makerDetailAnimator;
 
     [System.Serializable]
     public class MakerItemData
     {
         public string name;    // 제작기 이름
-        public string image;   // Resources/Sprites/Guide/{image}
+        public string image;   // Resources/Sprites/restaurant/{image}
         public string desc;    // 제작기 설명
     }
 
@@ -179,10 +186,27 @@ public class DoGamUIManager : MonoBehaviour
         public List<MakerItemData> items; // 평면 리스트(타이틀 없음)
     }
 
-    // 멤버 변수
+    // 0: 제작대 목록, 1: 제작대 상세
     private List<MakerItemData> makerItems = new();
-    private int makerSpreadIndex = 0;
-    private List<HowToPageData> makerPages = new();
+    private int makerPageIndex = 0;
+
+    private MakerItemData selectedMakerItem;
+
+    private class MakerButtonView
+    {
+        public MakerItemData data;
+        public Button button;
+        public Image icon;
+    }
+
+    private readonly List<MakerButtonView> makerButtonViews = new();
+
+    [Header("Workbench Selection Colors")]
+    [SerializeField] private Color makerSelectedColor = Color.white;
+
+    [SerializeField]
+    private Color makerUnselectedColor =
+        new Color(0.45f, 0.45f, 0.45f, 1f);
 
     // ===================== 초기화 =====================
     private void Awake()
@@ -221,7 +245,8 @@ public class DoGamUIManager : MonoBehaviour
         });
         drinkButton.onClick.AddListener(() => {
             if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
-            FilterByCategory("음료"); });
+            FilterByCategory("음료");
+        });
 
         // 레시피 네비
         nextButton.onClick.AddListener(() => {
@@ -260,13 +285,11 @@ public class DoGamUIManager : MonoBehaviour
             if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
             OpenMakerTab();
         });
-        if (makerNextButton != null) makerNextButton.onClick.AddListener(() => {
-            if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
-            ChangeMakerSpread(+1);
-        });
+        // 상세 페이지는 제작대 버튼을 클릭해서 들어가므로 다음 버튼은 사용하지 않는다.
         if (makerPrevButton != null) makerPrevButton.onClick.AddListener(() => {
+            if (makerPageIndex != 1) return;
             if (SFXManager.Instance) SFXManager.Instance.PlayPageFlipSFX();
-            ChangeMakerSpread(-1);
+            ShowMakerListPage();
         });
 
 
@@ -369,35 +392,27 @@ public class DoGamUIManager : MonoBehaviour
 
     private void Update()
     {
-        // 도감이 열려 있으면 A/D 키로 페이지 이동
         if (IsOpen())
         {
             if (Input.GetKeyDown(KeyCode.A))
-            {
                 ClickPageButton(GetCurrentPrevButton());
-            }
             else if (Input.GetKeyDown(KeyCode.D))
-            {
                 ClickPageButton(GetCurrentNextButton());
-            }
 
-            // F키로 도감 닫기
             if (Input.GetKeyDown(KeyCode.F))
-            {
                 CloseDoGam();
-            }
 
             return;
         }
 
-        // 도감이 닫혀 있을 때 F키로 열기
         if (!Input.GetKeyDown(KeyCode.F))
             return;
 
-        // 대화창이 열려 있으면 도감을 열지 않음
+        // 대화창 열려 있으면 도감 열기 금지
         if (IsDialogueOpen())
             return;
 
+        // 닫혀 있을 때만 버튼이 실제로 사용 가능한 상태인지 검사
         if (openButton == null ||
             !openButton.gameObject.activeInHierarchy ||
             !openButton.interactable)
@@ -408,29 +423,23 @@ public class DoGamUIManager : MonoBehaviour
 
     private Button GetCurrentPrevButton()
     {
-        // 게임 방법 탭
         if (howToRoot != null && howToRoot.activeSelf)
             return howToPrevButton;
 
-        // 제작대 설명 탭
         if (makerRoot != null && makerRoot.activeSelf)
             return makerPrevButton;
 
-        // 레시피 탭
         return prevButton;
     }
 
     private Button GetCurrentNextButton()
     {
-        // 게임 방법 탭
         if (howToRoot != null && howToRoot.activeSelf)
             return howToNextButton;
 
-        // 제작대 설명 탭
         if (makerRoot != null && makerRoot.activeSelf)
             return makerNextButton;
 
-        // 레시피 탭
         return nextButton;
     }
 
@@ -439,11 +448,8 @@ public class DoGamUIManager : MonoBehaviour
         if (button == null ||
             !button.gameObject.activeInHierarchy ||
             !button.interactable)
-        {
             return;
-        }
 
-        // 실제 버튼을 클릭한 것과 동일한 로직 실행
         button.onClick.Invoke();
     }
 
@@ -656,14 +662,7 @@ public class DoGamUIManager : MonoBehaviour
 
             SetMakerLayout(true);
             SetActiveTab(makerButton);
-
-            int spreadCount = Mathf.CeilToInt(
-                (makerItems != null ? (float)makerItems.Count : 0f) / makerItemsPerSpread
-            );
-            makerSpreadIndex = PlayerPrefs.GetInt(GetDoGamStateKey("DoGam_LastMakerSpread"), 0);
-            makerSpreadIndex = Mathf.Clamp(makerSpreadIndex, 0, Mathf.Max(0, spreadCount - 1));
-
-            RenderMakerSpread();
+            ShowMakerListPage();
         }
         else
         {
@@ -690,7 +689,7 @@ public class DoGamUIManager : MonoBehaviour
     }
 
 
-public void CloseDoGam()
+    public void CloseDoGam()
     {
         //튜토리얼 진행 트리거 8
         if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.DogamClose))
@@ -742,11 +741,6 @@ public void CloseDoGam()
         {
             PlayerPrefs.SetInt(GetDoGamStateKey("DoGam_LastHowToSpread"), howToSpreadIndex);
         }
-        else if (tab == 2)
-        {
-            PlayerPrefs.SetInt(GetDoGamStateKey("DoGam_LastMakerSpread"), makerSpreadIndex);
-        }
-
         PlayerPrefs.Save();
     }
 
@@ -1399,7 +1393,7 @@ public void CloseDoGam()
     private void SetMakerLayout(bool on)
     {
         if (makerRoot != null) makerRoot.SetActive(on);
-        SetMakerNavVisible(on && makerItems.Count > 0);
+        SetMakerNavVisible(on);
         if (on && lockCoverPanel) lockCoverPanel.SetActive(false);
     }
 
@@ -1412,8 +1406,22 @@ public void CloseDoGam()
         }
         else
         {
-            // 켤 때는 현재 스프레드 기준으로 버튼 보이기/숨기기 재계산
-            RenderMakerSpread();
+            UpdateMakerNavigation();
+        }
+    }
+
+    private void UpdateMakerNavigation()
+    {
+        if (makerPrevButton != null)
+        {
+            makerPrevButton.gameObject.SetActive(false);
+            makerPrevButton.interactable = false;
+        }
+
+        if (makerNextButton != null)
+        {
+            makerNextButton.gameObject.SetActive(false);
+            makerNextButton.interactable = false;
         }
     }
 
@@ -1445,12 +1453,12 @@ public void CloseDoGam()
         if (RecipeQuickViewUI.Instance != null)
             RecipeQuickViewUI.Instance.ForceCloseMiniPanel();
 
-        SubTitle.SetActive(false);
-        openButton.interactable = false;
+        if (SubTitle != null) SubTitle.SetActive(false);
+        if (openButton != null) openButton.interactable = false;
 
         SetRecipeLayout(false);
         SetHowToLayout(false);
-        
+
 
         if (makerItems == null || makerItems.Count == 0)
             LoadMakerFromJSON();
@@ -1458,85 +1466,262 @@ public void CloseDoGam()
         SetMakerLayout(true);
         SetActiveTab(makerButton);
 
-        makerSpreadIndex = 0;
-        RenderMakerSpread();
+        ShowMakerListPage();
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
     }
 
-    private void ChangeMakerSpread(int delta)
+    private void ShowMakerListPage()
     {
-        if (makerItems == null || makerItems.Count == 0) return;
-        int spreadCount = Mathf.CeilToInt((float)makerItems.Count / makerItemsPerSpread);
-        makerSpreadIndex = Mathf.Clamp(makerSpreadIndex + delta, 0, Mathf.Max(0, spreadCount - 1));
-        RenderMakerSpread();
+        // 페이지 1 그리드와 페이지 2 상세 정보를 동시에 표시
+        makerPageIndex = 1;
+
+        if (makerListPage != null)
+            makerListPage.SetActive(true);
+
+        if (makerDetailPage != null)
+            makerDetailPage.SetActive(true);
+
+        RenderMakerGrid();
+
+        // 제작대 탭을 열면 첫 번째 제작대 자동 선택
+        if (makerItems != null && makerItems.Count > 0)
+        {
+            SelectMakerItem(makerItems[0], false);
+        }
+        else
+        {
+            selectedMakerItem = null;
+            ClearMakerDetail();
+        }
+
+        UpdateMakerNavigation();
     }
 
-
-    //public int makerItemsPerSpread = 4; // 좌2 + 우2
-
-    private void RenderMakerSpread()
+    private void RenderMakerGrid()
     {
-        if (makerRoot == null) return;
-
-        // 부모 비우기
-        ClearChildren(makerLeftPageParent);
-        ClearChildren(makerRightPageParent);
-
-        if (makerItems == null || makerItems.Count == 0) return;
-
-        // 스프레드 범위 계산
-        int start = makerSpreadIndex * makerItemsPerSpread;
-        int end = Mathf.Min(start + makerItemsPerSpread, makerItems.Count);
-
-        for (int i = start; i < end; i++)
+        if (makerGridParent == null)
         {
-            var parent = ((i - start) < 2) ? makerLeftPageParent : makerRightPageParent;
-            var item = makerItems[i];
+            Debug.LogError(
+                "[Maker] Maker Grid Parent가 연결되지 않았습니다."
+            );
+            return;
+        }
 
-            var go = Instantiate(makerItemPrefab != null ? makerItemPrefab : howToItemPrefab, parent);
-            var icon = go.transform.Find("Icon")?.GetComponent<Image>();
-            var name = go.transform.Find("Name")?.GetComponent<TextMeshProUGUI>();
-            var body = go.transform.Find("Body")?.GetComponent<TextMeshProUGUI>();
+        if (makerItemPrefab == null)
+        {
+            Debug.LogError(
+                "[Maker] Maker Item Prefab이 연결되지 않았습니다."
+            );
+            return;
+        }
 
-            if (name != null) name.text = item.name;
-            if (body != null) body.text = item.desc;
+        ClearChildren(makerGridParent);
+        makerButtonViews.Clear();
 
-            if (icon != null)
+        if (makerItems == null || makerItems.Count == 0)
+        {
+            Debug.LogWarning("[Maker] 표시할 제작대 데이터가 없습니다.");
+            return;
+        }
+
+        foreach (MakerItemData item in makerItems)
+        {
+            MakerItemData capturedItem = item;
+
+            GameObject itemObject =
+                Instantiate(makerItemPrefab, makerGridParent);
+
+            itemObject.name = "MakerButton_" + capturedItem.name;
+            itemObject.SetActive(true);
+
+            // 루트 또는 자식에서 실제 Button을 찾음
+            Button itemButton = itemObject.GetComponent<Button>();
+
+            if (itemButton == null)
+                itemButton = itemObject.GetComponentInChildren<Button>(true);
+
+            if (itemButton == null)
             {
-                var sprite = Resources.Load<Sprite>("Sprites/restaurant/" + item.image);
-                if (sprite == null)
+                Debug.LogError(
+                    $"[Maker] {itemObject.name}에서 Button을 찾지 못했습니다."
+                );
+                continue;
+            }
+
+            Transform iconTransform =
+                itemObject.transform.Find("Icon");
+
+            Image icon = iconTransform != null
+                ? iconTransform.GetComponent<Image>()
+                : null;
+
+            // Icon이 바로 아래에 없으면 자식 전체에서 탐색
+            if (icon == null)
+            {
+                Image[] childImages =
+                    itemObject.GetComponentsInChildren<Image>(true);
+
+                foreach (Image childImage in childImages)
                 {
-                    var all = Resources.LoadAll<Sprite>("Sprites/restaurant/" + item.image);
-                    if (all != null && all.Length > 0) sprite = all[0];
-                }
-                icon.sprite = sprite;
-                icon.enabled = sprite != null;
-                if (sprite != null)
-                {
-                    icon.preserveAspect = true;
-                    LayoutRebuilder.MarkLayoutForRebuild(icon.rectTransform);
+                    if (childImage.gameObject == itemButton.gameObject)
+                        continue;
+
+                    icon = childImage;
+                    break;
                 }
             }
+
+            if (icon == null)
+            {
+                Debug.LogError(
+                    $"[Maker] {itemObject.name}에서 제작대 Icon을 찾지 못했습니다."
+                );
+                continue;
+            }
+
+            Sprite sprite =
+                LoadMakerSprite(capturedItem.image);
+
+            icon.sprite = sprite;
+            icon.enabled = sprite != null;
+            icon.preserveAspect = true;
+            icon.raycastTarget = true;
+
+            itemButton.interactable = true;
+            itemButton.onClick.RemoveAllListeners();
+
+            itemButton.onClick.AddListener(() =>
+            {
+                SelectMakerItem(capturedItem, true);
+            });
+
+            makerButtonViews.Add(new MakerButtonView
+            {
+                data = capturedItem,
+                button = itemButton,
+                icon = icon
+            });
+
+            RegisterButtonHoverMaterial(itemButton);
         }
 
-        // 내비 버튼 상태
-        int spreadCount = Mathf.CeilToInt((float)makerItems.Count / makerItemsPerSpread);
-        bool showPrev = (makerSpreadIndex > 0);
-        bool showNext = (makerSpreadIndex < spreadCount - 1);
-
-        if (makerPrevButton != null)
+        if (makerGridParent is RectTransform gridRect)
         {
-            makerPrevButton.gameObject.SetActive(showPrev);
-            makerPrevButton.interactable = showPrev;
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(gridRect);
         }
-        if (makerNextButton != null)
-        {
-            makerNextButton.gameObject.SetActive(showNext);
-            makerNextButton.interactable = showNext;
-        }
-
     }
 
+    private void SelectMakerItem(
+    MakerItemData item,
+    bool playSound)
+    {
+        if (item == null)
+            return;
+
+        selectedMakerItem = item;
+        makerPageIndex = 1;
+
+        // 두 페이지 모두 계속 표시
+        if (makerListPage != null)
+            makerListPage.SetActive(true);
+
+        if (makerDetailPage != null)
+            makerDetailPage.SetActive(true);
+
+        UpdateMakerButtonColors();
+        UpdateMakerDetail(item);
+        UpdateMakerNavigation();
+
+        if (playSound && SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayPageFlipSFX();
+        }
+    }
+
+    private void UpdateMakerButtonColors()
+    {
+        foreach (MakerButtonView view in makerButtonViews)
+        {
+            if (view == null || view.icon == null)
+                continue;
+
+            bool isSelected =
+                ReferenceEquals(view.data, selectedMakerItem);
+
+            view.icon.color = isSelected
+                ? makerSelectedColor
+                : makerUnselectedColor;
+        }
+    }
+
+    private void UpdateMakerDetail(MakerItemData item)
+    {
+        if (item == null)
+        {
+            ClearMakerDetail();
+            return;
+        }
+
+        if (makerDetailNameText != null)
+            makerDetailNameText.text = item.name;
+
+        if (makerDetailDescriptionText != null)
+            makerDetailDescriptionText.text = item.desc;
+
+        Sprite idleSprite = LoadMakerSprite(item.image);
+
+        if (makerDetailImage != null)
+        {
+            makerDetailImage.sprite = idleSprite;
+            makerDetailImage.enabled = idleSprite != null;
+            makerDetailImage.preserveAspect = true;
+            makerDetailImage.color = Color.white;
+        }
+
+        if (makerDetailAnimator != null)
+        {
+            makerDetailAnimator.SetMaker(
+                item.image,
+                idleSprite
+            );
+        }
+    }
+
+    private void ClearMakerDetail()
+    {
+        if (makerDetailNameText != null)
+            makerDetailNameText.text = string.Empty;
+
+        if (makerDetailDescriptionText != null)
+            makerDetailDescriptionText.text = string.Empty;
+
+        if (makerDetailImage != null)
+        {
+            makerDetailImage.sprite = null;
+            makerDetailImage.enabled = false;
+        }
+
+        if (makerDetailAnimator != null)
+            makerDetailAnimator.ClearMaker();
+    }
+
+    private Sprite LoadMakerSprite(string imageName)
+    {
+        if (string.IsNullOrEmpty(imageName)) return null;
+
+        string path = "Sprites/restaurant/" + imageName;
+        Sprite sprite = Resources.Load<Sprite>(path);
+
+        if (sprite == null)
+        {
+            Sprite[] sprites = Resources.LoadAll<Sprite>(path);
+            if (sprites != null && sprites.Length > 0)
+                sprite = sprites[0];
+        }
+
+        return sprite;
+    }
 
 
     //==========잠금 판정==============
@@ -1749,5 +1934,3 @@ public void CloseDoGam()
                NPCDialogueUIManager.Instance.IsDialogueOpen;
     }
 }
-
-
