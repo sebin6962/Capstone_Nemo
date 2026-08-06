@@ -40,6 +40,8 @@ public class ShootingStarSpawner : MonoBehaviour
     readonly HashSet<ShootingStar> active = new HashSet<ShootingStar>();
     float nextSpawnAt;
 
+    bool isSpawning = false;
+
     RectTransform canvasRT;
 
     void Awake()
@@ -68,18 +70,32 @@ public class ShootingStarSpawner : MonoBehaviour
             pool.Enqueue(CreateOne());
     }
 
-    void OnEnable()
-    {
-        ScheduleNext();
-    }
+    //void OnEnable()
+    //{
+    //    ScheduleNext();
+    //}
 
     void Update()
     {
+        // 타이틀 연출이 끝나기 전에는 별똥별을 생성하지 않음
+        if (!isSpawning)
+            return;
+
         if (Time.time >= nextSpawnAt)
         {
             SpawnOne();
             ScheduleNext();
         }
+    }
+
+    public void StartSpawning()
+    {
+        // 중복 실행 방지
+        if (isSpawning)
+            return;
+
+        isSpawning = true;
+        ScheduleNext();
     }
 
     void ScheduleNext()
@@ -156,5 +172,23 @@ public class ShootingStarSpawner : MonoBehaviour
         star.gameObject.SetActive(false);
         if (pool.Count < maxPool) pool.Enqueue(star);
         else Destroy(star.gameObject);
+    }
+
+    public void StopSpawning(bool hideActiveStars = true)
+    {
+        isSpawning = false;
+
+        if (!hideActiveStars)
+            return;
+
+        // 현재 화면에 날아가고 있는 별똥별도 모두 회수
+        List<ShootingStar> starsToHide =
+            new List<ShootingStar>(active);
+
+        foreach (ShootingStar star in starsToHide)
+        {
+            if (star != null)
+                Despawn(star);
+        }
     }
 }

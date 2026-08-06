@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7519027531824664346
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2063209792445510552}
+  - component: {fileID: 6357046079514228216}
+  - component: {fileID: 9078251236307144690}
+  m_Layer: 0
+  m_Name: SaveSelectManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2063209792445510552
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7519027531824664346}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 154.04541, y: 241.7672, z: -0.5270419}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6357046079514228216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7519027531824664346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c35064861bbd1fc4c86d8a37ca2eff51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  saveSlots:
+  - button: {fileID: 0}
+    txtServerName: {fileID: 0}
+    txtPlayerName: {fileID: 0}
+    txtStarlight: {fileID: 0}
+    txtLevel: {fileID: 0}
+    Playtime: {fileID: 0}
+    txtPlaytime: {fileID: 0}
+    LastPlayed: {fileID: 0}
+    txtLastPlayed: {fileID: 0}
+    backgroundImage: {fileID: 0}
+    deleteButton: {fileID: 0}
+    fixedTextObject: {fileID: 0}
+  - button: {fileID: 0}
+    txtServerName: {fileID: 0}
+    txtPlayerName: {fileID: 0}
+    txtStarlight: {fileID: 0}
+    txtLevel: {fileID: 0}
+    Playtime: {fileID: 0}
+    txtPlaytime: {fileID: 0}
+    LastPlayed: {fileID: 0}
+    txtLastPlayed: {fileID: 0}
+    backgroundImage: {fileID: 0}
+    deleteButton: {fileID: 0}
+    fixedTextObject: {fileID: 0}
+  - button: {fileID: 0}
+    txtServerName: {fileID: 0}
+    txtPlayerName: {fileID: 0}
+    txtStarlight: {fileID: 0}
+    txtLevel: {fileID: 0}
+    Playtime: {fileID: 0}
+    txtPlaytime: {fileID: 0}
+    LastPlayed: {fileID: 0}
+    txtLastPlayed: {fileID: 0}
+    backgroundImage: {fileID: 0}
+    deleteButton: {fileID: 0}
+    fixedTextObject: {fileID: 0}
+  newGamePopup: {fileID: 0}
+  normalSlotColor: {r: 1, g: 1, b: 1, a: 1}
+  emptySlotColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &9078251236307144690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7519027531824664346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b4fa498d3a42c468ef4644bf15157f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fileSelectPanel: {fileID: 0}
+  settingPanel: {fileID: 0}
+  exitPanel: {fileID: 0}
+  aboutPanel: {fileID: 0}
+  btnFileSelect: {fileID: 0}
+  btnSetting: {fileID: 0}
+  btnExit: {fileID: 0}
+  btnAbout: {fileID: 0}
+  txtFileSelect: {fileID: 0}
+  txtSetting: {fileID: 0}
+  txtExit: {fileID: 0}
+  txtAbout: {fileID: 0}
+  saveSelectManager: {fileID: 6357046079514228216}
+  btnGameExit: {fileID: 0}
+  normalTextColor: {r: 1, g: 1, b: 1, a: 1}
+  selectedTextColor: {r: 1, g: 0.88371813, b: 0.27987415, a: 1}
+  normalTextScale: 1
+  hoverTextScale: 1.08
+  selectedTextScale: 1.12
+  clickTextScale: 1
+  selectedTabMarker: {fileID: 0}
+  markerOffset: {x: -40, y: 0}
+  markerLayer: {fileID: 0}

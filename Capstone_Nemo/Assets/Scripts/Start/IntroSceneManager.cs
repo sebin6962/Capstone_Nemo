@@ -67,6 +67,37 @@ public class IntroSceneManager : MonoBehaviour
     public float logoBounceUpDuration = 0.22f;  // 튕겨 올라가는 시간
     public float logoSettleDuration = 0.18f;    // 제자리로 돌아오는 시간
 
+    [Header("Shooting Stars")]
+    [SerializeField] private ShootingStarSpawner shootingStarSpawner;
+
+    [Header("Save Select Transition")]
+    [SerializeField] private GameObject titleRoot;
+    [SerializeField] private Image moonImage;
+
+    [SerializeField] private GameObject saveSelectRoot;
+    [SerializeField] private CanvasGroup saveSelectCanvasGroup;
+
+    [SerializeField]
+    private Color saveSelectMoonColor =
+        new Color(0.45f, 0.45f, 0.45f, 1f);
+
+    [SerializeField] private float titleFadeOutDuration = 0.35f;
+    [SerializeField] private float moonColorDuration = 0.5f;
+
+    // 타이틀 페이드가 진행되는 도중 세이브 UI를 시작할 시간
+    [SerializeField] private float saveSelectStartDelay = 0.15f;
+
+    private bool openingSaveSelect;
+
+    [Header("Save Select Animation")]
+    [SerializeField]
+    private SaveSelectOpenAnimator saveSelectOpenAnimator;
+
+    [Header("Background Effect Fade")]
+    [SerializeField] private CanvasGroup spaceshipCanvasGroup;
+    [SerializeField] private CanvasGroup shootingStarCanvasGroup;
+    [SerializeField] private float backgroundEffectFadeDuration = 0.35f;
+
     void Awake()
     {
         // 하단 그라데이션 세팅
@@ -115,6 +146,25 @@ public class IntroSceneManager : MonoBehaviour
         clickTextUI.alpha = 0;
         clickTextUI.gameObject.SetActive(false);
 
+        if (saveSelectOpenAnimator != null)
+            saveSelectOpenAnimator.PrepareHidden();
+
+        if (saveSelectRoot != null)
+            saveSelectRoot.SetActive(false);
+
+        if (saveSelectCanvasGroup != null)
+        {
+            saveSelectCanvasGroup.alpha = 1f;
+            saveSelectCanvasGroup.interactable = false;
+            saveSelectCanvasGroup.blocksRaycasts = false;
+        }
+
+        if (spaceshipCanvasGroup != null)
+            spaceshipCanvasGroup.alpha = 1f;
+
+        if (shootingStarCanvasGroup != null)
+            shootingStarCanvasGroup.alpha = 1f;
+
         flowCoroutine = StartCoroutine(FlowSequence());
     }
 
@@ -124,18 +174,16 @@ public class IntroSceneManager : MonoBehaviour
         if (!clicked && Input.GetMouseButtonDown(0))
         {
             // 안내 문구가 활성화된 뒤에는 첫 클릭으로 바로 씬 전환
-            if (canClick)
+            if (canClick && !openingSaveSelect)
             {
                 clicked = true;
                 blinking = false;
+                openingSaveSelect = true;
 
                 if (SFXManager.Instance != null)
                     SFXManager.Instance.PlayIntroClickSFX();
 
-                if (FadeManager.Instance != null)
-                    FadeManager.Instance.FadeToScene("SaveSelectScene");
-                else
-                    SceneManager.LoadScene("SaveSelectScene");
+                StartCoroutine(OpenSaveSelectUI());
             }
             // 로고 연출이 끝난 뒤 클릭하면 남은 대기 시간을 건너뜀
             else if (!textStarted && allowSkipToText)
@@ -146,6 +194,8 @@ public class IntroSceneManager : MonoBehaviour
                 ForceStartTextStage();
             }
         }
+
+
 
         // 우주선
         if (moveShip && spaceshipUI != null)
@@ -177,23 +227,239 @@ public class IntroSceneManager : MonoBehaviour
         }
     }
 
+    private IEnumerator OpenSaveSelectUI()
+    {
+        canClick = false;
+
+        // 세 연출을 동시에 시작
+        StartCoroutine(FadeOutBackgroundEffects());
+        StartCoroutine(FadeOutTitleElements());
+        StartCoroutine(TransitionMoonColor());
+
+        // 타이틀이 완전히 사라질 때까지 기다리지 않고
+        // 페이드가 진행되는 도중 세이브 UI 등장 시작
+        yield return WaitRealtime(saveSelectStartDelay);
+
+        // 비활성 상태에서 먼저 숨김값 적용
+        if (saveSelectOpenAnimator != null)
+            saveSelectOpenAnimator.PrepareHidden();
+
+        if (saveSelectRoot != null)
+            saveSelectRoot.SetActive(true);
+
+        // OnEnable에서 UI 상태가 변경될 가능성이 있으므로
+        // 활성화 직후 같은 프레임에 다시 숨김값 적용
+        if (saveSelectOpenAnimator != null)
+            saveSelectOpenAnimator.PrepareHidden();
+
+        if (saveSelectCanvasGroup != null)
+        {
+            saveSelectCanvasGroup.alpha = 1f;
+
+            // 버튼이 Disabled 색상으로 변하지 않게 유지
+            saveSelectCanvasGroup.interactable = true;
+
+            // 연출 중 마우스 입력만 차단
+            saveSelectCanvasGroup.blocksRaycasts = false;
+        }
+
+        if (saveSelectOpenAnimator != null)
+        {
+            yield return StartCoroutine(
+                saveSelectOpenAnimator.PlayOpen()
+            );
+        }
+
+        if (saveSelectCanvasGroup != null)
+        {
+            saveSelectCanvasGroup.interactable = true;
+            saveSelectCanvasGroup.blocksRaycasts = true;
+        }
+    }
+
+    private IEnumerator FadeOutTitleElements()
+    {
+        float logoStartAlpha =
+            logoUI != null ? logoUI.alpha : 0f;
+
+        float textStartAlpha =
+            clickTextUI != null ? clickTextUI.alpha : 0f;
+
+        float elapsed = 0f;
+
+        while (elapsed < titleFadeOutDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+
+            float progress = titleFadeOutDuration <= 0f
+                ? 1f
+                : Mathf.Clamp01(
+                    elapsed / titleFadeOutDuration
+                );
+
+            float eased =
+                progress * progress * (3f - 2f * progress);
+
+            if (logoUI != null)
+            {
+                logoUI.alpha =
+                    Mathf.Lerp(logoStartAlpha, 0f, eased);
+            }
+
+            if (clickTextUI != null)
+            {
+                clickTextUI.alpha =
+                    Mathf.Lerp(textStartAlpha, 0f, eased);
+            }
+
+            yield return null;
+        }
+
+        if (logoUI != null)
+            logoUI.alpha = 0f;
+
+        if (clickTextUI != null)
+            clickTextUI.alpha = 0f;
+
+        if (titleRoot != null)
+            titleRoot.SetActive(false);
+    }
+
+    private IEnumerator TransitionMoonColor()
+    {
+        if (moonImage == null)
+            yield break;
+
+        Color startColor = moonImage.color;
+        Color targetColor = saveSelectMoonColor;
+
+        targetColor.a = startColor.a;
+
+        float elapsed = 0f;
+
+        while (elapsed < moonColorDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+
+            float progress = moonColorDuration <= 0f
+                ? 1f
+                : Mathf.Clamp01(
+                    elapsed / moonColorDuration
+                );
+
+            float eased =
+                progress * progress * (3f - 2f * progress);
+
+            moonImage.color =
+                Color.Lerp(startColor, targetColor, eased);
+
+            yield return null;
+        }
+
+        moonImage.color = targetColor;
+    }
+
+    private IEnumerator WaitRealtime(float duration)
+    {
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+    }
+
+    private IEnumerator FadeOutBackgroundEffects()
+    {
+        // 새로운 별똥별만 더 이상 생성하지 않음
+        // 현재 날아가던 별똥별은 잠시 계속 움직임
+        if (shootingStarSpawner != null)
+            shootingStarSpawner.StopSpawning(false);
+
+        float shipStartAlpha =
+            spaceshipCanvasGroup != null
+                ? spaceshipCanvasGroup.alpha
+                : 1f;
+
+        float starStartAlpha =
+            shootingStarCanvasGroup != null
+                ? shootingStarCanvasGroup.alpha
+                : 1f;
+
+        float elapsed = 0f;
+
+        while (elapsed < backgroundEffectFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+
+            float progress = backgroundEffectFadeDuration <= 0f
+                ? 1f
+                : Mathf.Clamp01(
+                    elapsed / backgroundEffectFadeDuration
+                );
+
+            // 처음에는 천천히, 마지막에 부드럽게 사라짐
+            float eased =
+                progress * progress * (3f - 2f * progress);
+
+            if (spaceshipCanvasGroup != null)
+            {
+                spaceshipCanvasGroup.alpha =
+                    Mathf.Lerp(shipStartAlpha, 0f, eased);
+            }
+
+            if (shootingStarCanvasGroup != null)
+            {
+                shootingStarCanvasGroup.alpha =
+                    Mathf.Lerp(starStartAlpha, 0f, eased);
+            }
+
+            yield return null;
+        }
+
+        if (spaceshipCanvasGroup != null)
+            spaceshipCanvasGroup.alpha = 0f;
+
+        if (shootingStarCanvasGroup != null)
+            shootingStarCanvasGroup.alpha = 0f;
+
+        // 완전히 투명해진 뒤 실제 재생 정지
+        moveShip = false;
+
+        if (shootingStarSpawner != null)
+            shootingStarSpawner.StopSpawning(true);
+
+        if (spaceshipUI != null)
+            spaceshipUI.gameObject.SetActive(false);
+
+        if (shootingStarCanvasGroup != null)
+            shootingStarCanvasGroup.gameObject.SetActive(false);
+    }
+
     IEnumerator FlowSequence()
     {
-        // 1 로고 등장
         yield return new WaitForSecondsRealtime(delayBeforeLogo);
 
-        // 로고 등장과 동시에 우주선 이동 시작
-        StartShipOnce();
-
-        // 로고가 위에서 내려오고 튕기면서 제자리로 이동
+        // 타이틀이 내려오고 튕긴 뒤 원위치까지 돌아옴
         yield return StartCoroutine(DropBounceLogo());
 
+        // 타이틀 복귀 완료 후 UFO 출발
+        StartShipOnce();
+
+        // 타이틀 복귀 완료 후 별똥별 생성 시작
+        if (shootingStarSpawner != null)
+            shootingStarSpawner.StartSpawning();
+
         if (gradientGroup != null)
-            yield return StartCoroutine(FadeCanvasGroup(gradientGroup, 0, 1, gradientFadeSeconds));
+        {
+            yield return StartCoroutine(
+                FadeCanvasGroup(gradientGroup, 0, 1, gradientFadeSeconds)
+            );
+        }
 
         allowSkipToText = true;
 
-        // 2 텍스트 등장
         if (!textStarted)
         {
             yield return new WaitForSecondsRealtime(delayBeforeText);
