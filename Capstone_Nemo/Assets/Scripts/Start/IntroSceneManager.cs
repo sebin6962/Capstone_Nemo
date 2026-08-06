@@ -14,7 +14,6 @@ public class IntroSceneManager : MonoBehaviour
     [Header("Timing Settings")]
     public float delayBeforeLogo = 2f;
     public float logoFadeDuration = 1f;
-    public float delayBeforeText = 2f;
     public float textFadeDuration = 1f;
 
     [Header("Blink Settings")]
@@ -23,6 +22,9 @@ public class IntroSceneManager : MonoBehaviour
 
     private bool clicked = false;
     private bool canClick = false;
+
+    // 타이틀 화면 전체 클릭용 손 커서 등록 상태
+    private bool introHandCursorRegistered = false;
 
     [Header("Gradient Overlay")]
     public Image gradientOverlay;               // 하단 그라데이션용 이미지
@@ -179,6 +181,9 @@ public class IntroSceneManager : MonoBehaviour
                 clicked = true;
                 blinking = false;
                 openingSaveSelect = true;
+
+                // 타이틀 전체 클릭용 손 커서 해제
+                UnregisterIntroHandCursor();
 
                 if (SFXManager.Instance != null)
                     SFXManager.Instance.PlayIntroClickSFX();
@@ -437,34 +442,36 @@ public class IntroSceneManager : MonoBehaviour
             shootingStarCanvasGroup.gameObject.SetActive(false);
     }
 
-    IEnumerator FlowSequence()
+    private IEnumerator FlowSequence()
     {
         yield return new WaitForSecondsRealtime(delayBeforeLogo);
 
-        // 타이틀이 내려오고 튕긴 뒤 원위치까지 돌아옴
+        // 타이틀 낙하 → 튕김 → 원위치 도착까지 대기
         yield return StartCoroutine(DropBounceLogo());
 
-        // 타이틀 복귀 완료 후 UFO 출발
+        // 타이틀 도착 직후 배경 연출 시작
         StartShipOnce();
 
-        // 타이틀 복귀 완료 후 별똥별 생성 시작
         if (shootingStarSpawner != null)
             shootingStarSpawner.StartSpawning();
 
+        // 그라데이션은 안내 문구와 동시에 나타나게 함
         if (gradientGroup != null)
         {
-            yield return StartCoroutine(
-                FadeCanvasGroup(gradientGroup, 0, 1, gradientFadeSeconds)
+            StartCoroutine(
+                FadeCanvasGroup(
+                    gradientGroup,
+                    0f,
+                    1f,
+                    gradientFadeSeconds
+                )
             );
         }
 
-        allowSkipToText = true;
+        // 별도의 클릭이나 추가 대기 없이 즉시 안내 문구 시작
+        yield return StartCoroutine(StartTextStage());
 
-        if (!textStarted)
-        {
-            yield return new WaitForSecondsRealtime(delayBeforeText);
-            yield return StartCoroutine(StartTextStage());
-        }
+        flowCoroutine = null;
     }
 
     // 텍스트 등장 + 깜빡임 + 클릭 허용까지 한 번에 처리
@@ -479,6 +486,18 @@ public class IntroSceneManager : MonoBehaviour
 
         // 문구가 켜지는 순간부터 클릭 허용
         canClick = true;
+
+        // 화면 어디를 클릭해도 되는 상태이므로 손 커서 표시
+        RegisterIntroHandCursor();
+
+        yield return StartCoroutine(
+            FadeCanvasGroup(
+                clickTextUI,
+                0,
+                1,
+                textFadeDuration
+            )
+        );
 
         yield return StartCoroutine(FadeCanvasGroup(clickTextUI, 0, 1, textFadeDuration));
 
@@ -706,5 +725,40 @@ public class IntroSceneManager : MonoBehaviour
     float EaseInQuad(float x)
     {
         return x * x;
+    }
+
+    private void RegisterIntroHandCursor()
+    {
+        if (introHandCursorRegistered)
+            return;
+
+        if (GameCursorManager.Instance == null)
+            return;
+
+        introHandCursorRegistered = true;
+        GameCursorManager.Instance.EnterHandCursor(this);
+    }
+
+    private void UnregisterIntroHandCursor()
+    {
+        if (!introHandCursorRegistered)
+            return;
+
+        introHandCursorRegistered = false;
+
+        if (GameCursorManager.Instance != null)
+        {
+            GameCursorManager.Instance.ExitHandCursor(this);
+        }
+    }
+
+    private void OnDisable()
+    {
+        UnregisterIntroHandCursor();
+    }
+
+    private void OnDestroy()
+    {
+        UnregisterIntroHandCursor();
     }
 }

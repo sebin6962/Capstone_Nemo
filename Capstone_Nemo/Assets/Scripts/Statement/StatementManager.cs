@@ -20,9 +20,6 @@ public class StatementManager : MonoBehaviour
     private TMP_Text txtNormalCount;
 
     [SerializeField]
-    private TMP_Text txtNormalStars;
-
-    [SerializeField]
     private TMP_Text txtTotalStars;
 
     [Header("판매 다과 슬롯")]
@@ -64,7 +61,6 @@ public class StatementManager : MonoBehaviour
             : default;
 
         PrimeAlpha(txtNormalCount, 0f);
-        PrimeAlpha(txtNormalStars, 0f);
         PrimeAlpha(txtTotalStars, 0f);
 
         HideAllDagwaSlots();
@@ -169,24 +165,6 @@ public class StatementManager : MonoBehaviour
 
             yield return FadeTextIn(
                 txtNormalCount,
-                fadeSec
-            );
-        }
-
-        yield return new WaitForSecondsRealtime(rowDelay);
-
-        // 2. 일반 손님에게 받은 별빛
-        if (txtNormalStars != null)
-        {
-            if (SFXManager.Instance != null)
-            {
-                SFXManager.Instance.PlayMoneyCountSFX();
-            }
-
-            txtNormalStars.text = $"{report.normalStars:N0}";
-
-            yield return FadeTextIn(
-                txtNormalStars,
                 fadeSec
             );
         }
