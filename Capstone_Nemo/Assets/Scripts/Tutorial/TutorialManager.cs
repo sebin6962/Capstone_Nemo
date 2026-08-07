@@ -114,6 +114,9 @@ public class TutorialManager : MonoBehaviour
     private float originalCameraSize;
     private bool hasCachedCameraSize = false;
 
+    // 인트로 시작 전 다른 스폰 로직이 플레이어 위치를 덮지 못하게 함
+    private bool holdPlayerAtVillageEntry = false;
+
     [Header("대화 중 비활성화할 버튼들")]
     [SerializeField] private List<Button> dialogueLockButtons = new List<Button>();
 
@@ -123,6 +126,9 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private List<GameObject> autoSequenceDisableUIObjects = new List<GameObject>();
 
     private Dictionary<GameObject, bool> autoSequenceUIStateCache = new Dictionary<GameObject, bool>();
+
+    [Header("인트로 시퀀스 레터박스")]
+    [SerializeField] private IntroLetterboxAnimator introLetterbox;
 
     private void Awake()
     {
@@ -199,10 +205,13 @@ public class TutorialManager : MonoBehaviour
                     TutorialFlowManager.Instance.RequestTutorialTimePause();
 
                 if (TutorialFlowManager.Instance != null &&
-                    !TutorialFlowManager.Instance.VillageIntroAutoSequencePlayed)
+    !TutorialFlowManager.Instance.VillageIntroAutoSequencePlayed)
                 {
                     waitingVillageIntroFade = true;
+                    holdPlayerAtVillageEntry = true;
+
                     SetPlayerInput(false);
+                    PlacePlayerAtVillageEntry();
                 }
                 else
                 {
@@ -226,6 +235,42 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
+    private void LateUpdate()
+    {
+        if (!holdPlayerAtVillageEntry)
+            return;
+
+        if (!waitingVillageIntroFade || isAutoSequenceRunning)
+            return;
+
+        PlacePlayerAtVillageEntry();
+    }
+
+    private void PlacePlayerAtVillageEntry()
+    {
+        if (player == null || villageEntryPoint == null)
+            return;
+
+        Vector3 startPosition = villageEntryPoint.position;
+        startPosition.z = player.transform.position.z;
+
+        player.transform.position = startPosition;
+
+        // Rigidbody가 있다면 이전 이동 속도도 제거
+        Rigidbody2D playerRigidbody = player.GetComponent<Rigidbody2D>();
+
+        if (playerRigidbody != null)
+        {
+            playerRigidbody.position = new Vector2(
+                startPosition.x,
+                startPosition.y
+            );
+
+            playerRigidbody.velocity = Vector2.zero;
+            playerRigidbody.angularVelocity = 0f;
+        }
+    }
+
     public void PrepareVillageIntroUnderFade()
     {
         if (!waitingVillageIntroFade || player == null)
@@ -238,12 +283,8 @@ public class TutorialManager : MonoBehaviour
         SetAutoSequenceUIObjectsHidden(true);
         HideCommonBubble();
 
-        if (villageEntryPoint != null)
-        {
-            Vector3 startPos = villageEntryPoint.position;
-            startPos.z = player.transform.position.z;
-            player.transform.position = startPos;
-        }
+        holdPlayerAtVillageEntry = true;
+        PlacePlayerAtVillageEntry();
 
         // 처음 시작 방향도 필요하면 여기서 맞춤
         if (grandmaNoticePoint != null)
@@ -259,7 +300,12 @@ public class TutorialManager : MonoBehaviour
         if (!waitingVillageIntroFade || isAutoSequenceRunning)
             return;
 
+        // 저장 위치 및 씬 스폰 로직이 덮어쓴 경우를 대비해 마지막으로 확정
+        PlacePlayerAtVillageEntry();
+
         waitingVillageIntroFade = false;
+        holdPlayerAtVillageEntry = false;
+
         StartCoroutine(PlayVillageIntroAutoSequence_AfterFade());
     }
 
@@ -334,6 +380,10 @@ public class TutorialManager : MonoBehaviour
         SetPlayerInput(false);
         SetGrandmaVisible(true);
 
+        // 인트로 자동 시퀀스와 동시에 위·아래 검은 패널 등장
+        if (introLetterbox != null)
+            introLetterbox.Show();
+
         // 0) 시퀀스 시작 후 잠깐 멈춤
         yield return new WaitForSeconds(beforeMoveDelay);
 
@@ -397,6 +447,10 @@ public class TutorialManager : MonoBehaviour
         }, villageFirstStartDialogues, grandmaNpcObject);
 
         yield return new WaitUntil(() => dialogueFinished);
+
+        // 자동 인트로가 끝났으므로 레터박스 퇴장
+        if (introLetterbox != null)
+            introLetterbox.Hide();
 
         // 할머니 대화 종료 직후, 도감 열기 전에 UI 복원
         SetAutoSequenceUIObjectsHidden(false);
