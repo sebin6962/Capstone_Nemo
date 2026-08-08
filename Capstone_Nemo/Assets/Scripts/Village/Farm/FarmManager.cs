@@ -1233,17 +1233,27 @@ public class FarmManager : MonoBehaviour
 
         Transform sensorTr = overlay.transform.Find("Sensor");
         Transform outlineTr = overlay.transform.Find("OutLineSprite");
+
         if (sensorTr == null || outlineTr == null) return;
 
         var outlineSR = outlineTr.GetComponent<SpriteRenderer>();
+
         if (outlineSR != null)
         {
             outlineSR.sprite = data != null ? data.outlineSprite : null;
+
+            if (data != null)
+            {
+                outlineTr.localPosition = data.outlineOffset;
+            }
+
             outlineSR.enabled = false;
         }
 
         var sensor = sensorTr.GetComponent<SpriteSensor>();
-        if (sensor == null) sensor = sensorTr.gameObject.AddComponent<SpriteSensor>();
+
+        if (sensor == null)
+            sensor = sensorTr.gameObject.AddComponent<SpriteSensor>();
 
         sensor.spriteRenderer = outlineSR;
         sensor.playerLayer = LayerMask.GetMask("Player");
