@@ -662,7 +662,7 @@ public class TutorialManager : MonoBehaviour
         CleanupTutorialVisuals();
 
         if (tutorialBlocker)
-            tutorialBlocker.SetActive(false);
+            tutorialBlocker.SetActive(true);
 
         if (villageTutorialPanel)
         {
