@@ -1242,7 +1242,7 @@ public class FarmManager : MonoBehaviour
         {
             outlineSR.sprite = data != null ? data.outlineSprite : null;
 
-            if (data != null)
+            if (data != null && data.isTree)
             {
                 outlineTr.localPosition = data.outlineOffset;
             }
