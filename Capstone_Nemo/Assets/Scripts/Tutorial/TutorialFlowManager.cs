@@ -137,6 +137,8 @@ public class TutorialFlowManager : MonoBehaviour
         state.tutorialDone = true;
         TutorialState.Save(server, state);
 
+        UnlockScenePortal();
+
         while (timePauseRequestCount > 0)
         {
             ReleaseTutorialTimePause();
