@@ -187,8 +187,6 @@ public class MillTutorialManager : MonoBehaviour
                 currentStep = MillTutorialStep.QuitStore;
                 break;
             case MillTutorialStep.QuitStore:
-                if (TutorialFlowManager.Instance != null)
-                    TutorialFlowManager.Instance.UnlockScenePortal();
                 currentStep = MillTutorialStep.Mill_Finish;
                 break;
             case MillTutorialStep.Mill_Finish:
