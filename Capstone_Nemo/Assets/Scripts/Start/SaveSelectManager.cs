@@ -30,12 +30,6 @@ public class SlotUI
 
 public class SaveSelectManager : MonoBehaviour
 {
-    [Serializable]
-    class PlaytimeData
-    {
-        public long seconds;
-        public string lastPlayed;
-    }
 
     public SlotUI[] saveSlots; // 슬롯 3개 연결
     public GameObject newGamePopup;
@@ -55,6 +49,11 @@ public class SaveSelectManager : MonoBehaviour
     // 세이브 하나를 지울 때 함께 지울 파일들
     void DeleteServerFiles(string serverName)
     {
+        if (SaveService.IsCurrent(serverName))
+        {
+            SaveService.Clear();
+        }
+
         var p = Application.persistentDataPath;
 
         TryDelete(Path.Combine(p, $"save_myuser_{serverName}.json"));
@@ -105,58 +104,6 @@ public class SaveSelectManager : MonoBehaviour
         RefreshSaveSlots();
     }
 
-    [System.Serializable]
-    public class StarData
-    {
-        public int starlight;
-    }
-
-    [System.Serializable]
-    public class LevelData
-    {
-        public int Level;
-        public int Exp;
-    }
-
-    [System.Serializable]
-    public class DayData
-    {
-        public int day;
-    }
-
-    int LoadStarlight(string serverName)
-    {
-        string path = Path.Combine(
-            Application.persistentDataPath,
-            $"playerStarData_{serverName}.json"
-        );
-
-        if (File.Exists(path))
-        {
-            var data = JsonUtility.FromJson<StarData>(File.ReadAllText(path));
-            if (data != null)
-                return data.starlight;
-        }
-
-        return 0;
-    }
-
-    int LoadLevel(string serverName)
-    {
-        string path = Path.Combine(
-            Application.persistentDataPath,
-            $"player_level_data_{serverName}.json"
-        );
-
-        if (File.Exists(path))
-        {
-            var data = JsonUtility.FromJson<LevelData>(File.ReadAllText(path));
-            if (data != null)
-                return data.Level;
-        }
-
-        return 1;
-    }
 
     public void DeleteSave(string serverName)
     {
@@ -213,9 +160,7 @@ public class SaveSelectManager : MonoBehaviour
                     $"save_myuser_{serverName}.json"
                 );
 
-                SaveData saveData = JsonUtility.FromJson<SaveData>(
-                    File.ReadAllText(savePath)
-                );
+                SaveData saveData = SaveRepository.Load(serverName);
 
                 if (saveData == null)
                     saveData = new SaveData { serverName = serverName };
@@ -229,10 +174,21 @@ public class SaveSelectManager : MonoBehaviour
                     ? "이름 미설정"
                     : saveData.playerName;
 
-                int starlight = LoadStarlight(serverName);
-                int level = LoadLevel(serverName);
+                int starlight = saveData.starData != null
+    ? saveData.starData.starlight
+    : 0;
 
-                var pt = LoadPlaytimeData(serverName);
+                int level = saveData.levelData != null
+    ? saveData.levelData.level
+    : 1;
+
+                PlaytimeSaveData pt =
+    saveData.playtimeData ??
+    new PlaytimeSaveData
+    {
+        seconds = 0,
+        lastPlayed = ""
+    };
 
                 if (slot.txtServerName != null)
                     slot.txtServerName.text = displayServerName;
@@ -279,31 +235,70 @@ public class SaveSelectManager : MonoBehaviour
                     if (SFXManager.Instance != null)
                         SFXManager.Instance.PlayFileSelectSFX();
 
-                    PlayerPrefs.SetString("SelectedSave", serverName);
+                    if (!SaveService.Load(serverName))
+                    {
+                        Debug.LogError(
+                            "[SaveSelectManager] 세이브 선택 실패: " +
+                            serverName
+                        );
+
+                        return;
+                    }
+
+                    PlayerPrefs.SetString(
+                        "SelectedSave",
+                        serverName
+                    );
+
                     PlayerPrefs.Save();
 
                     if (PlayerSkinManager.Instance != null)
-                        PlayerSkinManager.Instance.SwitchToSave(serverName);
+                    {
+                        PlayerSkinManager.Instance.SwitchToSave(
+                            serverName
+                        );
+                    }
 
                     if (StarDataManager.Instance != null)
-                        StarDataManager.Instance.InitFromSelectedSave();
+                    {
+                        StarDataManager.Instance
+                            .InitFromSelectedSave();
+                    }
 
                     TutorialFlowManager.ForceResetInstance();
 
                     if (QuestAcceptManager.Instance != null)
-                        QuestAcceptManager.Instance.SwitchToSave(serverName);
+                    {
+                        QuestAcceptManager.Instance.SwitchToSave(
+                            serverName
+                        );
+                    }
 
                     if (DailyQuestManager.Instance != null)
-                        DailyQuestManager.Instance.SwitchToSave(serverName);
+                    {
+                        DailyQuestManager.Instance.SwitchToSave(
+                            serverName
+                        );
+                    }
 
                     if (UnlockManager.Instance != null)
-                        UnlockManager.Instance.SwitchToServer(serverName);
+                    {
+                        UnlockManager.Instance.SwitchToServer(
+                            serverName
+                        );
+                    }
 
                     if (VillageSceneManager.Instance != null)
+                    {
                         VillageSceneManager.Instance.ResetData();
+                    }
 
-                    SceneTransitionInfo.Instance.entranceID = "FromPlayerStore";
-                    FadeManager.Instance.FadeToScene("VillageScene");
+                    SceneTransitionInfo.Instance.entranceID =
+                        "FromPlayerStore";
+
+                    FadeManager.Instance.FadeToScene(
+                        "VillageScene"
+                    );
                 });
 
                 delBtn.onClick.AddListener(() =>
@@ -374,27 +369,6 @@ public class SaveSelectManager : MonoBehaviour
                     newGamePopup.SetActive(true);
                 });
             }
-        }
-    }
-
-    PlaytimeData LoadPlaytimeData(string serverName)
-    {
-        string path = Path.Combine(
-            Application.persistentDataPath,
-            $"playtime_{serverName}.json"
-        );
-
-        if (!File.Exists(path))
-            return new PlaytimeData { seconds = 0, lastPlayed = "" };
-
-        try
-        {
-            return JsonUtility.FromJson<PlaytimeData>(File.ReadAllText(path))
-                   ?? new PlaytimeData { seconds = 0, lastPlayed = "" };
-        }
-        catch
-        {
-            return new PlaytimeData { seconds = 0, lastPlayed = "" };
         }
     }
 

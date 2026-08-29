@@ -1,38 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
-
-[System.Serializable]
-public class PlayerData
-{
-    public int starlight;
-    public DayReport todayReport;
-    public DayReport yesterdayReport;
-}
-
-[System.Serializable]
-public struct DayReport
-{
-    public int normalCount;
-    public int normalStars;
-
-    // 기존 특별 손님 데이터는 총 별빛 계산을 위해 유지
-    public int questCount;
-    public int questStars;
-
-    // 해당 날짜에 판매한 다과 종류
-    public List<string> soldDagwaKeys;
-
-    public int TotalStars => normalStars + questStars;
-}
 
 public class StarDataManager : MonoBehaviour
 {
     public static StarDataManager Instance;
 
-    public PlayerData playerData = new PlayerData();
+    public StarSaveData playerData = new StarSaveData();
 
-    private string savePath;
+    private string serverName;
 
     private DayReport _today;
     private DayReport _yesterday;
@@ -191,67 +166,84 @@ public class StarDataManager : MonoBehaviour
 
     public void SetServerName(string serverName)
     {
-        savePath =
-            Application.persistentDataPath +
-            $"/playerStarData_{serverName}.json";
+        this.serverName = serverName;
     }
 
     public void SaveStarData()
     {
-        if (string.IsNullOrEmpty(savePath))
+        if (string.IsNullOrWhiteSpace(serverName))
         {
             Debug.LogError(
-                "[StarDataManager] savePath가 설정되지 않았습니다. " +
-                "SetServerName()을 먼저 호출해야 합니다."
+                "[StarDataManager] serverName이 설정되지 않았습니다."
             );
 
             return;
         }
 
-        playerData.todayReport = NormalizeReport(_today);
-        playerData.yesterdayReport = NormalizeReport(_yesterday);
+        if (!SaveService.EnsureLoaded(serverName))
+        {
+            Debug.LogError(
+                "[StarDataManager] 현재 세이브를 준비할 수 없습니다: " +
+                serverName
+            );
 
-        string json = JsonUtility.ToJson(playerData, true);
-        File.WriteAllText(savePath, json);
+            return;
+        }
+
+        playerData.todayReport =
+            NormalizeReport(_today);
+
+        playerData.yesterdayReport =
+            NormalizeReport(_yesterday);
+
+        SaveService.CurrentData.starData =
+            playerData;
+
+        SaveService.CurrentData
+            .starDataMigrationCompleted = true;
+
+        SaveService.SaveCurrent();
     }
 
     public void LoadStarData()
     {
-        if (string.IsNullOrEmpty(savePath))
+        if (string.IsNullOrWhiteSpace(serverName))
         {
             Debug.LogError(
-                "[StarDataManager] savePath가 설정되지 않았습니다. " +
-                "SetServerName()을 먼저 호출해야 합니다."
+                "[StarDataManager] serverName이 설정되지 않았습니다."
             );
 
             return;
         }
 
-        if (File.Exists(savePath))
+        if (!SaveService.EnsureLoaded(serverName))
         {
-            string json = File.ReadAllText(savePath);
-
-            playerData = JsonUtility.FromJson<PlayerData>(json);
-
-            if (playerData == null)
-            {
-                playerData = new PlayerData();
-            }
-
-            // 기존 세이브 데이터 호환 처리
-            _today = NormalizeReport(playerData.todayReport);
-            _yesterday = NormalizeReport(playerData.yesterdayReport);
-        }
-        else
-        {
-            playerData = new PlayerData();
-            playerData.starlight = 0;
+            playerData = new StarSaveData();
 
             _today = CreateEmptyReport();
             _yesterday = CreateEmptyReport();
 
-            SaveStarData();
+            return;
         }
+
+        playerData =
+            SaveService.CurrentData.starData;
+
+        if (playerData == null)
+        {
+            playerData = new StarSaveData();
+
+            SaveService.CurrentData.starData =
+                playerData;
+        }
+
+        _today = NormalizeReport(
+            playerData.todayReport
+        );
+
+        _yesterday = NormalizeReport(
+            playerData.yesterdayReport
+        );
     }
 
     public void AddStarlight(int amount)

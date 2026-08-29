@@ -18,6 +18,51 @@ public class Profile
 }
 
 [Serializable]
+public class StarSaveData
+{
+    public int starlight;
+
+    public DayReport todayReport;
+    public DayReport yesterdayReport;
+}
+
+[Serializable]
+public struct DayReport
+{
+    public int normalCount;
+    public int normalStars;
+
+    public int questCount;
+    public int questStars;
+
+    public List<string> soldDagwaKeys;
+
+    public int TotalStars => normalStars + questStars;
+}
+
+[Serializable]
+public class LevelSaveData
+{
+    public int level = 1;
+    public int exp = 0;
+}
+
+[Serializable]
+public class WorldTimeSaveData
+{
+    public int day = 1;
+    public int hour = 9;
+    public int minute = 0;
+}
+
+[Serializable]
+public class PlaytimeSaveData
+{
+    public long seconds = 0;
+    public string lastPlayed = "";
+}
+
+[Serializable]
 public class SaveData
 {
     // 세이브 파일을 구분하는 마을 이름
@@ -26,11 +71,18 @@ public class SaveData
     // 해당 세이브에서 사용하는 캐릭터 이름
     public string playerName;
 
-    // ① 별빛(재화)
+    //플레이 시간
+    public PlaytimeSaveData playtimeData;
+    public bool playtimeMigrationCompleted;
+
+    // ① 별빛(재화) // 이전 필드: 앞으로 사용하지 않음(리펙토링)
     public int starlight;
 
     // ② 날짜
     public int day;
+
+    public WorldTimeSaveData worldTimeData;
+    public bool worldTimeMigrationCompleted;
 
     // ③ 경험치/레벨
     public int exp;
@@ -52,6 +104,14 @@ public class SaveData
     public string dailyQuestRealDate;
     public List<string> dailyQuestIds;
 
+    public StarSaveData starData;
+
+    // 기존 별빛 JSON을 통합했는지 기록
+    public bool starDataMigrationCompleted;
+
+    public LevelSaveData levelData;
+    public bool levelDataMigrationCompleted;
+
     // 새 게임 생성 시 기본값
     public SaveData()
     {
@@ -64,8 +124,32 @@ public class SaveData
         level = 1;
         currentUnlockedTreeLevel = 0;
 
+        starData = new StarSaveData
+        {
+            starlight = 0
+        };
+
         storageItems = new List<StorageEntry>();
         acceptedQuestIds = new List<string>();
+
+        levelData = new LevelSaveData
+        {
+            level = 1,
+            exp = 0
+        };
+
+        worldTimeData = new WorldTimeSaveData
+        {
+            day = 1,
+            hour = 9,
+            minute = 0
+        };
+
+        playtimeData = new PlaytimeSaveData
+        {
+            seconds = 0,
+            lastPlayed = ""
+        };
 
         dailyQuestRealDate = "";
         dailyQuestIds = new List<string>();

@@ -1,19 +1,10 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Globalization;
 using UnityEngine.SceneManagement;
-
-[Serializable]
-public class PlaytimeData
-{
-    public long seconds;          // 누적 플레이타임(초)
-    public string lastPlayed;     // 마지막 접속 표시(로컬 시간 문자열)
-}
 
 public class TimeManager : MonoBehaviour
 {
@@ -33,16 +24,13 @@ public class TimeManager : MonoBehaviour
     public int currentDay = 0;             // 일차
     private int totalGameMinutes = (26 - 9) * 60; // 하루 총 분(9시 ~ 26시 → 1020분)
 
-    private string savePath;
+    private string currentServer;
 
     public bool isTimeFlow = true; // 시간 흐름 제어 변수
 
     private DateTime? _sessionStartUtc;
     private string _currentServerForPlay;
     private long _cachedPlaySeconds;
-
-    private string PlaytimePath(string server)
-        => Path.Combine(Application.persistentDataPath, $"playtime_{server}.json");
 
     public GameObject dayEndPanel;      // 곧 하루가 끝남 팝업 패널
     public CanvasGroup dayEndGroup;     
@@ -70,7 +58,7 @@ public class TimeManager : MonoBehaviour
 
     public void SetServerName(string serverName)
     {
-        savePath = Path.Combine(Application.persistentDataPath, $"dayData_{serverName}.json");
+        currentServer = serverName;
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -223,29 +211,64 @@ public class TimeManager : MonoBehaviour
 
     public void LoadDay()
     {
-        Debug.Log("[DayData] 실제 로드 경로: " + savePath);
-
-        if (File.Exists(savePath))
+        if (string.IsNullOrWhiteSpace(currentServer))
         {
-            Debug.Log("[DayData] 파일 있음");
-            string json = File.ReadAllText(savePath);
-            DayData data = JsonUtility.FromJson<DayData>(json);
-            currentDay = data.day;
-            hour = data.hour;
-            minute = data.minute;
-            Debug.Log($"[LoadDay] 파일에서 불러옴: {currentDay}일차 {hour}:{minute} ({savePath})");
+            Debug.LogWarning(
+                "[TimeManager] 서버명이 설정되지 않아 " +
+                "날짜·시간을 불러올 수 없습니다."
+            );
+
+            return;
         }
-        else
+
+        if (!SaveService.EnsureLoaded(currentServer))
         {
             currentDay = 1;
             hour = 9;
             minute = 0;
-            Debug.Log("[LoadDay] 파일 없음. 1일차로 리셋");
+
+            UpdateDayUI();
+            UpdateClockProgressUI();
+
+            return;
         }
 
-        UpdateDayUI();
+        SaveData saveData =
+            SaveService.CurrentData;
 
-        // 하루 로드할 때마다 경고 초기화
+        if (saveData == null ||
+            saveData.worldTimeData == null)
+        {
+            currentDay = 1;
+            hour = 9;
+            minute = 0;
+
+            Debug.LogWarning(
+                "[TimeManager] 날짜·시간 데이터가 없어 " +
+                "기본값을 사용합니다."
+            );
+        }
+        else
+        {
+            WorldTimeSaveData timeData =
+                saveData.worldTimeData;
+
+            currentDay = Mathf.Max(1, timeData.day);
+            hour = Mathf.Clamp(timeData.hour, 0, 26);
+            minute = Mathf.Clamp(timeData.minute, 0, 59);
+
+            Debug.Log(
+                $"[TimeManager] 통합 세이브에서 불러옴: " +
+                $"{currentDay}일차 {hour:D2}:{minute:D2}"
+            );
+        }
+
+        // 이전 세이브에서 남아 있던 분 계산값 제거
+        timer = 0f;
+
+        UpdateDayUI();
+        UpdateClockProgressUI();
+
         dayEndWarningShown = false;
     }
 
@@ -312,19 +335,44 @@ public class TimeManager : MonoBehaviour
 
     public void SaveDayData()
     {
-        if (string.IsNullOrEmpty(savePath))
+        if (string.IsNullOrWhiteSpace(currentServer))
         {
-            Debug.LogWarning("[SaveDayData] 서버명 미지정 상태, 저장 skip!");
+            Debug.LogWarning(
+                "[TimeManager] 서버명이 설정되지 않아 " +
+                "날짜·시간 저장을 건너뜁니다."
+            );
+
             return;
         }
-        DayData data = new DayData
+
+        if (!SaveService.EnsureLoaded(currentServer))
         {
-            day = currentDay,
-            hour = hour,
-            minute = minute
-        };
-        File.WriteAllText(savePath, JsonUtility.ToJson(data));
-        Debug.Log($"[SaveDayData] {currentDay}일차 {hour}:{minute} 저장 ({savePath})");
+            Debug.LogError(
+                "[TimeManager] 현재 세이브를 준비할 수 없어 " +
+                "날짜·시간을 저장하지 못했습니다: " +
+                currentServer
+            );
+
+            return;
+        }
+
+        SaveService.CurrentData.worldTimeData =
+            new WorldTimeSaveData
+            {
+                day = Mathf.Max(1, currentDay),
+                hour = Mathf.Clamp(hour, 0, 26),
+                minute = Mathf.Clamp(minute, 0, 59)
+            };
+
+        SaveService.CurrentData
+            .worldTimeMigrationCompleted = true;
+
+        SaveService.SaveCurrent();
+
+        Debug.Log(
+            $"[TimeManager] {currentDay}일차 " +
+            $"{hour:D2}:{minute:D2} 통합 저장 완료"
+        );
     }
 
     void OnEnable()
@@ -353,43 +401,75 @@ public class TimeManager : MonoBehaviour
 
     public void BeginSession(string serverName)
     {
-        // 이전 세션 종료(혹시 열려있다면)
         EndAndPersistSession();
 
         _currentServerForPlay = serverName;
         _cachedPlaySeconds = 0;
 
-        // 기존 누적 불러오기
-        var path = PlaytimePath(serverName);
-        if (File.Exists(path))
+        if (SaveService.EnsureLoaded(serverName))
         {
-            try
+            PlaytimeSaveData playtimeData =
+                SaveService.CurrentData.playtimeData;
+
+            if (playtimeData != null)
             {
-                var data = JsonUtility.FromJson<PlaytimeData>(File.ReadAllText(path));
-                if (data != null) _cachedPlaySeconds = data.seconds;
+                _cachedPlaySeconds = Math.Max(
+                    0,
+                    playtimeData.seconds
+                );
             }
-            catch { /* 무시: 손상 시 0부터 */ }
         }
+
         _sessionStartUtc = DateTime.UtcNow;
     }
 
     public void EndAndPersistSession()
     {
-        if (_sessionStartUtc == null || string.IsNullOrEmpty(_currentServerForPlay)) return;
+        if (_sessionStartUtc == null ||
+            string.IsNullOrWhiteSpace(
+                _currentServerForPlay
+            ))
+        {
+            return;
+        }
 
-        var elapsed = (long)Math.Max(0, (DateTime.UtcNow - _sessionStartUtc.Value).TotalSeconds);
+        long elapsed = (long)Math.Max(
+            0,
+            (
+                DateTime.UtcNow -
+                _sessionStartUtc.Value
+            ).TotalSeconds
+        );
+
         _cachedPlaySeconds += elapsed;
 
-        var data = new PlaytimeData
+        if (SaveService.EnsureLoaded(
+            _currentServerForPlay
+        ))
         {
-            seconds = _cachedPlaySeconds,
-            lastPlayed = DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
-        };
-        try
-        {
-            File.WriteAllText(PlaytimePath(_currentServerForPlay), JsonUtility.ToJson(data, true));
+            SaveService.CurrentData.playtimeData =
+                new PlaytimeSaveData
+                {
+                    seconds = _cachedPlaySeconds,
+                    lastPlayed = DateTime.Now.ToString(
+                        "yyyy-MM-dd HH:mm",
+                        CultureInfo.InvariantCulture
+                    )
+                };
+
+            SaveService.CurrentData
+                .playtimeMigrationCompleted = true;
+
+            SaveService.SaveCurrent();
         }
-        catch { /* 디스크 에러 무시 */ }
+        else
+        {
+            Debug.LogError(
+                "[TimeManager] 현재 세이브를 준비할 수 없어 " +
+                "플레이 시간을 저장하지 못했습니다: " +
+                _currentServerForPlay
+            );
+        }
 
         _sessionStartUtc = null;
     }
@@ -442,10 +522,10 @@ public class TimeManager : MonoBehaviour
     }
 }
 
-[System.Serializable]
-public class DayData
-{
-    public int day;
-    public int hour;
-    public int minute;
-}
+//[System.Serializable]
+//public class DayData
+//{
+//    public int day;
+//    public int hour;
+//    public int minute;
+//}

@@ -391,40 +391,37 @@ public class GrassLootManager : MonoBehaviour
 
     private int GetCurrentPlayerLevel()
     {
-        // 1순위: 현재 씬에 PlayerLevelManager가 살아있으면 그 값을 사용
+        // 1순위: 현재 실행 중인 레벨 매니저의 값 사용
         if (PlayerLevelManager.Instance != null)
         {
-            return Mathf.Max(1, PlayerLevelManager.Instance.Level);
+            return Mathf.Max(
+                1,
+                PlayerLevelManager.Instance.Level
+            );
         }
 
-        // 2순위: 현재 선택된 세이브 파일에서 직접 레벨 로드
-        string serverName = PlayerPrefs.GetString("SelectedSave", "");
-
-        if (string.IsNullOrEmpty(serverName))
-            return 1;
-
-        string path = Path.Combine(
-            Application.persistentDataPath,
-            $"player_level_data_{serverName}.json"
+        // 2순위: 통합 세이브에서 레벨 확인
+        string serverName = PlayerPrefs.GetString(
+            "SelectedSave",
+            ""
         );
 
-        if (!File.Exists(path))
+        if (string.IsNullOrWhiteSpace(serverName))
             return 1;
 
-        try
-        {
-            string json = File.ReadAllText(path);
-            PlayerLevelData data = JsonUtility.FromJson<PlayerLevelData>(json);
+        SaveData integratedSaveData =
+            SaveRepository.Load(serverName);
 
-            if (data != null)
-                return Mathf.Max(1, data.Level);
-        }
-        catch
-        {
-            Debug.LogWarning("[GrassLoot] 플레이어 레벨 데이터를 읽는 중 오류가 발생했습니다.");
-        }
+        if (integratedSaveData == null)
+            return 1;
 
-        return 1;
+        if (integratedSaveData.levelData == null)
+            return 1;
+
+        return Mathf.Max(
+            1,
+            integratedSaveData.levelData.level
+        );
     }
 
     private string GetDisplayName(string itemKey)

@@ -231,32 +231,46 @@ public class NewGamePopupManager : MonoBehaviour
 
         File.WriteAllText(profilePath, JsonUtility.ToJson(profile, true));
 
-        // 캐릭터 이름은 각 세이브의 SaveData에 함께 저장
+        // 새 게임의 통합 세이브 데이터 생성
         SaveData newSaveData = new SaveData
         {
             serverName = serverName,
-            playerName = playerName
+            playerName = playerName,
+
+            starData = new StarSaveData
+            {
+                starlight = 0
+            },
+
+            // 새 세이브는 기존 별빛 파일을 옮길 필요가 없음
+            starDataMigrationCompleted = true,
+
+            levelData = new LevelSaveData
+            {
+                level = 1,
+                exp = 0
+            },
+            levelDataMigrationCompleted = true,
+
+            worldTimeData = new WorldTimeSaveData
+            {
+                day = 1,
+                hour = 9,
+                minute = 0
+            },
+            worldTimeMigrationCompleted = true,
+
+            playtimeData = new PlaytimeSaveData
+            {
+                seconds = 0,
+                lastPlayed = ""
+            },
+            playtimeMigrationCompleted = true
         };
 
-        File.WriteAllText(
-            Path.Combine(Application.persistentDataPath, $"save_myuser_{serverName}.json"),
-            JsonUtility.ToJson(newSaveData, true)
-        );
-
-        File.WriteAllText(
-            Path.Combine(Application.persistentDataPath, $"playerStarData_{serverName}.json"),
-            "{\"starlight\":0}"
-        );
-
-        File.WriteAllText(
-            Path.Combine(Application.persistentDataPath, $"player_level_data_{serverName}.json"),
-            "{\"Level\":1,\"Exp\":0}"
-        );
-
-        File.WriteAllText(
-            Path.Combine(Application.persistentDataPath, $"dayData_{serverName}.json"),
-            "{\"day\":1,\"hour\":9,\"minute\":0}"
-        );
+        // 통합 JSON 저장은 SaveRepository가 담당
+        SaveRepository.Save(serverName, newSaveData);
+        SaveService.SetCurrent(serverName, newSaveData);
 
         var defaultSkinData = new DefaultSkinSaveData();
 

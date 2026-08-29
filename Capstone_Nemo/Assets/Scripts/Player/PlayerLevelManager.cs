@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 public class PlayerLevelManager : MonoBehaviour
@@ -11,7 +8,7 @@ public class PlayerLevelManager : MonoBehaviour
     public int Exp { get; private set; } = 0;
     public int ExpToNextLevel => (100 + (Level - 1) * 50) *2;
 
-    private string savePath;
+    private string serverName;
 
     void Awake()
     {
@@ -29,7 +26,7 @@ public class PlayerLevelManager : MonoBehaviour
 
     public void SetServerName(string serverName)
     {
-        savePath = Path.Combine(Application.persistentDataPath, $"player_level_data_{serverName}.json");
+        this.serverName = serverName;
     }
 
     public void AddExp(int amount)
@@ -48,33 +45,68 @@ public class PlayerLevelManager : MonoBehaviour
 
     public void Save()
     {
-        PlayerLevelData data = new PlayerLevelData
+        if (string.IsNullOrWhiteSpace(serverName))
         {
-            Level = this.Level,
-            Exp = this.Exp
-        };
-        string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(savePath, json);
+            Debug.LogError(
+                "[PlayerLevelManager] serverName이 설정되지 않았습니다."
+            );
+
+            return;
+        }
+
+        if (!SaveService.EnsureLoaded(serverName))
+        {
+            Debug.LogError(
+                "[PlayerLevelManager] 현재 세이브를 준비할 수 없습니다: " +
+                serverName
+            );
+
+            return;
+        }
+
+        SaveService.CurrentData.levelData =
+            new LevelSaveData
+            {
+                level = Level,
+                exp = Exp
+            };
+
+        SaveService.CurrentData
+            .levelDataMigrationCompleted = true;
+
+        SaveService.SaveCurrent();
     }
 
     public void Load()
     {
-        if (File.Exists(savePath))
+        if (string.IsNullOrWhiteSpace(serverName))
         {
-            string json = File.ReadAllText(savePath);
-            PlayerLevelData data = JsonUtility.FromJson<PlayerLevelData>(json);
-            if (data != null)
-            {
-                this.Level = data.Level;
-                this.Exp = data.Exp;
-            }
+            Debug.LogError(
+                "[PlayerLevelManager] serverName이 설정되지 않았습니다."
+            );
+
+            return;
         }
-        else
+
+        if (!SaveService.EnsureLoaded(serverName))
         {
             Level = 1;
             Exp = 0;
-            Save();
+            return;
         }
+
+        LevelSaveData levelData =
+            SaveService.CurrentData.levelData;
+
+        if (levelData == null)
+        {
+            Level = 1;
+            Exp = 0;
+            return;
+        }
+
+        Level = Mathf.Max(1, levelData.level);
+        Exp = Mathf.Max(0, levelData.exp);
     }
 
     public void SetLevelAndExp(int level, int exp)
@@ -82,11 +114,4 @@ public class PlayerLevelManager : MonoBehaviour
         this.Level = Mathf.Max(1, level);
         this.Exp = Mathf.Max(0, exp);
     }
-}
-
-[System.Serializable]
-public class PlayerLevelData
-{
-    public int Level;
-    public int Exp;
 }
