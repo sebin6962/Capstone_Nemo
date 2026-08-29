@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using UnityEngine;
+using System.Collections.Generic;
 
 public static class SaveRepository
 {
@@ -9,6 +10,14 @@ public static class SaveRepository
     {
         public int Level;
         public int Exp;
+    }
+
+    [Serializable]
+    private class LegacyUnlockProgressData
+    {
+        public List<int> pendingLevels;
+        public List<int> appliedLevels;
+        public bool initialized;
     }
 
     public static string GetSavePath(string serverName)
@@ -50,6 +59,46 @@ public static class SaveRepository
         return Path.Combine(
             Application.persistentDataPath,
             $"playtime_{serverName}.json"
+        );
+    }
+
+    private static string GetLegacyTutorialPath(
+    string serverName
+)
+    {
+        return Path.Combine(
+            Application.persistentDataPath,
+            $"tutorial_{serverName}.json"
+        );
+    }
+
+    private static string GetLegacyTreeUnlockPath(
+    string serverName
+)
+    {
+        return Path.Combine(
+            Application.persistentDataPath,
+            $"treeUnlock_{serverName}.json"
+        );
+    }
+
+    private static string GetLegacyUnlockPath(
+    string serverName
+)
+    {
+        return Path.Combine(
+            Application.persistentDataPath,
+            $"unlock_{serverName}.json"
+        );
+    }
+
+    private static string GetLegacyEndingPath(
+    string serverName
+)
+    {
+        return Path.Combine(
+            Application.persistentDataPath,
+            $"ending_{serverName}.json"
         );
     }
 
@@ -101,6 +150,26 @@ public static class SaveRepository
             }
 
             if (MigratePlaytimeData(serverName, saveData))
+            {
+                dataChanged = true;
+            }
+
+            if (MigrateTutorialData(serverName, saveData))
+            {
+                dataChanged = true;
+            }
+
+            if (MigrateTreeUnlockData(serverName, saveData))
+            {
+                dataChanged = true;
+            }
+
+            if (MigrateUnlockProgressData(serverName, saveData))
+            {
+                dataChanged = true;
+            }
+
+            if (MigrateEndingData(serverName, saveData))
             {
                 dataChanged = true;
             }
@@ -164,6 +233,68 @@ public static class SaveRepository
                         seconds = 0,
                         lastPlayed = ""
                     };
+
+                dataChanged = true;
+            }
+
+            if (saveData.tutorialData == null)
+            {
+                saveData.tutorialData =
+                    new TutorialStateData
+                    {
+                        tutorialDone = false
+                    };
+
+                dataChanged = true;
+            }
+
+            if (saveData.treeUnlockData == null)
+            {
+                saveData.treeUnlockData =
+                    new TreeUnlockData
+                    {
+                        currentUnlockedLevel = 0
+                    };
+
+                dataChanged = true;
+            }
+
+            if (saveData.unlockProgressData == null)
+            {
+                saveData.unlockProgressData =
+                    new UnlockProgressSaveData
+                    {
+                        pendingLevels = new List<int>(),
+                        appliedLevels = new List<int> { 1 },
+                        initialized = true
+                    };
+
+                dataChanged = true;
+            }
+
+            if (saveData.endingData == null)
+            {
+                saveData.endingData =
+                    new EndingData
+                    {
+                        hasSeenEnding = false
+                    };
+
+                dataChanged = true;
+            }
+
+            if (saveData.npcDialogueProgressData == null)
+            {
+                saveData.npcDialogueProgressData =
+                    new NPCDialogueProgressDataList();
+
+                dataChanged = true;
+            }
+
+            if (saveData.npcDialogueProgressData.npcProgressList == null)
+            {
+                saveData.npcDialogueProgressData.npcProgressList =
+                    new List<NPCDialogueNpcProgressData>();
 
                 dataChanged = true;
             }
@@ -252,7 +383,7 @@ public static class SaveRepository
         return true;
     }
 
-    public static void Save(
+    public static bool Save(
         string serverName,
         SaveData saveData
     )
@@ -263,7 +394,7 @@ public static class SaveRepository
                 "[SaveRepository] serverName이 비어 있습니다."
             );
 
-            return;
+            return false;
         }
 
         if (saveData == null)
@@ -272,7 +403,7 @@ public static class SaveRepository
                 "[SaveRepository] 저장할 SaveData가 없습니다."
             );
 
-            return;
+            return false;
         }
 
         try
@@ -283,6 +414,7 @@ public static class SaveRepository
             string json = JsonUtility.ToJson(saveData, true);
 
             File.WriteAllText(path, json);
+            return true;
         }
         catch (Exception exception)
         {
@@ -291,6 +423,8 @@ public static class SaveRepository
                 $"마을: {serverName}\n" +
                 $"오류: {exception.Message}"
             );
+
+            return false;
         }
     }
 
@@ -511,6 +645,307 @@ public static class SaveRepository
 
         Debug.Log(
             "[SaveRepository] 플레이 시간 데이터 통합 완료: " +
+            serverName
+        );
+
+        return true;
+    }
+
+    private static bool MigrateTutorialData(
+    string serverName,
+    SaveData saveData
+)
+    {
+        if (saveData.tutorialMigrationCompleted)
+            return false;
+
+        string legacyPath =
+            GetLegacyTutorialPath(serverName);
+
+        if (File.Exists(legacyPath))
+        {
+            try
+            {
+                string legacyJson =
+                    File.ReadAllText(legacyPath);
+
+                TutorialStateData legacyData =
+                    JsonUtility.FromJson<TutorialStateData>(
+                        legacyJson
+                    );
+
+                if (legacyData == null)
+                {
+                    Debug.LogError(
+                        "[SaveRepository] 기존 튜토리얼 데이터 " +
+                        $"변환 실패: {legacyPath}"
+                    );
+
+                    return false;
+                }
+
+                saveData.tutorialData =
+                    new TutorialStateData
+                    {
+                        tutorialDone =
+                            legacyData.tutorialDone
+                    };
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    "[SaveRepository] 기존 튜토리얼 데이터 " +
+                    $"이전 실패\n경로: {legacyPath}\n" +
+                    $"오류: {exception.Message}"
+                );
+
+                return false;
+            }
+        }
+        else
+        {
+            saveData.tutorialData =
+                new TutorialStateData
+                {
+                    tutorialDone = false
+                };
+        }
+
+        saveData.tutorialMigrationCompleted = true;
+
+        Debug.Log(
+            "[SaveRepository] 튜토리얼 데이터 통합 완료: " +
+            serverName
+        );
+
+        return true;
+    }
+
+    private static bool MigrateTreeUnlockData(
+    string serverName,
+    SaveData saveData
+)
+    {
+        if (saveData.treeUnlockMigrationCompleted)
+            return false;
+
+        string legacyPath =
+            GetLegacyTreeUnlockPath(serverName);
+
+        if (File.Exists(legacyPath))
+        {
+            try
+            {
+                string legacyJson =
+                    File.ReadAllText(legacyPath);
+
+                TreeUnlockData legacyData =
+                    JsonUtility.FromJson<TreeUnlockData>(
+                        legacyJson
+                    );
+
+                if (legacyData == null)
+                {
+                    Debug.LogError(
+                        "[SaveRepository] 기존 계수나무 데이터 " +
+                        $"변환 실패: {legacyPath}"
+                    );
+
+                    return false;
+                }
+
+                saveData.treeUnlockData =
+                    new TreeUnlockData
+                    {
+                        currentUnlockedLevel =
+                            Mathf.Max(
+                                0,
+                                legacyData.currentUnlockedLevel
+                            )
+                    };
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    "[SaveRepository] 기존 계수나무 데이터 " +
+                    $"이전 실패\n경로: {legacyPath}\n" +
+                    $"오류: {exception.Message}"
+                );
+
+                return false;
+            }
+        }
+        else
+        {
+            // 별도 파일이 없는 초기 통합 세이브 대응
+            saveData.treeUnlockData =
+                new TreeUnlockData
+                {
+                    currentUnlockedLevel =
+                        Mathf.Max(
+                            0,
+                            saveData.currentUnlockedTreeLevel
+                        )
+                };
+        }
+
+        saveData.treeUnlockMigrationCompleted = true;
+
+        Debug.Log(
+            "[SaveRepository] 계수나무 데이터 통합 완료: " +
+            serverName
+        );
+
+        return true;
+    }
+
+    private static bool MigrateUnlockProgressData(
+    string serverName,
+    SaveData saveData
+)
+    {
+        if (saveData.unlockProgressMigrationCompleted)
+            return false;
+
+        string legacyPath =
+            GetLegacyUnlockPath(serverName);
+
+        if (File.Exists(legacyPath))
+        {
+            try
+            {
+                string legacyJson =
+                    File.ReadAllText(legacyPath);
+
+                LegacyUnlockProgressData legacyData =
+                    JsonUtility.FromJson
+                        <LegacyUnlockProgressData>(
+                            legacyJson
+                        );
+
+                if (legacyData == null)
+                {
+                    Debug.LogError(
+                        "[SaveRepository] 기존 레벨별 해금 " +
+                        $"데이터 변환 실패: {legacyPath}"
+                    );
+
+                    return false;
+                }
+
+                saveData.unlockProgressData =
+                    new UnlockProgressSaveData
+                    {
+                        pendingLevels =
+                            legacyData.pendingLevels ??
+                            new List<int>(),
+
+                        appliedLevels =
+                            legacyData.appliedLevels ??
+                            new List<int>(),
+
+                        initialized =
+                            legacyData.initialized
+                    };
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    "[SaveRepository] 기존 레벨별 해금 " +
+                    $"데이터 이전 실패\n경로: {legacyPath}\n" +
+                    $"오류: {exception.Message}"
+                );
+
+                return false;
+            }
+        }
+        else
+        {
+            saveData.unlockProgressData =
+                new UnlockProgressSaveData
+                {
+                    pendingLevels = new List<int>(),
+                    appliedLevels = new List<int> { 1 },
+                    initialized = true
+                };
+        }
+
+        saveData.unlockProgressMigrationCompleted = true;
+
+        Debug.Log(
+            "[SaveRepository] 레벨별 해금 데이터 통합 완료: " +
+            serverName
+        );
+
+        return true;
+    }
+
+    private static bool MigrateEndingData(
+    string serverName,
+    SaveData saveData
+)
+    {
+        if (saveData.endingMigrationCompleted)
+        {
+            return false;
+        }
+
+        string legacyPath =
+            GetLegacyEndingPath(serverName);
+
+        if (File.Exists(legacyPath))
+        {
+            try
+            {
+                string legacyJson =
+                    File.ReadAllText(legacyPath);
+
+                EndingData legacyData =
+                    JsonUtility.FromJson<EndingData>(
+                        legacyJson
+                    );
+
+                if (legacyData == null)
+                {
+                    Debug.LogError(
+                        "[SaveRepository] 기존 엔딩 데이터 " +
+                        $"변환 실패: {legacyPath}"
+                    );
+
+                    return false;
+                }
+
+                saveData.endingData =
+                    new EndingData
+                    {
+                        hasSeenEnding =
+                            legacyData.hasSeenEnding
+                    };
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    "[SaveRepository] 기존 엔딩 데이터 " +
+                    $"이전 실패\n경로: {legacyPath}\n" +
+                    $"오류: {exception.Message}"
+                );
+
+                return false;
+            }
+        }
+        else if (saveData.endingData == null)
+        {
+            saveData.endingData =
+                new EndingData
+                {
+                    hasSeenEnding = false
+                };
+        }
+
+        saveData.endingMigrationCompleted = true;
+
+        Debug.Log(
+            "[SaveRepository] 엔딩 데이터 통합 완료: " +
             serverName
         );
 

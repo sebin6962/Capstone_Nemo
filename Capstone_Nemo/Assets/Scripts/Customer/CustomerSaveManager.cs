@@ -18,11 +18,11 @@ public class CustomerSaveManager : MonoBehaviour
     private float[] prefabOrderTimes;
 
     private bool ignoreSaveFromScene = false;
-
+    private string currentServerName = "";
 
     private void Awake()
     {
-        if(Instance != null && Instance != this)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
@@ -30,10 +30,62 @@ public class CustomerSaveManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        currentServerName =
+            PlayerPrefs.GetString(
+                "SelectedSave",
+                ""
+            );
+    }
+
+    public void SwitchToServer(string serverName)
+    {
+        if (string.IsNullOrWhiteSpace(serverName))
+        {
+            Debug.LogError(
+                "[CustomerSaveManager] 변경할 슬롯 이름이 비어 있습니다."
+            );
+
+            return;
+        }
+
+        // 현재 슬롯과 같으면 유지
+        if (currentServerName == serverName)
+        {
+            return;
+        }
+
+        Debug.Log(
+            "[CustomerSaveManager] 손님 데이터 슬롯 전환: " +
+            $"{currentServerName} → {serverName}"
+        );
+
+        currentServerName = serverName;
+
+        // 이전 슬롯의 손님이 새 슬롯에 넘어가지 않도록 초기화
+        save.Clear();
+
+        simulateWhileStoreClosed = false;
+        spawnTimer = 0f;
+        ignoreSaveFromScene = false;
     }
 
     public void ConfigureFromSpawner(CustomerSpawner spawner)
     {
+        string selectedServer =
+        PlayerPrefs.GetString(
+            "SelectedSave",
+            ""
+        );
+
+        // SaveSelect 씬에 CustomerSaveManager가 없었던 경우에도
+        // 상점 진입 시 현재 슬롯과 동기화
+        if (!string.IsNullOrWhiteSpace(selectedServer) &&
+            currentServerName != selectedServer)
+        {
+            SwitchToServer(selectedServer);
+        }
+
         ignoreSaveFromScene = false;
 
         spawnInterval = spawner.spawnInterval;
@@ -145,16 +197,46 @@ public class CustomerSaveManager : MonoBehaviour
             return;
         }
 
+        string selectedServer =
+            PlayerPrefs.GetString(
+                "SelectedSave",
+                ""
+            );
+
+        // 슬롯 전환 중 이전 씬의 손님을
+        // 새 슬롯 데이터로 저장하는 것을 방지
+        if (string.IsNullOrWhiteSpace(selectedServer) ||
+            currentServerName != selectedServer)
+        {
+            Debug.LogWarning(
+                "[CustomerSaveManager] 슬롯이 일치하지 않아 " +
+                "손님 데이터 수집을 건너뜁니다. " +
+                $"현재={currentServerName}, " +
+                $"선택={selectedServer}"
+            );
+
+            return;
+        }
+
         save.Clear();
 
-        var customers = FindObjectsOfType<Customer>();
-        Debug.Log($"[CustomerSaveManager] SaveFromScene 호출됨, 발견한 Customer 수 = {customers.Length}");
+        var customers =
+            FindObjectsOfType<Customer>();
 
-        foreach (var c in customers)
+        Debug.Log(
+            "[CustomerSaveManager] SaveFromScene 호출, " +
+            $"발견된 Customer 수={customers.Length}"
+        );
+
+        foreach (var customer in customers)
         {
-            save.Add(c.ToSave());
+            save.Add(customer.ToSave());
         }
-        Debug.Log($"[CustomerSaveManager] 저장 완료, save.Count = {save.Count}");
+
+        Debug.Log(
+            "[CustomerSaveManager] 저장 완료, " +
+            $"save.Count={save.Count}"
+        );
 
         simulateWhileStoreClosed = true;
         spawnTimer = 0f;

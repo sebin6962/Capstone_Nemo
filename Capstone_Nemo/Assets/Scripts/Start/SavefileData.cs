@@ -63,6 +63,24 @@ public class PlaytimeSaveData
 }
 
 [Serializable]
+public class UnlockProgressSaveData
+{
+    public List<int> pendingLevels =
+        new List<int>();
+
+    public List<int> appliedLevels =
+        new List<int>();
+
+    public bool initialized = false;
+}
+
+[Serializable]
+public class EndingData
+{
+    public bool hasSeenEnding = false;
+}
+
+[Serializable]
 public class SaveData
 {
     // 세이브 파일을 구분하는 마을 이름
@@ -106,11 +124,32 @@ public class SaveData
 
     public StarSaveData starData;
 
+    //튜토리얼 상태 저장
+    public TutorialStateData tutorialData;
+    public bool tutorialMigrationCompleted;
+
+    //계수나무 해금 저장
+    public TreeUnlockData treeUnlockData;
+    public bool treeUnlockMigrationCompleted;
+
+    //레벨 별 다과 해금
+    public UnlockProgressSaveData unlockProgressData;
+    public bool unlockProgressMigrationCompleted;
+
     // 기존 별빛 JSON을 통합했는지 기록
     public bool starDataMigrationCompleted;
 
+    //레벨 저장
     public LevelSaveData levelData;
     public bool levelDataMigrationCompleted;
+
+    // 엔딩 완료 상태
+    public EndingData endingData;
+    public bool endingMigrationCompleted;
+
+    // NPC 대화 진행도
+    public NPCDialogueProgressDataList npcDialogueProgressData;
+    public bool npcDialogueProgressMigrationCompleted;
 
     // 새 게임 생성 시 기본값
     public SaveData()
@@ -153,6 +192,34 @@ public class SaveData
 
         dailyQuestRealDate = "";
         dailyQuestIds = new List<string>();
+
+        tutorialData = new TutorialStateData
+        {
+            tutorialDone = false
+        };
+
+        treeUnlockData = new TreeUnlockData
+        {
+            currentUnlockedLevel = 0
+        };
+
+        unlockProgressData =
+    new UnlockProgressSaveData
+    {
+        pendingLevels = new List<int>(),
+        appliedLevels = new List<int> { 1 },
+        initialized = true
+    };
+
+        endingData = new EndingData
+        {
+            hasSeenEnding = false
+        };
+
+        npcDialogueProgressData =
+            new NPCDialogueProgressDataList();
+
+        npcDialogueProgressMigrationCompleted = false;
 
         storageItems.Add(new StorageEntry
         {

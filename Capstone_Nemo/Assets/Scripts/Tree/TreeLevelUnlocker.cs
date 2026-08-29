@@ -1,11 +1,9 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
-using System.IO;
 using UnityEngine.Playables;
 
 public class TreeLevelUnlocker : MonoBehaviour
@@ -39,7 +37,7 @@ public class TreeLevelUnlocker : MonoBehaviour
     private Coroutine notEnoughCoroutine = null;
 
     private TreeUnlockData unlockData;
-    private string savePath;
+    private string serverName;
 
     [Header("나무 해금 패널 UI")]
     public Image unlockPopupPanelImage;          // 나무 해금 팝업(전체 패널)의 Image
@@ -138,39 +136,61 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     public void SetServerName(string serverName)
     {
-        savePath = Path.Combine(Application.persistentDataPath, $"treeUnlock_{serverName}.json");
+        this.serverName = serverName ?? "";
     }
 
     public static int GetSavedCurrentLevel()
     {
-        // 현재 활성화된 TreeLevelUnlocker가 있으면 메모리의 최신 값을 사용한다.
+        // TreeScene에 매니저가 있으면
+        // 현재 런타임 해금값을 우선 사용
         if (Instance != null)
-            return Mathf.Max(0, Instance.currentUnlockedLevel);
+        {
+            return Mathf.Max(
+                0,
+                Instance.currentUnlockedLevel
+            );
+        }
 
-        // 계수나무 씬이 아닌 다른 씬에서도 NPC가 정확한 대화를 고를 수 있도록
-        // 현재 세이브의 계수나무 해금 파일을 직접 읽는다.
-        string serverName = PlayerPrefs.GetString("SelectedSave", string.Empty);
-        if (string.IsNullOrEmpty(serverName))
-            return Mathf.Max(0, CurrentLevel);
+        string selectedServer =
+            PlayerPrefs.GetString(
+                "SelectedSave",
+                ""
+            );
 
-        string selectedSavePath = Path.Combine(
-            Application.persistentDataPath,
-            $"treeUnlock_{serverName}.json");
+        if (string.IsNullOrWhiteSpace(selectedServer))
+        {
+            Debug.LogWarning(
+                "[TreeLevelUnlocker] 선택된 세이브가 없습니다."
+            );
 
-        if (!File.Exists(selectedSavePath))
             return 0;
+        }
 
-        try
+        if (!SaveService.EnsureLoaded(selectedServer))
         {
-            string json = File.ReadAllText(selectedSavePath);
-            TreeUnlockData savedData = JsonUtility.FromJson<TreeUnlockData>(json);
-            return savedData != null ? Mathf.Max(0, savedData.currentUnlockedLevel) : 0;
+            Debug.LogWarning(
+                "[TreeLevelUnlocker] 계수나무 단계를 " +
+                $"불러올 수 없습니다: {selectedServer}"
+            );
+
+            return 0;
         }
-        catch (System.Exception e)
+
+        TreeUnlockData savedData =
+            SaveService.CurrentData.treeUnlockData;
+
+        if (savedData == null)
         {
-            Debug.LogWarning($"[TreeLevelUnlocker] Failed to read saved level: {e.Message}");
-            return Mathf.Max(0, CurrentLevel);
+            return 0;
         }
+
+        int savedLevel =
+            Mathf.Max(
+                0,
+                savedData.currentUnlockedLevel
+            );
+
+        return savedLevel;
     }
 
     void Start()
@@ -437,40 +457,110 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     public void SaveUnlockData()
     {
-        if (unlockData == null) unlockData = new TreeUnlockData();
-
-        if (string.IsNullOrEmpty(savePath))
+        if (unlockData == null)
         {
-            Debug.LogError("[TreeLevelUnlocker] savePath is null/empty. Call SetServerName() first.");
+            unlockData =
+                new TreeUnlockData();
+        }
+
+        if (string.IsNullOrWhiteSpace(serverName))
+        {
+            Debug.LogError(
+                "[TreeLevelUnlocker] serverName이 비어 있습니다. " +
+                "SetServerName()을 먼저 호출해야 합니다."
+            );
+
             return;
         }
 
-        string json = JsonUtility.ToJson(unlockData, true);
-        File.WriteAllText(savePath, json);
+        if (!SaveService.EnsureLoaded(serverName))
+        {
+            Debug.LogError(
+                "[TreeLevelUnlocker] 통합 세이브를 " +
+                $"준비할 수 없습니다: {serverName}"
+            );
+
+            return;
+        }
+
+        unlockData.currentUnlockedLevel =
+            Mathf.Max(
+                0,
+                unlockData.currentUnlockedLevel
+            );
+
+        SaveService.CurrentData.treeUnlockData =
+            unlockData;
+
+        SaveService.CurrentData
+            .treeUnlockMigrationCompleted = true;
+
+        if (!SaveService.SaveCurrent())
+        {
+            Debug.LogError(
+                "[TreeLevelUnlocker] 계수나무 단계 " +
+                "저장에 실패했습니다."
+            );
+        }
     }
 
     public void LoadUnlockData()
     {
-        // unlockData 객체는 최소한 생성
-        if (unlockData == null) unlockData = new TreeUnlockData();
-
-        if (string.IsNullOrEmpty(savePath))
+        if (string.IsNullOrWhiteSpace(serverName))
         {
-            Debug.LogWarning("[TreeLevelUnlocker] savePath is null/empty. Load will use memory-only defaults.");
+            serverName =
+                PlayerPrefs.GetString(
+                    "SelectedSave",
+                    ""
+                );
+        }
+
+        if (string.IsNullOrWhiteSpace(serverName))
+        {
+            Debug.LogWarning(
+                "[TreeLevelUnlocker] 선택된 세이브가 없어 " +
+                "기본 계수나무 데이터를 사용합니다."
+            );
+
+            unlockData =
+                new TreeUnlockData();
+
             return;
         }
 
-        if (File.Exists(savePath))
+        if (!SaveService.EnsureLoaded(serverName))
         {
-            string json = File.ReadAllText(savePath);
-            var loaded = JsonUtility.FromJson<TreeUnlockData>(json);
-            if (loaded != null) unlockData = loaded;
+            Debug.LogWarning(
+                "[TreeLevelUnlocker] 통합 세이브를 " +
+                $"불러올 수 없습니다: {serverName}"
+            );
+
+            unlockData =
+                new TreeUnlockData();
+
+            return;
         }
-        else
+
+        unlockData =
+            SaveService.CurrentData.treeUnlockData;
+
+        if (unlockData == null)
         {
-            // 파일이 없으면 현재 메모리 상태(기본 0)로 저장해서 생성
-            SaveUnlockData();
+            unlockData =
+                new TreeUnlockData
+                {
+                    currentUnlockedLevel = 0
+                };
+
+            SaveService.CurrentData.treeUnlockData =
+                unlockData;
         }
+
+        unlockData.currentUnlockedLevel =
+            Mathf.Max(
+                0,
+                unlockData.currentUnlockedLevel
+            );
     }
 
     void UpdateLevelButtons()

@@ -1,7 +1,10 @@
+using System;
 using UnityEngine;
 
 public static class SaveService
 {
+    public static event Action<SaveData> CurrentSaveChanged;
+
     public static SaveData CurrentData
     {
         get;
@@ -32,6 +35,7 @@ public static class SaveService
     {
         CurrentData = null;
         CurrentServer = "";
+        CurrentSaveChanged = null;
     }
 
     public static bool Load(string serverName)
@@ -60,6 +64,8 @@ public static class SaveService
 
         CurrentServer = serverName;
         CurrentData = loadedData;
+
+        CurrentSaveChanged?.Invoke(CurrentData);
 
         Debug.Log(
             "[SaveService] 현재 세이브 설정 완료: " +
@@ -117,6 +123,8 @@ public static class SaveService
 
         CurrentServer = serverName;
         CurrentData = saveData;
+
+        CurrentSaveChanged?.Invoke(CurrentData);
     }
 
     public static bool SaveCurrent()
@@ -131,12 +139,10 @@ public static class SaveService
             return false;
         }
 
-        SaveRepository.Save(
+        return SaveRepository.Save(
             CurrentServer,
             CurrentData
         );
-
-        return true;
     }
 
     public static bool IsCurrent(string serverName)
@@ -149,5 +155,7 @@ public static class SaveService
     {
         CurrentData = null;
         CurrentServer = "";
+
+        CurrentSaveChanged?.Invoke(null);
     }
 }

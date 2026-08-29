@@ -5,12 +5,6 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.IO;
 
-[System.Serializable]
-public class EndingData
-{
-    public bool hasSeenEnding;
-}
-
 public class EndingCutSceneScroller : MonoBehaviour
 {
     [Header("스크롤할 카메라")]
@@ -101,17 +95,53 @@ public class EndingCutSceneScroller : MonoBehaviour
 
     public void LoadNextScene()
     {
-        // 현재 선택된 서버 이름 가져오기
-        string serverName = PlayerPrefs.GetString("SelectedSave", "");
+        string serverName =
+            PlayerPrefs.GetString(
+                "SelectedSave",
+                ""
+            );
 
-        if (!string.IsNullOrEmpty(serverName))
+        if (string.IsNullOrWhiteSpace(serverName))
         {
-            string path = Path.Combine(Application.persistentDataPath, $"ending_{serverName}.json");
-            EndingData data = new EndingData { hasSeenEnding = true };
-            File.WriteAllText(path, JsonUtility.ToJson(data, true));
+            Debug.LogError(
+                "[EndingCutSceneScroller] 선택된 세이브가 없어 " +
+                "엔딩 완료 상태를 저장할 수 없습니다."
+            );
+        }
+        else if (!SaveService.EnsureLoaded(serverName))
+        {
+            Debug.LogError(
+                "[EndingCutSceneScroller] 통합 세이브를 " +
+                $"불러올 수 없습니다: {serverName}"
+            );
+        }
+        else
+        {
+            if (SaveService.CurrentData.endingData == null)
+            {
+                SaveService.CurrentData.endingData =
+                    new EndingData();
+            }
+
+            SaveService.CurrentData
+                .endingData
+                .hasSeenEnding = true;
+
+            SaveService.CurrentData
+                .endingMigrationCompleted = true;
+
+            if (!SaveService.SaveCurrent())
+            {
+                Debug.LogError(
+                    "[EndingCutSceneScroller] 엔딩 완료 상태 " +
+                    "저장에 실패했습니다."
+                );
+            }
         }
 
-        FadeManager.Instance.FadeToScene(nextSceneName);
+        FadeManager.Instance.FadeToScene(
+            nextSceneName
+        );
     }
 
     private void Start()

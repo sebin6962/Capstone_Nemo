@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine.UI;
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 public class NewGamePopupManager : MonoBehaviour
 {
@@ -265,7 +266,38 @@ public class NewGamePopupManager : MonoBehaviour
                 seconds = 0,
                 lastPlayed = ""
             },
-            playtimeMigrationCompleted = true
+            playtimeMigrationCompleted = true,
+
+            tutorialData = new TutorialStateData
+            {
+                tutorialDone = false
+            },
+            tutorialMigrationCompleted = true,
+
+            treeUnlockData = new TreeUnlockData
+            {
+                currentUnlockedLevel = 0
+            },
+            treeUnlockMigrationCompleted = true,
+
+            unlockProgressData =
+    new UnlockProgressSaveData
+    {
+        pendingLevels = new List<int>(),
+        appliedLevels = new List<int> { 1 },
+        initialized = true
+    },
+            unlockProgressMigrationCompleted = true,
+
+            endingData = new EndingData
+            {
+                hasSeenEnding = false
+            },
+            endingMigrationCompleted = true,
+
+            npcDialogueProgressData =
+                new NPCDialogueProgressDataList(),
+            npcDialogueProgressMigrationCompleted = true
         };
 
         // 통합 JSON 저장은 SaveRepository가 담당

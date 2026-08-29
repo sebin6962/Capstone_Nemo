@@ -679,12 +679,26 @@ public class NPCDialogueUIManager : MonoBehaviour
                     );
         }
 
+        Debug.Log(
+    "[NPCDialogue] 시작 노드 선택 / " +
+    $"NPC={data.npcId}, " +
+    $"category={categoryId ?? "(기본)"}, " +
+    $"hasMetNpc={npcProgress?.hasMetNpc}, " +
+    $"treeLevel=" +
+    TreeLevelUnlocker.GetSavedCurrentLevel()
+);
+
         string entryNodeId =
             NPCDialogueSelector.GetStartNodeId(
                 data,
                 npcProgress,
                 categoryId
             );
+
+        Debug.Log(
+    "[NPCDialogue] 선택 결과 / " +
+    $"nodeId={entryNodeId}"
+);
 
         if (NPCDialogueProgressManager.Instance != null)
         {

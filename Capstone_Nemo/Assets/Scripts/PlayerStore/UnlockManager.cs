@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
 using System.Linq;
 using System;
 using UnityEngine.SceneManagement;
@@ -25,7 +24,6 @@ public class UnlockManager : MonoBehaviour
     public static UnlockManager Instance;
     private UnlockConfig config;
     private UnlockSaveData save = new();
-    private string savePath;
 
     private HashSet<int> _lastAppliedLevels = new(); // 새벽에 실제로 적용된 레벨들
     private bool _revealShownToday = false;          // 오늘 레벨업 패널을 이미 보여줬는지
@@ -63,96 +61,97 @@ public class UnlockManager : MonoBehaviour
     public void SetServerName(string serverName)
     {
         _serverName = serverName ?? "";
-        // 서버별 해금 저장 파일: unlock_{server}.json
-        savePath = Path.Combine(Application.persistentDataPath, $"unlock_{_serverName}.json");
 
-        // 레거시/이전 서버 데이터가 메모리에 남지 않도록 초기화
+        // 이전 슬롯의 런타임 데이터 제거
         save = new UnlockSaveData();
+
         _lastAppliedLevels.Clear();
         _revealShownToday = false;
-
-        // 서버 파일 로드(없으면 새로 초기화)
-        //LoadState();
-        //if (!save.initialized)
-        //{
-        //    // 새 게임 기본값: 레벨1 적용
-        //    save.appliedLevels.Add(1);
-        //    RebuildUnlockedFromApplied();
-        //    save.initialized = true;
-        //    SaveState();
-        //}
     }
 
     public void LoadUnlockData()
     {
-        //====================기존 로직===========================
-        //// 서버명이 아직 안 들어왔다면 SelectedSave로 한번 더 보정
-        //if (string.IsNullOrEmpty(_serverName))
-        //    SetServerName(PlayerPrefs.GetString("SelectedSave", ""));
-
-        //// 로드 전에 초기화
-        //save = new UnlockSaveData();
-
-        //LoadState();
-
-
-        //// 파일이 없거나 미초기화: 현재 플레이어 레벨까지 시드
-        //if (!save.initialized || save.appliedLevels == null || save.appliedLevels.Count == 0)
-        //{
-        //    if (save.appliedLevels == null)
-        //        save.appliedLevels = new HashSet<int>();
-
-        //    // 현재 플레이어 레벨까지 시드
-        //    int playerLevel = Mathf.Max(1, PlayerLevelManager.Instance ? PlayerLevelManager.Instance.Level : 1);
-        //    SeedAppliedLevelsUpTo(playerLevel);
-
-        //    RebuildUnlockedFromApplied();
-        //    save.initialized = true;
-        //    SaveState();
-        //}
-        //else
-        //{
-        //    // 기존 파일 → 항상 재구성으로 정합성 보장
-        //    RebuildUnlockedFromApplied();
-        //}
-
-        //RefreshMakerActivationInScene();
-
-
-        //================수정 버전======================
-        // 서버명이 아직 안 들어왔다면 SelectedSave로 보정
-        if (string.IsNullOrEmpty(_serverName))
-            SetServerName(PlayerPrefs.GetString("SelectedSave", ""));
-
-        // 1 파일이 이미 있는지 먼저 확인
-        bool existed = File.Exists(savePath);
-
-        // 항상 깨끗한 인스턴스로 시작
-        save = new UnlockSaveData();
-
-        // 2 파일이 있으면 그대로 로드
-        if (existed)
+        if (string.IsNullOrWhiteSpace(_serverName))
         {
-            LoadState();   // pending / applied / unlocked* 그대로 불러오기
+            SetServerName(
+                PlayerPrefs.GetString(
+                    "SelectedSave",
+                    ""
+                )
+            );
         }
 
-        //  파일이 "아예 없을 때"만, 현재 플레이어 레벨까지 시드
-        if (!existed)
+        if (string.IsNullOrWhiteSpace(_serverName))
         {
-            if (save.appliedLevels == null)
-                save.appliedLevels = new HashSet<int>();
+            Debug.LogWarning(
+                "[UnlockManager] 선택된 세이브가 없습니다."
+            );
 
-            // 새 세이브 처음 생성 시: 플레이어 현재 레벨(보통 1)까지 해금
-            //int playerLevel = Mathf.Max(1, PlayerLevelManager.Instance ? PlayerLevelManager.Instance.Level : 1);
+            return;
+        }
+
+        if (!SaveService.EnsureLoaded(_serverName))
+        {
+            Debug.LogError(
+                "[UnlockManager] 현재 세이브를 " +
+                $"준비할 수 없습니다: {_serverName}"
+            );
+
+            return;
+        }
+
+        UnlockProgressSaveData progressData =
+            SaveService.CurrentData
+                .unlockProgressData;
+
+        save = new UnlockSaveData
+        {
+            pendingLevels =
+                new HashSet<int>(
+                    progressData?.pendingLevels ??
+                    new List<int>()
+                ),
+
+            appliedLevels =
+                new HashSet<int>(
+                    progressData?.appliedLevels ??
+                    new List<int>()
+                ),
+
+            initialized =
+                progressData != null &&
+                progressData.initialized
+        };
+
+        // 저장 데이터가 비어 있거나 초기화되지 않은 경우 보정
+        if (!save.initialized ||
+            save.appliedLevels.Count == 0)
+        {
             int playerLevel = 1;
-            SeedAppliedLevelsUpTo(playerLevel);
 
+            if (PlayerLevelManager.Instance != null)
+            {
+                playerLevel = Mathf.Max(
+                    1,
+                    PlayerLevelManager.Instance.Level
+                );
+            }
+            else if (SaveService.CurrentData.levelData != null)
+            {
+                playerLevel = Mathf.Max(
+                    1,
+                    SaveService.CurrentData
+                        .levelData.level
+                );
+            }
+
+            SeedAppliedLevelsUpTo(playerLevel);
             save.initialized = true;
-            SaveState();   // 초기 상태 저장 (appliedLevels에 기본 레벨 세팅)
         }
 
-        // 4 이후로는 오직 appliedLevels만 기준으로 해금 재구성
+        // appliedLevels를 원본으로 실제 해금 목록 재계산
         RebuildUnlockedFromApplied();
+
         RefreshMakerActivationInScene();
     }
 
@@ -166,31 +165,36 @@ public class UnlockManager : MonoBehaviour
 
     void Awake()
     {
-        if(Instance != null) { Destroy(gameObject); return; }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-        
-        LoadConfig();
-
-        // SelectedSave가 있으면 로컬 레거시 파일을 건너뛰고 서버 파일로 즉시 세팅
-        var selected = PlayerPrefs.GetString("SelectedSave", "");
-        if (!string.IsNullOrEmpty(selected))
+        if (Instance != null)
         {
-            SwitchToServer(selected);
-            //SetServerName(selected);// 내부에서 초기화+서버 파일 로드+씬 반영까지 끝
+            Destroy(gameObject);
             return;
         }
 
-        savePath = Path.Combine(Application.persistentDataPath, "unlock_state.json");
-        LoadState();
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
 
-        if (!save.initialized)
+        LoadConfig();
+
+        string selectedServer =
+            PlayerPrefs.GetString(
+                "SelectedSave",
+                ""
+            );
+
+        if (!string.IsNullOrWhiteSpace(selectedServer))
         {
-            save.appliedLevels.Add(1); //  기본 레벨 1은 항상 적용
-            RebuildUnlockedFromApplied();
-            save.initialized = true;
-            SaveState();
+            SwitchToServer(selectedServer);
+            return;
         }
+
+        // 아직 슬롯을 고르지 않은 타이틀 화면용 메모리 기본값
+        save = new UnlockSaveData();
+        save.appliedLevels.Add(1);
+        save.initialized = true;
+
+        // 저장할 슬롯이 없으므로 메모리 목록만 계산
+        RebuildUnlockedFromApplied();
     }
 
     void RebuildUnlockedFromApplied()
@@ -268,48 +272,50 @@ public class UnlockManager : MonoBehaviour
         config = JsonUtility.FromJson<UnlockConfig>(json.text) ?? new UnlockConfig { levels = new() };
     }
 
-    void LoadState()
-    {
-        // 기본값
-        save = new UnlockSaveData();
-
-        if (!File.Exists(savePath)) return;
-
-        try
-        {
-            var json = File.ReadAllText(savePath);
-            var dto = JsonUtility.FromJson<UnlockSaveDataDTO>(json);
-
-            if (dto != null)
-            {
-                save.unlockedMakers = new HashSet<string>(dto.unlockedMakers ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
-                save.unlockedRecipes = new HashSet<string>(dto.unlockedRecipes ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
-                save.unlockedShopItems = new HashSet<string>(dto.unlockedShopItems ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
-                save.pendingLevels = new HashSet<int>(dto.pendingLevels ?? new List<int>());
-                save.appliedLevels = new HashSet<int>(dto.appliedLevels ?? new List<int>());
-                save.initialized = dto.initialized;
-            }
-        }
-        catch
-        {
-            // 파손된 파일 등 → 새로 시작
-            save = new UnlockSaveData();
-        }
-    }
 
     void SaveState()
     {
-        var dto = new UnlockSaveDataDTO
+        if (string.IsNullOrWhiteSpace(_serverName))
         {
-            unlockedMakers = save.unlockedMakers != null ? new List<string>(save.unlockedMakers) : new List<string>(),
-            unlockedRecipes = save.unlockedRecipes != null ? new List<string>(save.unlockedRecipes) : new List<string>(),
-            unlockedShopItems = save.unlockedShopItems != null ? new List<string>(save.unlockedShopItems) : new List<string>(),
-            pendingLevels = save.pendingLevels != null ? new List<int>(save.pendingLevels) : new List<int>(),
-            appliedLevels = save.appliedLevels != null ? new List<int>(save.appliedLevels) : new List<int>(),
-            initialized = save.initialized
-        };
+            return;
+        }
 
-        File.WriteAllText(savePath, JsonUtility.ToJson(dto, true));
+        if (!SaveService.EnsureLoaded(_serverName))
+        {
+            Debug.LogError(
+                "[UnlockManager] 현재 세이브를 " +
+                $"준비할 수 없습니다: {_serverName}"
+            );
+
+            return;
+        }
+
+        List<int> pendingLevels =
+            save.pendingLevels != null
+                ? save.pendingLevels
+                    .OrderBy(level => level)
+                    .ToList()
+                : new List<int>();
+
+        List<int> appliedLevels =
+            save.appliedLevels != null
+                ? save.appliedLevels
+                    .OrderBy(level => level)
+                    .ToList()
+                : new List<int>();
+
+        SaveService.CurrentData.unlockProgressData =
+            new UnlockProgressSaveData
+            {
+                pendingLevels = pendingLevels,
+                appliedLevels = appliedLevels,
+                initialized = save.initialized
+            };
+
+        SaveService.CurrentData
+            .unlockProgressMigrationCompleted = true;
+
+        SaveService.SaveCurrent();
     }
 
     // 레벨업 "즉시 해금"이 아니라 "다음 날 적용" 예약만
@@ -483,16 +489,5 @@ public class UnlockManager : MonoBehaviour
         var shown = PlayerPrefs.GetInt(PPK(PP_RevealShown), 0);
         return $"pending=[{pend}] lastApplied=[{last}] persisted=[{pers}] shownToday={_revealShownToday} PP_Shown={shown}";
     }
-}
-
-[Serializable]
-class UnlockSaveDataDTO
-{
-    public List<string> unlockedMakers;
-    public List<string> unlockedRecipes;
-    public List<string> unlockedShopItems;
-    public List<int> pendingLevels;
-    public List<int> appliedLevels;
-    public bool initialized;
 }
 

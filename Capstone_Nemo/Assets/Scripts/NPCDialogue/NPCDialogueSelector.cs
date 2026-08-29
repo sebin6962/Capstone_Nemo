@@ -144,7 +144,46 @@ public static class NPCDialogueSelector
         }
 
         if (pool.Count == 0)
+        {
+            if (npcData.useTreeLevelDialogue)
+            {
+                int currentTreeLevel =
+                    TreeLevelUnlocker
+                        .GetSavedCurrentLevel();
+
+                string levelNodeId =
+                    GetTreeLevelStartNodeId(
+                        npcData,
+                        npcProgress,
+                        currentTreeLevel
+                    );
+
+                if (!string.IsNullOrEmpty(levelNodeId))
+                {
+                    Debug.Log(
+                        "[NPCDialogueSelector] 카테고리에 " +
+                        "정확히 일치하는 세트가 없어 " +
+                        "현재 단계 대화를 사용합니다. " +
+                        $"NPC={npcData.npcId}, " +
+                        $"category={categoryId}, " +
+                        $"treeLevel={currentTreeLevel}, " +
+                        $"node={levelNodeId}"
+                    );
+
+                    return levelNodeId;
+                }
+            }
+
+            Debug.LogWarning(
+                "[NPCDialogueSelector] 사용할 대화 세트가 없습니다. " +
+                $"NPC={npcData.npcId}, " +
+                $"category={categoryId}, " +
+                $"treeLevel=" +
+                TreeLevelUnlocker.GetSavedCurrentLevel()
+            );
+
             return GetLegacyStartNodeId(npcData);
+        }
 
         string selectedSetId = pool[Random.Range(0, pool.Count)];
 

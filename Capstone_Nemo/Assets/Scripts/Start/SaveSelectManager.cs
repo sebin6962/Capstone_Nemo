@@ -70,6 +70,7 @@ public class SaveSelectManager : MonoBehaviour
         TryDelete(Path.Combine(p, $"playerSkin_{serverName}.json"));
         TryDelete(Path.Combine(p, $"farm_{serverName}.json"));
         TryDelete(Path.Combine(p, $"grassLoot_{serverName}.json"));
+        TryDelete(Path.Combine(p,$"ending_{serverName}.json"));
 
         // 레거시 해금 파일
         var legacy = Path.Combine(p, "unlock_state.json");
@@ -284,6 +285,13 @@ public class SaveSelectManager : MonoBehaviour
                     if (UnlockManager.Instance != null)
                     {
                         UnlockManager.Instance.SwitchToServer(
+                            serverName
+                        );
+                    }
+
+                    if (CustomerSaveManager.Instance != null)
+                    {
+                        CustomerSaveManager.Instance.SwitchToServer(
                             serverName
                         );
                     }

@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 public class NpcSpawner : MonoBehaviour
@@ -9,47 +6,94 @@ public class NpcSpawner : MonoBehaviour
 
     public ParticleSystem[] treeParticles;
 
-    void Start()
+    private void Start()
     {
-        string serverName = PlayerPrefs.GetString("SelectedSave", "");
-        bool hasSeenEnding = false;
+        bool hasSeenEnding =
+            LoadEndingState();
 
-        if (!string.IsNullOrEmpty(serverName))
+        ApplyEndingState(hasSeenEnding);
+    }
+
+    private bool LoadEndingState()
+    {
+        string serverName =
+            PlayerPrefs.GetString(
+                "SelectedSave",
+                ""
+            );
+
+        if (string.IsNullOrWhiteSpace(serverName))
         {
-            string path = Path.Combine(Application.persistentDataPath, $"ending_{serverName}.json");
-            if (File.Exists(path))
+            Debug.LogWarning(
+                "[NpcSpawner] 선택된 세이브가 없습니다."
+            );
+
+            return false;
+        }
+
+        if (!SaveService.EnsureLoaded(serverName))
+        {
+            Debug.LogError(
+                "[NpcSpawner] 통합 세이브를 " +
+                $"불러올 수 없습니다: {serverName}"
+            );
+
+            return false;
+        }
+
+        EndingData endingData =
+            SaveService.CurrentData.endingData;
+
+        return endingData != null &&
+               endingData.hasSeenEnding;
+    }
+
+    private void ApplyEndingState(
+        bool hasSeenEnding
+    )
+    {
+        if (npcObjects != null)
+        {
+            foreach (GameObject npc in npcObjects)
             {
-                var data = JsonUtility.FromJson<EndingData>(File.ReadAllText(path));
-                hasSeenEnding = (data != null && data.hasSeenEnding);
+                if (npc == null)
+                {
+                    continue;
+                }
+
+                npc.SetActive(hasSeenEnding);
             }
         }
 
-        foreach (var npc in npcObjects)
+        if (treeParticles == null)
         {
-            if (npc == null) continue;
-            npc.SetActive(hasSeenEnding); // 엔딩 본 세이브에서만 등장
+            return;
         }
 
-        if (treeParticles != null)
+        foreach (ParticleSystem particle in treeParticles)
         {
-            foreach (var ps in treeParticles)
+            if (particle == null)
             {
-                if (ps == null) continue;
+                continue;
+            }
 
-                // 게임오브젝트 활성/비활성
-                ps.gameObject.SetActive(hasSeenEnding);
+            particle.gameObject.SetActive(
+                hasSeenEnding
+            );
 
-                if (hasSeenEnding)
-                {
-                    ps.Clear();
-                    ps.Play();
-                }
-                else
-                {
-                    ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                }
+            if (hasSeenEnding)
+            {
+                particle.Clear();
+                particle.Play();
+            }
+            else
+            {
+                particle.Stop(
+                    true,
+                    ParticleSystemStopBehavior
+                        .StopEmittingAndClear
+                );
             }
         }
     }
 }
-
