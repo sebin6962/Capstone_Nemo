@@ -31,6 +31,15 @@ public enum VillageSecondStep
     VillageSecond_Finish = 12
 }
 
+[Serializable]
+public class TutorialBubbleLine
+{
+    [TextArea(2, 4)]
+    public string message;
+    public bool useTyping = false;
+    [Min(0.01f)] public float typingInterval = 0.04f;
+}
+
 public class TutorialManager : MonoBehaviour
 {
     public static TutorialManager Instance;
@@ -86,6 +95,14 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private float beforeDialogueDelay = 1f;
     [SerializeField] private CinemachineConfiner2D introConfiner2D;
 
+    [Header("할머니 대화 E키 오브젝트")]
+    [SerializeField] private GameObject grandmaInteractKeyObject;
+    [SerializeField] private Vector2 grandmaInteractKeyOffset = new Vector2(0f, 100f);
+
+    private RectTransform grandmaInteractKeyRectTransform;
+    private Canvas grandmaInteractCanvas;
+    private RectTransform grandmaInteractCanvasRectTransform;
+
     private CinemachineFramingTransposer framingTransposer;
     private float originalXDamping;
     private float originalYDamping;
@@ -99,8 +116,14 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private Transform commonBubbleDefaultAnchor;
     [SerializeField] private Vector3 commonBubbleOffset = new Vector3(0f, 1.2f, 0f);
     [SerializeField] private float introBubbleDuration = 3f;
-    [SerializeField] private List<string> introBubbleTexts;
-    [SerializeField] private string noticeBubbleMessage = "!";
+    [SerializeField] private List<TutorialBubbleLine> introBubbleLines;
+    [SerializeField]
+    private TutorialBubbleLine noticeBubble = new TutorialBubbleLine
+    {
+        message = "!",
+        useTyping = false,
+        typingInterval = 0.04f
+    };
 
     [SerializeField] private BubblePopupEffect commonBubbleEffect;
 
@@ -141,6 +164,17 @@ public class TutorialManager : MonoBehaviour
             commonBubbleEffect.HideImmediate();
         else if (commonBubbleObject != null)
             commonBubbleObject.SetActive(false);
+
+        if (grandmaInteractKeyObject != null)
+        {
+            grandmaInteractKeyRectTransform = grandmaInteractKeyObject.GetComponent<RectTransform>();
+            grandmaInteractCanvas = grandmaInteractKeyObject.GetComponentInParent<Canvas>();
+
+            if (grandmaInteractCanvas != null)
+                grandmaInteractCanvasRectTransform = grandmaInteractCanvas.GetComponent<RectTransform>();
+        }
+
+        SetGrandmaInteractKeyVisible(false);
 
         if (introVirtualCamera != null)
         {
@@ -237,6 +271,8 @@ public class TutorialManager : MonoBehaviour
 
     private void LateUpdate()
     {
+        UpdateGrandmaInteractKeyPosition();
+
         if (!holdPlayerAtVillageEntry)
             return;
 
@@ -392,10 +428,10 @@ public class TutorialManager : MonoBehaviour
             yield return StartCoroutine(ZoomCameraTo(introZoomSize, introZoomDuration));
 
         // 2) 이동 시작 전 말풍선 텍스트 여러 개
-        if (introBubbleTexts != null && introBubbleTexts.Count > 0)
+        if (introBubbleLines != null && introBubbleLines.Count > 0)
         {
             Transform introAnchor = player != null ? player.transform : commonBubbleDefaultAnchor;
-            yield return StartCoroutine(ShowCommonBubbleSequence(introBubbleTexts, introBubbleDuration, introAnchor));
+            yield return StartCoroutine(ShowCommonBubbleSequence(introBubbleLines, introBubbleDuration, introAnchor));
         }
 
         // 2.5) 말풍선 끝나고 이동 전 텀
@@ -409,15 +445,17 @@ public class TutorialManager : MonoBehaviour
         yield return new WaitForSeconds(beforeNoticeBubbleDelay);
 
         // 5) 기존 말풍선 (공용 말풍선으로 처리)
-        if (!string.IsNullOrEmpty(noticeBubbleMessage))
+        if (noticeBubble != null && !string.IsNullOrEmpty(noticeBubble.message))
         {
             Transform noticeAnchor = player != null ? player.transform : commonBubbleDefaultAnchor;
             yield return StartCoroutine(
                 ShowCommonBubble(
-                    noticeBubbleMessage,
+                    noticeBubble.message,
                     reactionBubbleDuration,
                     noticeAnchor,
-                    BubblePopupEffect.ShowStyle.NoticeBoing
+                    BubblePopupEffect.ShowStyle.NoticeBoing,
+                    noticeBubble.useTyping,
+                    noticeBubble.typingInterval
                 )
             );
         }
@@ -437,6 +475,15 @@ public class TutorialManager : MonoBehaviour
 
         // 8) 대화 시작 전 1초 텀
         yield return new WaitForSeconds(beforeDialogueDelay);
+
+        // 할머니 앞에서 멈춘 뒤, 플레이어가 E키를 눌러야 대화를 시작한다.
+        SetGrandmaInteractKeyVisible(true);
+
+        // 이동 중 누르고 있던 키가 입력으로 처리되지 않도록 먼저 키가 떼어지기를 기다린다.
+        yield return new WaitUntil(() => !Input.GetKey(KeyCode.E));
+        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.E));
+
+        SetGrandmaInteractKeyVisible(false);
 
         // 9) 첫 대화
         bool dialogueFinished = false;
@@ -1091,7 +1138,84 @@ public class TutorialManager : MonoBehaviour
             commonBubbleObject.SetActive(false);
     }
 
-    private IEnumerator ShowCommonBubble(string message, float duration, Transform anchor = null, BubblePopupEffect.ShowStyle style = BubblePopupEffect.ShowStyle.IntroSpread)
+    private void SetGrandmaInteractKeyVisible(bool visible)
+    {
+        if (grandmaInteractKeyObject == null)
+            return;
+
+        grandmaInteractKeyObject.SetActive(visible);
+        UpdateGrandmaInteractKeyPosition();
+    }
+
+    private void UpdateGrandmaInteractKeyPosition()
+    {
+        if (grandmaInteractKeyObject == null ||
+            grandmaNpcObject == null ||
+            !grandmaInteractKeyObject.activeSelf)
+            return;
+
+        if (grandmaInteractKeyRectTransform == null)
+            grandmaInteractKeyRectTransform = grandmaInteractKeyObject.GetComponent<RectTransform>();
+
+        if (grandmaInteractCanvas == null)
+            grandmaInteractCanvas = grandmaInteractKeyObject.GetComponentInParent<Canvas>();
+
+        if (grandmaInteractCanvas != null && grandmaInteractCanvasRectTransform == null)
+            grandmaInteractCanvasRectTransform = grandmaInteractCanvas.GetComponent<RectTransform>();
+
+        if (grandmaInteractKeyRectTransform == null ||
+            grandmaInteractCanvas == null ||
+            grandmaInteractCanvasRectTransform == null)
+        {
+            return;
+        }
+
+        Vector3 grandmaWorldPosition = grandmaNpcObject.transform.position;
+        Vector2 grandmaCanvasPosition;
+
+        if (grandmaInteractCanvas.renderMode == RenderMode.WorldSpace)
+        {
+            // World Space Canvas에서는 할머니 월드 좌표를 Canvas 로컬 좌표로 변환한다.
+            grandmaCanvasPosition =
+                grandmaInteractCanvasRectTransform.InverseTransformPoint(grandmaWorldPosition);
+        }
+        else
+        {
+            Camera worldCamera = Camera.main;
+            if (worldCamera == null)
+                return;
+
+            Vector2 screenPosition =
+                RectTransformUtility.WorldToScreenPoint(worldCamera, grandmaWorldPosition);
+
+            Camera uiCamera = grandmaInteractCanvas.renderMode == RenderMode.ScreenSpaceOverlay
+                ? null
+                : (grandmaInteractCanvas.worldCamera != null
+                    ? grandmaInteractCanvas.worldCamera
+                    : worldCamera);
+
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    grandmaInteractCanvasRectTransform,
+                    screenPosition,
+                    uiCamera,
+                    out grandmaCanvasPosition))
+            {
+                return;
+            }
+        }
+
+        // Canvas 중앙이 아니라 실제 할머니 위치를 기준으로 오프셋을 더한다.
+        grandmaInteractKeyRectTransform.anchoredPosition =
+            grandmaCanvasPosition + grandmaInteractKeyOffset;
+    }
+
+    private IEnumerator ShowCommonBubble(
+        string message,
+        float duration,
+        Transform anchor = null,
+        BubblePopupEffect.ShowStyle style = BubblePopupEffect.ShowStyle.IntroSpread,
+        bool useTyping = false,
+        float typingInterval = 0.04f)
     {
         SetBubblePosition(anchor);
 
@@ -1100,7 +1224,13 @@ public class TutorialManager : MonoBehaviour
             if (commonBubbleObject != null)
                 commonBubbleObject.SetActive(true);
 
-            yield return commonBubbleEffect.Play(message, duration, style);
+            yield return commonBubbleEffect.Play(
+                message,
+                duration,
+                style,
+                useTyping,
+                typingInterval
+            );
             yield break;
         }
 
@@ -1108,23 +1238,55 @@ public class TutorialManager : MonoBehaviour
             yield break;
 
         commonBubbleText.text = message;
+        commonBubbleText.ForceMeshUpdate();
         commonBubbleObject.SetActive(true);
+
+        if (useTyping)
+        {
+            int characterCount = commonBubbleText.textInfo.characterCount;
+            commonBubbleText.maxVisibleCharacters = 0;
+
+            float interval = Mathf.Max(0.01f, typingInterval);
+            for (int i = 1; i <= characterCount; i++)
+            {
+                commonBubbleText.maxVisibleCharacters = i;
+                yield return new WaitForSecondsRealtime(interval);
+            }
+        }
+        else
+        {
+            commonBubbleText.maxVisibleCharacters = int.MaxValue;
+        }
 
         yield return new WaitForSeconds(duration);
 
+        commonBubbleText.maxVisibleCharacters = int.MaxValue;
         commonBubbleObject.SetActive(false);
     }
 
-    private IEnumerator ShowCommonBubbleSequence(List<string> messages, float durationPerMessage, Transform anchor = null)
+    private IEnumerator ShowCommonBubbleSequence(
+        List<TutorialBubbleLine> lines,
+        float durationPerMessage,
+        Transform anchor = null)
     {
-        if (messages == null || messages.Count == 0)
+        if (lines == null || lines.Count == 0)
             yield break;
 
-        foreach (var msg in messages)
+        foreach (var line in lines)
         {
+            if (line == null || string.IsNullOrEmpty(line.message))
+                continue;
+
             SetBubblePosition(anchor);
             yield return StartCoroutine(
-                ShowCommonBubble(msg, durationPerMessage, anchor, BubblePopupEffect.ShowStyle.IntroSpread)
+                ShowCommonBubble(
+                    line.message,
+                    durationPerMessage,
+                    anchor,
+                    BubblePopupEffect.ShowStyle.IntroSpread,
+                    line.useTyping,
+                    line.typingInterval
+                )
             );
         }
     }
@@ -1201,6 +1363,7 @@ public class TutorialManager : MonoBehaviour
         }
 
         HideCommonBubble();
+        SetGrandmaInteractKeyVisible(false);
         SetDialogueButtonsLocked(false);
         SetAutoSequenceUIObjectsHidden(false);
     }

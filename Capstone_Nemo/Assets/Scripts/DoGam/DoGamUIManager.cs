@@ -124,7 +124,8 @@ public class DoGamUIManager : MonoBehaviour
     public class HowToItemData
     {
         public string text;   // 항목 설명
-        public string image;  // Resources/Sprites/Guide/{image}
+        public string video;  // Resources/Videos/Guide/{video}
+        public string image;  // 기존 JSON 이전 기간용 호환 필드
     }
 
     [System.Serializable]
@@ -1341,28 +1342,36 @@ public class DoGamUIManager : MonoBehaviour
 
             var go = Instantiate(howToItemPrefab, parent);
 
-            var icon = go.transform.Find("Icon")?.GetComponent<Image>();
+            var iconTransform = go.transform.Find("Icon");
+            var icon = iconTransform?.GetComponent<Image>();
             var body = go.transform.Find("Body")?.GetComponent<TextMeshProUGUI>();
 
             if (body != null) body.text = item.text;
 
-            if (icon != null)
+            if (iconTransform != null)
             {
-                var sprite = Resources.Load<Sprite>("Sprites/Guide/" + item.image);
-                if (sprite == null)
-                {
-                    var all = Resources.LoadAll<Sprite>("Sprites/Guide/" + item.image);
-                    if (all != null && all.Length > 0) sprite = all[0];
-                }
+                // 기존 Icon 오브젝트를 영상 영역으로 사용한다.
+                // 기존 Image는 숨기고, 실제 영상은 RawImage 자식에 표시된다.
+                if (icon != null)
+                    icon.enabled = false;
 
-                icon.sprite = sprite;
-                icon.enabled = sprite != null;
+                string videoName = !string.IsNullOrWhiteSpace(item.video)
+                    ? item.video
+                    : item.image;
+                videoName = Path.GetFileNameWithoutExtension(videoName);
 
-                if (sprite != null)
-                {
-                    icon.preserveAspect = true;
-                    LayoutRebuilder.MarkLayoutForRebuild(icon.rectTransform);
-                }
+                var clip = string.IsNullOrWhiteSpace(videoName)
+                    ? null
+                    : Resources.Load<UnityEngine.Video.VideoClip>("Videos/Guide/" + videoName);
+
+                var hoverPlayer = iconTransform.GetComponent<HowToHoverVideoPlayer>();
+                if (hoverPlayer == null)
+                    hoverPlayer = iconTransform.gameObject.AddComponent<HowToHoverVideoPlayer>();
+
+                hoverPlayer.Setup(clip);
+
+                if (clip == null)
+                    Debug.LogWarning($"[HowTo] 영상을 찾을 수 없음: Resources/Videos/Guide/{videoName}");
             }
         }
 

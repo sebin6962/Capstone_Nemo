@@ -72,14 +72,26 @@ public class BubblePopupEffect : MonoBehaviour
 
         if (cachedTransform != null)
             cachedTransform.localScale = hiddenScale;
-    }
-
-    public Coroutine Play(string message, float visibleDuration, ShowStyle style)
-    {
-        Debug.Log($"[BubblePopupEffect] Play 호출됨 / message={message} / style={style}");
 
         if (bubbleText != null)
+            bubbleText.maxVisibleCharacters = int.MaxValue;
+    }
+
+    public Coroutine Play(
+        string message,
+        float visibleDuration,
+        ShowStyle style,
+        bool useTyping = false,
+        float typingInterval = 0.04f)
+    {
+        Debug.Log($"[BubblePopupEffect] Play 호출됨 / message={message} / style={style} / typing={useTyping}");
+
+        if (bubbleText != null)
+        {
             bubbleText.text = message;
+            bubbleText.ForceMeshUpdate();
+            bubbleText.maxVisibleCharacters = useTyping ? 0 : int.MaxValue;
+        }
         else
             Debug.LogWarning("[BubblePopupEffect] bubbleText가 연결되지 않았습니다.");
 
@@ -98,11 +110,17 @@ public class BubblePopupEffect : MonoBehaviour
         if (cachedTransform != null)
             cachedTransform.localScale = hiddenScale;
 
-        playingCoroutine = StartCoroutine(PlayRoutine(visibleDuration, style));
+        playingCoroutine = StartCoroutine(
+            PlayRoutine(visibleDuration, style, useTyping, typingInterval)
+        );
         return playingCoroutine;
     }
 
-    private IEnumerator PlayRoutine(float visibleDuration, ShowStyle style)
+    private IEnumerator PlayRoutine(
+        float visibleDuration,
+        ShowStyle style,
+        bool useTyping,
+        float typingInterval)
     {
         Debug.Log("[BubblePopupEffect] PlayRoutine 시작");
 
@@ -116,6 +134,9 @@ public class BubblePopupEffect : MonoBehaviour
                 yield return StartCoroutine(PlayNoticeShow());
                 break;
         }
+
+        if (useTyping)
+            yield return StartCoroutine(PlayTyping(typingInterval));
 
         yield return new WaitForSecondsRealtime(visibleDuration);
 
@@ -138,6 +159,27 @@ public class BubblePopupEffect : MonoBehaviour
 
         playingCoroutine = null;
         Debug.Log("[BubblePopupEffect] PlayRoutine 종료");
+    }
+
+    private IEnumerator PlayTyping(float typingInterval)
+    {
+        if (bubbleText == null)
+            yield break;
+
+        bubbleText.ForceMeshUpdate();
+
+        int characterCount = bubbleText.textInfo.characterCount;
+        float interval = Mathf.Max(0.01f, typingInterval);
+
+        bubbleText.maxVisibleCharacters = 0;
+
+        for (int i = 1; i <= characterCount; i++)
+        {
+            bubbleText.maxVisibleCharacters = i;
+            yield return new WaitForSecondsRealtime(interval);
+        }
+
+        bubbleText.maxVisibleCharacters = int.MaxValue;
     }
 
     private IEnumerator PlayIntroShow()
