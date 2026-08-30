@@ -1,7 +1,5 @@
-using System.Collections;
-using UnityEngine;
 using System.Collections.Generic;
-using System.IO;
+using UnityEngine;
 
 [System.Serializable]
 public class StorageEntry
@@ -10,121 +8,155 @@ public class StorageEntry
     public int amount;
 }
 
+// 기존 storage_{serverName}.json 이전에만 사용하는 레거시 구조
 [System.Serializable]
 public class StorageData
 {
-    public List<StorageEntry> items = new();
+    public List<StorageEntry> items = new List<StorageEntry>();
 }
 
 public class StorageInventory : MonoBehaviour
 {
     public static StorageInventory Instance;
 
-    private Dictionary<string, int> storage = new();
-    private string savePath;
+    private readonly Dictionary<string, int> storage =
+        new Dictionary<string, int>();
 
-    public int maxSlots = 12;          // 서로 다른 아이템 종류 수(슬롯) 최대치
-    public int maxStackPerItem = 99;   // 아이템 1종류당 최대 수량 (0이면 무제한)
+    public int maxSlots = 12;
+    public int maxStackPerItem = 99;
 
-    public int OccupiedSlots => storage.Count;                 // 사용 중 슬롯 수
-    public int FreeSlots => Mathf.Max(0, maxSlots - storage.Count); // 남은 슬롯 수
+    public int OccupiedSlots => storage.Count;
+    public int FreeSlots => Mathf.Max(0, maxSlots - storage.Count);
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            // savePath는 SetServerName에서 할당
-        }
-        else
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        SaveService.CurrentSaveChanged += OnCurrentSaveChanged;
+        LoadStorage();
     }
 
+    private void OnDestroy()
+    {
+        if (Instance != this)
+            return;
+
+        SaveService.CurrentSaveChanged -= OnCurrentSaveChanged;
+        Instance = null;
+    }
+
+    private void OnCurrentSaveChanged(SaveData saveData)
+    {
+        if (saveData == null)
+        {
+            storage.Clear();
+            return;
+        }
+
+        LoadStorage();
+    }
+
+    // 기존 호출부와의 호환성을 유지한다.
+    // 파일 경로를 설정하는 대신 SaveService의 현재 슬롯을 전환한다.
     public void SetServerName(string serverName)
     {
-        savePath = Path.Combine(Application.persistentDataPath, $"storage_{serverName}.json");
+        if (!SaveService.EnsureLoaded(serverName))
+        {
+            Debug.LogError(
+                "[StorageInventory] 저장 슬롯 전환 실패: " +
+                serverName
+            );
+
+            return;
+        }
+
+        LoadStorage();
     }
 
     public void AddItem(string itemName, int amount)
     {
-        //if (storage.ContainsKey(itemName))
-        //    storage[itemName] += amount;
-        //else
-        //    storage[itemName] = amount;
-
-        //if (storage.ContainsKey(itemName))
-        //{
-        //    storage[itemName] += amount;
-
-        //    // 수량이 0 이하가 되면 제거
-        //    if (storage[itemName] <= 0)
-        //        storage.Remove(itemName);
-        //}
-        //else if (amount > 0)
-        //{
-        //    // 새로 추가할 땐 amount가 양수일 때만 허용
-        //    storage[itemName] = amount;
-        //}
-
-        if (string.IsNullOrEmpty(itemName)) return;
+        if (string.IsNullOrEmpty(itemName))
+            return;
 
         if (storage.ContainsKey(itemName))
         {
             storage[itemName] += amount;
 
             if (storage[itemName] <= 0)
-            {
                 storage.Remove(itemName);
-            }
+
+            return;
         }
-        else if (amount > 0)
+
+        if (amount > 0)
         {
             storage[itemName] = amount;
+            return;
         }
-        else
-        {
-            Debug.LogWarning($"[StorageInventory] 없는 아이템 '{itemName}'에 음수 {amount} 추가 시도");
-        }
+
+        Debug.LogWarning(
+            $"[StorageInventory] 없는 아이템 '{itemName}'에 " +
+            $"음수 {amount} 추가 시도"
+        );
     }
 
     public int GetItemCount(string itemName)
     {
-        return storage.TryGetValue(itemName, out var count) ? count : 0;
+        return storage.TryGetValue(itemName, out int count)
+            ? count
+            : 0;
     }
 
-    public void SaveStorage()
+    public bool SaveStorage()
     {
-        var data = new StorageData();
-        foreach (var pair in storage)
-            data.items.Add(new StorageEntry { name = pair.Key, amount = pair.Value });
-        string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(savePath, json);
+        if (!SaveService.HasCurrentSave)
+        {
+            Debug.LogWarning(
+                "[StorageInventory] 현재 저장 슬롯이 없어 " +
+                "창고 저장을 건너뜁니다."
+            );
+
+            return false;
+        }
+
+        List<StorageEntry> entries = new List<StorageEntry>();
+
+        foreach (KeyValuePair<string, int> pair in storage)
+        {
+            if (string.IsNullOrWhiteSpace(pair.Key) || pair.Value <= 0)
+                continue;
+
+            entries.Add(new StorageEntry
+            {
+                name = pair.Key,
+                amount = pair.Value
+            });
+        }
+
+        SaveService.CurrentData.storageItems = entries;
+        SaveService.CurrentData.storageMigrationCompleted = true;
+
+        return SaveService.SaveCurrent();
     }
 
     public void LoadStorage()
     {
-        Debug.Log("[StorageInventory] 실제 로드 경로: " + savePath);
-
-        if (File.Exists(savePath))
+        if (!SaveService.HasCurrentSave)
         {
-            string json = File.ReadAllText(savePath);
-            var data = JsonUtility.FromJson<StorageData>(json);
             storage.Clear();
-            foreach (var entry in data.items)
-                storage[entry.name] = entry.amount;
+            return;
         }
-        else
-        {
-            Debug.LogWarning("[StorageInventory] 파일 없음! 초기화!");
 
-            
-            storage.Clear();
-            AddItem("Mepssalgaru", 10);
-            SaveStorage();
-        }
+        LoadFromSaveData(
+            SaveService.CurrentData.storageItems
+        );
     }
 
     public bool HasItem(string itemName)
@@ -140,31 +172,46 @@ public class StorageInventory : MonoBehaviour
     public void LoadFromSaveData(List<StorageEntry> entries)
     {
         storage.Clear();
-        if (entries == null) return;
-        foreach (var entry in entries)
-            storage[entry.name] = entry.amount;
+
+        if (entries == null)
+            return;
+
+        foreach (StorageEntry entry in entries)
+        {
+            if (entry == null ||
+                string.IsNullOrWhiteSpace(entry.name) ||
+                entry.amount <= 0)
+            {
+                continue;
+            }
+
+            if (storage.ContainsKey(entry.name))
+                storage[entry.name] += entry.amount;
+            else
+                storage[entry.name] = entry.amount;
+        }
     }
 
     public bool HasRoomFor(string itemName, int amount)
     {
-        if (string.IsNullOrEmpty(itemName) || amount <= 0) return true;
+        if (string.IsNullOrEmpty(itemName) || amount <= 0)
+            return true;
 
-        // 같은 아이템이면: 99 초과 금지 (슬롯 가득이어도 누적 허용)
         if (storage.TryGetValue(itemName, out int current))
         {
             long after = (long)current + amount;
-            return after <= maxStackPerItem;   // 100 이상이면 false
+            return after <= maxStackPerItem;
         }
 
-        // 새 아이템이면: 반드시 빈 슬롯 필요
         return FreeSlots >= 1 && amount <= maxStackPerItem;
     }
 
     public bool TryAddItem(string itemName, int amount)
     {
-        if (!HasRoomFor(itemName, amount)) return false;
-        AddItem(itemName, amount); // 기존 AddItem 재사용(음수 방어 등)
+        if (!HasRoomFor(itemName, amount))
+            return false;
+
+        AddItem(itemName, amount);
         return true;
     }
 }
-

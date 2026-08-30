@@ -64,33 +64,22 @@ public class SaveSelectManager : MonoBehaviour
         TryDelete(Path.Combine(p, $"unlock_{serverName}.json"));
         TryDelete(Path.Combine(p, $"playtime_{serverName}.json"));
         TryDelete(Path.Combine(p, $"storage_{serverName}.json"));
+        TryDelete(Path.Combine(p, $"maker_{serverName}.json"));
         TryDelete(Path.Combine(p, $"treeUnlock_{serverName}.json"));
         TryDelete(Path.Combine(p, $"tutorial_{serverName}.json"));
         TryDelete(Path.Combine(p, $"ps_tableItem_{serverName}.json"));
         TryDelete(Path.Combine(p, $"playerSkin_{serverName}.json"));
         TryDelete(Path.Combine(p, $"farm_{serverName}.json"));
         TryDelete(Path.Combine(p, $"grassLoot_{serverName}.json"));
-        TryDelete(Path.Combine(p,$"ending_{serverName}.json"));
+        TryDelete(Path.Combine(p, $"ending_{serverName}.json"));
 
         // 레거시 해금 파일
         var legacy = Path.Combine(p, "unlock_state.json");
         if (File.Exists(legacy))
             TryDelete(legacy);
 
-        // 프로필 목록에서 엔트리 제거
-        var profilePath = Path.Combine(p, "profile_myuser.json");
-
-        if (File.Exists(profilePath))
-        {
-            var json = File.ReadAllText(profilePath);
-            var profile = JsonUtility.FromJson<Profile>(json);
-
-            if (profile != null && profile.saves != null)
-            {
-                profile.saves.RemoveAll(s => s.serverName == serverName);
-                File.WriteAllText(profilePath, JsonUtility.ToJson(profile, true));
-            }
-        }
+        // 프로필 목록 갱신은 ProfileRepository가 담당
+        ProfileRepository.RemoveSave(serverName);
 
         // 현재 선택된 세이브였다면 선택값 초기화
         if (PlayerPrefs.GetString("SelectedSave", "") == serverName)
@@ -114,33 +103,8 @@ public class SaveSelectManager : MonoBehaviour
 
     public void RefreshSaveSlots()
     {
-        string profilePath = Path.Combine(
-            Application.persistentDataPath,
-            "profile_myuser.json"
-        );
-
-        Profile profile = File.Exists(profilePath)
-            ? JsonUtility.FromJson<Profile>(File.ReadAllText(profilePath))
-            : new Profile { username = "myuser" };
-
-        if (profile == null)
-            profile = new Profile { username = "myuser" };
-
-        if (profile.saves == null)
-            profile.saves = new List<SaveInfo>();
-
-        List<SaveInfo> validSaves = new List<SaveInfo>();
-
-        foreach (var save in profile.saves)
-        {
-            string savePath = Path.Combine(
-                Application.persistentDataPath,
-                $"save_myuser_{save.serverName}.json"
-            );
-
-            if (File.Exists(savePath))
-                validSaves.Add(save);
-        }
+        List<SaveInfo> validSaves =
+            ProfileRepository.LoadExistingSaves();
 
         for (int i = 0; i < saveSlots.Length; i++)
         {

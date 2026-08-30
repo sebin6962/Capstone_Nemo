@@ -62,6 +62,36 @@ public static class SaveRepository
         );
     }
 
+    private static string GetLegacyStoragePath(
+        string serverName
+    )
+    {
+        return Path.Combine(
+            Application.persistentDataPath,
+            $"storage_{serverName}.json"
+        );
+    }
+
+    private static string GetLegacyMakerPath(
+        string serverName
+    )
+    {
+        return Path.Combine(
+            Application.persistentDataPath,
+            $"maker_{serverName}.json"
+        );
+    }
+
+    private static string GetLegacyTablePath(
+        string serverName
+    )
+    {
+        return Path.Combine(
+            Application.persistentDataPath,
+            $"ps_tableItem_{serverName}.json"
+        );
+    }
+
     private static string GetLegacyTutorialPath(
     string serverName
 )
@@ -150,6 +180,21 @@ public static class SaveRepository
             }
 
             if (MigratePlaytimeData(serverName, saveData))
+            {
+                dataChanged = true;
+            }
+
+            if (MigrateStorageData(serverName, saveData))
+            {
+                dataChanged = true;
+            }
+
+            if (MigrateMakerData(serverName, saveData))
+            {
+                dataChanged = true;
+            }
+
+            if (MigrateTableData(serverName, saveData))
             {
                 dataChanged = true;
             }
@@ -295,6 +340,40 @@ public static class SaveRepository
             {
                 saveData.npcDialogueProgressData.npcProgressList =
                     new List<NPCDialogueNpcProgressData>();
+
+                dataChanged = true;
+            }
+
+            if (saveData.storageItems == null)
+            {
+                saveData.storageItems = new List<StorageEntry>();
+                dataChanged = true;
+            }
+
+            if (saveData.makerData == null)
+            {
+                saveData.makerData = new MakerSaveData();
+                dataChanged = true;
+            }
+
+            if (saveData.makerData.makers == null)
+            {
+                saveData.makerData.makers =
+                    new List<MakerSlotSave>();
+
+                dataChanged = true;
+            }
+
+            if (saveData.tableData == null)
+            {
+                saveData.tableData = new TableSaveData();
+                dataChanged = true;
+            }
+
+            if (saveData.tableData.tables == null)
+            {
+                saveData.tableData.tables =
+                    new List<TableSlotSave>();
 
                 dataChanged = true;
             }
@@ -649,6 +728,314 @@ public static class SaveRepository
         );
 
         return true;
+    }
+
+    private static bool MigrateStorageData(
+        string serverName,
+        SaveData saveData
+    )
+    {
+        if (saveData.storageMigrationCompleted)
+            return false;
+
+        string legacyPath = GetLegacyStoragePath(serverName);
+        List<StorageEntry> migratedItems = new List<StorageEntry>();
+
+        if (File.Exists(legacyPath))
+        {
+            try
+            {
+                string legacyJson = File.ReadAllText(legacyPath);
+                StorageData legacyData =
+                    JsonUtility.FromJson<StorageData>(legacyJson);
+
+                if (legacyData == null)
+                {
+                    Debug.LogError(
+                        "[SaveRepository] 기존 창고 데이터 변환 실패: " +
+                        legacyPath
+                    );
+
+                    return false;
+                }
+
+                if (legacyData.items != null)
+                {
+                    foreach (StorageEntry entry in legacyData.items)
+                    {
+                        AddOrMergeStorageEntry(migratedItems, entry);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    "[SaveRepository] 기존 창고 데이터 읽기 실패\n" +
+                    $"경로: {legacyPath}\n" +
+                    $"오류: {exception.Message}"
+                );
+
+                return false;
+            }
+        }
+        else
+        {
+            // 별도 창고 파일이 없던 슬롯은 기존 창고 기본값을 사용한다.
+            migratedItems.Add(new StorageEntry
+            {
+                name = "Mepssalgaru",
+                amount = 10
+            });
+        }
+
+        saveData.storageItems = migratedItems;
+        saveData.storageMigrationCompleted = true;
+
+        Debug.Log(
+            "[SaveRepository] 창고 데이터 통합 완료: " +
+            serverName
+        );
+
+        return true;
+    }
+
+    private static void AddOrMergeStorageEntry(
+        List<StorageEntry> entries,
+        StorageEntry entry
+    )
+    {
+        if (entry == null ||
+            string.IsNullOrWhiteSpace(entry.name) ||
+            entry.amount <= 0)
+        {
+            return;
+        }
+
+        StorageEntry existing = entries.Find(
+            item => item.name == entry.name
+        );
+
+        if (existing == null)
+        {
+            entries.Add(new StorageEntry
+            {
+                name = entry.name,
+                amount = entry.amount
+            });
+
+            return;
+        }
+
+        existing.amount += entry.amount;
+    }
+
+    private static bool MigrateMakerData(
+        string serverName,
+        SaveData saveData
+    )
+    {
+        if (saveData.makerMigrationCompleted)
+            return false;
+
+        string legacyPath = GetLegacyMakerPath(serverName);
+        MakerSaveData migratedData = new MakerSaveData();
+
+        if (File.Exists(legacyPath))
+        {
+            try
+            {
+                string legacyJson = File.ReadAllText(legacyPath);
+                MakerSaveData legacyData =
+                    JsonUtility.FromJson<MakerSaveData>(legacyJson);
+
+                if (legacyData == null)
+                {
+                    Debug.LogError(
+                        "[SaveRepository] 기존 제작대 데이터 변환 실패: " +
+                        legacyPath
+                    );
+
+                    return false;
+                }
+
+                if (legacyData.makers != null)
+                {
+                    foreach (MakerSlotSave maker in legacyData.makers)
+                    {
+                        AddOrReplaceMakerState(
+                            migratedData.makers,
+                            maker
+                        );
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    "[SaveRepository] 기존 제작대 데이터 읽기 실패\n" +
+                    $"경로: {legacyPath}\n" +
+                    $"오류: {exception.Message}"
+                );
+
+                return false;
+            }
+        }
+
+        saveData.makerData = migratedData;
+        saveData.makerMigrationCompleted = true;
+
+        Debug.Log(
+            "[SaveRepository] 제작대 데이터 통합 완료: " +
+            serverName
+        );
+
+        return true;
+    }
+
+    private static void AddOrReplaceMakerState(
+        List<MakerSlotSave> makers,
+        MakerSlotSave source
+    )
+    {
+        if (source == null ||
+            string.IsNullOrWhiteSpace(source.makerId))
+        {
+            return;
+        }
+
+        List<string> inputItems = new List<string>();
+
+        if (source.inputItemNames != null)
+        {
+            foreach (string itemName in source.inputItemNames)
+            {
+                if (!string.IsNullOrWhiteSpace(itemName))
+                    inputItems.Add(itemName);
+            }
+        }
+
+        bool canProduce =
+            source.isProducing &&
+            !string.IsNullOrWhiteSpace(source.resultItemName);
+
+        MakerSlotSave copiedState = new MakerSlotSave
+        {
+            makerId = source.makerId,
+            inputItemNames = inputItems,
+            isProducing = canProduce,
+            resultItemName = source.resultItemName,
+            craftEndUtcSeconds = canProduce
+                ? Math.Max(0d, source.craftEndUtcSeconds)
+                : 0d
+        };
+
+        int existingIndex = makers.FindIndex(
+            maker => maker != null &&
+                     maker.makerId == copiedState.makerId
+        );
+
+        if (existingIndex >= 0)
+            makers[existingIndex] = copiedState;
+        else
+            makers.Add(copiedState);
+    }
+
+    private static bool MigrateTableData(
+        string serverName,
+        SaveData saveData
+    )
+    {
+        if (saveData.tableMigrationCompleted)
+            return false;
+
+        string legacyPath = GetLegacyTablePath(serverName);
+        TableSaveData migratedData = new TableSaveData();
+
+        if (File.Exists(legacyPath))
+        {
+            try
+            {
+                string legacyJson = File.ReadAllText(legacyPath);
+                TableSaveData legacyData =
+                    JsonUtility.FromJson<TableSaveData>(legacyJson);
+
+                if (legacyData == null)
+                {
+                    Debug.LogError(
+                        "[SaveRepository] 기존 테이블 데이터 변환 실패: " +
+                        legacyPath
+                    );
+
+                    return false;
+                }
+
+                if (legacyData.tables != null)
+                {
+                    foreach (TableSlotSave table in legacyData.tables)
+                    {
+                        AddOrReplaceTableState(
+                            migratedData.tables,
+                            table
+                        );
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    "[SaveRepository] 기존 테이블 데이터 읽기 실패\n" +
+                    $"경로: {legacyPath}\n" +
+                    $"오류: {exception.Message}"
+                );
+
+                return false;
+            }
+        }
+
+        saveData.tableData = migratedData;
+        saveData.tableMigrationCompleted = true;
+
+        Debug.Log(
+            "[SaveRepository] 테이블 데이터 통합 완료: " +
+            serverName
+        );
+
+        return true;
+    }
+
+    private static void AddOrReplaceTableState(
+        List<TableSlotSave> tables,
+        TableSlotSave source
+    )
+    {
+        if (source == null ||
+            string.IsNullOrWhiteSpace(source.tableId))
+        {
+            return;
+        }
+
+        bool hasItem =
+            source.hasItem ||
+            !string.IsNullOrWhiteSpace(source.itemSpriteName);
+
+        TableSlotSave copiedState = new TableSlotSave
+        {
+            tableId = source.tableId,
+            hasItem = hasItem,
+            itemSpriteName = hasItem
+                ? source.itemSpriteName
+                : ""
+        };
+
+        int existingIndex = tables.FindIndex(
+            table => table != null &&
+                     table.tableId == copiedState.tableId
+        );
+
+        if (existingIndex >= 0)
+            tables[existingIndex] = copiedState;
+        else
+            tables.Add(copiedState);
     }
 
     private static bool MigrateTutorialData(

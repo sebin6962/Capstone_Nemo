@@ -1,200 +1,362 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 public class MakerManager : MonoBehaviour
 {
-    string CurrentServer => PlayerPrefs.GetString("SelectedSave", "");
+    private string loadedServer = "";
+    private bool isRestoring;
 
-    string MakerSavePath
-        => string.IsNullOrEmpty(CurrentServer)
-           ? null
-           : Path.Combine(Application.persistentDataPath, $"maker_{CurrentServer}.json");
-
-    void Start()
+    private void Start()
     {
-        LoadMakerState();
-    }
-
-    void OnDisable()
-    {
-        SaveMakerState();
-    }
-
-    void OnApplicationQuit()
-    {
-        SaveMakerState();
-    }
-
-    public void SaveMakerState()
-    {
-        if (string.IsNullOrEmpty(MakerSavePath)) return;
-
-        // 씬에 MakerInfo가 하나도 없으면 저장 안 함
-        var makersInScene = FindObjectsOfType<MakerInfo>();
-        if (makersInScene.Length == 0)
+        if (!SaveService.HasCurrentSave &&
+            !SaveService.LoadSelectedSave())
         {
-            Debug.Log("[Maker] 씬에 MakerInfo 없음 → 기존 maker json 덮어쓰기 생략");
+            Debug.LogWarning(
+                "[MakerManager] 불러올 저장 슬롯이 없습니다."
+            );
+
             return;
         }
 
-        var data = new MakerSaveData();
+        loadedServer = SaveService.CurrentServer;
+        LoadMakerState();
+    }
 
-        foreach (var maker in makersInScene)
+    private void OnDisable()
+    {
+        SaveCurrentSceneStateIfSafe();
+    }
+
+    private void OnApplicationQuit()
+    {
+        SaveCurrentSceneStateIfSafe();
+    }
+
+    public bool SaveMakerState()
+    {
+        if (isRestoring)
+            return true;
+
+        if (!SaveService.HasCurrentSave)
+            return false;
+
+        if (!string.IsNullOrEmpty(loadedServer) &&
+            !SaveService.IsCurrent(loadedServer))
         {
-            // 아무것도 없는 제작기는 저장 안 함
-            bool hasInput = maker.inputItemNames.Count > 0;
-            bool hasResult = maker.currentResultObject != null;
-            bool producing = maker.isProducing;
+            Debug.LogWarning(
+                "[MakerManager] 다른 슬롯으로 전환된 뒤 이전 제작대가 " +
+                "저장되는 것을 차단했습니다."
+            );
 
-            if (!hasInput && !hasResult && !producing)
-                continue;
-
-            var m = new MakerSlotSave();
-            m.makerId = maker.makerId;
-            m.inputItemNames = new List<string>(maker.inputItemNames);
-            m.isProducing = maker.isProducing;
-            m.resultItemName = maker.resultItemName;
-            m.craftEndUtcSeconds = maker.craftEndUtcSeconds;
-
-            data.makers.Add(m);
+            return false;
         }
 
-        File.WriteAllText(MakerSavePath, JsonUtility.ToJson(data, true));
-        Debug.Log($"[Maker] Saved {data.makers.Count} makers → {MakerSavePath}");
+        MakerInfo[] makersInScene =
+            FindObjectsOfType<MakerInfo>();
+
+        // 제작대가 없는 씬에서 기존 데이터를 빈 목록으로 덮어쓰지 않는다.
+        if (makersInScene.Length == 0)
+        {
+            Debug.Log(
+                "[MakerManager] 씬에 MakerInfo가 없어 저장을 생략합니다."
+            );
+
+            return false;
+        }
+
+        MakerSaveData data = new MakerSaveData();
+
+        foreach (MakerInfo maker in makersInScene)
+        {
+            if (maker == null ||
+                string.IsNullOrWhiteSpace(maker.makerId))
+            {
+                continue;
+            }
+
+            bool hasInput =
+                maker.inputItemNames != null &&
+                maker.inputItemNames.Count > 0;
+
+            bool hasResult = maker.currentResultObject != null;
+
+            if (!hasInput && !hasResult && !maker.isProducing)
+                continue;
+
+            data.makers.Add(new MakerSlotSave
+            {
+                makerId = maker.makerId,
+                inputItemNames = hasInput
+                    ? new List<string>(maker.inputItemNames)
+                    : new List<string>(),
+                isProducing = maker.isProducing,
+                resultItemName = maker.resultItemName,
+                craftEndUtcSeconds = maker.craftEndUtcSeconds
+            });
+        }
+
+        SaveService.CurrentData.makerData = data;
+        SaveService.CurrentData.makerMigrationCompleted = true;
+
+        bool saved = SaveService.SaveCurrent();
+
+        if (saved)
+        {
+            Debug.Log(
+                $"[MakerManager] 제작대 {data.makers.Count}개 저장 완료"
+            );
+        }
+
+        return saved;
     }
 
     public void LoadMakerState()
     {
-        if (string.IsNullOrEmpty(MakerSavePath)) return;
-        if (!File.Exists(MakerSavePath)) return;
+        if (!SaveService.HasCurrentSave)
+            return;
 
-        var json = File.ReadAllText(MakerSavePath);
-        var data = JsonUtility.FromJson<MakerSaveData>(json);
-        if (data == null) return;
+        loadedServer = SaveService.CurrentServer;
 
-        double nowUtc = (System.DateTime.UtcNow - System.DateTime.UnixEpoch).TotalSeconds;
+        MakerSaveData data =
+            SaveService.CurrentData.makerData ??
+            new MakerSaveData();
 
-        // 씬에 있는 MakerInfo들을 makerId 기준으로 매핑
-        var makersInScene = FindObjectsOfType<MakerInfo>();
-        var map = new Dictionary<string, MakerInfo>();
-        foreach (var mi in makersInScene)
-            if (!string.IsNullOrEmpty(mi.makerId))
-                map[mi.makerId] = mi;
+        if (data.makers == null)
+            data.makers = new List<MakerSlotSave>();
 
-        foreach (var m in data.makers)
+        SaveService.CurrentData.makerData = data;
+
+        double nowUtc =
+            (DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds;
+
+        MakerInfo[] makersInScene =
+            FindObjectsOfType<MakerInfo>();
+
+        Dictionary<string, MakerInfo> makerMap =
+            new Dictionary<string, MakerInfo>();
+
+        foreach (MakerInfo maker in makersInScene)
         {
-            if (!map.TryGetValue(m.makerId, out var maker)) continue;
-
-            // 입력 재료 복원
-            maker.inputItemNames = new List<string>(m.inputItemNames);
-            maker.inputItemSprites.Clear();
-
-            // 아이템 이름으로 스프라이트 재로딩
-            foreach (var itemName in maker.inputItemNames)
+            if (maker == null ||
+                string.IsNullOrWhiteSpace(maker.makerId))
             {
-                Sprite sp = Resources.Load<Sprite>($"Sprites/Ingredients/{itemName}");
-                maker.inputItemSprites.Add(sp);
+                continue;
             }
 
-            // 슬롯 UI 갱신
-            maker.EnsureSlotUIInstance();
-
-            if (maker.slotUIManager != null)
+            if (makerMap.ContainsKey(maker.makerId))
             {
-                // 저장된 재료가 하나라도 있으면 UI를 켜서 보여줌
-                if (maker.inputItemSprites.Count > 0)
-                {
-                    maker.slotUIManager.transform.position =
-                        maker.transform.position + new Vector3(0, 1.0f, 0);
+                Debug.LogError(
+                    "[MakerManager] 중복 makerId 발견: " +
+                    maker.makerId
+                );
 
-                    maker.slotUIManager.gameObject.SetActive(true);
-                    maker.slotUIManager.UpdateSlots(maker.inputItemSprites);
-                }
-                else
-                {
-                    // 재료가 없으면 그냥 비워두고 끔
-                    maker.slotUIManager.ClearSlots();
-                    maker.slotUIManager.gameObject.SetActive(false);
-                }
+                continue;
             }
 
-            // ===================제작 진행 복원===============================
-            maker.isProducing = m.isProducing;
-            maker.resultItemName = m.resultItemName;
-            maker.craftEndUtcSeconds = m.craftEndUtcSeconds;
+            makerMap.Add(maker.makerId, maker);
+        }
 
-            if (m.isProducing && !string.IsNullOrEmpty(m.resultItemName))
+        isRestoring = true;
+
+        try
+        {
+            foreach (MakerSlotSave savedMaker in data.makers)
             {
-                Sprite resultSprite = Resources.Load<Sprite>($"Sprites/Ingredients/{m.resultItemName}");
-
-                double remain = m.craftEndUtcSeconds - nowUtc;
-                float remainF = Mathf.Max(0.01f, (float)remain);
-
-                if (remain <= 0)
+                if (savedMaker == null ||
+                    string.IsNullOrWhiteSpace(savedMaker.makerId) ||
+                    !makerMap.TryGetValue(
+                        savedMaker.makerId,
+                        out MakerInfo maker
+                    ))
                 {
-                    // 이미 제작 끝나 있을 경우 거의 0초로 돌려서 바로 완성
-                    maker.StartCraft(resultSprite, 0.01f, force: true);
+                    continue;
                 }
-                else
+
+                RestoreInputItems(maker, savedMaker.inputItemNames);
+
+                maker.isProducing = savedMaker.isProducing;
+                maker.resultItemName = savedMaker.resultItemName;
+                maker.craftEndUtcSeconds =
+                    savedMaker.craftEndUtcSeconds;
+
+                if (savedMaker.isProducing &&
+                    !string.IsNullOrWhiteSpace(savedMaker.resultItemName))
                 {
-                    // 남은 시간만큼만 진행바 재생
-                    maker.StartCraft(resultSprite, remainF, force: true);
+                    RestoreProducingMaker(
+                        maker,
+                        savedMaker,
+                        nowUtc
+                    );
                 }
-            }
-            // 진행은 끝났지만, 제작대 위에 결과물이 남아 있는 경우
-            else if (!m.isProducing && !string.IsNullOrEmpty(m.resultItemName))
-            {
-                // 이미 currentResultObject가 없다면 새로 생성
-                if (maker.currentResultObject == null)
+                else if (!savedMaker.isProducing &&
+                         !string.IsNullOrWhiteSpace(
+                             savedMaker.resultItemName
+                         ))
                 {
-                    Sprite resultSprite = Resources.Load<Sprite>($"Sprites/Ingredients/{m.resultItemName}");
-                    if (resultSprite != null && maker.resultItemPrefab != null)
-                    {
-                        Vector3 resultPos = maker.transform.position + new Vector3(0f, 1.2f, 0f);
-                        GameObject resultObj = Instantiate(maker.resultItemPrefab, resultPos, Quaternion.identity);
-
-                        var sr = resultObj.GetComponent<SpriteRenderer>();
-                        if (sr != null)
-                            sr.sprite = resultSprite;
-
-                        maker.currentResultObject = resultObj;
-                        Debug.Log($"[Maker] 저장된 결과물 복원: makerId={m.makerId}, item={m.resultItemName}");
-                        
-                        //이펙트도 켜줌
-                        maker.SpawnCompleteEffect();
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"[Maker] 결과 스프라이트 로드 실패: {m.resultItemName}");
-                    }
+                    RestoreCompletedResult(maker, savedMaker);
                 }
             }
         }
+        finally
+        {
+            isRestoring = false;
+        }
 
-        Debug.Log($"[Maker] Loaded {data.makers.Count} makers");
+        Debug.Log(
+            $"[MakerManager] 제작대 {data.makers.Count}개 불러오기 완료"
+        );
+    }
+
+    private void SaveCurrentSceneStateIfSafe()
+    {
+        if (string.IsNullOrEmpty(loadedServer) ||
+            !SaveService.IsCurrent(loadedServer))
+        {
+            return;
+        }
+
+        SaveMakerState();
+    }
+
+    private static void RestoreInputItems(
+        MakerInfo maker,
+        List<string> itemNames
+    )
+    {
+        maker.inputItemNames = itemNames != null
+            ? new List<string>(itemNames)
+            : new List<string>();
+
+        maker.inputItemSprites.Clear();
+
+        foreach (string itemName in maker.inputItemNames)
+        {
+            Sprite sprite = Resources.Load<Sprite>(
+                $"Sprites/Ingredients/{itemName}"
+            );
+
+            maker.inputItemSprites.Add(sprite);
+
+            if (sprite == null)
+            {
+                Debug.LogWarning(
+                    "[MakerManager] 재료 스프라이트 로드 실패: " +
+                    itemName
+                );
+            }
+        }
+
+        maker.EnsureSlotUIInstance();
+
+        if (maker.slotUIManager == null)
+            return;
+
+        if (maker.inputItemSprites.Count > 0)
+        {
+            maker.slotUIManager.transform.position =
+                maker.transform.position +
+                new Vector3(0f, 1f, 0f);
+
+            maker.slotUIManager.gameObject.SetActive(true);
+            maker.slotUIManager.UpdateSlots(maker.inputItemSprites);
+        }
+        else
+        {
+            maker.slotUIManager.ClearSlots();
+            maker.slotUIManager.gameObject.SetActive(false);
+        }
+    }
+
+    private static void RestoreProducingMaker(
+        MakerInfo maker,
+        MakerSlotSave savedMaker,
+        double nowUtc
+    )
+    {
+        Sprite resultSprite = Resources.Load<Sprite>(
+            $"Sprites/Ingredients/{savedMaker.resultItemName}"
+        );
+
+        if (resultSprite == null)
+        {
+            Debug.LogWarning(
+                "[MakerManager] 제작 결과 스프라이트 로드 실패: " +
+                savedMaker.resultItemName
+            );
+
+            maker.isProducing = false;
+            return;
+        }
+
+        double remainingSeconds =
+            savedMaker.craftEndUtcSeconds - nowUtc;
+
+        float remainingDuration = remainingSeconds <= 0d
+            ? 0.01f
+            : Mathf.Max(0.01f, (float)remainingSeconds);
+
+        maker.StartCraft(
+            resultSprite,
+            remainingDuration,
+            force: true
+        );
+    }
+
+    private static void RestoreCompletedResult(
+        MakerInfo maker,
+        MakerSlotSave savedMaker
+    )
+    {
+        if (maker.currentResultObject != null)
+            return;
+
+        Sprite resultSprite = Resources.Load<Sprite>(
+            $"Sprites/Ingredients/{savedMaker.resultItemName}"
+        );
+
+        if (resultSprite == null || maker.resultItemPrefab == null)
+        {
+            Debug.LogWarning(
+                "[MakerManager] 저장된 제작 결과 복원 실패: " +
+                savedMaker.resultItemName
+            );
+
+            return;
+        }
+
+        Vector3 resultPosition =
+            maker.transform.position + new Vector3(0f, 1.2f, 0f);
+
+        GameObject resultObject = Instantiate(
+            maker.resultItemPrefab,
+            resultPosition,
+            Quaternion.identity
+        );
+
+        SpriteRenderer spriteRenderer =
+            resultObject.GetComponent<SpriteRenderer>();
+
+        if (spriteRenderer != null)
+            spriteRenderer.sprite = resultSprite;
+
+        maker.currentResultObject = resultObject;
+        maker.SpawnCompleteEffect();
     }
 }
 
-[System.Serializable]
+[Serializable]
 public class MakerSlotSave
 {
     public string makerId;
-
-    // 슬롯에 들어간 재료들
     public List<string> inputItemNames = new List<string>();
-
-    // 제작 진행 상태
     public bool isProducing;
     public string resultItemName;
-    public double craftEndUtcSeconds; 
+    public double craftEndUtcSeconds;
 }
 
-[System.Serializable]
+[Serializable]
 public class MakerSaveData
 {
     public List<MakerSlotSave> makers = new List<MakerSlotSave>();
 }
-

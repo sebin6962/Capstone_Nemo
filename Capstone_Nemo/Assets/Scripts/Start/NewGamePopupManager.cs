@@ -207,30 +207,12 @@ public class NewGamePopupManager : MonoBehaviour
             return;
         }
 
-        string profilePath = Path.Combine(Application.persistentDataPath, "profile_myuser.json");
-
-        Profile profile = File.Exists(profilePath)
-            ? JsonUtility.FromJson<Profile>(File.ReadAllText(profilePath))
-            : new Profile { username = "myuser" };
-
-        if (profile == null)
-            profile = new Profile { username = "myuser" };
-
-        if (profile.saves == null)
-            profile.saves = new System.Collections.Generic.List<SaveInfo>();
-
         // 마을 이름은 파일명으로 사용되므로 중복 생성 금지
-        if (profile.saves.Exists(x => x.serverName == serverName))
-            return;
-
-        profile.saves.Add(new SaveInfo
+        if (ProfileRepository.ContainsSave(serverName) ||
+            SaveRepository.Exists(serverName))
         {
-            serverName = serverName,
-            created = DateTime.Now.ToString("s"),
-            lastPlayed = DateTime.Now.ToString("s")
-        });
-
-        File.WriteAllText(profilePath, JsonUtility.ToJson(profile, true));
+            return;
+        }
 
         // 새 게임의 통합 세이브 데이터 생성
         SaveData newSaveData = new SaveData
@@ -297,11 +279,27 @@ public class NewGamePopupManager : MonoBehaviour
 
             npcDialogueProgressData =
                 new NPCDialogueProgressDataList(),
-            npcDialogueProgressMigrationCompleted = true
+            npcDialogueProgressMigrationCompleted = true,
+
+            storageMigrationCompleted = true,
+
+            makerData = new MakerSaveData(),
+            makerMigrationCompleted = true,
+
+            tableData = new TableSaveData(),
+            tableMigrationCompleted = true
         };
 
         // 통합 JSON 저장은 SaveRepository가 담당
-        SaveRepository.Save(serverName, newSaveData);
+        if (!SaveRepository.Save(serverName, newSaveData))
+            return;
+
+        if (!ProfileRepository.TryAddSave(serverName, DateTime.Now))
+        {
+            SaveRepository.Delete(serverName);
+            return;
+        }
+
         SaveService.SetCurrent(serverName, newSaveData);
 
         var defaultSkinData = new DefaultSkinSaveData();

@@ -1,13 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 [Serializable]
 public class TableSlotSave
 {
     public string tableId;
+    public bool hasItem;
     public string itemSpriteName;
 }
 
@@ -19,180 +18,347 @@ public class TableSaveData
 
 public class TableManager : MonoBehaviour
 {
-    string CurrentServer => PlayerPrefs.GetString("SelectedSave", "");
+    private readonly HashSet<string> restoredTableIds =
+        new HashSet<string>();
 
-    string TableSavePath
-        => string.IsNullOrEmpty(CurrentServer)
-           ? null
-           : Path.Combine(Application.persistentDataPath, $"ps_tableItem_{CurrentServer}.json");
+    private string loadedServer = "";
+    private bool isRestoring;
 
-    void Start()
+    private void Start()
     {
-        bool hasSave =
-        !string.IsNullOrEmpty(TableSavePath) &&
-        File.Exists(TableSavePath);
-
-        if (hasSave)
+        if (!SaveService.HasCurrentSave &&
+            !SaveService.LoadSelectedSave())
         {
-            LoadTableState(); 
+            Debug.LogWarning(
+                "[TableManager] 불러올 저장 슬롯이 없습니다."
+            );
+
+            return;
         }
 
+        loadedServer = SaveService.CurrentServer;
+
+        LoadTableState();
         SpawnInitialItemsUnique();
-    }
 
-    void OnDisable()
-    {
+        // 새 게임과 기존 파일 이전 직후에도 빈 테이블을 포함한
+        // 현재 씬의 전체 상태를 확정해 둔다.
         SaveTableState();
     }
 
-    void OnApplicationQuit()
+    private void OnDisable()
     {
-        SaveTableState();
+        SaveCurrentSceneStateIfSafe();
+    }
+
+    private void OnApplicationQuit()
+    {
+        SaveCurrentSceneStateIfSafe();
     }
 
     private void SpawnInitialItemsUnique()
     {
-        var tablesInScene = FindObjectsOfType<TableInfo>();
+        TableInfo[] tablesInScene =
+            FindObjectsOfType<TableInfo>();
 
-        var existingSpriteNames = new HashSet<string>();
-        foreach (var t in tablesInScene)
+        HashSet<string> existingSpriteNames =
+            new HashSet<string>();
+
+        foreach (TableInfo table in tablesInScene)
         {
-            if (t.currentPlacedObject == null) continue;
-
-            var sr = t.currentPlacedObject.GetComponent<SpriteRenderer>();
-            if (sr != null && sr.sprite != null)
+            if (table == null ||
+                table.currentPlacedObject == null)
             {
-                existingSpriteNames.Add(sr.sprite.name);
+                continue;
             }
+
+            SpriteRenderer renderer =
+                table.currentPlacedObject.GetComponent<SpriteRenderer>();
+
+            if (renderer != null && renderer.sprite != null)
+                existingSpriteNames.Add(renderer.sprite.name);
         }
 
-        foreach (var t in tablesInScene)
+        foreach (TableInfo table in tablesInScene)
         {
-            if (!t.spawnInitialItemOnStart) continue;
-            if (string.IsNullOrEmpty(t.initialItemSpriteName)) continue;
-
-            if (existingSpriteNames.Contains(t.initialItemSpriteName))
-                continue;
-
-            if (t.currentPlacedObject != null)
-                continue;
-
-            if (t.TrySpawnInitialItem())
+            if (table == null ||
+                string.IsNullOrWhiteSpace(table.tableId) ||
+                restoredTableIds.Contains(table.tableId) ||
+                !table.spawnInitialItemOnStart ||
+                string.IsNullOrWhiteSpace(table.initialItemSpriteName) ||
+                table.currentPlacedObject != null ||
+                existingSpriteNames.Contains(table.initialItemSpriteName))
             {
-                existingSpriteNames.Add(t.initialItemSpriteName);
+                continue;
             }
+
+            if (table.TrySpawnInitialItem())
+                existingSpriteNames.Add(table.initialItemSpriteName);
         }
     }
+
     public void SaveTableState()
     {
-        if (string.IsNullOrEmpty(TableSavePath)) return;
+        TrySaveTableState();
+    }
 
-        var tablesInScene = FindObjectsOfType<TableInfo>();
-        if (tablesInScene.Length == 0)
+    private bool TrySaveTableState()
+    {
+        if (isRestoring)
+            return true;
+
+        if (!SaveService.HasCurrentSave)
+            return false;
+
+        if (!string.IsNullOrEmpty(loadedServer) &&
+            !SaveService.IsCurrent(loadedServer))
         {
-            Debug.Log("[Table] 씬에 TableInfo 없음 → 기존 table json 덮어쓰기 생략");
-            return;
+            Debug.LogWarning(
+                "[TableManager] 다른 슬롯으로 전환된 뒤 이전 테이블이 " +
+                "저장되는 것을 차단했습니다."
+            );
+
+            return false;
         }
 
-        var data = new TableSaveData();
+        TableInfo[] tablesInScene =
+            FindObjectsOfType<TableInfo>();
 
-        foreach (var table in tablesInScene)
+        if (tablesInScene.Length == 0)
         {
-            if (string.IsNullOrEmpty(table.tableId)) continue;
+            Debug.Log(
+                "[TableManager] 씬에 TableInfo가 없어 저장을 생략합니다."
+            );
 
-            // 테이블 위에 아무것도 없으면 저장 안 함 (이 테이블은 비어있는 상태로 간주)
-            if (table.currentPlacedObject == null) continue;
+            return false;
+        }
 
-            var sr = table.currentPlacedObject.GetComponent<SpriteRenderer>();
-            if (sr == null || sr.sprite == null) continue;
+        TableSaveData currentData =
+            SaveService.CurrentData.tableData ??
+            new TableSaveData();
 
-            // 초기 아이템이면 세이브에서 제외
-            if (table.spawnInitialItemOnStart &&
-                !string.IsNullOrEmpty(table.initialItemSpriteName) &&
-                sr.sprite.name == table.initialItemSpriteName)
+        TableSaveData data = new TableSaveData();
+        HashSet<string> savedTableIds = new HashSet<string>();
+
+        foreach (TableInfo table in tablesInScene)
+        {
+            if (table != null &&
+                !string.IsNullOrWhiteSpace(table.tableId))
             {
-                // JSON에 안 넣음
+                savedTableIds.Add(table.tableId);
+            }
+        }
+
+        if (currentData.tables != null)
+        {
+            foreach (TableSlotSave savedTable in currentData.tables)
+            {
+                if (savedTable == null ||
+                    string.IsNullOrWhiteSpace(savedTable.tableId) ||
+                    savedTableIds.Contains(savedTable.tableId))
+                {
+                    continue;
+                }
+
+                data.tables.Add(savedTable);
+            }
+        }
+
+        savedTableIds.Clear();
+
+        foreach (TableInfo table in tablesInScene)
+        {
+            if (table == null ||
+                string.IsNullOrWhiteSpace(table.tableId))
+            {
                 continue;
             }
 
-            var slot = new TableSlotSave
+            if (!savedTableIds.Add(table.tableId))
+            {
+                Debug.LogError(
+                    "[TableManager] 중복 tableId 발견: " +
+                    table.tableId
+                );
+
+                continue;
+            }
+
+            SpriteRenderer renderer = null;
+
+            if (table.currentPlacedObject != null)
+            {
+                renderer = table.currentPlacedObject
+                    .GetComponent<SpriteRenderer>();
+            }
+
+            bool hasItem =
+                renderer != null && renderer.sprite != null;
+
+            data.tables.Add(new TableSlotSave
             {
                 tableId = table.tableId,
-                itemSpriteName = sr.sprite.name
-            };
-
-            data.tables.Add(slot);
+                hasItem = hasItem,
+                itemSpriteName = hasItem
+                    ? renderer.sprite.name
+                    : ""
+            });
         }
 
-        File.WriteAllText(TableSavePath, JsonUtility.ToJson(data, true));
-        Debug.Log($"[Table] Saved {data.tables.Count} tables → {TableSavePath}");
+        SaveService.CurrentData.tableData = data;
+        SaveService.CurrentData.tableMigrationCompleted = true;
+
+        bool saved = SaveService.SaveCurrent();
+
+        if (saved)
+        {
+            Debug.Log(
+                $"[TableManager] 테이블 {data.tables.Count}개 저장 완료"
+            );
+        }
+
+        return saved;
     }
 
     public void LoadTableState()
     {
-        if (string.IsNullOrEmpty(TableSavePath)) return;
-        if (!File.Exists(TableSavePath)) return;
+        if (!SaveService.HasCurrentSave)
+            return;
 
-        var json = File.ReadAllText(TableSavePath);
-        var data = JsonUtility.FromJson<TableSaveData>(json);
-        if (data == null) return;
+        loadedServer = SaveService.CurrentServer;
+        restoredTableIds.Clear();
 
-        var tablesInScene = FindObjectsOfType<TableInfo>();
-        var map = new Dictionary<string, TableInfo>();
+        TableSaveData data =
+            SaveService.CurrentData.tableData ??
+            new TableSaveData();
 
-        foreach (var t in tablesInScene)
+        if (data.tables == null)
+            data.tables = new List<TableSlotSave>();
+
+        SaveService.CurrentData.tableData = data;
+
+        TableInfo[] tablesInScene =
+            FindObjectsOfType<TableInfo>();
+
+        Dictionary<string, TableInfo> tableMap =
+            new Dictionary<string, TableInfo>();
+
+        foreach (TableInfo table in tablesInScene)
         {
-            if (!string.IsNullOrEmpty(t.tableId))
-                map[t.tableId] = t;
-        }
-
-        foreach (var saved in data.tables)
-        {
-            if (!map.TryGetValue(saved.tableId, out var table))
-                continue;
-
-            // 기존에 올라가 있던 초기 아이템/이전 상태 제거
-            if (table.currentPlacedObject != null)
+            if (table == null ||
+                string.IsNullOrWhiteSpace(table.tableId))
             {
-                Destroy(table.currentPlacedObject);
-                table.currentPlacedObject = null;
-            }
-
-            if (string.IsNullOrEmpty(saved.itemSpriteName))
-                continue;
-
-            // 스프라이트 로드
-            Sprite spr = Resources.Load<Sprite>(table.spriteResourceDir + saved.itemSpriteName);
-            if (spr == null)
-            {
-                Debug.LogWarning($"[Table] 스프라이트 로드 실패: {table.spriteResourceDir}{saved.itemSpriteName}");
                 continue;
             }
 
-            // 테이블 위에 새 TableItem 생성
-            table.CreateTableItem(spr);
+            if (tableMap.ContainsKey(table.tableId))
+            {
+                Debug.LogError(
+                    "[TableManager] 중복 tableId 발견: " +
+                    table.tableId
+                );
 
-            Debug.Log($"[Table] 복원: tableId={saved.tableId}, item={saved.itemSpriteName}");
+                continue;
+            }
+
+            tableMap.Add(table.tableId, table);
         }
 
-        Debug.Log($"[Table] Loaded {data.tables.Count} tables");
+        isRestoring = true;
+
+        try
+        {
+            foreach (TableSlotSave savedTable in data.tables)
+            {
+                if (savedTable == null ||
+                    string.IsNullOrWhiteSpace(savedTable.tableId) ||
+                    !restoredTableIds.Add(savedTable.tableId) ||
+                    !tableMap.TryGetValue(
+                        savedTable.tableId,
+                        out TableInfo table
+                    ))
+                {
+                    continue;
+                }
+
+                if (table.currentPlacedObject != null)
+                {
+                    Destroy(table.currentPlacedObject);
+                    table.currentPlacedObject = null;
+                }
+
+                if (!savedTable.hasItem ||
+                    string.IsNullOrWhiteSpace(savedTable.itemSpriteName))
+                {
+                    continue;
+                }
+
+                Sprite sprite = Resources.Load<Sprite>(
+                    table.spriteResourceDir +
+                    savedTable.itemSpriteName
+                );
+
+                if (sprite == null)
+                {
+                    Debug.LogWarning(
+                        "[TableManager] 스프라이트 로드 실패: " +
+                        table.spriteResourceDir +
+                        savedTable.itemSpriteName
+                    );
+
+                    continue;
+                }
+
+                table.CreateTableItem(sprite);
+
+                Debug.Log(
+                    "[TableManager] 복원: tableId=" +
+                    savedTable.tableId +
+                    ", item=" + savedTable.itemSpriteName
+                );
+            }
+        }
+        finally
+        {
+            isRestoring = false;
+        }
+
+        Debug.Log(
+            $"[TableManager] 테이블 상태 {restoredTableIds.Count}개 복원 완료"
+        );
+    }
+
+    private void SaveCurrentSceneStateIfSafe()
+    {
+        if (string.IsNullOrEmpty(loadedServer) ||
+            !SaveService.IsCurrent(loadedServer))
+        {
+            return;
+        }
+
+        SaveTableState();
     }
 }
 
 public static class TableInitialItemHelper
 {
-    // 씬에 있는 TableInfo들을 보고 "초기 아이템 스프라이트 이름" 목록을 만든다.
     public static bool IsInitialTableItemName(string spriteName)
     {
-        if (string.IsNullOrEmpty(spriteName)) return false;
+        if (string.IsNullOrEmpty(spriteName))
+            return false;
 
-        var tables = GameObject.FindObjectsOfType<TableInfo>();
-        foreach (var t in tables)
+        TableInfo[] tables =
+            GameObject.FindObjectsOfType<TableInfo>();
+
+        foreach (TableInfo table in tables)
         {
-            if (!t.spawnInitialItemOnStart) continue;
-            if (string.IsNullOrEmpty(t.initialItemSpriteName)) continue;
+            if (!table.spawnInitialItemOnStart ||
+                string.IsNullOrEmpty(table.initialItemSpriteName))
+            {
+                continue;
+            }
 
-            if (t.initialItemSpriteName == spriteName)
+            if (table.initialItemSpriteName == spriteName)
                 return true;
         }
 

@@ -111,6 +111,15 @@ public class SaveData
 
     // ⑤ 아이템 재고
     public List<StorageEntry> storageItems;
+    public bool storageMigrationCompleted;
+
+    // 제작대 진행 상태
+    public MakerSaveData makerData;
+    public bool makerMigrationCompleted;
+
+    // 테이블 위 아이템 상태
+    public TableSaveData tableData;
+    public bool tableMigrationCompleted;
 
     public float playerPosX;
     public float playerPosY;
@@ -171,6 +180,9 @@ public class SaveData
         storageItems = new List<StorageEntry>();
         acceptedQuestIds = new List<string>();
 
+        makerData = new MakerSaveData();
+        tableData = new TableSaveData();
+
         levelData = new LevelSaveData
         {
             level = 1,
@@ -224,7 +236,7 @@ public class SaveData
         storageItems.Add(new StorageEntry
         {
             name = "Mepssalgaru",
-            amount = 50
+            amount = 10
         });
 
         // 위치/방향 기본값
@@ -234,4 +246,3 @@ public class SaveData
         moveDirY = 1f;
     }
 }
-

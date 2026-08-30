@@ -77,6 +77,15 @@ public class MakerInfo : MonoBehaviour
     // --- 여기부터 씬 전환 시 진행 상태 관련 ---
     public void StartCraft(Sprite resultSprite, float duration, bool force = false)
     {
+        if (resultSprite == null)
+        {
+            Debug.LogError(
+                $"[{makerId}] 결과 스프라이트가 없어 제작을 시작할 수 없습니다."
+            );
+
+            return;
+        }
+
         // [추가] 강제 복원이 아니면 제작중/결과물 존재 시 시작 금지
         if (!force)
         {
@@ -99,8 +108,23 @@ public class MakerInfo : MonoBehaviour
         double nowUtc = (System.DateTime.UtcNow - System.DateTime.UnixEpoch).TotalSeconds;
         craftEndUtcSeconds = nowUtc + duration;
 
+        // 제작을 시작한 순간 투입 재료는 소비된 상태가 된다.
+        inputItemNames.Clear();
+        inputItemSprites.Clear();
+
+        if (slotUIManager != null)
+        {
+            slotUIManager.ClearSlots();
+            slotUIManager.gameObject.SetActive(false);
+        }
+
         // 실제 진행바 코루틴 시작
         StartCoroutine(ShowProgressAndSpawnItem(resultSprite, duration));
+
+        // 제작 시작 시점부터 종료 시각을 보존한다.
+        var makerMgr = FindObjectOfType<MakerManager>();
+        if (makerMgr != null)
+            makerMgr.SaveMakerState();
     }
 
     // 제작이 정상적으로 끝났을 때 호출
@@ -234,7 +258,7 @@ public class MakerInfo : MonoBehaviour
 
         OnCraftFinished();
 
-        //튜토리얼 진행 트리거 
+        //튜토리얼 진행 트리거
         if (StoreTutorialManager.Instance)
         {
             switch (makerId)
@@ -453,5 +477,3 @@ public class MakerInfo : MonoBehaviour
         SetMakerCraftVisuals(false);
     }
 }
-
-
