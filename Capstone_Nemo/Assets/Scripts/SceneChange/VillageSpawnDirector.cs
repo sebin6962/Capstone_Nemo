@@ -63,7 +63,7 @@ public class VillageSpawnDirector : MonoBehaviour
         string id = null;
         SceneTransitionInfo info = null;
 
-        const int maxFrames = 60;               // ~1초@60fps 타임아웃
+        const int maxFrames = 2;
         for (int f = 0; f < maxFrames; f++)
         {
             info = SceneTransitionInfo.Instance;
@@ -85,7 +85,29 @@ public class VillageSpawnDirector : MonoBehaviour
 
         if (string.IsNullOrEmpty(id))
         {
-            Debug.LogWarning("[VillageSpawnDirector] entranceID 없음(빌드 브리지 포함) → 기본 위치 유지");
+            bool restored =
+                playerManager != null &&
+                playerManager.TryRestoreSavedLocationForCurrentScene();
+
+            if (!restored && defaultSpawnPoint != null)
+            {
+                Vector3 defaultPosition = defaultSpawnPoint.position;
+                defaultPosition.z = 0f;
+                player.transform.position = defaultPosition;
+            }
+
+            var directVcam =
+                FindObjectOfType<CinemachineVirtualCamera>();
+
+            if (directVcam != null)
+                directVcam.PreviousStateIsValid = false;
+
+            Debug.Log(
+                restored
+                    ? "[VillageSpawnDirector] 저장 위치 복원 완료"
+                    : "[VillageSpawnDirector] 저장 위치 없음 → 기본 위치 적용"
+            );
+
             Time.timeScale = 1f;
 
 #if ENABLE_INPUT_SYSTEM

@@ -92,6 +92,16 @@ public static class SaveRepository
         );
     }
 
+    private static string GetLegacyFarmPath(
+        string serverName
+    )
+    {
+        return Path.Combine(
+            Application.persistentDataPath,
+            $"farm_{serverName}.json"
+        );
+    }
+
     private static string GetLegacyTutorialPath(
     string serverName
 )
@@ -184,6 +194,11 @@ public static class SaveRepository
                 dataChanged = true;
             }
 
+            if (MigratePlayerLocationData(saveData))
+            {
+                dataChanged = true;
+            }
+
             if (MigrateStorageData(serverName, saveData))
             {
                 dataChanged = true;
@@ -195,6 +210,11 @@ public static class SaveRepository
             }
 
             if (MigrateTableData(serverName, saveData))
+            {
+                dataChanged = true;
+            }
+
+            if (MigrateFarmData(serverName, saveData))
             {
                 dataChanged = true;
             }
@@ -374,6 +394,19 @@ public static class SaveRepository
             {
                 saveData.tableData.tables =
                     new List<TableSlotSave>();
+
+                dataChanged = true;
+            }
+
+            if (NormalizeFarmData(saveData))
+            {
+                dataChanged = true;
+            }
+
+            if (saveData.playerLocationData == null)
+            {
+                saveData.playerLocationData =
+                    new PlayerLocationSaveData();
 
                 dataChanged = true;
             }
@@ -799,6 +832,51 @@ public static class SaveRepository
         return true;
     }
 
+    private static bool MigratePlayerLocationData(
+        SaveData saveData
+    )
+    {
+        if (saveData.playerLocationMigrationCompleted)
+            return false;
+
+        bool hasLegacyPosition =
+            !Mathf.Approximately(saveData.playerPosX, 0f) ||
+            !Mathf.Approximately(saveData.playerPosY, 0f);
+
+        Vector2 legacyFacing = new Vector2(
+            saveData.moveDirX,
+            saveData.moveDirY
+        );
+
+        if (legacyFacing.sqrMagnitude < 0.001f)
+            legacyFacing = Vector2.down;
+        else
+            legacyFacing.Normalize();
+
+        saveData.playerLocationData =
+            new PlayerLocationSaveData
+            {
+                // 기존 필드에는 씬 정보가 없었으므로 마을 위치로만 이전한다.
+                sceneName = hasLegacyPosition
+                    ? "VillageScene"
+                    : "",
+                positionX = saveData.playerPosX,
+                positionY = saveData.playerPosY,
+                facingX = legacyFacing.x,
+                facingY = legacyFacing.y,
+                initialized = hasLegacyPosition
+            };
+
+        saveData.playerLocationMigrationCompleted = true;
+
+        Debug.Log(
+            "[SaveRepository] 플레이어 위치 데이터 통합 완료: " +
+            saveData.serverName
+        );
+
+        return true;
+    }
+
     private static void AddOrMergeStorageEntry(
         List<StorageEntry> entries,
         StorageEntry entry
@@ -1036,6 +1114,172 @@ public static class SaveRepository
             tables[existingIndex] = copiedState;
         else
             tables.Add(copiedState);
+    }
+
+    private static bool MigrateFarmData(
+        string serverName,
+        SaveData saveData
+    )
+    {
+        if (saveData.farmMigrationCompleted)
+            return false;
+
+        string legacyPath = GetLegacyFarmPath(serverName);
+        FarmSaveData migratedData = new FarmSaveData();
+
+        if (File.Exists(legacyPath))
+        {
+            try
+            {
+                string legacyJson = File.ReadAllText(legacyPath);
+                FarmSaveData legacyData =
+                    JsonUtility.FromJson<FarmSaveData>(legacyJson);
+
+                if (legacyData == null)
+                {
+                    Debug.LogError(
+                        "[SaveRepository] 기존 농장 데이터 변환 실패: " +
+                        legacyPath
+                    );
+
+                    return false;
+                }
+
+                if (legacyData.crops != null)
+                {
+                    foreach (CropTileSave crop in legacyData.crops)
+                    {
+                        AddOrReplaceFarmCrop(migratedData.crops, crop);
+                    }
+                }
+
+                CopyFarmWetTiles(legacyData, migratedData);
+                migratedData.lastSavedUtcSeconds =
+                    Math.Max(0d, legacyData.lastSavedUtcSeconds);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    "[SaveRepository] 기존 농장 데이터 읽기 실패\n" +
+                    $"경로: {legacyPath}\n" +
+                    $"오류: {exception.Message}"
+                );
+
+                return false;
+            }
+        }
+
+        saveData.farmData = migratedData;
+        saveData.farmMigrationCompleted = true;
+
+        Debug.Log(
+            "[SaveRepository] 농장 데이터 통합 완료: " +
+            serverName
+        );
+
+        return true;
+    }
+
+    private static bool NormalizeFarmData(SaveData saveData)
+    {
+        bool changed = false;
+
+        if (saveData.farmData == null)
+        {
+            saveData.farmData = new FarmSaveData();
+            changed = true;
+        }
+
+        FarmSaveData source = saveData.farmData;
+        FarmSaveData normalized = new FarmSaveData
+        {
+            lastSavedUtcSeconds =
+                Math.Max(0d, source.lastSavedUtcSeconds)
+        };
+
+        if (source.crops != null)
+        {
+            foreach (CropTileSave crop in source.crops)
+            {
+                AddOrReplaceFarmCrop(normalized.crops, crop);
+            }
+        }
+        else
+        {
+            changed = true;
+        }
+
+        if (source.wetXs == null || source.wetYs == null)
+            changed = true;
+
+        CopyFarmWetTiles(source, normalized);
+
+        if (JsonUtility.ToJson(source) != JsonUtility.ToJson(normalized))
+        {
+            changed = true;
+        }
+
+        saveData.farmData = normalized;
+
+        return changed;
+    }
+
+    private static void AddOrReplaceFarmCrop(
+        List<CropTileSave> crops,
+        CropTileSave source
+    )
+    {
+        if (source == null ||
+            string.IsNullOrWhiteSpace(source.harvestItemName))
+        {
+            return;
+        }
+
+        CropTileSave copiedState = new CropTileSave
+        {
+            x = source.x,
+            y = source.y,
+            harvestItemName = source.harvestItemName,
+            currentStage = Math.Max(0, source.currentStage),
+            timer = Mathf.Max(0f, source.timer),
+            isWatered = source.isWatered,
+            lastWaterTime = source.lastWaterTime,
+            isTree = source.isTree,
+            autoRegrow = source.autoRegrow && source.isTree
+        };
+
+        int existingIndex = crops.FindIndex(
+            crop => crop != null &&
+                    crop.x == copiedState.x &&
+                    crop.y == copiedState.y
+        );
+
+        if (existingIndex >= 0)
+            crops[existingIndex] = copiedState;
+        else
+            crops.Add(copiedState);
+    }
+
+    private static void CopyFarmWetTiles(
+        FarmSaveData source,
+        FarmSaveData destination
+    )
+    {
+        if (source.wetXs == null || source.wetYs == null)
+            return;
+
+        int count = Math.Min(source.wetXs.Count, source.wetYs.Count);
+        HashSet<string> positions = new HashSet<string>();
+
+        for (int i = 0; i < count; i++)
+        {
+            string key = source.wetXs[i] + ":" + source.wetYs[i];
+            if (!positions.Add(key))
+                continue;
+
+            destination.wetXs.Add(source.wetXs[i]);
+            destination.wetYs.Add(source.wetYs[i]);
+        }
     }
 
     private static bool MigrateTutorialData(

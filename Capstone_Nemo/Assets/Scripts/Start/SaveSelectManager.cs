@@ -265,8 +265,25 @@ public class SaveSelectManager : MonoBehaviour
                         VillageSceneManager.Instance.ResetData();
                     }
 
+                    PlayerLocationSaveData location =
+                        SaveService.CurrentData.playerLocationData;
+
+                    bool canRestoreVillageLocation =
+                        location != null &&
+                        location.initialized &&
+                        location.sceneName == "VillageScene";
+
                     SceneTransitionInfo.Instance.entranceID =
-                        "FromPlayerStore";
+                        canRestoreVillageLocation
+                            ? null
+                            : "FromPlayerStore";
+
+                    // 이전 실행의 포털 브리지 값이 저장 위치 복원을
+                    // 덮어쓰지 않도록 세이브 선택 시 정리한다.
+                    PlayerPrefs.DeleteKey("__entranceID");
+                    PlayerPrefs.DeleteKey("__fromScene");
+                    PlayerPrefs.DeleteKey("__toScene");
+                    PlayerPrefs.Save();
 
                     FadeManager.Instance.FadeToScene(
                         "VillageScene"

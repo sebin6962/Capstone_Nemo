@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using System.IO;
 
 [System.Serializable]
 public class CropTileSave
@@ -63,7 +62,8 @@ public class FarmManager : MonoBehaviour
     public Transform player;           // 플레이어 Transform 할당
     public float interactRadius = 1.6f; // E키 범위
 
-    string CurrentServer => PlayerPrefs.GetString("SelectedSave", "");
+    private string loadedServer = "";
+    private bool isRestoring;
 
     private TreeTooltip currentHoverTree;
 
@@ -139,11 +139,6 @@ public class FarmManager : MonoBehaviour
         playerWateringMotion.Play(tileCenter);
     }
 
-    string FarmSavePath
-        => string.IsNullOrEmpty(CurrentServer)
-           ? null
-           : System.IO.Path.Combine(Application.persistentDataPath, $"farm_{CurrentServer}.json");
-
     private bool IsTreeLocked(CropData data)
     {
         if (data == null || !data.isTree) return false;
@@ -205,6 +200,14 @@ public class FarmManager : MonoBehaviour
 
     void Start()
     {
+        string selectedServer = PlayerPrefs.GetString("SelectedSave", "");
+        if (!SaveService.EnsureLoaded(selectedServer))
+        {
+            Debug.LogError("[Farm] 통합 세이브를 불러오지 못했습니다.");
+            return;
+        }
+
+        loadedServer = SaveService.CurrentServer;
         RegisterFarmTiles();
         LoadFarmState();
 
@@ -216,6 +219,7 @@ public class FarmManager : MonoBehaviour
         StorageInventoryUIManager.Instance?.UpdateSlots();
 
         RegisterAllTreeAnchorsInScene();
+        SaveFarmState();
         if (levelTooLowPanel) levelTooLowPanel.SetActive(false);
         if (levelTooLowGroup) levelTooLowGroup.alpha = 0f;
     }
@@ -264,7 +268,13 @@ public class FarmManager : MonoBehaviour
 
     public void SaveFarmState()
     {
-        if (string.IsNullOrEmpty(FarmSavePath)) return;   // 세이브 미선택 시 스킵
+        if (isRestoring ||
+            string.IsNullOrEmpty(loadedServer) ||
+            !SaveService.IsCurrent(loadedServer) ||
+            SaveService.CurrentData == null)
+        {
+            return;
+        }
 
         var data = new FarmSaveData();
 
@@ -297,17 +307,26 @@ public class FarmManager : MonoBehaviour
 
         // 3) 마지막 저장 시각 기록
         data.lastSavedUtcSeconds = (System.DateTime.UtcNow - System.DateTime.UnixEpoch).TotalSeconds;
-        System.IO.File.WriteAllText(FarmSavePath, JsonUtility.ToJson(data, true));
+        SaveService.CurrentData.farmData = data;
+        SaveService.CurrentData.farmMigrationCompleted = true;
+        SaveService.SaveCurrent();
     }
 
     public void LoadFarmState()
     {
-        if (string.IsNullOrEmpty(FarmSavePath)) return;
-        if (!File.Exists(FarmSavePath)) return;
+        if (SaveService.CurrentData == null) return;
 
-        var json = File.ReadAllText(FarmSavePath);
-        var data = JsonUtility.FromJson<FarmSaveData>(json);
-        if (data == null) return;
+        var data = SaveService.CurrentData.farmData;
+        if (data == null)
+        {
+            data = new FarmSaveData();
+            SaveService.CurrentData.farmData = data;
+        }
+
+        data.crops ??= new List<CropTileSave>();
+        data.wetXs ??= new List<int>();
+        data.wetYs ??= new List<int>();
+        isRestoring = true;
 
         // 경과 시간 계산(초)
         double nowUtc = (System.DateTime.UtcNow - System.DateTime.UnixEpoch).TotalSeconds;
@@ -323,7 +342,8 @@ public class FarmManager : MonoBehaviour
         autoGrowingTrees.Clear();
 
         // 2) 젖은 흙 복원 (overlay 타일/집합)
-        for (int i = 0; i < data.wetXs.Count; i++)
+        int wetCount = Mathf.Min(data.wetXs.Count, data.wetYs.Count);
+        for (int i = 0; i < wetCount; i++)
         {
             var pos = new Vector3Int(data.wetXs[i], data.wetYs[i], 0);
             overlayTilemap.SetTile(pos, wetSoilTile);
@@ -441,6 +461,7 @@ public class FarmManager : MonoBehaviour
                 }
             }
         }
+        isRestoring = false;
         Debug.Log($"[Farm] Loaded: {data.crops.Count} crops, {data.wetXs.Count} wet tiles");
     }
 
@@ -661,6 +682,8 @@ public class FarmManager : MonoBehaviour
                 TutorialManager.Instance.GoToNextVillageSecondStep();
             }
 
+            SaveFarmState();
+
             return;
 
 
@@ -678,6 +701,7 @@ public class FarmManager : MonoBehaviour
             Debug.Log("[FarmWater] 빈 밭 타일에 물주기 성공 → 모션 호출 직전");
             PlayWaterSfxOnce();
             PlayPlayerWateringMotion(cellPos);
+            SaveFarmState();
         }
 
         bool IsFarmTile(Vector3 worldPos)
@@ -716,6 +740,7 @@ public class FarmManager : MonoBehaviour
         {
             TutorialManager.Instance.GoToNextVillageSecondStep();
         }
+        SaveFarmState();
     }
 
     //작물 성장
@@ -764,6 +789,7 @@ public class FarmManager : MonoBehaviour
         {
             TutorialManager.Instance.GoToNextVillageSecondStep();
         }
+        SaveFarmState();
     }
 
     // 수확 처리 함수
@@ -959,6 +985,7 @@ public class FarmManager : MonoBehaviour
         {
             TutorialManager.Instance.GoToNextVillageSecondStep();
         }
+        SaveFarmState();
     }
 
     private readonly HashSet<Transform> shakingTrees = new HashSet<Transform>();

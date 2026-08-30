@@ -81,6 +81,17 @@ public class EndingData
 }
 
 [Serializable]
+public class PlayerLocationSaveData
+{
+    public string sceneName = "";
+    public float positionX;
+    public float positionY;
+    public float facingX;
+    public float facingY = -1f;
+    public bool initialized;
+}
+
+[Serializable]
 public class SaveData
 {
     // 세이브 파일을 구분하는 마을 이름
@@ -121,6 +132,15 @@ public class SaveData
     public TableSaveData tableData;
     public bool tableMigrationCompleted;
 
+    // 농장 작물, 젖은 흙, 나무 성장 상태
+    public FarmSaveData farmData;
+    public bool farmMigrationCompleted;
+
+    // 플레이어가 마지막으로 있던 씬, 위치, 방향
+    public PlayerLocationSaveData playerLocationData;
+    public bool playerLocationMigrationCompleted;
+
+    // 이전 위치 필드: 마이그레이션 호환용
     public float playerPosX;
     public float playerPosY;
     public float moveDirX;
@@ -182,6 +202,8 @@ public class SaveData
 
         makerData = new MakerSaveData();
         tableData = new TableSaveData();
+        farmData = new FarmSaveData();
+        playerLocationData = new PlayerLocationSaveData();
 
         levelData = new LevelSaveData
         {

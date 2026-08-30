@@ -33,7 +33,16 @@ public class PlayerSpwaner : MonoBehaviour
 
         // 여기까지 왔다는 건 VSD가 없거나 또는 아직 처리를 못 했다는 뜻
         var info = SceneTransitionInfo.Instance;
-        if (info == null || string.IsNullOrEmpty(info.entranceID)) yield break;
+        if (info == null || string.IsNullOrEmpty(info.entranceID))
+        {
+            if (!hasDirector)
+            {
+                GetComponent<PlayerManager>()
+                    ?.TryRestoreSavedLocationForCurrentScene();
+            }
+
+            yield break;
+        }
 
         string entrance = info.entranceID;
         GameObject spawnPoint = GameObject.Find(entrance);
@@ -73,7 +82,7 @@ public class PlayerSpwaner : MonoBehaviour
     //        pm.lastMoveDir = Vector2.down;
     //        Debug.Log("Spawner LookDown: lastMoveDir=" + pm.lastMoveDir + ", Animator MoveY=" + animator.GetFloat("MoveY"));
     //    }
-           
+
 
     //}
     //public void LookUp()

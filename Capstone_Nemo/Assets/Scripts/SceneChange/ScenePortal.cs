@@ -99,6 +99,11 @@ public class ScenePortal : MonoBehaviour
         if (flow != null && flow.IsScenePortalLocked)
             return;
 
+        // 씬이 바뀌기 전에 현재 위치와 방향을 저장한다.
+        var playerManager = FindObjectOfType<PlayerManager>();
+        if (playerManager != null)
+            playerManager.SaveCurrentLocation();
+
         // 1 전역 전환 정보
         if (SceneTransitionInfo.Instance != null)
         {

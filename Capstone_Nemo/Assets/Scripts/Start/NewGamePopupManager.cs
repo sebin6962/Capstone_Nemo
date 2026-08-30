@@ -287,7 +287,16 @@ public class NewGamePopupManager : MonoBehaviour
             makerMigrationCompleted = true,
 
             tableData = new TableSaveData(),
-            tableMigrationCompleted = true
+            tableMigrationCompleted = true,
+
+            farmData = new FarmSaveData(),
+            farmMigrationCompleted = true,
+
+            playerLocationData = new PlayerLocationSaveData
+            {
+                initialized = false
+            },
+            playerLocationMigrationCompleted = true
         };
 
         // 통합 JSON 저장은 SaveRepository가 담당

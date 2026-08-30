@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,6 +19,7 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private InitialFacing initialFacing = InitialFacing.Down;
 
     private bool isActionLocked = false;
+    private bool isRestoringLocation;
 
     // PlayerHoldingResolverMotion에서 현재 방향/이동 상태를 읽기 위한 값
     public Vector2 LastMoveDirection => lastMoveDir;
@@ -193,6 +193,12 @@ public class PlayerManager : MonoBehaviour
     void OnDisable()
     {
         TimeManager.OnNewDayStarted -= HandleNewDayStarted;
+        SaveCurrentLocation();
+    }
+
+    void OnApplicationQuit()
+    {
+        SaveCurrentLocation();
     }
 
     private void HandleNewDayStarted()
@@ -269,5 +275,129 @@ public class PlayerManager : MonoBehaviour
 
         // 해당 프레임에 즉시 화면에 반영
         animator.Update(0f);
+    }
+
+    public void SetFacingDirection(Vector2 direction)
+    {
+        if (direction.sqrMagnitude < 0.001f)
+        {
+            SetFacing(initialFacing);
+            return;
+        }
+
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+        {
+            SetFacing(
+                direction.x >= 0f
+                    ? InitialFacing.Right
+                    : InitialFacing.Left
+            );
+        }
+        else
+        {
+            SetFacing(
+                direction.y >= 0f
+                    ? InitialFacing.Up
+                    : InitialFacing.Down
+            );
+        }
+    }
+
+    public bool TryRestoreSavedLocationForCurrentScene()
+    {
+        if (!SaveService.HasCurrentSave &&
+            !SaveService.LoadSelectedSave())
+        {
+            return false;
+        }
+
+        PlayerLocationSaveData data =
+            SaveService.CurrentData.playerLocationData;
+
+        string currentScene = gameObject.scene.name;
+
+        if (data == null ||
+            !data.initialized ||
+            data.sceneName != currentScene)
+        {
+            return false;
+        }
+
+        isRestoringLocation = true;
+
+        try
+        {
+            Vector2 savedPosition = new Vector2(
+                data.positionX,
+                data.positionY
+            );
+
+            transform.position = new Vector3(
+                savedPosition.x,
+                savedPosition.y,
+                0f
+            );
+
+            if (rb != null)
+                rb.position = savedPosition;
+
+            SetFacingDirection(
+                new Vector2(data.facingX, data.facingY)
+            );
+        }
+        finally
+        {
+            isRestoringLocation = false;
+        }
+
+        Debug.Log(
+            "[PlayerManager] 저장 위치 복원: " +
+            currentScene +
+            $" ({data.positionX}, {data.positionY})"
+        );
+
+        return true;
+    }
+
+    public bool SaveCurrentLocation()
+    {
+        if (isRestoringLocation ||
+            !SaveService.HasCurrentSave)
+        {
+            return false;
+        }
+
+        string currentScene = gameObject.scene.name;
+
+        if (string.IsNullOrWhiteSpace(currentScene))
+            return false;
+
+        Vector3 position = transform.position;
+        Vector2 facing = lastMoveDir;
+
+        if (facing.sqrMagnitude < 0.001f)
+            facing = Vector2.down;
+
+        PlayerLocationSaveData data =
+            new PlayerLocationSaveData
+            {
+                sceneName = currentScene,
+                positionX = position.x,
+                positionY = position.y,
+                facingX = facing.x,
+                facingY = facing.y,
+                initialized = true
+            };
+
+        SaveService.CurrentData.playerLocationData = data;
+        SaveService.CurrentData.playerLocationMigrationCompleted = true;
+
+        // 이전 필드는 구버전 코드와의 호환을 위해 함께 갱신한다.
+        SaveService.CurrentData.playerPosX = position.x;
+        SaveService.CurrentData.playerPosY = position.y;
+        SaveService.CurrentData.moveDirX = facing.x;
+        SaveService.CurrentData.moveDirY = facing.y;
+
+        return SaveService.SaveCurrent();
     }
 }
