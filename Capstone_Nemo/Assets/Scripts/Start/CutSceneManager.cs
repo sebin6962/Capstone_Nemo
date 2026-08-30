@@ -3,9 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.AddressableAssets;
+using UnityEngine.Localization.Settings;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class CutSceneManager : MonoBehaviour
 {
+    private const string SubtitleTable = "Cutscene";
+    private const string SubtitleKeyPrefix = "cutscene.intro.";
+
     [Header("컷 패널 (순서대로)")]
     public List<GameObject> cutPanels = new List<GameObject>();
 
@@ -432,6 +438,46 @@ public class CutSceneManager : MonoBehaviour
         return !string.IsNullOrWhiteSpace(raw);
     }
 
+    private string GetSubtitleKey(int index)
+    {
+        return $"{SubtitleKeyPrefix}{index + 1:00}";
+    }
+
+    private IEnumerator GetLocalizedSubtitleRoutine(
+        int index,
+        System.Action<string> onCompleted)
+    {
+        string fallback =
+            subtitles != null && index >= 0 && index < subtitles.Count
+                ? subtitles[index]?.content ?? string.Empty
+                : string.Empty;
+
+        string key = GetSubtitleKey(index);
+        AsyncOperationHandle<string> handle =
+            LocalizationSettings.StringDatabase.GetLocalizedStringAsync(
+                SubtitleTable,
+                key
+            );
+
+        yield return handle;
+
+        bool succeeded =
+            handle.Status == AsyncOperationStatus.Succeeded &&
+            !string.IsNullOrEmpty(handle.Result);
+
+        string result = succeeded ? handle.Result : fallback;
+        Addressables.Release(handle);
+
+        if (!succeeded)
+        {
+            Debug.LogWarning(
+                $"[CutScene] 번역 키를 찾을 수 없어 한국어 원문을 사용합니다: {key}"
+            );
+        }
+
+        onCompleted?.Invoke(result);
+    }
+
     //private IEnumerator ShowSubtitleStackRoutine(int index)
     //{
     //    if (gradientGroup != null)
@@ -498,7 +544,8 @@ public class CutSceneManager : MonoBehaviour
 
         if (subtitleContainer == null || subtitleLinePrefab == null) yield break;
 
-        string raw = subtitles[index]?.content ?? "";
+        string raw = string.Empty;
+        yield return GetLocalizedSubtitleRoutine(index, value => raw = value);
         if (string.IsNullOrWhiteSpace(raw)) yield break;
 
         // 1 블록 분리 (한 블록 = 한 줄)
@@ -758,7 +805,7 @@ public class CutSceneManager : MonoBehaviour
 
     private IEnumerator SkipCutSceneRoutine()
     {
-       
+
         // 마을로 전환
         yield return TransitionToVillage();
     }

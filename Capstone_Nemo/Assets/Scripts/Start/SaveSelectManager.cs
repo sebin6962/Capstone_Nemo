@@ -33,7 +33,7 @@ public class SlotUI
 
 public class SaveSelectManager : MonoBehaviour
 {
-    private const string UiStringTable = "Intro UI";
+    private const string UiStringTable = "UI";
     private const string DeleteSaveConfirmKey =
         "popup.delete_save.confirm";
 
