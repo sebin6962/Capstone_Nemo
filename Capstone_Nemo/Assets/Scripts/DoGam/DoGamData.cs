@@ -14,14 +14,17 @@ public class RecipeImageData
 public class DoGamEntry
 {
     public string name;
+    public string nameKey;
     public string image;
     public string description;
+    public string descriptionKey;
     public string category;
     public List<string> recipe;
+    public List<string> recipeKeys;
     public List<string> recipeImage;
     public List<RecipeImageData> recipeImageBundle;
 
-    public int rewardStarlight; 
+    public int rewardStarlight;
     public int rewardExp;
 }
 

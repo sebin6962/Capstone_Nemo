@@ -1,14 +1,20 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using System.Linq;
 using UnityEngine.EventSystems;
 using Newtonsoft.Json;
 using System.IO;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.AddressableAssets;
 
 public class DoGamUIManager : MonoBehaviour
 {
+    private const string LocalizationTable = "DoGam";
     public static DoGamUIManager Instance;
     [Header("Button Hover Material")]
     [SerializeField] private Material hoverEffectMaterial;
@@ -124,6 +130,7 @@ public class DoGamUIManager : MonoBehaviour
     public class HowToItemData
     {
         public string text;   // 항목 설명
+        public string textKey;
         public string video;  // Resources/Videos/Guide/{video}
         public string image;  // 기존 JSON 이전 기간용 호환 필드
     }
@@ -132,6 +139,7 @@ public class DoGamUIManager : MonoBehaviour
     public class HowToPageData
     {
         public string title;          // 스프레드(두 페이지) 주제(예: 기본조작)
+        public string titleKey;
         public List<HowToItemData> items; // 반드시 4개(왼쪽 2 + 오른쪽 2) 권장
     }
 
@@ -177,8 +185,10 @@ public class DoGamUIManager : MonoBehaviour
     public class MakerItemData
     {
         public string name;    // 제작기 이름
+        public string nameKey;
         public string image;   // Resources/Sprites/restaurant/{image}
         public string desc;    // 제작기 설명
+        public string descKey;
     }
 
     [System.Serializable]
@@ -201,6 +211,7 @@ public class DoGamUIManager : MonoBehaviour
     }
 
     private readonly List<MakerButtonView> makerButtonViews = new();
+    private int recipeSummaryRequestVersion;
 
     [Header("Workbench Selection Colors")]
     [SerializeField] private Color makerSelectedColor = Color.white;
@@ -307,6 +318,122 @@ public class DoGamUIManager : MonoBehaviour
 
         InitSeenRecipeState();
         RegisterAllButtonHoverMaterials();
+    }
+
+    private void OnEnable()
+    {
+        LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
+    }
+
+    private void OnDisable()
+    {
+        LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+    }
+
+    private void OnSelectedLocaleChanged(Locale locale)
+    {
+        if (!IsOpen()) return;
+
+        if (howToRoot != null && howToRoot.activeSelf)
+        {
+            RenderHowToSpread();
+            return;
+        }
+
+        if (makerRoot != null && makerRoot.activeSelf)
+        {
+            if (makerDetailPage != null && makerDetailPage.activeSelf && selectedMakerItem != null)
+                UpdateMakerDetail(selectedMakerItem);
+            return;
+        }
+
+        UpdatePage();
+    }
+
+    private void SetLocalizedText(TMP_Text target, string key, string fallback)
+    {
+        if (target == null) return;
+
+        fallback ??= string.Empty;
+        target.text = fallback;
+
+        if (!string.IsNullOrWhiteSpace(key))
+            StartCoroutine(SetLocalizedTextRoutine(target, key, fallback));
+    }
+
+    private IEnumerator SetLocalizedTextRoutine(TMP_Text target, string key, string fallback)
+    {
+        AsyncOperationHandle<string> handle =
+            LocalizationSettings.StringDatabase.GetLocalizedStringAsync(LocalizationTable, key);
+        yield return handle;
+
+        bool succeeded = handle.Status == AsyncOperationStatus.Succeeded &&
+                         !string.IsNullOrEmpty(handle.Result);
+        string localizedValue = succeeded ? handle.Result : fallback;
+        Addressables.Release(handle);
+
+        if (target == null || target.text != fallback) yield break;
+
+        if (succeeded)
+            target.text = localizedValue;
+        else
+            Debug.LogWarning($"[DoGam] 번역 키를 찾을 수 없음: {key}");
+    }
+
+    private static string GetRecipeFallback(DoGamEntry entry, int index)
+    {
+        return entry?.recipe != null && index >= 0 && index < entry.recipe.Count
+            ? entry.recipe[index]
+            : string.Empty;
+    }
+
+    private static string GetRecipeKey(DoGamEntry entry, int index)
+    {
+        return entry?.recipeKeys != null && index >= 0 && index < entry.recipeKeys.Count
+            ? entry.recipeKeys[index]
+            : string.Empty;
+    }
+
+    private void ApplyLocalizedEntryText(DoGamEntry entry)
+    {
+        if (entry == null) return;
+
+        SetLocalizedText(nameText, entry.nameKey, entry.name);
+        SetLocalizedText(descriptionText, entry.descriptionKey, entry.description);
+
+        int requestVersion = ++recipeSummaryRequestVersion;
+        if (recipeText != null)
+            StartCoroutine(SetLocalizedRecipeSummaryRoutine(entry, requestVersion));
+    }
+
+    private IEnumerator SetLocalizedRecipeSummaryRoutine(DoGamEntry entry, int requestVersion)
+    {
+        int count = Mathf.Max(entry.recipe?.Count ?? 0, entry.recipeKeys?.Count ?? 0);
+        var lines = new List<string>(count);
+
+        for (int i = 0; i < count; i++)
+        {
+            string fallback = GetRecipeFallback(entry, i);
+            string key = GetRecipeKey(entry, i);
+            string value = fallback;
+
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                AsyncOperationHandle<string> handle =
+                    LocalizationSettings.StringDatabase.GetLocalizedStringAsync(LocalizationTable, key);
+                yield return handle;
+
+                if (handle.Status == AsyncOperationStatus.Succeeded && !string.IsNullOrEmpty(handle.Result))
+                    value = handle.Result;
+
+                Addressables.Release(handle);
+            }
+
+            lines.Add(value);
+        }
+
+        if (recipeText != null && requestVersion == recipeSummaryRequestVersion)
+            recipeText.text = string.Join("\n", lines);
     }
 
     private void RegisterAllButtonHoverMaterials()
@@ -558,9 +685,7 @@ public class DoGamUIManager : MonoBehaviour
 
         openButton.interactable = false;
 
-        nameText.text = entry.name;
-        descriptionText.text = entry.description;
-        recipeText.text = string.Join("\n", entry.recipe);
+        ApplyLocalizedEntryText(entry);
         itemImage.sprite = Resources.Load<Sprite>("Sprites/Ingredients/" + entry.image);
 
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
@@ -1079,9 +1204,7 @@ public class DoGamUIManager : MonoBehaviour
 
         // 2) 상단 정보 바인딩
         if (itemImage) itemImage.sprite = Resources.Load<Sprite>("Sprites/Ingredients/" + entry.image);
-        if (nameText) nameText.text = entry.name;
-        //if (descriptionText) nameText.text = entry.name; // (오타 방지: 필요시 descriptionText 로 아래 줄 사용)
-        if (descriptionText) descriptionText.text = entry.description;
+        ApplyLocalizedEntryText(entry);
 
         UpdateRewardInfo(entry);
 
@@ -1330,8 +1453,7 @@ public class DoGamUIManager : MonoBehaviour
         var page = howToPages[Mathf.Clamp(howToSpreadIndex, 0, howToPages.Count - 1)];
 
         // 스프레드 제목
-        if (howToTitleText != null)
-            howToTitleText.text = page.title;
+        SetLocalizedText(howToTitleText, page.titleKey, page.title);
 
         // 항목 4개 (왼쪽 2, 오른쪽 2) 배치
         int count = page.items != null ? Mathf.Min(page.items.Count, howToItemsPerSpread) : 0;
@@ -1346,7 +1468,7 @@ public class DoGamUIManager : MonoBehaviour
             var icon = iconTransform?.GetComponent<Image>();
             var body = go.transform.Find("Body")?.GetComponent<TextMeshProUGUI>();
 
-            if (body != null) body.text = item.text;
+            SetLocalizedText(body, item.textKey, item.text);
 
             if (iconTransform != null)
             {
@@ -1672,11 +1794,8 @@ public class DoGamUIManager : MonoBehaviour
             return;
         }
 
-        if (makerDetailNameText != null)
-            makerDetailNameText.text = item.name;
-
-        if (makerDetailDescriptionText != null)
-            makerDetailDescriptionText.text = item.desc;
+        SetLocalizedText(makerDetailNameText, item.nameKey, item.name);
+        SetLocalizedText(makerDetailDescriptionText, item.descKey, item.desc);
 
         Sprite idleSprite = LoadMakerSprite(item.image);
 
@@ -1776,7 +1895,7 @@ public class DoGamUIManager : MonoBehaviour
             Destroy(targetContentParent.GetChild(c).gameObject);
         if (entry == null) return;
 
-        int recipeCount = entry.recipe != null ? entry.recipe.Count : 0;
+        int recipeCount = Mathf.Max(entry.recipe?.Count ?? 0, entry.recipeKeys?.Count ?? 0);
         int bundleCount = (entry.recipeImageBundle != null) ? entry.recipeImageBundle.Count : 0;
         int linesWithImages = Mathf.Min(recipeCount, bundleCount);
 
@@ -1797,7 +1916,7 @@ public class DoGamUIManager : MonoBehaviour
 
             // 텍스트
             var text = lineGO.GetComponentInChildren<TextMeshProUGUI>();
-            if (text != null && i < recipeCount) text.text = entry.recipe[i];
+            SetLocalizedText(text, GetRecipeKey(entry, i), GetRecipeFallback(entry, i));
 
             // 슬롯들
             var toolSlot = lineGO.transform.Find("ToolSlot");
@@ -1902,7 +2021,7 @@ public class DoGamUIManager : MonoBehaviour
             var lineGO = Instantiate(prefab, targetContentParent);
 
             var text = lineGO.GetComponentInChildren<TextMeshProUGUI>();
-            if (text != null) text.text = entry.recipe[i];
+            SetLocalizedText(text, GetRecipeKey(entry, i), GetRecipeFallback(entry, i));
         }
 
         // 3) 스크롤 맨 위로
