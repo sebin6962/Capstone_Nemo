@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PauseMenuButtons : MonoBehaviour
 {
-    [SerializeField] private string mainSceneName = "SaveSelectScene";
+    [SerializeField] private string mainSceneName = "IntroScene";
 
     public void OnClickOpenSettings()
     {

@@ -6,6 +6,24 @@ using UnityEngine.SceneManagement;
 
 public class IntroSceneManager : MonoBehaviour
 {
+    // 게임 중 일시정지 메뉴에서 IntroScene으로 돌아올 때만 사용한다.
+    // 씬이 로드되면 한 번 소비되어 일반 타이틀 진입에는 영향을 주지 않는다.
+    private static bool openSaveSelectOnNextLoad;
+
+    public static void RequestOpenSaveSelectOnNextLoad()
+    {
+        openSaveSelectOnNextLoad = true;
+    }
+
+    private static bool ConsumeOpenSaveSelectRequest()
+    {
+        if (!openSaveSelectOnNextLoad)
+            return false;
+
+        openSaveSelectOnNextLoad = false;
+        return true;
+    }
+
     [Header("UI References")]
     public CanvasGroup logoUI;
     public CanvasGroup clickTextUI;
@@ -138,6 +156,12 @@ public class IntroSceneManager : MonoBehaviour
     }
     void Start()
     {
+        bool openSaveSelectImmediately =
+            ConsumeOpenSaveSelectRequest();
+
+        if (titleRoot != null)
+            titleRoot.SetActive(true);
+
         // 초기 상태: 전부 숨김
         logoUI.alpha = 0;
         logoUI.gameObject.SetActive(true);
@@ -167,7 +191,105 @@ public class IntroSceneManager : MonoBehaviour
         if (shootingStarCanvasGroup != null)
             shootingStarCanvasGroup.alpha = 1f;
 
+        if (openSaveSelectImmediately)
+        {
+            PrepareReturnedSaveSelectState();
+            StartCoroutine(OpenSaveSelectAfterSceneReturn());
+            return;
+        }
+
         flowCoroutine = StartCoroutine(FlowSequence());
+    }
+
+    /// <summary>
+    /// 플레이 중 메뉴에서 IntroScene으로 복귀했을 때 인트로를 건너뛰고
+    /// 세이브 선택 화면이 열리기 직전 상태로 맞춘다.
+    /// </summary>
+    private void PrepareReturnedSaveSelectState()
+    {
+        clicked = true;
+        canClick = false;
+        blinking = false;
+        openingSaveSelect = true;
+        textStarted = true;
+        shipStarted = true;
+        moveShip = false;
+
+        UnregisterIntroHandCursor();
+
+        if (logoUI != null)
+            logoUI.alpha = 0f;
+
+        if (clickTextUI != null)
+        {
+            clickTextUI.alpha = 0f;
+            clickTextUI.gameObject.SetActive(false);
+        }
+
+        if (titleRoot != null)
+            titleRoot.SetActive(false);
+
+        if (gradientGroup != null)
+            gradientGroup.alpha = 1f;
+
+        if (moonImage != null)
+        {
+            Color moonColor = saveSelectMoonColor;
+            moonColor.a = moonImage.color.a;
+            moonImage.color = moonColor;
+        }
+
+        if (spaceshipCanvasGroup != null)
+        {
+            spaceshipCanvasGroup.alpha = 0f;
+            spaceshipCanvasGroup.gameObject.SetActive(false);
+        }
+
+        if (shootingStarSpawner != null)
+            shootingStarSpawner.StopSpawning(true);
+
+        if (shootingStarCanvasGroup != null)
+        {
+            shootingStarCanvasGroup.alpha = 0f;
+            shootingStarCanvasGroup.gameObject.SetActive(false);
+        }
+
+        if (saveSelectOpenAnimator != null)
+            saveSelectOpenAnimator.PrepareHidden();
+
+        if (saveSelectRoot != null)
+            saveSelectRoot.SetActive(true);
+
+        if (saveSelectCanvasGroup != null)
+        {
+            saveSelectCanvasGroup.alpha = 1f;
+            saveSelectCanvasGroup.interactable = false;
+            saveSelectCanvasGroup.blocksRaycasts = false;
+        }
+    }
+
+    /// <summary>
+    /// SaveSelectRoot의 OnEnable 초기화가 끝난 다음 프레임부터
+    /// 탭, 패널, 슬롯 등장 모션만 재생한다.
+    /// </summary>
+    private IEnumerator OpenSaveSelectAfterSceneReturn()
+    {
+        yield return null;
+
+        if (saveSelectOpenAnimator != null)
+        {
+            saveSelectOpenAnimator.PrepareHidden();
+            yield return StartCoroutine(
+                saveSelectOpenAnimator.PlayOpen()
+            );
+        }
+
+        if (saveSelectCanvasGroup != null)
+        {
+            saveSelectCanvasGroup.alpha = 1f;
+            saveSelectCanvasGroup.interactable = true;
+            saveSelectCanvasGroup.blocksRaycasts = true;
+        }
     }
 
     void Update()

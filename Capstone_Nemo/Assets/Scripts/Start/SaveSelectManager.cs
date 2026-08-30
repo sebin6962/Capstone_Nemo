@@ -4,6 +4,9 @@ using TMPro;
 using System.IO;
 using System.Collections.Generic;
 using System;
+using System.Collections;
+using UnityEngine.Localization.Settings;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 [System.Serializable]
 public class SlotUI
@@ -30,6 +33,9 @@ public class SlotUI
 
 public class SaveSelectManager : MonoBehaviour
 {
+    private const string UiStringTable = "Intro UI";
+    private const string DeleteSaveConfirmKey =
+        "popup.delete_save.confirm";
 
     public SlotUI[] saveSlots; // 슬롯 3개 연결
     public GameObject newGamePopup;
@@ -295,13 +301,8 @@ public class SaveSelectManager : MonoBehaviour
                     if (SFXManager.Instance != null)
                         SFXManager.Instance.PlayBtnClickSFX();
 
-                    ConfirmPopup.Instance.Open(
-                        $"[{serverName}] 세이브 파일을 삭제할까요?",
-                        () =>
-                        {
-                            DeleteServerFiles(serverName);
-                            RefreshSaveSlots();
-                        }
+                    StartCoroutine(
+                        OpenDeleteConfirmPopup(serverName)
                     );
                 });
             }
@@ -359,6 +360,48 @@ public class SaveSelectManager : MonoBehaviour
                 });
             }
         }
+    }
+
+    private IEnumerator OpenDeleteConfirmPopup(
+        string serverName)
+    {
+        var operation =
+            LocalizationSettings.StringDatabase
+                .GetLocalizedStringAsync(
+                    UiStringTable,
+                    DeleteSaveConfirmKey,
+                    arguments: new object[] { serverName }
+                );
+
+        if (!operation.IsDone)
+            yield return operation;
+
+        string message;
+
+        if (operation.Status ==
+            AsyncOperationStatus.Succeeded)
+        {
+            message = operation.Result;
+        }
+        else
+        {
+            Debug.LogError(
+                "[SaveSelectManager] 삭제 확인 번역을 " +
+                $"불러오지 못했습니다: {DeleteSaveConfirmKey}"
+            );
+
+            // 번역 테이블에 문제가 있어도 삭제 확인 기능은 유지한다.
+            message = $"[{serverName}] 세이브 파일을 삭제할까요?";
+        }
+
+        ConfirmPopup.Instance.Open(
+            message,
+            () =>
+            {
+                DeleteServerFiles(serverName);
+                RefreshSaveSlots();
+            }
+        );
     }
 
     string FormatHMS(long seconds)

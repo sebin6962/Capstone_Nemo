@@ -7,6 +7,9 @@ public class PauseManager : MonoBehaviour
 {
     public static PauseManager Instance { get; private set; }
 
+    private const string LegacyMainSceneName = "SaveSelectScene";
+    private const string IntroSceneName = "IntroScene";
+
     [Header("UI")]
     [SerializeField] private GameObject pauseMenuPanel;
     [SerializeField] private GameObject settingsPanel;
@@ -205,6 +208,29 @@ public class PauseManager : MonoBehaviour
         {
             Debug.LogError("[PauseManager] sceneName is empty.");
             return;
+        }
+
+        // 이전 Inspector 이벤트에 SaveSelectScene 문자열이 남아 있어도
+        // 통합된 IntroScene으로 안전하게 보낸다.
+        if (string.Equals(
+                sceneName,
+                LegacyMainSceneName,
+                System.StringComparison.OrdinalIgnoreCase))
+        {
+            sceneName = IntroSceneName;
+        }
+
+        bool isReturningToIntro = string.Equals(
+            sceneName,
+            IntroSceneName,
+            System.StringComparison.OrdinalIgnoreCase
+        );
+
+        if (isReturningToIntro)
+        {
+            // IntroSceneManager가 이 요청을 한 번만 소비하여
+            // 타이틀 인트로 대신 세이브 선택 등장 모션부터 시작한다.
+            IntroSceneManager.RequestOpenSaveSelectOnNextLoad();
         }
 
         Time.timeScale = 1f;
