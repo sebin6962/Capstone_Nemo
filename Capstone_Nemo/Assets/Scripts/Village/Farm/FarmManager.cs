@@ -256,9 +256,16 @@ public class FarmManager : MonoBehaviour
             AdvanceCropStage(pos);
         }
 
-        HandleTreeLevelWarningByInput();
+        bool blockFarmInteraction =
+            NPCInteractable.BlocksOtherWorldInteraction;
+
+        if (!blockFarmInteraction)
+            HandleTreeLevelWarningByInput();
+
         RefreshCropInteractionStates();
-        HandleRightClickHarvest();
+
+        if (!blockFarmInteraction)
+            HandleRightClickHarvest();
 
         // 같은 툴팁 패널을 쓰기때문에 나무 먼저, 작물은 그 다음
         HandleTreeTooltipHover();
@@ -870,10 +877,10 @@ public class FarmManager : MonoBehaviour
                     return;
                 }
 
-                HarvestCrop(
+                StartCoroutine(HarvestCropAfterInteractionResolution(
                     cellPos,
                     tile.cropData.cropName
-                );
+                ));
 
                 // 한 번 클릭으로 여러 작물이 수확되는 것 방지
                 return;
@@ -881,8 +888,23 @@ public class FarmManager : MonoBehaviour
         }
     }
 
+    // 같은 입력 프레임에 물뿌리개 들기와 작물 수확이 함께 감지되면
+    // 모든 상호작용 처리가 끝난 다음 물뿌리개 상태를 다시 확인합니다.
+    // 따라서 MonoBehaviour의 Update 실행 순서와 관계없이 물뿌리개가 우선됩니다.
+    private IEnumerator HarvestCropAfterInteractionResolution(
+        Vector3Int pos,
+        string cropName)
+    {
+        yield return null;
+
+        HarvestCrop(pos, cropName);
+    }
+
     private void HarvestCrop(Vector3Int pos, string cropName)
     {
+        if (NPCInteractable.BlocksOtherWorldInteraction)
+            return;
+
         if (IsHoldingWateringCan())
             return;
 

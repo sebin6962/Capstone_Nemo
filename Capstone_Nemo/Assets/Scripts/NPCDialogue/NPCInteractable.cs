@@ -23,6 +23,21 @@ public class NPCInteractable : MonoBehaviour
         }
     }
 
+    // NPC 상호작용은 다른 E키 월드 상호작용보다 우선합니다.
+    // 대화창만 검사하면 대화를 여는 첫 프레임에는 같은 E 입력이
+    // 다른 Update()에도 전달될 수 있으므로 NPC 범위도 함께 검사합니다.
+    public static bool BlocksOtherWorldInteraction
+    {
+        get
+        {
+            bool isDialogueOpen =
+                NPCDialogueUIManager.Instance != null &&
+                NPCDialogueUIManager.Instance.IsDialogueOpen;
+
+            return isDialogueOpen || HasInteractableNpcInRange;
+        }
+    }
+
     [Header("기본 정보")]
     [SerializeField] private string npcId;
     [SerializeField] private string npcName;

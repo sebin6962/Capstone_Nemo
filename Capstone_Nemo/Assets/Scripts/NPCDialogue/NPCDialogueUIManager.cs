@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.Localization.Settings;
 
 public class NPCDialogueUIManager : MonoBehaviour
 {
+    private const string LocalizationTable = "NPCDialogue";
+
     public static NPCDialogueUIManager Instance;
 
     private enum DialogueState
@@ -72,6 +75,46 @@ public class NPCDialogueUIManager : MonoBehaviour
     private string currentFullLine = "";
     private bool isTyping = false;
     private string currentCategoryId = null;
+
+    private string GetLocalizedText(string key, string fallback)
+    {
+        string localized = LocalizationSettings.StringDatabase.GetLocalizedString(
+            LocalizationTable,
+            key
+        );
+
+        if (string.IsNullOrEmpty(localized) ||
+            localized.Contains("No translation found"))
+        {
+            localized = fallback ?? string.Empty;
+        }
+
+        if (NPCDialogueDatabase.Instance != null)
+        {
+            localized = NPCDialogueDatabase.Instance
+                .ReplacePlayerNameTokenInText(localized);
+        }
+
+        return localized;
+    }
+
+    private string GetNpcNameKey()
+    {
+        return currentDialogueData == null
+            ? string.Empty
+            : $"npc.{currentDialogueData.npcId}.name";
+    }
+
+    private string GetNodeTextKey(
+        NPCDialogueNodeData node,
+        string textType,
+        int index)
+    {
+        if (currentDialogueData == null || node == null)
+            return string.Empty;
+
+        return $"npc.{currentDialogueData.npcId}.node.{node.nodeId}.{textType}.{index + 1:00}";
+    }
 
     // 튜토리얼용
     private System.Action tutorialDialogueFinishedCallback;
@@ -501,12 +544,15 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         if (npcNameText != null)
         {
-            npcNameText.text =
-                string.IsNullOrEmpty(
-                    currentDialogueData.npcName
-                )
+            string fallbackName =
+                string.IsNullOrEmpty(currentDialogueData.npcName)
                     ? npc.NpcName
                     : currentDialogueData.npcName;
+
+            npcNameText.text = GetLocalizedText(
+                GetNpcNameKey(),
+                fallbackName
+            );
         }
 
         ApplyPortrait(
@@ -778,7 +824,10 @@ public class NPCDialogueUIManager : MonoBehaviour
                  i < node.lines.Count;
                  i++)
             {
-                string line = node.lines[i];
+                string line = GetLocalizedText(
+                    GetNodeTextKey(node, "line", i),
+                    node.lines[i]
+                );
 
                 if (!string.IsNullOrWhiteSpace(line))
                     pendingLines.Enqueue(line);
@@ -840,7 +889,10 @@ public class NPCDialogueUIManager : MonoBehaviour
             createdOptionCount++;
 
             CreateOption(
-                option.text,
+                GetLocalizedText(
+                    GetNodeTextKey(node, "option", i),
+                    option.text
+                ),
                 () =>
                 {
                     HandleOptionSelected(option);
@@ -1464,7 +1516,9 @@ public class NPCDialogueUIManager : MonoBehaviour
         }
 
         if (nextButtonText != null)
-            nextButtonText.text = text;
+            nextButtonText.text = text == "다음"
+                ? GetLocalizedText("npc.ui.next", text)
+                : text;
     }
 
     private void SetEKeyGuideVisible(bool visible)

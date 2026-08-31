@@ -95,6 +95,12 @@ public class HeldItemManager : MonoBehaviour
 
     public void ShowHeldItem(Sprite sprite, string itemName = null)
     {
+        // NPC와 대화할 수 있는 범위이거나 대화 진행 중이면
+        // 같은 E 입력으로 물뿌리개/아이템을 동시에 들지 않도록 차단합니다.
+        if (Input.GetKeyDown(KeyCode.E) &&
+            NPCInteractable.BlocksOtherWorldInteraction)
+            return;
+
         if (sprite == null)
         {
             Debug.LogWarning("ShowHeldItem: 스프라이트가 null입니다.");

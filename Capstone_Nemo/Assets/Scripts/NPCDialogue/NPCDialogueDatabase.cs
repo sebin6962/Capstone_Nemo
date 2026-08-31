@@ -10,6 +10,7 @@ public class NPCDialogueDatabase : MonoBehaviour
 
     private Dictionary<string, NPCDialogueData> dialogueDict = new();
     private string loadedServerName = "";
+    private string loadedPlayerName = "";
 
     private const string PlayerNameToken = "(플레이어 이름)";
 
@@ -46,6 +47,7 @@ public class NPCDialogueDatabase : MonoBehaviour
         }
 
         string playerName = LoadPlayerName(serverName);
+        loadedPlayerName = playerName;
         ReplacePlayerNameTokens(dataList, playerName);
 
         dialogueDict.Clear();
@@ -74,6 +76,14 @@ public class NPCDialogueDatabase : MonoBehaviour
 
         dialogueDict.TryGetValue(npcId, out var data);
         return data;
+    }
+
+    public string ReplacePlayerNameTokenInText(string text)
+    {
+        if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(loadedPlayerName))
+            return text;
+
+        return text.Replace(PlayerNameToken, loadedPlayerName);
     }
 
     /// <summary>

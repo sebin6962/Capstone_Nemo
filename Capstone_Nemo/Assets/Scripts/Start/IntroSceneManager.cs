@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 public class IntroSceneManager : MonoBehaviour
 {
@@ -33,6 +34,40 @@ public class IntroSceneManager : MonoBehaviour
     public float delayBeforeLogo = 2f;
     public float logoFadeDuration = 1f;
     public float textFadeDuration = 1f;
+
+    [Header("Team Logo Splash")]
+    [Tooltip("화면 전체를 덮는 흰 패널의 CanvasGroup입니다. 팀 로고 이미지는 이 패널의 자식으로 배치하세요.")]
+    [SerializeField] private CanvasGroup teamLogoPanel;
+    [Tooltip("팀 로고 이미지에 추가한 별도의 CanvasGroup입니다.")]
+    [SerializeField] private CanvasGroup teamLogoUI;
+    [Tooltip("흰 패널이 나타난 후 로고 페이드인을 시작하기까지의 시간입니다.")]
+    [SerializeField] private float teamLogoAppearDelay = 0.5f;
+    [Tooltip("팀 로고가 나타나는 페이드 시간입니다.")]
+    [SerializeField] private float teamLogoFadeInDuration = 0.8f;
+    [Tooltip("나타난 팀 로고를 그대로 유지하는 시간입니다.")]
+    [SerializeField] private float teamLogoHoldDuration = 2f;
+    [Tooltip("팀 로고만 사라지는 페이드 시간입니다.")]
+    [SerializeField] private float teamLogoFadeOutDuration = 0.8f;
+    [Tooltip("로고가 사라진 후 흰 패널의 페이드아웃을 시작하기까지의 시간입니다.")]
+    [SerializeField] private float panelFadeDelayAfterLogo = 0.5f;
+    [Tooltip("마지막에 흰 패널이 사라지는 페이드 시간입니다.")]
+    [FormerlySerializedAs("teamLogoFadeDuration")]
+    [SerializeField] private float teamLogoPanelFadeDuration = 1f;
+
+    [Header("Team Logo Moon Bounce")]
+    [Tooltip("로고 옆에서 최종적으로 멈출 달 이미지의 RectTransform입니다. 현재 Anchored Position이 최종 위치가 됩니다.")]
+    [SerializeField] private RectTransform teamLogoMoon;
+    [Tooltip("로고가 나타난 뒤 달이 움직이기 시작할 때까지의 시간입니다.")]
+    [SerializeField] private float teamLogoMoonStartDelay = 0.15f;
+    [Tooltip("달이 최종 위치의 왼쪽에서 시작할 거리입니다. 양수로 입력하세요.")]
+    [SerializeField] private float teamLogoMoonStartDistance = 180f;
+    [Tooltip("첫 번째 튀어 오르는 높이입니다.")]
+    [SerializeField] private float teamLogoMoonHopHeight = 36f;
+    [Tooltip("한 번 튀는 데 걸리는 시간입니다. 총 세 번 튑니다.")]
+    [SerializeField] private float teamLogoMoonHopDuration = 0.28f;
+    [Tooltip("다음 점프 높이에 곱할 값입니다. 1보다 작으면 통통 튀는 높이가 점점 낮아집니다.")]
+    [Range(0.1f, 1f)]
+    [SerializeField] private float teamLogoMoonHopHeightDecay = 0.72f;
 
     [Header("Blink Settings")]
     public float blinkSpeed = 1.5f;
@@ -193,12 +228,193 @@ public class IntroSceneManager : MonoBehaviour
 
         if (openSaveSelectImmediately)
         {
+            HideTeamLogoPanelImmediately();
             PrepareReturnedSaveSelectState();
             StartCoroutine(OpenSaveSelectAfterSceneReturn());
             return;
         }
 
-        flowCoroutine = StartCoroutine(FlowSequence());
+        // 팀 로고가 끝날 때까지 기존 인트로 FlowSequence는 시작하지 않는다.
+        flowCoroutine = StartCoroutine(PlayTeamLogoThenIntro());
+    }
+
+    private IEnumerator PlayTeamLogoThenIntro()
+    {
+        if (teamLogoPanel != null)
+        {
+            teamLogoPanel.gameObject.SetActive(true);
+            teamLogoPanel.alpha = 1f;
+            teamLogoPanel.interactable = false;
+            teamLogoPanel.blocksRaycasts = true;
+
+            if (teamLogoUI != null)
+            {
+                teamLogoUI.gameObject.SetActive(true);
+                teamLogoUI.alpha = 0f;
+                teamLogoUI.interactable = false;
+                teamLogoUI.blocksRaycasts = false;
+            }
+
+            if (teamLogoMoon != null)
+                teamLogoMoon.gameObject.SetActive(false);
+
+            // 1. 흰 패널만 표시한 채 대기
+            yield return WaitRealtime(teamLogoAppearDelay);
+
+            if (teamLogoUI != null)
+            {
+                // 2. 팀 로고 페이드인
+                yield return StartCoroutine(
+                    FadeCanvasGroup(
+                        teamLogoUI,
+                        0f,
+                        1f,
+                        teamLogoFadeInDuration
+                    )
+                );
+
+                // 3. 로고가 유지되는 동안 달이 세 번 튀어 최종 위치에 도착
+                yield return StartCoroutine(PlayLogoHoldWithMoonBounce());
+
+                // 4. 흰 패널은 유지하고 팀 로고만 페이드아웃
+                yield return StartCoroutine(
+                    FadeCanvasGroup(
+                        teamLogoUI,
+                        1f,
+                        0f,
+                        teamLogoFadeOutDuration
+                    )
+                );
+
+                if (teamLogoMoon != null)
+                    teamLogoMoon.gameObject.SetActive(false);
+
+                teamLogoUI.gameObject.SetActive(false);
+            }
+
+            // 5. 로고가 사라진 흰 화면을 그대로 유지
+            yield return WaitRealtime(panelFadeDelayAfterLogo);
+
+            // 6. 마지막으로 흰 패널 페이드아웃
+            yield return StartCoroutine(
+                FadeCanvasGroup(
+                    teamLogoPanel,
+                    1f,
+                    0f,
+                    teamLogoPanelFadeDuration
+                )
+            );
+
+            teamLogoPanel.blocksRaycasts = false;
+            teamLogoPanel.gameObject.SetActive(false);
+        }
+
+        // 팀 로고 패널이 완전히 사라진 뒤 기존 인트로를 그대로 시작한다.
+        yield return StartCoroutine(FlowSequence());
+    }
+
+    private void HideTeamLogoPanelImmediately()
+    {
+        if (teamLogoPanel != null)
+        {
+            teamLogoPanel.alpha = 0f;
+            teamLogoPanel.interactable = false;
+            teamLogoPanel.blocksRaycasts = false;
+            teamLogoPanel.gameObject.SetActive(false);
+        }
+
+        if (teamLogoUI != null)
+        {
+            teamLogoUI.alpha = 0f;
+            teamLogoUI.interactable = false;
+            teamLogoUI.blocksRaycasts = false;
+            teamLogoUI.gameObject.SetActive(false);
+        }
+
+        if (teamLogoMoon != null)
+            teamLogoMoon.gameObject.SetActive(false);
+    }
+
+    private IEnumerator PlayLogoHoldWithMoonBounce()
+    {
+        float holdStartTime = Time.unscaledTime;
+
+        if (teamLogoMoon != null)
+        {
+            yield return WaitRealtime(teamLogoMoonStartDelay);
+            yield return StartCoroutine(PlayMoonTripleBounce());
+        }
+
+        // 달 연출이 빨리 끝나더라도 설정된 로고 유지 시간까지는 기다린다.
+        float elapsed = Time.unscaledTime - holdStartTime;
+        float remainingHoldTime = Mathf.Max(0f, teamLogoHoldDuration - elapsed);
+        yield return WaitRealtime(remainingHoldTime);
+    }
+
+    private IEnumerator PlayMoonTripleBounce()
+    {
+        if (teamLogoMoon == null)
+            yield break;
+
+        const int hopCount = 3;
+
+        Vector2 finalPosition = teamLogoMoon.anchoredPosition;
+        Vector2 startPosition = finalPosition +
+            new Vector2(-Mathf.Abs(teamLogoMoonStartDistance), 0f);
+
+        teamLogoMoon.anchoredPosition = startPosition;
+        teamLogoMoon.gameObject.SetActive(true);
+
+        if (teamLogoMoonHopDuration <= 0f)
+        {
+            teamLogoMoon.anchoredPosition = finalPosition;
+            yield break;
+        }
+
+        Vector2 hopStart = startPosition;
+
+        for (int hopIndex = 0; hopIndex < hopCount; hopIndex++)
+        {
+            float arrivalProgress = (hopIndex + 1f) / hopCount;
+            Vector2 hopEnd = Vector2.Lerp(
+                startPosition,
+                finalPosition,
+                arrivalProgress
+            );
+
+            float hopHeight = teamLogoMoonHopHeight *
+                Mathf.Pow(teamLogoMoonHopHeightDecay, hopIndex);
+
+            float elapsed = 0f;
+
+            while (elapsed < teamLogoMoonHopDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float progress = Mathf.Clamp01(
+                    elapsed / teamLogoMoonHopDuration
+                );
+
+                float horizontalProgress =
+                    progress * progress * (3f - 2f * progress);
+
+                Vector2 position = Vector2.Lerp(
+                    hopStart,
+                    hopEnd,
+                    horizontalProgress
+                );
+
+                // 0 → 위쪽 정점 → 0 형태의 포물선
+                position.y += 4f * hopHeight * progress * (1f - progress);
+                teamLogoMoon.anchoredPosition = position;
+
+                yield return null;
+            }
+
+            teamLogoMoon.anchoredPosition = hopEnd;
+            hopStart = hopEnd;
+        }
+
+        teamLogoMoon.anchoredPosition = finalPosition;
     }
 
     /// <summary>
