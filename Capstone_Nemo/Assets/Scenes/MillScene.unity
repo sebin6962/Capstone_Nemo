@@ -4020,12 +4020,18 @@ MonoBehaviour:
   instantOn: 0
   dayLightColor: {r: 1, g: 1, b: 1, a: 1}
   nightLightColor: {r: 0.23137255, g: 0.25882354, b: 0.4, a: 1}
+  starRainDayLightColor: {r: 0.72156864, g: 0.78431374, b: 0.9098039, a: 1}
+  starRainNightLightColor: {r: 0.15294118, g: 0.17254902, b: 0.2901961, a: 1}
   windowSkyRenderers: []
   windowSkyTopRatio: 0.7
   daySkyTopColor: {r: 0.40784314, g: 0.78431374, b: 1, a: 1}
   daySkyBottomColor: {r: 1, g: 0.8392157, b: 0.6039216, a: 1}
   nightSkyTopColor: {r: 0.07058824, g: 0.09411765, b: 0.20784314, a: 1}
   nightSkyBottomColor: {r: 0.22745098, g: 0.17254902, b: 0.3529412, a: 1}
+  starRainDaySkyTopColor: {r: 0.44705883, g: 0.5176471, b: 0.70980394, a: 1}
+  starRainDaySkyBottomColor: {r: 0.7647059, g: 0.68235296, b: 0.8235294, a: 1}
+  starRainNightSkyTopColor: {r: 0.047058824, g: 0.07058824, b: 0.1882353, a: 1}
+  starRainNightSkyBottomColor: {r: 0.21176471, g: 0.16470589, b: 0.38431373, a: 1}
 --- !u!4 &309216452
 Transform:
   m_ObjectHideFlags: 0
@@ -7730,12 +7736,18 @@ MonoBehaviour:
   instantOn: 0
   dayLightColor: {r: 1, g: 1, b: 1, a: 1}
   nightLightColor: {r: 0.21960784, g: 0.23921569, b: 0.34117648, a: 1}
+  starRainDayLightColor: {r: 0.72156864, g: 0.78431374, b: 0.9098039, a: 1}
+  starRainNightLightColor: {r: 0.15294118, g: 0.17254902, b: 0.2901961, a: 1}
   windowSkyRenderers: []
   windowSkyTopRatio: 0.7
   daySkyTopColor: {r: 0.40784314, g: 0.78431374, b: 1, a: 1}
   daySkyBottomColor: {r: 1, g: 0.8392157, b: 0.6039216, a: 1}
   nightSkyTopColor: {r: 0.07058824, g: 0.09411765, b: 0.20784314, a: 1}
   nightSkyBottomColor: {r: 0.22745098, g: 0.17254902, b: 0.3529412, a: 1}
+  starRainDaySkyTopColor: {r: 0.44705883, g: 0.5176471, b: 0.70980394, a: 1}
+  starRainDaySkyBottomColor: {r: 0.7647059, g: 0.68235296, b: 0.8235294, a: 1}
+  starRainNightSkyTopColor: {r: 0.047058824, g: 0.07058824, b: 0.1882353, a: 1}
+  starRainNightSkyBottomColor: {r: 0.21176471, g: 0.16470589, b: 0.38431373, a: 1}
 --- !u!225 &621624125
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -9174,9 +9186,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.00036859512
+    x: 0.0007162094
     y: 0
-    width: 0.9992628
+    width: 0.9985676
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
@@ -9364,7 +9376,7 @@ RectTransform:
   m_GameObject: {fileID: 689396628}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 767824813}
@@ -9374,7 +9386,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 850, y: 430}
+  m_AnchoredPosition: {x: 875, y: 430}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &698098488
@@ -10862,11 +10874,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8650811978895785469, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 100
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 8650811978895785469, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 100
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 8650811978895785469, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
       propertyPath: m_LocalPosition.x

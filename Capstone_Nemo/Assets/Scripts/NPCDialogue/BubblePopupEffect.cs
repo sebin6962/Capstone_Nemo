@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class BubblePopupEffect : MonoBehaviour
 {
@@ -13,6 +14,20 @@ public class BubblePopupEffect : MonoBehaviour
     [Header("References")]
     [SerializeField] private TMP_Text bubbleText;
     [SerializeField] private CanvasGroup canvasGroup;
+    [SerializeField] private RectTransform bubbleRect;
+    [SerializeField] private Image bubbleImage;
+
+    [Header("Auto Size")]
+    [Tooltip("텍스트 바깥 여백의 합입니다. X는 좌우 합, Y는 위아래 합입니다.")]
+    [SerializeField] private Vector2 totalPadding = new Vector2(40f, 40f);
+
+    [SerializeField, Min(1f)] private float minBubbleWidth = 140f;
+    [SerializeField, Min(1f)] private float minBubbleHeight = 80f;
+
+    [Tooltip("이 너비를 넘으면 텍스트가 다음 줄로 내려갑니다.")]
+    [SerializeField, Min(1f)] private float maxBubbleWidth = 320f;
+
+    [SerializeField] private bool roundToWholePixels = true;
 
     [Header("Intro Spread")]
     [SerializeField] private float introShowDuration = 0.28f;
@@ -35,10 +50,23 @@ public class BubblePopupEffect : MonoBehaviour
 
     private Coroutine playingCoroutine;
     private Transform cachedTransform;
+    private RectTransform bubbleTextRect;
 
     private void Awake()
     {
         cachedTransform = transform;
+
+        if (bubbleRect == null)
+            bubbleRect = transform as RectTransform;
+
+        if (bubbleImage == null)
+            bubbleImage = GetComponent<Image>();
+
+        if (bubbleText != null)
+            bubbleTextRect = bubbleText.rectTransform;
+
+        if (bubbleImage != null)
+            bubbleImage.type = Image.Type.Sliced;
 
         if (canvasGroup == null)
             canvasGroup = GetComponent<CanvasGroup>();
@@ -48,7 +76,7 @@ public class BubblePopupEffect : MonoBehaviour
 
         gameObject.SetActive(true);
 
-        // 씬에 배치해둔 원래 크기를 기준으로 저장
+        // 씬에 배치해둔 원래 스케일을 기준으로 저장한다.
         originalScale = cachedTransform.localScale;
         normalScale = originalScale;
         hiddenScale = originalScale * hiddenScaleMultiplier;
@@ -57,6 +85,25 @@ public class BubblePopupEffect : MonoBehaviour
 
         canvasGroup.alpha = 0f;
         cachedTransform.localScale = hiddenScale;
+    }
+
+    private void OnValidate()
+    {
+        minBubbleWidth = Mathf.Max(1f, minBubbleWidth);
+        minBubbleHeight = Mathf.Max(1f, minBubbleHeight);
+        maxBubbleWidth = Mathf.Max(minBubbleWidth, maxBubbleWidth);
+
+        if (bubbleRect == null)
+            bubbleRect = transform as RectTransform;
+
+        if (bubbleImage == null)
+            bubbleImage = GetComponent<Image>();
+
+        if (bubbleImage != null)
+            bubbleImage.type = Image.Type.Sliced;
+
+        if (bubbleText != null)
+            bubbleTextRect = bubbleText.rectTransform;
     }
 
     public void HideImmediate()
@@ -89,11 +136,17 @@ public class BubblePopupEffect : MonoBehaviour
         if (bubbleText != null)
         {
             bubbleText.text = message;
+
+            // 타이핑을 시작하기 전에 전체 문장 기준으로 말풍선 크기를 확정한다.
+            ResizeBubbleToMessage(message);
+
             bubbleText.ForceMeshUpdate();
             bubbleText.maxVisibleCharacters = useTyping ? 0 : int.MaxValue;
         }
         else
+        {
             Debug.LogWarning("[BubblePopupEffect] bubbleText가 연결되지 않았습니다.");
+        }
 
         if (canvasGroup == null)
             Debug.LogWarning("[BubblePopupEffect] canvasGroup이 없습니다.");
@@ -103,7 +156,6 @@ public class BubblePopupEffect : MonoBehaviour
 
         gameObject.SetActive(true);
 
-        // 시작 상태 강제 초기화
         if (canvasGroup != null)
             canvasGroup.alpha = 0f;
 
@@ -113,7 +165,90 @@ public class BubblePopupEffect : MonoBehaviour
         playingCoroutine = StartCoroutine(
             PlayRoutine(visibleDuration, style, useTyping, typingInterval)
         );
+
         return playingCoroutine;
+    }
+
+    private void ResizeBubbleToMessage(string message)
+    {
+        if (bubbleText == null)
+            return;
+
+        if (bubbleRect == null)
+            bubbleRect = transform as RectTransform;
+
+        if (bubbleTextRect == null)
+            bubbleTextRect = bubbleText.rectTransform;
+
+        if (bubbleRect == null || bubbleTextRect == null)
+            return;
+
+        if (bubbleImage != null && bubbleImage.type != Image.Type.Sliced)
+            bubbleImage.type = Image.Type.Sliced;
+
+        string safeMessage = message ?? string.Empty;
+
+        bubbleText.enableWordWrapping = true;
+
+        float horizontalPadding = Mathf.Max(0f, totalPadding.x);
+        float verticalPadding = Mathf.Max(0f, totalPadding.y);
+
+        float minTextWidth = Mathf.Max(1f, minBubbleWidth - horizontalPadding);
+        float maxTextWidth = Mathf.Max(minTextWidth, maxBubbleWidth - horizontalPadding);
+
+        // 줄바꿈하지 않았을 때의 문장 너비를 먼저 측정한다.
+        Vector2 singleLinePreferred = bubbleText.GetPreferredValues(
+            safeMessage,
+            Mathf.Infinity,
+            Mathf.Infinity
+        );
+
+        // 짧은 문장은 가로로 줄이고, 긴 문장은 최대 너비에서 줄바꿈한다.
+        float textWidth = Mathf.Clamp(
+            singleLinePreferred.x,
+            minTextWidth,
+            maxTextWidth
+        );
+
+        Vector2 wrappedPreferred = bubbleText.GetPreferredValues(
+            safeMessage,
+            textWidth,
+            Mathf.Infinity
+        );
+
+        float textHeight = Mathf.Max(1f, wrappedPreferred.y);
+        float bubbleWidth = Mathf.Max(minBubbleWidth, textWidth + horizontalPadding);
+        float bubbleHeight = Mathf.Max(minBubbleHeight, textHeight + verticalPadding);
+
+        if (roundToWholePixels)
+        {
+            textWidth = Mathf.Ceil(textWidth);
+            textHeight = Mathf.Ceil(textHeight);
+            bubbleWidth = Mathf.Ceil(bubbleWidth);
+            bubbleHeight = Mathf.Ceil(bubbleHeight);
+        }
+
+        bubbleTextRect.SetSizeWithCurrentAnchors(
+            RectTransform.Axis.Horizontal,
+            textWidth
+        );
+
+        bubbleTextRect.SetSizeWithCurrentAnchors(
+            RectTransform.Axis.Vertical,
+            textHeight
+        );
+
+        bubbleRect.SetSizeWithCurrentAnchors(
+            RectTransform.Axis.Horizontal,
+            bubbleWidth
+        );
+
+        bubbleRect.SetSizeWithCurrentAnchors(
+            RectTransform.Axis.Vertical,
+            bubbleHeight
+        );
+
+        bubbleText.ForceMeshUpdate();
     }
 
     private IEnumerator PlayRoutine(
@@ -243,6 +378,7 @@ public class BubblePopupEffect : MonoBehaviour
         }
 
         t = 0f;
+
         while (t < second)
         {
             t += Time.unscaledDeltaTime;
@@ -255,6 +391,7 @@ public class BubblePopupEffect : MonoBehaviour
         }
 
         t = 0f;
+
         while (t < third)
         {
             t += Time.unscaledDeltaTime;
@@ -276,8 +413,13 @@ public class BubblePopupEffect : MonoBehaviour
     private IEnumerator PlayHide(float duration)
     {
         float t = 0f;
-        Vector3 startScale = cachedTransform != null ? cachedTransform.localScale : hiddenScale;
-        float startAlpha = canvasGroup != null ? canvasGroup.alpha : 1f;
+        Vector3 startScale = cachedTransform != null
+            ? cachedTransform.localScale
+            : hiddenScale;
+
+        float startAlpha = canvasGroup != null
+            ? canvasGroup.alpha
+            : 1f;
 
         while (t < duration)
         {

@@ -5,6 +5,9 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using Cinemachine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.Localization.Settings;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 /*public enum TutorialStep
 {
@@ -42,6 +45,8 @@ public class TutorialBubbleLine
 
 public class TutorialManager : MonoBehaviour
 {
+    private const string TutorialLocalizationTable = "Tutorial";
+
     public static TutorialManager Instance;
 
     //public TutorialStep currentStep = TutorialStep.None;
@@ -431,7 +436,12 @@ public class TutorialManager : MonoBehaviour
         if (introBubbleLines != null && introBubbleLines.Count > 0)
         {
             Transform introAnchor = player != null ? player.transform : commonBubbleDefaultAnchor;
-            yield return StartCoroutine(ShowCommonBubbleSequence(introBubbleLines, introBubbleDuration, introAnchor));
+            yield return StartCoroutine(ShowCommonBubbleSequence(
+                introBubbleLines,
+                introBubbleDuration,
+                introAnchor,
+                "tutorial.bubble.intro"
+            ));
         }
 
         // 2.5) 말풍선 끝나고 이동 전 텀
@@ -448,16 +458,21 @@ public class TutorialManager : MonoBehaviour
         if (noticeBubble != null && !string.IsNullOrEmpty(noticeBubble.message))
         {
             Transform noticeAnchor = player != null ? player.transform : commonBubbleDefaultAnchor;
-            yield return StartCoroutine(
-                ShowCommonBubble(
-                    noticeBubble.message,
-                    reactionBubbleDuration,
-                    noticeAnchor,
-                    BubblePopupEffect.ShowStyle.NoticeBoing,
-                    noticeBubble.useTyping,
-                    noticeBubble.typingInterval
-                )
-            );
+            string localizedNotice = noticeBubble.message;
+            yield return StartCoroutine(GetLocalizedTutorialText(
+                "tutorial.bubble.notice",
+                noticeBubble.message,
+                value => localizedNotice = value
+            ));
+
+            yield return StartCoroutine(ShowCommonBubble(
+                localizedNotice,
+                reactionBubbleDuration,
+                noticeAnchor,
+                BubblePopupEffect.ShowStyle.NoticeBoing,
+                noticeBubble.useTyping,
+                noticeBubble.typingInterval
+            ));
         }
 
         // 2.5) 말풍선 끝나고 이동 전 텀
@@ -488,10 +503,10 @@ public class TutorialManager : MonoBehaviour
         // 9) 첫 대화
         bool dialogueFinished = false;
 
-        PlayDialogueThen(() =>
+        PlayLocalizedDialogueThen(() =>
         {
             dialogueFinished = true;
-        }, villageFirstStartDialogues, grandmaNpcObject);
+        }, villageFirstStartDialogues, "tutorial.grandma.village_start", grandmaNpcObject);
 
         yield return new WaitUntil(() => dialogueFinished);
 
@@ -551,22 +566,121 @@ public class TutorialManager : MonoBehaviour
         });
     }
 
+    private void PlayLocalizedDialogueThen(
+        System.Action onFinished,
+        List<TutorialDialogueLine> lines,
+        string keyPrefix,
+        GameObject focusNpcObj = null)
+    {
+        StartCoroutine(LocalizeTutorialDialoguesThen(
+            onFinished,
+            lines,
+            keyPrefix,
+            focusNpcObj
+        ));
+    }
+
+    private IEnumerator LocalizeTutorialDialoguesThen(
+        System.Action onFinished,
+        List<TutorialDialogueLine> lines,
+        string keyPrefix,
+        GameObject focusNpcObj)
+    {
+        if (lines == null || lines.Count == 0)
+        {
+            onFinished?.Invoke();
+            yield break;
+        }
+
+        var localizedLines = new List<TutorialDialogueLine>(lines.Count);
+
+        for (int i = 0; i < lines.Count; i++)
+        {
+            TutorialDialogueLine source = lines[i];
+            if (source == null)
+                continue;
+
+            string localizedSpeaker = source.speakerName;
+            string localizedDialogue = source.dialogue;
+
+            yield return StartCoroutine(GetLocalizedTutorialText(
+                "tutorial.grandma.name",
+                source.speakerName,
+                value => localizedSpeaker = value
+            ));
+
+            yield return StartCoroutine(GetLocalizedTutorialText(
+                $"{keyPrefix}.{i + 1:00}",
+                source.dialogue,
+                value => localizedDialogue = value
+            ));
+
+            localizedLines.Add(new TutorialDialogueLine
+            {
+                speakerName = localizedSpeaker,
+                dialogue = localizedDialogue,
+                portrait = source.portrait
+            });
+        }
+
+        PlayDialogueThen(onFinished, localizedLines, focusNpcObj);
+    }
+
+    private IEnumerator GetLocalizedTutorialText(
+        string key,
+        string fallback,
+        System.Action<string> onCompleted)
+    {
+        fallback ??= string.Empty;
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            onCompleted?.Invoke(fallback);
+            yield break;
+        }
+
+        AsyncOperationHandle<string> handle =
+            LocalizationSettings.StringDatabase.GetLocalizedStringAsync(
+                TutorialLocalizationTable,
+                key
+            );
+
+        yield return handle;
+
+        bool succeeded =
+            handle.Status == AsyncOperationStatus.Succeeded &&
+            !string.IsNullOrEmpty(handle.Result);
+
+        string result = succeeded ? handle.Result : fallback;
+
+        if (!succeeded)
+        {
+            Debug.LogWarning(
+                $"[TutorialManager] 번역 키를 찾을 수 없습니다: " +
+                $"{TutorialLocalizationTable}/{key}"
+            );
+        }
+
+        Addressables.Release(handle);
+        onCompleted?.Invoke(result);
+    }
+
     void ShowVillageSecondStepWithDialogue(VillageSecondStep step)
     {
         switch (step)
         {
             case VillageSecondStep.OpenStorage:
-                PlayDialogueThen(() =>
+                PlayLocalizedDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterGoToFieldDialogues);
+                }, afterGoToFieldDialogues, "tutorial.grandma.after_field");
                 break;
 
             case VillageSecondStep.GoToMill:
-                PlayDialogueThen(() =>
+                PlayLocalizedDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterHarvestDialogues);
+                }, afterHarvestDialogues, "tutorial.grandma.after_harvest");
                 break;
 
             default:
@@ -1267,20 +1381,34 @@ public class TutorialManager : MonoBehaviour
     private IEnumerator ShowCommonBubbleSequence(
         List<TutorialBubbleLine> lines,
         float durationPerMessage,
-        Transform anchor = null)
+        Transform anchor = null,
+        string keyPrefix = null)
     {
         if (lines == null || lines.Count == 0)
             yield break;
 
-        foreach (var line in lines)
+        for (int i = 0; i < lines.Count; i++)
         {
+            TutorialBubbleLine line = lines[i];
+
             if (line == null || string.IsNullOrEmpty(line.message))
                 continue;
+
+            string localizedMessage = line.message;
+
+            if (!string.IsNullOrWhiteSpace(keyPrefix))
+            {
+                yield return StartCoroutine(GetLocalizedTutorialText(
+                    $"{keyPrefix}.{i + 1:00}",
+                    line.message,
+                    value => localizedMessage = value
+                ));
+            }
 
             SetBubblePosition(anchor);
             yield return StartCoroutine(
                 ShowCommonBubble(
-                    line.message,
+                    localizedMessage,
                     durationPerMessage,
                     anchor,
                     BubblePopupEffect.ShowStyle.IntroSpread,

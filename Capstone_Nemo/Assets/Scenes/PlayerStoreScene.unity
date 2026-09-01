@@ -37892,7 +37892,7 @@ RectTransform:
   m_GameObject: {fileID: 948949934}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2097557368}
@@ -37902,7 +37902,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 850, y: 430}
+  m_AnchoredPosition: {x: 875, y: 430}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &951858329
@@ -44328,6 +44328,8 @@ MonoBehaviour:
   instantOn: 0
   dayLightColor: {r: 1, g: 1, b: 1, a: 1}
   nightLightColor: {r: 0.2099204, g: 0.23573028, b: 0.36477977, a: 1}
+  starRainDayLightColor: {r: 0.72156864, g: 0.78431374, b: 0.9098039, a: 1}
+  starRainNightLightColor: {r: 0.15294118, g: 0.17254902, b: 0.2901961, a: 1}
   windowSkyRenderers:
   - {fileID: 750834481}
   - {fileID: 1220104928}
@@ -44336,6 +44338,10 @@ MonoBehaviour:
   daySkyBottomColor: {r: 0.81446534, g: 0.98080677, b: 1, a: 1}
   nightSkyTopColor: {r: 0.17513146, g: 0.17907308, b: 0.34591186, a: 1}
   nightSkyBottomColor: {r: 0.22044094, g: 0.09916529, b: 0.28930807, a: 1}
+  starRainDaySkyTopColor: {r: 0.44705883, g: 0.5176471, b: 0.70980394, a: 1}
+  starRainDaySkyBottomColor: {r: 0.7647059, g: 0.68235296, b: 0.8235294, a: 1}
+  starRainNightSkyTopColor: {r: 0.047058824, g: 0.07058824, b: 0.1882353, a: 1}
+  starRainNightSkyBottomColor: {r: 0.21176471, g: 0.16470589, b: 0.38431373, a: 1}
 --- !u!4 &1150329002
 Transform:
   m_ObjectHideFlags: 0
@@ -70705,11 +70711,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8650811978895785469, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 100
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 8650811978895785469, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 100
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 8650811978895785469, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -83399,9 +83405,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.000128299
+    x: 0.0007162094
     y: 0
-    width: 0.9997434
+    width: 0.9985676
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
@@ -85754,7 +85760,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -299.29, y: 299.49}
+  m_AnchoredPosition: {x: -299.29004, y: 299.49}
   m_SizeDelta: {x: 3027.01, y: 2157.05}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1938849889
