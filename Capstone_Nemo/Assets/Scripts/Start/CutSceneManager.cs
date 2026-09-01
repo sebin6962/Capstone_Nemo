@@ -564,6 +564,7 @@ public class CutSceneManager : MonoBehaviour
             tmp.alignment = TextAlignmentOptions.Top;    // 상단 정렬
             tmp.enableWordWrapping = true;
             tmp.enableAutoSizing = false;
+            tmp.richText = true;                         // <b>, <color>, <size> 등 TMP 태그 허용
             tmp.lineSpacing = textLineSpacing;
 
             // “보임 상태”로 두되, 글자 수만 0부터 증가시킴
