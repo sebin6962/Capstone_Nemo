@@ -278,6 +278,13 @@ public class Customer : MonoBehaviour
             state = CustomerState.Served;
             orderUI.ShowResult(true);
             orderUI.ShowTimerUI(false);
+
+            if (isTutorialCustomer)
+            {
+                Invoke(nameof(HideTutorialResult), 3f);
+            }
+
+
             Debug.Log($"정답 처리됨: {givenDagwa}");
 
             // 기본값(대비용)
@@ -316,6 +323,17 @@ public class Customer : MonoBehaviour
             // --- 정답 효과음 재생 추가 ---
             SFXManager.Instance.PlayCorrectSFX();
 
+            if (isTutorialCustomer)
+            {
+                var tutorMgr = StoreTutorialManager.Instance;
+
+                if (tutorMgr != null &&
+                    tutorMgr.IsCurrentStep(StoreTutorialStep.Serve))
+                {
+                    tutorMgr.GoToNextStep();
+                }
+            }
+
         }
         else
         {
@@ -334,7 +352,10 @@ public class Customer : MonoBehaviour
             SFXManager.Instance.PlayWrongSFX();
         }
 
-        Invoke(nameof(Leave), 4f);
+        if (!isTutorialCustomer)
+        {
+            Invoke(nameof(Leave), 4f);
+        }
     }
     protected virtual void HandleTimeOver()
     {
@@ -572,4 +593,13 @@ public class Customer : MonoBehaviour
         AssignPlate();
         StartOrdering();
     }
+
+    private void HideTutorialResult()
+    {
+        if (orderUI != null)
+        {
+            orderUI.HideResult();
+        }
+    }
+
 }

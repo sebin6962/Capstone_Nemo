@@ -363,12 +363,6 @@ public class MillManager : MonoBehaviour
         if (selectedItem == null)
             return;
 
-        //Mill 튜토리얼 진행 트리거 3
-        if (MillTutorialManager.Instance && MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.Grind))
-        {
-            MillTutorialManager.Instance.GoToNextMillStep();
-        }
-
         int useCount = queuedCount;
         if (useCount <= 0)
             return;
@@ -585,6 +579,12 @@ public class MillManager : MonoBehaviour
 
         if (hideJeolguUIAfter && jeolguUI) jeolguUI.SetActive(false);
         isMilling = false;
+
+        //Mill 튜토리얼 진행 트리거 3
+        if (MillTutorialManager.Instance && MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.Grind))
+        {
+            MillTutorialManager.Instance.GoToNextMillStep();
+        }
     }
 
 

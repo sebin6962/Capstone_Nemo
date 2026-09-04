@@ -43,4 +43,10 @@ public class OrderUI : MonoBehaviour
         timerSlider.gameObject.SetActive(false);
         dagwaBubble.gameObject.SetActive(false);
     }
+
+    public void HideResult()
+    {
+        heartImage.gameObject.SetActive(false);
+        ximage.gameObject.SetActive(false);
+    }
 }

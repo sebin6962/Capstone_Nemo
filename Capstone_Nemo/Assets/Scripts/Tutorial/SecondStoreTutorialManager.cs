@@ -90,7 +90,7 @@ public class SecondStoreTutorialManager : MonoBehaviour
         }
 
         if (customerSpawner)
-            customerSpawner.SpawnTutorialCustomer(1, "Danhobakseolgi_finish", 15f);
+            customerSpawner.SpawnSeatedTutorialCustomer("Danhobakseolgi_finish", 0f);
 
         PlayDialogueThen(() =>
         {
