@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class TutorialSkip : MonoBehaviour
 {
@@ -9,6 +10,7 @@ public class TutorialSkip : MonoBehaviour
 
     [SerializeField] private GameObject skipButton;
     [SerializeField] private GameObject confirmPopup;
+    [SerializeField] private string[] tutorialScenes;
 
     private void Awake()
     {
@@ -41,13 +43,29 @@ public class TutorialSkip : MonoBehaviour
             TutorialFlowManager.Instance.currentStep != GlobalTutorialStep.None &&
             TutorialFlowManager.Instance.currentStep != GlobalTutorialStep.Done;
 
-        if (skipButton != null &&
-            skipButton.activeSelf != tutorialRunning)
+        string currentScene = SceneManager.GetActiveScene().name;
+
+        bool isTutorialScene = false;
+
+        foreach (string sceneName in tutorialScenes)
         {
-            skipButton.SetActive(tutorialRunning);
+            if (currentScene == sceneName)
+            {
+                isTutorialScene = true;
+                break;
+            }
         }
 
-        if (!tutorialRunning &&
+        bool shouldShowSkipButton =
+            tutorialRunning && isTutorialScene;
+
+        if (skipButton != null &&
+            skipButton.activeSelf != shouldShowSkipButton)
+        {
+            skipButton.SetActive(shouldShowSkipButton);
+        }
+
+        if (!shouldShowSkipButton &&
             confirmPopup != null &&
             confirmPopup.activeSelf)
         {
@@ -73,13 +91,31 @@ public class TutorialSkip : MonoBehaviour
             confirmPopup.SetActive(false);
 
         if (TutorialFlowManager.Instance == null)
-        {
-            Debug.LogError("[TutorialSkip] TutorialFlowManager가 없습니다.");
             return;
+
+        StartCoroutine(SkipTutorialRoutine());
+    }
+
+    private IEnumerator SkipTutorialRoutine()
+    {
+        if (FadeManager.Instance == null)
+        {
+            TutorialFlowManager.Instance.FinishAllTutorial();
+
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            yield break;
         }
 
-        //전체 튜토리얼 완료+저장+시간정지/포털잠금 해제
+        yield return StartCoroutine(FadeManager.Instance.FadeOut());
+
         TutorialFlowManager.Instance.FinishAllTutorial();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+        string currentScene = SceneManager.GetActiveScene().name;
+
+        SceneManager.LoadScene(currentScene);
+
+        yield return null;
+
+        yield return StartCoroutine(FadeManager.Instance.FadeIn());
     }
 }
