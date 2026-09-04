@@ -20,9 +20,6 @@ public class TutorialSkip : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-
-        if (confirmPopup != null)
-            confirmPopup.SetActive(false);
     }
 
     private void Start()
