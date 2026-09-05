@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 
 public class SFXManager : MonoBehaviour
@@ -9,6 +10,9 @@ public class SFXManager : MonoBehaviour
 
     public static SFXManager Instance;
     public AudioSource audioSource;
+
+    [Header("Audio Mixer")]
+    [SerializeField] private AudioMixerGroup sfxMixerGroup;
 
     //public AudioClip sieveClip;
     //public AudioClip siruClip;
@@ -227,6 +231,9 @@ public class SFXManager : MonoBehaviour
             var go = new GameObject($"MakerSFX_{makerId}");
             go.transform.SetParent(transform);   // SFXManager 밑에 두기
             src = go.AddComponent<AudioSource>();
+
+            src.outputAudioMixerGroup = sfxMixerGroup; //수정
+
             src.playOnAwake = false;
             src.loop = false;    
             src.spatialBlend = 0f;             
