@@ -29,10 +29,26 @@ public class MillTutorialManager : MonoBehaviour
     [SerializeField] private List<TutorialDialogueLine> afterQuitStoreDialogues;
 
     [SerializeField] private GameObject millTutorialPanel;
-/*    [SerializeField] private CustomerSpawner customerSpawner;
-    [SerializeField] private SeatManager seatManager;*/
+    /*    [SerializeField] private CustomerSpawner customerSpawner;
+        [SerializeField] private SeatManager seatManager;*/
 
     //[SerializeField] private GameObject tutorialBlocker;
+
+    [Header("NPC 대화 UI")]
+    [Header("NPC 숫자 UI")]
+    [SerializeField] private GameObject talkToNpcNumberObject;   
+    [SerializeField] private Transform talkToNpcTarget;          
+
+    [SerializeField] private GameObject openStoreNumberObject;   
+    [SerializeField] private Transform openStoreNpcTarget;       
+
+    [SerializeField] private Vector2 npcNumberOffset = new Vector2(0f, 100f);
+
+    private Transform currentNpcTarget;
+
+    private RectTransform npcNumberRectTransform;
+    private Canvas npcNumberCanvas;
+    private RectTransform npcNumberCanvasRectTransform;
 
     private TutorialStateData state;
     private string server;
@@ -51,7 +67,14 @@ public class MillTutorialManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
+
+        if (talkToNpcNumberObject != null)
+            talkToNpcNumberObject.SetActive(false);
+
+        if (openStoreNumberObject != null)
+            openStoreNumberObject.SetActive(false);
     }
 
     void Start()
@@ -91,6 +114,12 @@ public class MillTutorialManager : MonoBehaviour
     {
         IsMillTutorialRunning = true;
         currentStep = MillTutorialStep.TalkToNpc;
+
+        ShowNpcNumber(
+        talkToNpcNumberObject,
+        talkToNpcTarget
+    );
+
 
         //시간 정지
         if (TutorialFlowManager.Instance != null)
@@ -171,28 +200,39 @@ public class MillTutorialManager : MonoBehaviour
         {
             //MillNpc.cs
             case MillTutorialStep.TalkToNpc:
+                HideNpcNumber(talkToNpcNumberObject);
                 currentStep = MillTutorialStep.SelectCrop;
                 break;
+
             //MillManager.cs
             case MillTutorialStep.SelectCrop:
                 currentStep = MillTutorialStep.Grind;
                 break;
+
             case MillTutorialStep.Grind:
                 currentStep = MillTutorialStep.GrindQuit;
                 break;
+
             case MillTutorialStep.GrindQuit:
                 currentStep = MillTutorialStep.OpenStore;
+                ShowNpcNumber(
+                    openStoreNumberObject,
+                    openStoreNpcTarget
+                );
                 break;
+
             case MillTutorialStep.OpenStore:
+                HideNpcNumber(openStoreNumberObject);
                 currentStep = MillTutorialStep.QuitStore;
                 break;
+
             case MillTutorialStep.QuitStore:
                 currentStep = MillTutorialStep.Mill_Finish;
                 break;
+
             case MillTutorialStep.Mill_Finish:
                 FinishMillTutorial();
                 return;
-                
 
             default:
                 return;
@@ -303,5 +343,138 @@ public class MillTutorialManager : MonoBehaviour
             TutorialFlowManager.Instance.ReleaseTutorialTimePause();
 
         Debug.Log("튜토리얼 완전히 종료");
+    }
+
+    private void ShowNpcNumber(
+    GameObject numberObject,
+    Transform targetNpc)
+    {
+        if (numberObject == null || targetNpc == null)
+            return;
+
+        RectTransform numberRect =
+            numberObject.GetComponent<RectTransform>();
+
+        Canvas canvas =
+            numberObject.GetComponentInParent<Canvas>();
+
+        if (numberRect == null || canvas == null)
+            return;
+
+        RectTransform canvasRect =
+            canvas.GetComponent<RectTransform>();
+
+        if (canvasRect == null)
+            return;
+
+        numberObject.SetActive(true);
+
+        Vector3 npcWorldPosition = targetNpc.position;
+        Vector2 npcCanvasPosition;
+
+        if (canvas.renderMode == RenderMode.WorldSpace)
+        {
+            npcCanvasPosition =
+                canvasRect.InverseTransformPoint(npcWorldPosition);
+        }
+        else
+        {
+            Camera worldCamera = Camera.main;
+
+            if (worldCamera == null)
+                return;
+
+            Vector2 screenPosition =
+                RectTransformUtility.WorldToScreenPoint(
+                    worldCamera,
+                    npcWorldPosition);
+
+            Camera uiCamera =
+                canvas.renderMode == RenderMode.ScreenSpaceOverlay
+                    ? null
+                    : (canvas.worldCamera != null
+                        ? canvas.worldCamera
+                        : worldCamera);
+
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    canvasRect,
+                    screenPosition,
+                    uiCamera,
+                    out npcCanvasPosition))
+                return;
+        }
+
+        numberRect.anchoredPosition =
+            npcCanvasPosition + npcNumberOffset;
+    }
+
+    private void HideNpcNumber(GameObject numberObject)
+    {
+        if (numberObject != null)
+            numberObject.SetActive(false);
+    }
+
+    private void UpdateNpcNumberPosition(
+    GameObject numberObject,
+    Transform targetNpc)
+    {
+        if (numberObject == null || targetNpc == null)
+            return;
+
+        RectTransform numberRect =
+            numberObject.GetComponent<RectTransform>();
+
+        Canvas canvas =
+            numberObject.GetComponentInParent<Canvas>();
+
+        if (numberRect == null || canvas == null)
+            return;
+
+        RectTransform canvasRect =
+            canvas.GetComponent<RectTransform>();
+
+        if (canvasRect == null)
+            return;
+
+        Vector3 npcWorldPosition = targetNpc.position;
+        Vector2 npcCanvasPosition;
+
+        if (canvas.renderMode == RenderMode.WorldSpace)
+        {
+            npcCanvasPosition =
+                canvasRect.InverseTransformPoint(npcWorldPosition);
+        }
+        else
+        {
+            Camera worldCamera = Camera.main;
+
+            if (worldCamera == null)
+                return;
+
+            Vector2 screenPosition =
+                RectTransformUtility.WorldToScreenPoint(
+                    worldCamera,
+                    npcWorldPosition
+                );
+
+            Camera uiCamera =
+                canvas.renderMode == RenderMode.ScreenSpaceOverlay
+                    ? null
+                    : (canvas.worldCamera != null
+                        ? canvas.worldCamera
+                        : worldCamera);
+
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    canvasRect,
+                    screenPosition,
+                    uiCamera,
+                    out npcCanvasPosition))
+            {
+                return;
+            }
+        }
+
+        numberRect.anchoredPosition =
+            npcCanvasPosition + npcNumberOffset;
     }
 }
