@@ -191,6 +191,8 @@ public class IntroSceneManager : MonoBehaviour
     }
     void Start()
     {
+        AudioListener.volume = 0f;
+
         bool openSaveSelectImmediately =
             ConsumeOpenSaveSelectRequest();
 
@@ -228,6 +230,8 @@ public class IntroSceneManager : MonoBehaviour
 
         if (openSaveSelectImmediately)
         {
+            AudioListener.volume = 1f;
+
             HideTeamLogoPanelImmediately();
             PrepareReturnedSaveSelectState();
             StartCoroutine(OpenSaveSelectAfterSceneReturn());
@@ -308,6 +312,8 @@ public class IntroSceneManager : MonoBehaviour
             teamLogoPanel.blocksRaycasts = false;
             teamLogoPanel.gameObject.SetActive(false);
         }
+
+        AudioListener.volume = 1f;
 
         // 팀 로고 패널이 완전히 사라진 뒤 기존 인트로를 그대로 시작한다.
         yield return StartCoroutine(FlowSequence());
