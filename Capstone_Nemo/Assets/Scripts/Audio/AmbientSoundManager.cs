@@ -9,6 +9,13 @@ public class AmbientSoundManager : MonoBehaviour
 {
     public static AmbientSoundManager Instance { get; private set; }
 
+    public enum PlaybackMode
+    {
+        RandomIntermittent,
+        ContinuousWhileAllowed,
+        ContinuousVolumeVariation
+    }
+
     public enum TimeRule
     {
         Always,
@@ -31,6 +38,13 @@ public class AmbientSoundManager : MonoBehaviour
         [Header("Basic")]
         public string soundName = "Ambient";
         public AudioClip clip;
+
+        [Tooltip(
+            "RandomIntermittent = 랜덤 재생/휴식, " +
+            "ContinuousWhileAllowed = 조건이 맞는 동안 일정 음량으로 계속 재생, " +
+            "ContinuousVolumeVariation = 재생은 유지하고 음량만 불규칙하게 변화"
+        )]
+        public PlaybackMode playbackMode = PlaybackMode.RandomIntermittent;
 
         [Range(0f, 1f)]
         public float volume = 0.25f;
@@ -70,6 +84,54 @@ public class AmbientSoundManager : MonoBehaviour
         public bool randomPitch = false;
 
         public Vector2 pitchRange = new Vector2(0.97f, 1.03f);
+
+        [Header("Continuous Volume Variation")]
+        [Tooltip(
+            "ContinuousVolumeVariation 모드에서 사용하는 최소 음량입니다. " +
+            "완전한 무음처럼 끊겨 들리지 않게 0보다 조금 크게 두는 것을 추천합니다."
+        )]
+        [Range(0f, 1f)]
+        public float minVariationVolume = 0.02f;
+
+        [Tooltip(
+            "ContinuousVolumeVariation 모드에서 사용하는 최대 음량입니다."
+        )]
+        [Range(0f, 1f)]
+        public float maxVariationVolume = 0.14f;
+
+        [Tooltip("목표 음량에 도달한 뒤 유지하는 최소 시간")]
+        [Min(0f)]
+        public float minVariationHoldTime = 0.4f;
+
+        [Tooltip("목표 음량에 도달한 뒤 유지하는 최대 시간")]
+        [Min(0f)]
+        public float maxVariationHoldTime = 1.5f;
+
+        [Tooltip("다음 목표 음량으로 변화하는 최소 시간")]
+        [Min(0.01f)]
+        public float minVolumeTransitionTime = 0.6f;
+
+        [Tooltip("다음 목표 음량으로 변화하는 최대 시간")]
+        [Min(0.01f)]
+        public float maxVolumeTransitionTime = 1.4f;
+
+        [Tooltip(
+            "체크하면 대부분 낮은 음량에 머물고 가끔 크게 올라옵니다. " +
+            "별빛 비처럼 드문드문 들리는 환경음에 추천합니다."
+        )]
+        public bool favorQuietVolumes = true;
+
+        [Tooltip(
+            "Favor Quiet Volumes가 켜져 있을 때 높은 음량 구간을 선택할 확률"
+        )]
+        [Range(0f, 1f)]
+        public float loudVolumeChance = 0.3f;
+
+        [Tooltip(
+            "낮은 음량 구간과 높은 음량 구간을 나누는 기준값"
+        )]
+        [Range(0f, 1f)]
+        public float quietVolumeMax = 0.07f;
 
         [Header("Time Condition")]
         public TimeRule timeRule = TimeRule.Always;
@@ -203,6 +265,20 @@ public class AmbientSoundManager : MonoBehaviour
 
     private IEnumerator AmbientRoutine(AmbientSound sound)
     {
+        if (sound.playbackMode ==
+            PlaybackMode.ContinuousWhileAllowed)
+        {
+            yield return ContinuousAmbientRoutine(sound);
+            yield break;
+        }
+
+        if (sound.playbackMode ==
+            PlaybackMode.ContinuousVolumeVariation)
+        {
+            yield return ContinuousVolumeVariationRoutine(sound);
+            yield break;
+        }
+
         bool needInitialInterval =
             sound.waitBeforeFirstPlay;
 
@@ -336,6 +412,394 @@ public class AmbientSoundManager : MonoBehaviour
                     sound.waitBeforeFirstPlay;
             }
         }
+    }
+
+    private IEnumerator ContinuousAmbientRoutine(
+        AmbientSound sound)
+    {
+        while (true)
+        {
+            // 씬 / 시간 / 날씨 조건이 맞을 때까지 대기
+            while (!IsSoundAllowed(sound))
+            {
+                if (sound.runtimeSource != null &&
+                    sound.runtimeSource.isPlaying)
+                {
+                    yield return FadeOutAndStop(sound);
+                }
+
+                yield return WaitRealtime(
+                    inactiveCheckInterval
+                );
+            }
+
+            if (sound.runtimeSource == null ||
+                sound.clip == null)
+            {
+                yield return WaitRealtime(
+                    inactiveCheckInterval
+                );
+
+                continue;
+            }
+
+            // 조건이 맞으면 한 번 시작한 뒤 계속 루프
+            PrepareSource(sound);
+
+            sound.runtimeSource.loop = true;
+            sound.runtimeSource.Play();
+
+            // 서서히 등장
+            yield return FadeInWhileAllowed(sound);
+
+            // 별빛 비가 계속 내리는 동안 유지
+            while (IsSoundAllowed(sound))
+            {
+                float targetVolume =
+                    GetEffectiveVolume(sound);
+
+                sound.runtimeSource.volume =
+                    Mathf.MoveTowards(
+                        sound.runtimeSource.volume,
+                        targetVolume,
+                        Time.unscaledDeltaTime / 1.5f
+                    );
+
+                yield return null;
+            }
+
+            // 비가 끝나거나 허용 씬/시간 조건을 벗어나면
+            // 자연스럽게 Fade Out 후 정지
+            yield return FadeOutAndStop(sound);
+        }
+    }
+
+    private IEnumerator ContinuousVolumeVariationRoutine(
+        AmbientSound sound)
+    {
+        while (true)
+        {
+            // 씬 / 시간 / 날씨 조건이 맞을 때까지 대기
+            while (!IsSoundAllowed(sound))
+            {
+                if (sound.runtimeSource != null &&
+                    sound.runtimeSource.isPlaying)
+                {
+                    yield return FadeOutAndStop(sound);
+                }
+
+                yield return WaitRealtime(
+                    inactiveCheckInterval
+                );
+            }
+
+            if (sound.runtimeSource == null ||
+                sound.clip == null)
+            {
+                yield return WaitRealtime(
+                    inactiveCheckInterval
+                );
+
+                continue;
+            }
+
+            /*
+             * 이 모드에서는 AudioSource를 중간에 Stop하지 않습니다.
+             * 조건이 유지되는 동안 음원은 계속 Loop되고,
+             * runtimeSource.volume만 불규칙하게 변화합니다.
+             */
+            PrepareSource(sound);
+
+            sound.runtimeSource.loop = true;
+            sound.runtimeSource.volume = 0f;
+            sound.runtimeSource.Play();
+
+            // 첫 음량도 랜덤으로 고르되, 보통은 낮은 음량부터 시작
+            float firstRawTarget =
+                GetRandomVariationTargetVolume(sound);
+
+            float firstTransitionDuration =
+                sound.fadeInDuration > 0f
+                    ? sound.fadeInDuration
+                    : GetRandomVolumeTransitionTime(sound);
+
+            yield return TransitionVariationVolumeWhileAllowed(
+                sound,
+                firstRawTarget,
+                firstTransitionDuration
+            );
+
+            if (!IsSoundAllowed(sound))
+            {
+                yield return FadeOutAndStop(sound);
+                continue;
+            }
+
+            // 첫 목표 음량에서 잠깐 유지
+            yield return HoldVariationVolumeWhileAllowed(
+                sound,
+                firstRawTarget,
+                GetRandomVariationHoldTime(sound)
+            );
+
+            // 조건이 유지되는 동안 재생은 그대로 두고
+            // 목표 음량만 계속 새로 선택
+            while (IsSoundAllowed(sound))
+            {
+                float rawTargetVolume =
+                    GetRandomVariationTargetVolume(sound);
+
+                float transitionDuration =
+                    GetRandomVolumeTransitionTime(sound);
+
+                yield return TransitionVariationVolumeWhileAllowed(
+                    sound,
+                    rawTargetVolume,
+                    transitionDuration
+                );
+
+                if (!IsSoundAllowed(sound))
+                    break;
+
+                float holdDuration =
+                    GetRandomVariationHoldTime(sound);
+
+                yield return HoldVariationVolumeWhileAllowed(
+                    sound,
+                    rawTargetVolume,
+                    holdDuration
+                );
+            }
+
+            // 별빛 비가 끝나거나 씬/시간 조건을 벗어난 경우에만
+            // 마지막으로 Fade Out 후 실제 재생을 멈춤
+            yield return FadeOutAndStop(sound);
+        }
+    }
+
+    private IEnumerator TransitionVariationVolumeWhileAllowed(
+        AmbientSound sound,
+        float rawTargetVolume,
+        float duration)
+    {
+        AudioSource source = sound.runtimeSource;
+
+        if (source == null)
+            yield break;
+
+        duration = Mathf.Max(0f, duration);
+
+        if (duration <= 0f)
+        {
+            if (IsSoundAllowed(sound))
+            {
+                source.volume =
+                    ApplyWeatherVolume(
+                        sound,
+                        rawTargetVolume
+                    );
+            }
+
+            yield break;
+        }
+
+        float startVolume = source.volume;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            if (!IsSoundAllowed(sound))
+                yield break;
+
+            elapsed += Time.unscaledDeltaTime;
+
+            float t =
+                Mathf.Clamp01(
+                    elapsed / duration
+                );
+
+            // 직선 변화보다 부드럽게 오르내리도록 SmoothStep 사용
+            t = Mathf.SmoothStep(0f, 1f, t);
+
+            float targetVolume =
+                ApplyWeatherVolume(
+                    sound,
+                    rawTargetVolume
+                );
+
+            source.volume =
+                Mathf.Lerp(
+                    startVolume,
+                    targetVolume,
+                    t
+                );
+
+            yield return null;
+        }
+
+        if (IsSoundAllowed(sound))
+        {
+            source.volume =
+                ApplyWeatherVolume(
+                    sound,
+                    rawTargetVolume
+                );
+        }
+    }
+
+    private IEnumerator HoldVariationVolumeWhileAllowed(
+        AmbientSound sound,
+        float rawTargetVolume,
+        float duration)
+    {
+        AudioSource source = sound.runtimeSource;
+
+        if (source == null)
+            yield break;
+
+        duration = Mathf.Max(0f, duration);
+
+        float elapsed = 0f;
+
+        while (elapsed < duration &&
+               IsSoundAllowed(sound))
+        {
+            /*
+             * ReduceVolumeDuringStarRain 같은 날씨 배율이
+             * 유지 중 바뀌어도 갑자기 튀지 않도록 천천히 보정합니다.
+             */
+            float targetVolume =
+                ApplyWeatherVolume(
+                    sound,
+                    rawTargetVolume
+                );
+
+            source.volume =
+                Mathf.MoveTowards(
+                    source.volume,
+                    targetVolume,
+                    Time.unscaledDeltaTime / 0.2f
+                );
+
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+    }
+
+    private float GetRandomVariationTargetVolume(
+        AmbientSound sound)
+    {
+        float minVolume =
+            Mathf.Clamp01(
+                Mathf.Min(
+                    sound.minVariationVolume,
+                    sound.maxVariationVolume
+                )
+            );
+
+        float maxVolume =
+            Mathf.Clamp01(
+                Mathf.Max(
+                    sound.minVariationVolume,
+                    sound.maxVariationVolume
+                )
+            );
+
+        if (Mathf.Approximately(
+            minVolume,
+            maxVolume))
+        {
+            return minVolume;
+        }
+
+        if (!sound.favorQuietVolumes)
+        {
+            return UnityEngine.Random.Range(
+                minVolume,
+                maxVolume
+            );
+        }
+
+        float quietMax =
+            Mathf.Clamp(
+                sound.quietVolumeMax,
+                minVolume,
+                maxVolume
+            );
+
+        bool chooseLoud =
+            UnityEngine.Random.value <
+            Mathf.Clamp01(
+                sound.loudVolumeChance
+            );
+
+        if (chooseLoud &&
+            quietMax < maxVolume)
+        {
+            return UnityEngine.Random.Range(
+                quietMax,
+                maxVolume
+            );
+        }
+
+        return UnityEngine.Random.Range(
+            minVolume,
+            quietMax
+        );
+    }
+
+    private float GetRandomVariationHoldTime(
+        AmbientSound sound)
+    {
+        float min =
+            Mathf.Max(
+                0f,
+                Mathf.Min(
+                    sound.minVariationHoldTime,
+                    sound.maxVariationHoldTime
+                )
+            );
+
+        float max =
+            Mathf.Max(
+                min,
+                Mathf.Max(
+                    sound.minVariationHoldTime,
+                    sound.maxVariationHoldTime
+                )
+            );
+
+        return UnityEngine.Random.Range(
+            min,
+            max
+        );
+    }
+
+    private float GetRandomVolumeTransitionTime(
+        AmbientSound sound)
+    {
+        float min =
+            Mathf.Max(
+                0.01f,
+                Mathf.Min(
+                    sound.minVolumeTransitionTime,
+                    sound.maxVolumeTransitionTime
+                )
+            );
+
+        float max =
+            Mathf.Max(
+                min,
+                Mathf.Max(
+                    sound.minVolumeTransitionTime,
+                    sound.maxVolumeTransitionTime
+                )
+            );
+
+        return UnityEngine.Random.Range(
+            min,
+            max
+        );
     }
 
     private void PrepareSource(AmbientSound sound)
@@ -644,8 +1108,18 @@ public class AmbientSoundManager : MonoBehaviour
     private float GetEffectiveVolume(
         AmbientSound sound)
     {
+        return ApplyWeatherVolume(
+            sound,
+            sound.volume
+        );
+    }
+
+    private float ApplyWeatherVolume(
+        AmbientSound sound,
+        float rawVolume)
+    {
         float result =
-            Mathf.Clamp01(sound.volume);
+            Mathf.Clamp01(rawVolume);
 
         if (isStarRainActive &&
             sound.starRainBehavior ==
@@ -770,4 +1244,3 @@ public class AmbientSoundManager : MonoBehaviour
         }
     }
 }
-
