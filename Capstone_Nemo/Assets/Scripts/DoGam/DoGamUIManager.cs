@@ -1478,22 +1478,78 @@ public class DoGamUIManager : MonoBehaviour
                     icon.enabled = false;
 
                 string videoName = !string.IsNullOrWhiteSpace(item.video)
-                    ? item.video
-                    : item.image;
+    ? item.video
+    : item.image;
+
                 videoName = Path.GetFileNameWithoutExtension(videoName);
 
+
+                // ===============================
+                // 영상
+                // Resources/Videos/Guide/
+                // ===============================
                 var clip = string.IsNullOrWhiteSpace(videoName)
                     ? null
-                    : Resources.Load<UnityEngine.Video.VideoClip>("Videos/Guide/" + videoName);
+                    : Resources.Load<UnityEngine.Video.VideoClip>(
+                        "Videos/Guide/" + videoName
+                    );
 
-                var hoverPlayer = iconTransform.GetComponent<HowToHoverVideoPlayer>();
+
+                // ===============================
+                // PNG 썸네일
+                // Resources/Sprites/GuideThumbnail/
+                // 영상과 동일한 파일명 사용
+                //
+                // 예:
+                // Move.mp4
+                // Move.png
+                // ===============================
+                var thumbnail = string.IsNullOrWhiteSpace(videoName)
+                    ? null
+                    : Resources.Load<Sprite>(
+                        "Sprites/GuideThumbnail/" + videoName
+                    );
+
+
+                // ===============================
+                // Hover Video Player
+                // ===============================
+                var hoverPlayer =
+                    iconTransform.GetComponent<HowToHoverVideoPlayer>();
+
                 if (hoverPlayer == null)
-                    hoverPlayer = iconTransform.gameObject.AddComponent<HowToHoverVideoPlayer>();
+                {
+                    hoverPlayer =
+                        iconTransform.gameObject
+                            .AddComponent<HowToHoverVideoPlayer>();
+                }
 
-                hoverPlayer.Setup(clip);
 
+                // 영상 + 썸네일 전달
+                hoverPlayer.Setup(
+                    clip,
+                    thumbnail
+                );
+
+
+                // ===============================
+                // 오류 확인
+                // ===============================
                 if (clip == null)
-                    Debug.LogWarning($"[HowTo] 영상을 찾을 수 없음: Resources/Videos/Guide/{videoName}");
+                {
+                    Debug.LogWarning(
+                        $"[HowTo] 영상을 찾을 수 없음: " +
+                        $"Resources/Videos/Guide/{videoName}"
+                    );
+                }
+
+                if (thumbnail == null)
+                {
+                    Debug.LogWarning(
+                        $"[HowTo] 썸네일을 찾을 수 없음: " +
+                        $"Resources/Sprites/GuideThumbnail/{videoName}"
+                    );
+                }
             }
         }
 

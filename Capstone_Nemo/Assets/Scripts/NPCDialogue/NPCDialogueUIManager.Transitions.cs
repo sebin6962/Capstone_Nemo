@@ -11,6 +11,7 @@ public partial class NPCDialogueUIManager
     {
         public RectTransform root;
         public bool moveUp;
+        [NonSerialized] public UnityEngine.Object sceneOwner;
     }
 
     [Header("Dialogue HUD Transition")]
@@ -34,6 +35,7 @@ public partial class NPCDialogueUIManager
 
     private readonly List<HudSnapshot> hudSnapshots = new();
     private readonly Vector3[] hudCorners = new Vector3[4];
+    private readonly List<RectTransform> hudBoundsRects = new();
     private Coroutine hudTransitionCoroutine;
     private bool dialogueSessionActive;
     private bool dialogueTransitionClosing;
@@ -86,19 +88,114 @@ public partial class NPCDialogueUIManager
     {
         Canvas.ForceUpdateCanvases();
         hudSnapshots.Clear();
+        dialogueHudTargets.RemoveAll(t => t == null || t.root == null);
         foreach (DialogueHudTarget target in dialogueHudTargets)
+            CaptureDialogueHudTarget(target);
+    }
+
+    private HudSnapshot CaptureDialogueHudTarget(DialogueHudTarget target)
+    {
+        if (target == null || target.root == null)
+            return null;
+        RectTransform root = target.root;
+        Canvas canvas = root.GetComponentInParent<Canvas>();
+        if (canvas == null || canvas.rootCanvas.renderMode == RenderMode.WorldSpace ||
+            root.parent == null || root == canvas.rootCanvas.transform ||
+            (dialoguePanel != null && dialoguePanel.transform.IsChildOf(root)))
         {
+            Debug.LogWarning("Dialogue HUD: use a separate HUD wrapper under a screen-space Canvas.", root);
+            return null;
+        }
+        bool overlaps = hudSnapshots.Exists(s => s.root != null &&
+            (root.IsChildOf(s.root) || s.root.IsChildOf(root)));
+        if (overlaps)
+        {
+            Debug.LogWarning("Dialogue HUD: duplicate or nested target skipped.", root);
+            return null;
+        }
+        CanvasGroup group = root.GetComponent<CanvasGroup>();
+        if (group == null)
+            group = root.gameObject.AddComponent<CanvasGroup>();
+        HudSnapshot snapshot = new HudSnapshot
+        {
+            root = root,
+            viewport = (RectTransform)canvas.rootCanvas.transform,
+            group = group,
+            home = root.anchoredPosition,
+            closeStart = root.anchoredPosition,
+            moveUp = target.moveUp,
+            interactable = group.interactable
+        };
+        hudSnapshots.Add(snapshot);
+        // Preserve raycast blocking to avoid clicks falling through moving UI.
+        group.interactable = false;
+        return snapshot;
+    }
+
+    // Scene-local binders register with the surviving singleton, not a scene copy.
+    public void RegisterSceneDialogueHud(UnityEngine.Object owner, RectTransform root, bool moveUp)
+    {
+        if (owner == null || root == null)
+            return;
+        dialogueHudTargets.RemoveAll(t => t == null || t.root == null);
+        DialogueHudTarget existing = dialogueHudTargets.Find(t => t.root == root);
+        if (existing != null && existing.sceneOwner == owner)
+            return;
+        bool overlaps = dialogueHudTargets.Exists(t =>
+            root.IsChildOf(t.root) || t.root.IsChildOf(root));
+        if (overlaps)
+        {
+            Debug.LogWarning("Scene HUD registration skipped: root already registered or nested. Remove scene HUD references from the manager Inspector and register them only in the scene binder.", root);
+            return;
+        }
+        DialogueHudTarget target = new DialogueHudTarget
+        {
+            root = root,
+            moveUp = moveUp,
+            sceneOwner = owner
+        };
+        dialogueHudTargets.Add(target);
+        // If a dialogue survives a scene load, keep the new HUD hidden too.
+        // During closing, leave newly loaded HUD at home for the next dialogue.
+        if (!isActiveAndEnabled || !dialogueSessionActive || dialogueTransitionClosing ||
+            (isTutorialDialogueMode && !animateTutorialHud))
+            return;
+        Canvas.ForceUpdateCanvases();
+        HudSnapshot snapshot = CaptureDialogueHudTarget(target);
+        if (snapshot != null)
+        {
+            root.anchoredPosition = GetDialogueHudHiddenPosition(snapshot);
+            snapshot.closeStart = root.anchoredPosition;
+        }
+    }
+
+    public void UnregisterSceneDialogueHud(UnityEngine.Object owner)
+    {
+        // Remove only this binder's roots: safe for additive scene unloading.
+        for (int i = dialogueHudTargets.Count - 1; i >= 0; i--)
+        {
+            DialogueHudTarget target = dialogueHudTargets[i];
             if (target == null || target.root == null)
-                continue;
+                if (target == null || target.sceneOwner != owner)
+                    continue;
             RectTransform root = target.root;
             Canvas canvas = root.GetComponentInParent<Canvas>();
             if (canvas == null || canvas.rootCanvas.renderMode == RenderMode.WorldSpace ||
                 root.parent == null || root == canvas.rootCanvas.transform ||
                 (dialoguePanel != null && dialoguePanel.transform.IsChildOf(root)))
-            {
-                Debug.LogWarning("Dialogue HUD: use a separate HUD wrapper under a screen-space Canvas.", root);
-                continue;
-            }
+                for (int j = hudSnapshots.Count - 1; j >= 0; j--)
+                {
+                    Debug.LogWarning("Dialogue HUD: use a separate HUD wrapper under a screen-space Canvas.", root);
+                    continue;
+                    HudSnapshot snapshot = hudSnapshots[j];
+                    if (!ReferenceEquals(snapshot.root, target.root))
+                        continue;
+                    if (snapshot.root != null)
+                        snapshot.root.anchoredPosition = snapshot.home;
+                    if (snapshot.group != null)
+                        snapshot.group.interactable = snapshot.interactable;
+                    hudSnapshots.RemoveAt(j);
+                }
             bool overlaps = hudSnapshots.Exists(s =>
                 root.IsChildOf(s.root) || s.root.IsChildOf(root));
             if (overlaps)
@@ -120,6 +217,7 @@ public partial class NPCDialogueUIManager
             });
             // Preserve raycast blocking to avoid clicks falling through moving UI.
             group.interactable = false;
+            dialogueHudTargets.RemoveAt(i);
         }
     }
 
@@ -127,26 +225,46 @@ public partial class NPCDialogueUIManager
     {
         if (s.root == null || s.viewport == null || s.root.parent == null)
             return s.home;
-        s.root.GetWorldCorners(hudCorners);
+
+        s.root.GetComponentsInChildren<RectTransform>(true, hudBoundsRects);
+
         Vector2 displacement = s.root.anchoredPosition - s.home;
+
         Vector3 worldDisplacement = s.root.parent.TransformVector(
             new Vector3(displacement.x, displacement.y, 0f));
+
         float minY = float.PositiveInfinity;
         float maxY = float.NegativeInfinity;
-        foreach (Vector3 corner in hudCorners)
+
+        foreach (RectTransform rect in hudBoundsRects)
         {
-            float y = s.viewport.InverseTransformPoint(corner - worldDisplacement).y;
-            minY = Mathf.Min(minY, y);
-            maxY = Mathf.Max(maxY, y);
+            if (rect == null ||
+                (rect != s.root && !rect.gameObject.activeInHierarchy))
+            {
+                continue;
+            }
+
+            rect.GetWorldCorners(hudCorners);
+
+            foreach (Vector3 corner in hudCorners)
+            {
+                float y = s.viewport.InverseTransformPoint(
+                    corner - worldDisplacement).y;
+
+                minY = Mathf.Min(minY, y);
+                maxY = Mathf.Max(maxY, y);
+            }
         }
+
         float delta = s.moveUp
             ? Mathf.Max(0f, s.viewport.rect.yMax + hudOutsidePadding - minY)
             : Mathf.Min(0f, s.viewport.rect.yMin - hudOutsidePadding - maxY);
+
         Vector3 localDelta = s.root.parent.InverseTransformVector(
             s.viewport.TransformVector(new Vector3(0f, delta, 0f)));
+
         return s.home + new Vector2(localDelta.x, localDelta.y);
     }
-
     private IEnumerator SlideDialogueHud(bool hide)
     {
         if (hudSnapshots.Count == 0)
