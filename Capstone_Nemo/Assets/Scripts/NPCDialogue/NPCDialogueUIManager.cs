@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.Localization.Settings;
 
-public class NPCDialogueUIManager : MonoBehaviour
+public partial class NPCDialogueUIManager : MonoBehaviour
 {
     private const string LocalizationTable = "NPCDialogue";
 
@@ -133,14 +133,16 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     public bool IsOpen()
     {
-        return dialoguePanel != null && dialoguePanel.activeSelf;
+        return dialogueSessionActive || IsDialogueTransitioning ||
+                (dialoguePanel != null && dialoguePanel.activeSelf);
     }
 
     public bool IsDialogueOpen
     {
         get
         {
-            return dialoguePanel != null && dialoguePanel.activeSelf;
+            return dialogueSessionActive || IsDialogueTransitioning ||
+                (dialoguePanel != null && dialoguePanel.activeSelf);
         }
     }
 
@@ -196,6 +198,9 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     private void Update()
     {
+        if (IsDialogueTransitioning)
+            return;
+
         if (dialoguePanel == null ||
             !dialoguePanel.activeSelf)
         {
@@ -515,6 +520,9 @@ public class NPCDialogueUIManager : MonoBehaviour
         string categoryId
     )
     {
+        if (!isActiveAndEnabled || IsOpen() || dialoguePanel == null)
+            return;
+
         if (npc == null)
             return;
 
@@ -595,7 +603,7 @@ public class NPCDialogueUIManager : MonoBehaviour
                 .StartDialogueBGM();
         }
 
-        OpenPanelWithPortraitAnimation(() =>
+        BeginDialogueWithHud(() =>
         {
             MoveToNode(entryNodeId);
         });
@@ -610,6 +618,12 @@ public class NPCDialogueUIManager : MonoBehaviour
             lines.Count == 0)
         {
             onFinished?.Invoke();
+            return;
+        }
+
+        if (!isActiveAndEnabled || IsOpen() || dialoguePanel == null)
+        {
+            Debug.LogWarning("Tutorial dialogue rejected: manager unavailable or dialogue already active.", this);
             return;
         }
 
@@ -658,7 +672,7 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         if (playOpenAnimation)
         {
-            OpenPanelWithPortraitAnimation(() =>
+            BeginDialogueWithHud(() =>
             {
                 StartTyping(
                     currentTutorialLine.dialogue
@@ -1020,6 +1034,9 @@ public class NPCDialogueUIManager : MonoBehaviour
 
     private void OnClickNextButton()
     {
+        if (IsDialogueTransitioning || dialoguePanel == null || !dialoguePanel.activeSelf)
+            return;
+
         if (currentState != DialogueState.Line)
             return;
 
@@ -1060,7 +1077,7 @@ public class NPCDialogueUIManager : MonoBehaviour
         CloseDialogue();
     }
 
-    private void CloseTutorialDialogue()
+    private System.Action CloseTutorialDialogueCore()
     {
         StopPortraitOpenAnimation();
 
@@ -1082,7 +1099,7 @@ public class NPCDialogueUIManager : MonoBehaviour
         waitTypingDelayForNextLine = false;
         currentState = DialogueState.None;
 
-        callback?.Invoke();
+        return callback;
     }
 
     private void ShowNextLine()
@@ -1527,7 +1544,7 @@ public class NPCDialogueUIManager : MonoBehaviour
             eKeyGuideImage.SetActive(visible);
     }
 
-    public void CloseDialogue()
+    private void CloseDialogueCore()
     {
         if (BGMPlayer.Instance != null)
         {
@@ -1552,9 +1569,6 @@ public class NPCDialogueUIManager : MonoBehaviour
 
         if (dialoguePanel != null)
             dialoguePanel.SetActive(false);
-
-        if (currentNpc != null)
-            currentNpc.EndDialogue();
 
         currentNpc = null;
         currentDialogueData = null;
