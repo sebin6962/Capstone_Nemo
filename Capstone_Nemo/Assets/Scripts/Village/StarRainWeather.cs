@@ -3,7 +3,7 @@ using UnityEngine;
 public static class StarRainWeather
 {
     // 하루에 별빛 비가 내릴 확률
-    private const float StarRainChance = 0.15f;
+    private const float StarRainChance = 0.3f;
 
     /// <summary>
     /// 특정 세이브 슬롯의 특정 날짜가 별빛 비가 오는 날인지 반환합니다.
