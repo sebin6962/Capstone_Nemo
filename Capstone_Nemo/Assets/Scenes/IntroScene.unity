@@ -1292,7 +1292,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 573424457062852244, guid: be0b33dfd3e246a40bc58011b50b915e, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 660413560425413994, guid: be0b33dfd3e246a40bc58011b50b915e, type: 3}
       propertyPath: m_fontAsset
@@ -2333,6 +2333,10 @@ PrefabInstance:
     - target: {fileID: 5421539502536266907, guid: be0b33dfd3e246a40bc58011b50b915e, type: 3}
       propertyPath: m_hasFontAssetChanged
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5580096768222181981, guid: be0b33dfd3e246a40bc58011b50b915e, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 250
       objectReference: {fileID: 0}
     - target: {fileID: 5633785387876201155, guid: be0b33dfd3e246a40bc58011b50b915e, type: 3}
       propertyPath: m_fontAsset
@@ -4437,6 +4441,7 @@ GameObject:
   - component: {fileID: 480295562}
   - component: {fileID: 480295564}
   - component: {fileID: 480295565}
+  - component: {fileID: 480295566}
   m_Layer: 5
   m_Name: LogoPanel
   m_TagString: Untagged
@@ -4462,7 +4467,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 160}
-  m_SizeDelta: {x: 925, y: 300}
+  m_SizeDelta: {x: 1200, y: 300}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &480295562
 MonoBehaviour:
@@ -4486,7 +4491,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: a69226824bab84c4c8585a1d019e09b3, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -4528,6 +4533,41 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   breathAmount: 0.02
   breathSpeed: 0.5
+--- !u!114 &480295566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 480295560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f55fcc3768689a4f9cf863b8c11c618, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_LocalizedAssetReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:72826a24745276447b4060b092dec628
+    m_TableEntryReference:
+      m_KeyId: 30843060224
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+  m_UpdateAsset:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 480295562}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Image, UnityEngine.UI
+        m_MethodName: set_sprite
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &480568201 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4211259029610059384, guid: be0b33dfd3e246a40bc58011b50b915e, type: 3}
@@ -4780,7 +4820,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetText: {fileID: 567182040}
   koreanFontSize: 35
-  englishFontSize: 30
+  englishFontSize: 28
 --- !u!1 &571841142
 GameObject:
   m_ObjectHideFlags: 0
@@ -4919,7 +4959,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &586673661
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4951,7 +4991,7 @@ CanvasGroup:
   m_Enabled: 1
   m_Alpha: 1
   m_Interactable: 1
-  m_BlocksRaycasts: 1
+  m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!114 &586673663
 MonoBehaviour:
@@ -5114,7 +5154,7 @@ RectTransform:
   m_GameObject: {fileID: 663137371}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.6, y: 0.6, z: 1}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1296198805}
@@ -5128,7 +5168,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 21, y: -730}
+  m_AnchoredPosition: {x: 21, y: -605}
   m_SizeDelta: {x: 3210, y: 1310}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &663137373
@@ -5439,7 +5479,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -118.00006}
+  m_AnchoredPosition: {x: 0, y: -118.00003}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &750243509
@@ -6654,7 +6694,7 @@ MonoBehaviour:
   - soundName: Cricket
     clip: {fileID: 8300000, guid: c9314f4e0e20a7942b11d2cd59522081, type: 3}
     playbackMode: 0
-    volume: 0.308
+    volume: 0.401
     loop: 1
     minPlayDuration: 10
     maxPlayDuration: 25
@@ -6667,7 +6707,7 @@ MonoBehaviour:
     randomPitch: 1
     pitchRange: {x: 0.97, y: 1.03}
     minVariationVolume: 0.02
-    maxVariationVolume: 0.14
+    maxVariationVolume: 0.198
     minVariationHoldTime: 0.4
     maxVariationHoldTime: 1.5
     minVolumeTransitionTime: 0.6
@@ -6686,7 +6726,7 @@ MonoBehaviour:
   - soundName: StarRain
     clip: {fileID: 8300000, guid: 3db1c34bac66c4c4281f4dd19da3b5d0, type: 3}
     playbackMode: 2
-    volume: 0.67
+    volume: 0.714
     loop: 1
     minPlayDuration: 10
     maxPlayDuration: 25
@@ -6699,7 +6739,7 @@ MonoBehaviour:
     randomPitch: 0
     pitchRange: {x: 0.97, y: 1.03}
     minVariationVolume: 0.041
-    maxVariationVolume: 0.315
+    maxVariationVolume: 0.424
     minVariationHoldTime: 0.4
     maxVariationHoldTime: 1.5
     minVolumeTransitionTime: 0.6
@@ -7462,10 +7502,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.00027352571
-    width: 1
-    height: 0.99945295
+    x: 0.00022312999
+    y: 0
+    width: 0.99955374
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -8781,7 +8821,7 @@ MonoBehaviour:
   nightBGM: {fileID: 8300000, guid: 7855f595289fb594c8e00c5ea9d70715, type: 3}
   nightStartHour: 20
   dialogueBGM: {fileID: 8300000, guid: 6e685f8ae2496a74fa9692da65db86dc, type: 3}
-  dialogueTargetVolume: 0.9
+  dialogueTargetVolume: 1
   fadeDuration: 1.5
   targetVolume: 0.6
 --- !u!82 &1579875989
@@ -9399,7 +9439,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetText: {fileID: 1883752010}
   koreanFontSize: 35
-  englishFontSize: 30
+  englishFontSize: 28
 --- !u!1 &1886327886
 GameObject:
   m_ObjectHideFlags: 0

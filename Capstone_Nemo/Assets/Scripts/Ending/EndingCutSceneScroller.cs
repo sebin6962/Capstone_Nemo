@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -146,6 +148,7 @@ public class EndingCutSceneScroller : MonoBehaviour
 
     private void Start()
     {
+        InitializeSecondCutscene();
         if (targetCamera == null)
             targetCamera = Camera.main;
 
@@ -308,6 +311,8 @@ public class EndingCutSceneScroller : MonoBehaviour
 
         StopCutsceneParticles();
 
+        yield return SecondCutsceneRoutine();
+
         // 검은 이미지 페이드
         if (blackImage != null)
         {
@@ -317,8 +322,9 @@ public class EndingCutSceneScroller : MonoBehaviour
             yield return StartCoroutine(FadeBlackImage(0f, 1f, blackFadeSeconds));
         }
 
-        
 
+
+        HideSecondCutscene();
         yield return StartCoroutine(SubtitleSequenceRoutine());
     }
 
@@ -468,6 +474,292 @@ public class EndingCutSceneScroller : MonoBehaviour
         }
 
         cg.alpha = 1f;
+    }
+
+    [Header("두 번째 컷신")]
+    public bool useSecondCutscene = true;
+    [Tooltip("이 컴포넌트가 붙은 오브젝트와 별도의 전체 화면 UI 패널")]
+    public GameObject secondCutscenePanel;
+    public CanvasGroup secondCutsceneGroup;
+    [Min(0f)] public float secondFadeInSeconds = 0.8f;
+    [Min(0f)] public float secondPanelHoldSeconds = 3f;
+
+    [Header("두 번째 컷신 이미지 Pan / Zoom")]
+    public RectTransform secondTargetImage;
+    public bool secondUseImagePan;
+    public Vector2 secondStartAnchoredPos;
+    public Vector2 secondEndAnchoredPos;
+    public bool secondUseZoom;
+    public Vector3 secondStartScale = Vector3.one;
+    public Vector3 secondEndScale = Vector3.one;
+    [Min(0f)] public float secondMoveDuration = 3f;
+
+    [Header("두 번째 컷신 TMP 누적 자막")]
+    [TextArea(3, 12)] public string secondSubtitleContent;
+    public string secondSegmentDelimiter = "||";
+    public RectTransform secondSubtitleContainer;
+    public TextMeshProUGUI secondSubtitleLinePrefab;
+    public CanvasGroup secondSubtitleGroup;
+    public float secondLineSpacingPx = 6f;
+    public float secondTextLineSpacing = 1f;
+    [Min(0f)] public float secondFirstLineDelay = 0.5f;
+    [Min(0f)] public float secondBetweenLinesDelay = 0.8f;
+    [Min(0f)] public float secondAfterAllLinesHoldSeconds = 0.8f;
+    [Min(1f)] public float secondCharsPerSecond = 28f;
+    public bool secondClickCompletesCurrentLine = true;
+    public bool secondClickToSkipAfterAllLines = true;
+
+    [Header("두 번째 컷신 하단 그라데이션")]
+    public Image secondGradientOverlay;
+    [Tooltip("켜면 기존 Source Image 대신 아래/위 알파로 그라데이션을 생성합니다.")]
+    public bool secondGenerateGradient = true;
+    [Tooltip("켜면 부모 하단에 자동 배치합니다. 끄면 인스펙터 RectTransform 설정을 유지합니다.")]
+    public bool secondAutoLayoutGradient = false;
+    [Min(1f)] public float secondGradientHeight = 320f;
+    [Range(0f, 1f)] public float secondBottomAlpha = 0.65f;
+    [Range(0f, 1f)] public float secondTopAlpha;
+    [Min(0f)] public float secondGradientFadeSeconds = 0.3f;
+    [Min(0f)] public float secondOverlayFadeOutSeconds = 0.35f;
+
+    private CanvasGroup secondGradientGroup;
+    private Sprite secondGeneratedGradientSprite;
+    private Texture2D secondGeneratedGradientTexture;
+    private Coroutine secondPanCoroutine;
+    private readonly List<TextMeshProUGUI> secondLines = new List<TextMeshProUGUI>();
+    private int secondLastClickFrame = -1;
+
+    private CanvasGroup GetOrAddSecondGroup(GameObject obj)
+    {
+        var group = obj.GetComponent<CanvasGroup>();
+        return group != null ? group : obj.AddComponent<CanvasGroup>();
+    }
+
+    private void InitializeSecondCutscene()
+    {
+        if (secondCutscenePanel == null) return;
+        if (secondCutscenePanel == gameObject || transform.IsChildOf(secondCutscenePanel.transform))
+        {
+            Debug.LogError("[EndingCutSceneScroller] 두 번째 패널은 스크립트 오브젝트의 부모가 될 수 없습니다.", this);
+            useSecondCutscene = false;
+            return;
+        }
+        if (secondCutsceneGroup == null)
+            secondCutsceneGroup = GetOrAddSecondGroup(secondCutscenePanel);
+        secondCutsceneGroup.alpha = 0f;
+        secondCutsceneGroup.interactable = false;
+        secondCutsceneGroup.blocksRaycasts = false;
+        secondCutscenePanel.SetActive(false);
+
+        if (secondSubtitleContainer != null)
+        {
+            if (secondSubtitleGroup == null)
+                secondSubtitleGroup = GetOrAddSecondGroup(secondSubtitleContainer.gameObject);
+            secondSubtitleGroup.alpha = 0f;
+            var layout = secondSubtitleContainer.GetComponent<VerticalLayoutGroup>();
+            if (layout != null)
+            {
+                layout.childAlignment = TextAnchor.UpperCenter;
+                layout.childControlWidth = true;
+                layout.childForceExpandWidth = true;
+                layout.childControlHeight = true;
+                layout.childForceExpandHeight = false;
+                layout.spacing = secondLineSpacingPx;
+            }
+        }
+        if (secondGradientOverlay != null)
+        {
+            var rt = secondGradientOverlay.rectTransform;
+            if (secondAutoLayoutGradient)
+            {
+                rt.anchorMin = new Vector2(0f, 0f);
+                rt.anchorMax = new Vector2(1f, 0f);
+                rt.pivot = new Vector2(0.5f, 0f);
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta = new Vector2(0f, secondGradientHeight);
+                rt.localRotation = Quaternion.identity;
+                rt.localScale = Vector3.one;
+            }
+            secondGradientGroup = GetOrAddSecondGroup(secondGradientOverlay.gameObject);
+            secondGradientGroup.alpha = 0f;
+            secondGradientOverlay.raycastTarget = false;
+            if (secondGenerateGradient || secondGradientOverlay.sprite == null)
+            {
+                const int height = 128;
+                secondGeneratedGradientTexture = new Texture2D(4, height, TextureFormat.RGBA32, false);
+                secondGeneratedGradientTexture.wrapMode = TextureWrapMode.Clamp;
+                secondGeneratedGradientTexture.filterMode = FilterMode.Bilinear;
+                for (int y = 0; y < height; y++)
+                {
+                    var color = new Color(0f, 0f, 0f,
+                        Mathf.Lerp(secondBottomAlpha, secondTopAlpha, y / (float)(height - 1)));
+                    for (int x = 0; x < 4; x++) secondGeneratedGradientTexture.SetPixel(x, y, color);
+                }
+                secondGeneratedGradientTexture.Apply();
+                secondGeneratedGradientSprite = Sprite.Create(secondGeneratedGradientTexture,
+                    new Rect(0, 0, 4, height), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
+                secondGradientOverlay.overrideSprite = null;
+                secondGradientOverlay.sprite = secondGeneratedGradientSprite;
+                secondGradientOverlay.color = Color.white;
+                secondGradientOverlay.type = Image.Type.Simple;
+                secondGradientOverlay.preserveAspect = false;
+                secondGradientOverlay.useSpriteMesh = false;
+                secondGradientOverlay.material = null;
+            }
+        }
+    }
+
+    private IEnumerator SecondCutsceneRoutine()
+    {
+        if (!useSecondCutscene || secondCutscenePanel == null) yield break;
+
+        secondLastClickFrame = Time.frameCount;
+        secondCutsceneGroup.alpha = 0f;
+        if (secondSubtitleGroup != null) secondSubtitleGroup.alpha = 1f;
+        if (secondGradientGroup != null) secondGradientGroup.alpha = 0f;
+        ApplySecondImageMotion(0f);
+        secondCutscenePanel.SetActive(true);
+        secondPanCoroutine = StartCoroutine(AnimateSecondImage());
+        yield return FadeCanvasGroup(secondCutsceneGroup, 0f, 1f, secondFadeInSeconds);
+
+        bool hasSubtitles = !string.IsNullOrWhiteSpace(secondSubtitleContent);
+        if (hasSubtitles && secondSubtitleContainer != null && secondSubtitleLinePrefab != null)
+        {
+            // Fade in the gradient concurrently with subtitle timing, and join it before fading out.
+            Coroutine gradientFade = null;
+            if (secondGradientGroup != null)
+                gradientFade = StartCoroutine(FadeCanvasGroup(secondGradientGroup, 0f, 1f, secondGradientFadeSeconds));
+            yield return ShowSecondSubtitles();
+            if (gradientFade != null) yield return gradientFade;
+        }
+        else
+        {
+            if (hasSubtitles)
+                Debug.LogWarning("[EndingCutSceneScroller] 두 번째 자막 Container / Prefab 연결이 필요합니다.", this);
+            yield return SecondDelay(secondPanelHoldSeconds, false);
+        }
+
+        Coroutine subtitleFade = null;
+        Coroutine overlayFade = null;
+        if (secondSubtitleGroup != null)
+            subtitleFade = StartCoroutine(FadeCanvasGroup(secondSubtitleGroup, secondSubtitleGroup.alpha, 0f, secondOverlayFadeOutSeconds));
+        if (secondGradientGroup != null)
+            overlayFade = StartCoroutine(FadeCanvasGroup(secondGradientGroup, secondGradientGroup.alpha, 0f, secondOverlayFadeOutSeconds));
+        if (subtitleFade != null) yield return subtitleFade;
+        if (overlayFade != null) yield return overlayFade;
+        // Keep the image visible until FadeToBlackRoutine has fully covered it.
+    }
+
+    private void ApplySecondImageMotion(float t)
+    {
+        if (secondTargetImage == null) return;
+        if (secondUseImagePan)
+            secondTargetImage.anchoredPosition = Vector2.Lerp(secondStartAnchoredPos, secondEndAnchoredPos, t);
+        if (secondUseZoom)
+            secondTargetImage.localScale = Vector3.Lerp(secondStartScale, secondEndScale, t);
+    }
+
+    private IEnumerator AnimateSecondImage()
+    {
+        if (secondTargetImage == null || (!secondUseImagePan && !secondUseZoom)) yield break;
+        float elapsed = 0f;
+        while (elapsed < secondMoveDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            ApplySecondImageMotion(Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / secondMoveDuration)));
+            yield return null;
+        }
+        ApplySecondImageMotion(1f);
+    }
+
+    private IEnumerator ShowSecondSubtitles()
+    {
+        ClearSecondLines();
+        string delimiter = string.IsNullOrEmpty(secondSegmentDelimiter) ? "||" : secondSegmentDelimiter;
+        string[] segments = secondSubtitleContent.Split(new[] { delimiter }, System.StringSplitOptions.None);
+        foreach (string segment in segments)
+        {
+            var line = Instantiate(secondSubtitleLinePrefab, secondSubtitleContainer);
+            line.gameObject.SetActive(true);
+            line.alignment = TextAlignmentOptions.Top;
+            line.enableWordWrapping = true;
+            line.enableAutoSizing = false;
+            line.richText = true;
+            line.raycastTarget = false;
+            line.lineSpacing = secondTextLineSpacing;
+            GetOrAddSecondGroup(line.gameObject).alpha = 1f;
+            line.text = segment.Replace("\\n", "\n").TrimEnd('\r', '\n', ' ');
+            line.maxVisibleCharacters = 0;
+            var le = line.GetComponent<LayoutElement>();
+            if (le != null) { le.minHeight = 0f; le.preferredHeight = -1f; le.flexibleHeight = 0f; }
+            secondLines.Add(line);
+        }
+        LayoutRebuilder.ForceRebuildLayoutImmediate(secondSubtitleContainer);
+        yield return SecondDelay(secondFirstLineDelay, false);
+        for (int i = 0; i < secondLines.Count; i++)
+        {
+            yield return TypeSecondLine(secondLines[i]);
+            if (i < secondLines.Count - 1)
+                yield return SecondDelay(secondBetweenLinesDelay, secondClickCompletesCurrentLine);
+        }
+        yield return SecondDelay(secondAfterAllLinesHoldSeconds, secondClickToSkipAfterAllLines);
+    }
+
+    private bool ConsumeSecondClick()
+    {
+        if (secondLastClickFrame == Time.frameCount || !Input.GetMouseButtonDown(0)) return false;
+        secondLastClickFrame = Time.frameCount;
+        return true;
+    }
+
+    private IEnumerator SecondDelay(float seconds, bool allowClick)
+    {
+        float elapsed = 0f;
+        while (elapsed < seconds)
+        {
+            if (allowClick && ConsumeSecondClick()) yield break;
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+    }
+
+    private IEnumerator TypeSecondLine(TextMeshProUGUI line)
+    {
+        line.ForceMeshUpdate();
+        int count = line.textInfo.characterCount;
+        float shown = 0f;
+        while (shown < count)
+        {
+            if (secondClickCompletesCurrentLine && ConsumeSecondClick()) break;
+            shown += Mathf.Max(1f, secondCharsPerSecond) * Time.unscaledDeltaTime;
+            line.maxVisibleCharacters = Mathf.Min(count, Mathf.FloorToInt(shown));
+            yield return null;
+        }
+        line.maxVisibleCharacters = count;
+    }
+
+    private void ClearSecondLines()
+    {
+        foreach (var line in secondLines)
+        {
+            if (line == null) continue;
+            line.gameObject.SetActive(false);
+            Destroy(line.gameObject);
+        }
+        secondLines.Clear();
+    }
+
+    private void HideSecondCutscene()
+    {
+        if (secondPanCoroutine != null) StopCoroutine(secondPanCoroutine);
+        secondPanCoroutine = null;
+        ClearSecondLines();
+        if (useSecondCutscene && secondCutscenePanel != null) secondCutscenePanel.SetActive(false);
+    }
+
+    private void OnDestroy()
+    {
+        if (secondGeneratedGradientSprite != null) Destroy(secondGeneratedGradientSprite);
+        if (secondGeneratedGradientTexture != null) Destroy(secondGeneratedGradientTexture);
     }
 
 }

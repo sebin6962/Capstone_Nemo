@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Localization.Settings;
 
 public enum StoreTutorialStep
 {
     OpenStorage = 0,
     CloseStorage = 1,
     SieveInsert = 2,
-    SieveSpace = 3, 
+    SieveSpace = 3,
     SieveFinish = 4,
     MixingInsert = 5,
     WaterOn = 6,
@@ -89,7 +90,7 @@ public class StoreTutorialManager : MonoBehaviour
 
     void Awake()
     {
-        if(Instance != null && Instance != this)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
@@ -135,7 +136,10 @@ public class StoreTutorialManager : MonoBehaviour
         }
     }
 
-    void PlayDialogueThen(System.Action onFinished, List<TutorialDialogueLine> lines)
+    void PlayDialogueThen(
+        System.Action onFinished,
+        List<TutorialDialogueLine> lines,
+        string dialogueKeyPrefix)
     {
         if (lines == null || lines.Count == 0)
         {
@@ -150,10 +154,52 @@ public class StoreTutorialManager : MonoBehaviour
             return;
         }
 
-        NPCDialogueUIManager.Instance.OpenTutorialDialogue(lines, () =>
+        StartCoroutine(PlayLocalizedDialogueThenRoutine(
+            onFinished,
+            lines,
+            dialogueKeyPrefix));
+    }
+
+    private IEnumerator PlayLocalizedDialogueThenRoutine(
+        System.Action onFinished,
+        List<TutorialDialogueLine> lines,
+        string dialogueKeyPrefix)
+    {
+        // 마을 튜토리얼과 같은 Tutorial String Table을 사용한다.
+        // 이름 키는 기존 마을 튜토리얼의 든해 이름을 재사용한다.
+        var speakerNameHandle = LocalizationSettings.StringDatabase
+            .GetLocalizedStringAsync("Tutorial", "tutorial.grandma.name");
+
+        yield return speakerNameHandle;
+
+        string localizedSpeakerName = speakerNameHandle.Result;
+
+        for (int i = 0; i < lines.Count; i++)
         {
-            onFinished?.Invoke();
-        });
+            TutorialDialogueLine line = lines[i];
+
+            if (!string.IsNullOrWhiteSpace(localizedSpeakerName))
+                line.speakerName = localizedSpeakerName;
+
+            string dialogueKey = $"{dialogueKeyPrefix}.{i + 1:00}";
+            var dialogueHandle = LocalizationSettings.StringDatabase
+                .GetLocalizedStringAsync("Tutorial", dialogueKey);
+
+            yield return dialogueHandle;
+
+            // 키 또는 번역이 없으면 인스펙터에 입력된 한국어를 그대로 사용한다.
+            if (!string.IsNullOrWhiteSpace(dialogueHandle.Result) &&
+                dialogueHandle.Result != dialogueKey)
+            {
+                line.dialogue = dialogueHandle.Result;
+            }
+
+            lines[i] = line;
+        }
+
+        NPCDialogueUIManager.Instance.OpenTutorialDialogue(
+            lines,
+            () => onFinished?.Invoke());
     }
 
     void ShowStepWithOptionalDialogue(StoreTutorialStep step)
@@ -166,14 +212,14 @@ public class StoreTutorialManager : MonoBehaviour
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterSiruFinishDialogues);
+                }, afterSiruFinishDialogues, "tutorial.store.after_siru");
                 break;
 
             case StoreTutorialStep.StoreFirst_Finish:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterNextOrderDialogues);
+                }, afterNextOrderDialogues, "tutorial.store.after_next_order");
                 break;
 
             default:
@@ -199,7 +245,7 @@ public class StoreTutorialManager : MonoBehaviour
         PlayDialogueThen(() =>
         {
             ShowStepPanel(currentStep);
-        }, storeStartDialogues);
+        }, storeStartDialogues, "tutorial.store.start");
     }
 
     void ShowStepPanel(StoreTutorialStep step)
@@ -291,7 +337,7 @@ public class StoreTutorialManager : MonoBehaviour
             case StoreTutorialStep.WaterInsert:
                 currentStep = StoreTutorialStep.MixingSpace;
                 break;
-                //MakerInfo.cs
+            //MakerInfo.cs
             case StoreTutorialStep.MixingSpace:
                 currentStep = StoreTutorialStep.MixingFinish;
                 break;

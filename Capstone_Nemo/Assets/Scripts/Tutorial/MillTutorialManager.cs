@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Localization.Settings;
 using UnityEngine.SceneManagement;
 
 public enum MillTutorialStep
@@ -36,11 +37,11 @@ public class MillTutorialManager : MonoBehaviour
 
     [Header("NPC 대화 UI")]
     [Header("NPC 숫자 UI")]
-    [SerializeField] private GameObject talkToNpcNumberObject;   
-    [SerializeField] private Transform talkToNpcTarget;          
+    [SerializeField] private GameObject talkToNpcNumberObject;
+    [SerializeField] private Transform talkToNpcTarget;
 
-    [SerializeField] private GameObject openStoreNumberObject;   
-    [SerializeField] private Transform openStoreNpcTarget;       
+    [SerializeField] private GameObject openStoreNumberObject;
+    [SerializeField] private Transform openStoreNpcTarget;
 
     [SerializeField] private Vector2 npcNumberOffset = new Vector2(0f, 100f);
 
@@ -135,7 +136,7 @@ public class MillTutorialManager : MonoBehaviour
         PlayDialogueThen(() =>
         {
             ShowStepPanel(currentStep);
-        }, millStartDialogues);
+        }, millStartDialogues, "tutorial.mill.start");
     }
 
     void ShowStepPanel(MillTutorialStep step)
@@ -245,32 +246,32 @@ public class MillTutorialManager : MonoBehaviour
     {
         switch (step)
         {
-            case MillTutorialStep.SelectCrop: 
+            case MillTutorialStep.SelectCrop:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterTalkToNpcDialogues);
+                }, afterTalkToNpcDialogues, "tutorial.mill.after_talk");
                 break;
 
-            case MillTutorialStep.GrindQuit: 
+            case MillTutorialStep.GrindQuit:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterGrindDialogues);
+                }, afterGrindDialogues, "tutorial.mill.after_grind");
                 break;
 
-            case MillTutorialStep.QuitStore: 
+            case MillTutorialStep.QuitStore:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterOpenStoreDialogues);
+                }, afterOpenStoreDialogues, "tutorial.mill.after_open_store");
                 break;
 
-            case MillTutorialStep.Mill_Finish: 
+            case MillTutorialStep.Mill_Finish:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterQuitStoreDialogues);
+                }, afterQuitStoreDialogues, "tutorial.mill.after_quit_store");
                 break;
 
             default:
@@ -279,7 +280,10 @@ public class MillTutorialManager : MonoBehaviour
         }
     }
 
-    void PlayDialogueThen(System.Action onFinished, List<TutorialDialogueLine> lines)
+    void PlayDialogueThen(
+        System.Action onFinished,
+        List<TutorialDialogueLine> lines,
+        string dialogueKeyPrefix)
     {
         if (lines == null || lines.Count == 0)
         {
@@ -294,10 +298,76 @@ public class MillTutorialManager : MonoBehaviour
             return;
         }
 
-        NPCDialogueUIManager.Instance.OpenTutorialDialogue(lines, () =>
+        StartCoroutine(PlayLocalizedDialogueThenRoutine(
+            onFinished,
+            lines,
+            dialogueKeyPrefix));
+    }
+
+    private IEnumerator PlayLocalizedDialogueThenRoutine(
+        System.Action onFinished,
+        List<TutorialDialogueLine> lines,
+        string dialogueKeyPrefix)
+    {
+        for (int i = 0; i < lines.Count; i++)
         {
-            onFinished?.Invoke();
-        });
+            TutorialDialogueLine line = lines[i];
+
+            string speakerKey = GetSpeakerNameKey(line.speakerName);
+            if (!string.IsNullOrEmpty(speakerKey))
+            {
+                var speakerHandle = LocalizationSettings.StringDatabase
+                    .GetLocalizedStringAsync("Tutorial", speakerKey);
+
+                yield return speakerHandle;
+
+                if (!string.IsNullOrWhiteSpace(speakerHandle.Result) &&
+                    speakerHandle.Result != speakerKey)
+                {
+                    line.speakerName = speakerHandle.Result;
+                }
+            }
+
+            string dialogueKey = $"{dialogueKeyPrefix}.{i + 1:00}";
+            var dialogueHandle = LocalizationSettings.StringDatabase
+                .GetLocalizedStringAsync("Tutorial", dialogueKey);
+
+            yield return dialogueHandle;
+
+            // 키 또는 번역이 없으면 인스펙터에 입력된 한국어를 그대로 사용한다.
+            if (!string.IsNullOrWhiteSpace(dialogueHandle.Result) &&
+                dialogueHandle.Result != dialogueKey)
+            {
+                line.dialogue = dialogueHandle.Result;
+            }
+
+            lines[i] = line;
+        }
+
+        NPCDialogueUIManager.Instance.OpenTutorialDialogue(
+            lines,
+            () => onFinished?.Invoke());
+    }
+
+    private string GetSpeakerNameKey(string speakerName)
+    {
+        switch (speakerName)
+        {
+            case "든해":
+            case "Deunhae":
+                return "tutorial.grandma.name";
+
+            case "가람":
+            case "Garam":
+                return "tutorial.mill.speaker.garam";
+
+            case "윤슬":
+            case "Yoonseul":
+                return "tutorial.mill.speaker.yoonseul";
+
+            default:
+                return null;
+        }
     }
 
     public void FinishMillTutorial()
