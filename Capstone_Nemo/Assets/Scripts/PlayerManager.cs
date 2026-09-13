@@ -400,4 +400,34 @@ public class PlayerManager : MonoBehaviour
 
         return SaveService.SaveCurrent();
     }
+
+    public void SetActionFacingDirection(Vector2 direction)
+    {
+        if (direction.sqrMagnitude < 0.001f)
+            return;
+
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+        {
+            lastMoveDir =
+                direction.x >= 0f
+                    ? Vector2.right
+                    : Vector2.left;
+        }
+        else
+        {
+            lastMoveDir =
+                direction.y >= 0f
+                    ? Vector2.up
+                    : Vector2.down;
+        }
+
+        movement = Vector2.zero;
+
+        if (animator != null)
+        {
+            animator.SetBool("IsWalking", false);
+            animator.SetFloat("MoveX", lastMoveDir.x);
+            animator.SetFloat("MoveY", lastMoveDir.y);
+        }
+    }
 }

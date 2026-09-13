@@ -26,6 +26,8 @@ public class PlayerCraftResolverMotion : MonoBehaviour
 
     private bool isPlaying;
 
+    private bool animatorWasEnabled;
+
     private void Awake()
     {
         playerManager = GetComponent<PlayerManager>();
@@ -70,9 +72,16 @@ public class PlayerCraftResolverMotion : MonoBehaviour
 
         string direction = GetCraftDirection(maker);
 
-        // 제작하는 동안 이동 정지
+        // 제작 모션에서 바라본 방향을
+        // 실제 플레이어의 마지막 방향으로도 저장
         if (playerManager != null)
+        {
+            playerManager.SetActionFacingDirection(
+                DirectionToVector(direction)
+            );
+
             playerManager.SetActionLocked(true);
+        }
 
         // 머리 위에 들고 있는 아이템 잠시 숨기기
         HeldItemManager.Instance?.SetHeldItemVisualVisible(false);
@@ -97,6 +106,26 @@ public class PlayerCraftResolverMotion : MonoBehaviour
 
         RestorePlayerState();
         motionCoroutine = null;
+    }
+
+    private Vector2 DirectionToVector(string direction)
+    {
+        switch (direction)
+        {
+            case "Up":
+                return Vector2.up;
+
+            case "Down":
+                return Vector2.down;
+
+            case "Left":
+                return Vector2.left;
+
+            case "Right":
+                return Vector2.right;
+        }
+
+        return Vector2.down;
     }
 
     private string GetCraftDirection(MakerInfo maker)
@@ -131,7 +160,7 @@ public class PlayerCraftResolverMotion : MonoBehaviour
         }
 
         if (playerAnimator != null)
-            playerAnimator.enabled = true;
+            playerAnimator.enabled = animatorWasEnabled;
 
         HeldItemManager.Instance?.SetHeldItemVisualVisible(true);
 

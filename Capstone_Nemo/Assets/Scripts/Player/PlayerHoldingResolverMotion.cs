@@ -52,6 +52,12 @@ public class PlayerHoldingResolverMotion : MonoBehaviour
         if (playerManager.IsActionLocked)
         {
             previousHolding = isHolding;
+
+            // 액션 종료 후 현재 방향/상태를
+            // 반드시 한 번 다시 적용하도록 캐시 초기화
+            previousDirection = "";
+            previousMoving = false;
+
             return;
         }
 
@@ -71,7 +77,15 @@ public class PlayerHoldingResolverMotion : MonoBehaviour
         bool isMoving = playerManager.IsMoving;
 
         if (!isControlling)
+        {
             StartHoldingMotion();
+        }
+        else if (playerAnimator != null && playerAnimator.enabled)
+        {
+            // 다른 액션에서 Animator를 켜더라도
+            // 아이템을 들고 있으면 Holding이 다시 제어권을 가져온다.
+            playerAnimator.enabled = false;
+        }
 
         bool justStartedHolding = !previousHolding;
         bool movementStateChanged = isMoving != previousMoving;

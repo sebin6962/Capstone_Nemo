@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Localization.Settings;
 
 public enum SecondStoreTutorialStep
 {
@@ -95,18 +96,18 @@ public class SecondStoreTutorialManager : MonoBehaviour
         PlayDialogueThen(() =>
         {
             ShowStepPanel(currentStep);
-        }, secondStoreStartDialogues);
+        }, secondStoreStartDialogues, "tutorial.store.second_start");
     }
 
     void ShowStepWithOptionalDialogue(SecondStoreTutorialStep step)
     {
         switch (step)
         {
-            case SecondStoreTutorialStep.Serve: 
+            case SecondStoreTutorialStep.Serve:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterSiruFinishDialogues);
+                }, afterSiruFinishDialogues, "tutorial.store.second_after_siru");
                 break;
 
             default:
@@ -115,7 +116,10 @@ public class SecondStoreTutorialManager : MonoBehaviour
         }
     }
 
-    void PlayDialogueThen(System.Action onFinished, List<TutorialDialogueLine> lines)
+    void PlayDialogueThen(
+        System.Action onFinished,
+        List<TutorialDialogueLine> lines,
+        string dialogueKeyPrefix)
     {
         if (lines == null || lines.Count == 0)
         {
@@ -130,10 +134,55 @@ public class SecondStoreTutorialManager : MonoBehaviour
             return;
         }
 
-        NPCDialogueUIManager.Instance.OpenTutorialDialogue(lines, () =>
+        StartCoroutine(PlayLocalizedDialogueThenRoutine(
+            onFinished,
+            lines,
+            dialogueKeyPrefix));
+    }
+
+    private IEnumerator PlayLocalizedDialogueThenRoutine(
+        System.Action onFinished,
+        List<TutorialDialogueLine> lines,
+        string dialogueKeyPrefix)
+    {
+        const string speakerNameKey = "tutorial.grandma.name";
+
+        var speakerNameHandle = LocalizationSettings.StringDatabase
+            .GetLocalizedStringAsync("Tutorial", speakerNameKey);
+
+        yield return speakerNameHandle;
+
+        string localizedSpeakerName = speakerNameHandle.Result;
+        bool hasLocalizedSpeakerName =
+            !string.IsNullOrWhiteSpace(localizedSpeakerName) &&
+            localizedSpeakerName != speakerNameKey;
+
+        for (int i = 0; i < lines.Count; i++)
         {
-            onFinished?.Invoke();
-        });
+            TutorialDialogueLine line = lines[i];
+
+            if (hasLocalizedSpeakerName)
+                line.speakerName = localizedSpeakerName;
+
+            string dialogueKey = $"{dialogueKeyPrefix}.{i + 1:00}";
+            var dialogueHandle = LocalizationSettings.StringDatabase
+                .GetLocalizedStringAsync("Tutorial", dialogueKey);
+
+            yield return dialogueHandle;
+
+            // 번역을 찾지 못하면 인스펙터에 입력된 한국어를 그대로 사용한다.
+            if (!string.IsNullOrWhiteSpace(dialogueHandle.Result) &&
+                dialogueHandle.Result != dialogueKey)
+            {
+                line.dialogue = dialogueHandle.Result;
+            }
+
+            lines[i] = line;
+        }
+
+        NPCDialogueUIManager.Instance.OpenTutorialDialogue(
+            lines,
+            () => onFinished?.Invoke());
     }
 
     void ShowStepPanel(SecondStoreTutorialStep step)

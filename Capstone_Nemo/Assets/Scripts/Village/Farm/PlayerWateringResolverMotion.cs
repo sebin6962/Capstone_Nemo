@@ -33,6 +33,8 @@ public class PlayerWateringResolverMotion : MonoBehaviour
     private string prevCategory;
     private string prevLabel;
 
+    private bool animatorWasEnabled;
+
     private void Awake()
     {
         playerManager = GetComponent<PlayerManager>();
@@ -61,6 +63,13 @@ public class PlayerWateringResolverMotion : MonoBehaviour
     private IEnumerator PlayRoutine(Vector3 targetWorldPos)
     {
         string direction = GetDirectionName(targetWorldPos);
+
+        if (playerManager != null)
+        {
+            playerManager.SetActionFacingDirection(
+                DirectionToVector(direction)
+            );
+        }
 
         // 기존 상태 저장
         prevCategory = spriteResolver.GetCategory();
@@ -95,7 +104,7 @@ public class PlayerWateringResolverMotion : MonoBehaviour
         }
 
         if (playerAnimator != null)
-            playerAnimator.enabled = true;
+            playerAnimator.enabled = animatorWasEnabled;
 
         HeldItemManager.Instance?.SetHeldItemVisualVisible(true);
 
@@ -103,6 +112,26 @@ public class PlayerWateringResolverMotion : MonoBehaviour
             playerManager.SetActionLocked(false);
 
         motionCoroutine = null;
+    }
+
+    private Vector2 DirectionToVector(string direction)
+    {
+        switch (direction)
+        {
+            case "Up":
+                return Vector2.up;
+
+            case "Down":
+                return Vector2.down;
+
+            case "Left":
+                return Vector2.left;
+
+            case "Right":
+                return Vector2.right;
+        }
+
+        return Vector2.down;
     }
 
     private string GetDirectionName(Vector3 targetWorldPos)
