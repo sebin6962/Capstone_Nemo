@@ -201,6 +201,10 @@ public class TutorialManager : MonoBehaviour
         server = PlayerPrefs.GetString("SelectedSave", "default");
         state = TutorialState.Load(server);
 
+        // WebGL / 최초 실행에서는 Localization 초기화가 늦게 끝날 수 있으므로
+        // 자동 시퀀스가 진행되는 동안 미리 초기화를 시작해 둔다.
+        StartCoroutine(WarmupTutorialLocalization());
+
         var flow = TutorialFlowManager.Instance;
 
         bool isTutorialRunning = (flow != null && flow.currentStep != GlobalTutorialStep.Done);
@@ -498,6 +502,7 @@ public class TutorialManager : MonoBehaviour
         yield return new WaitUntil(() => !Input.GetKey(KeyCode.E));
         yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.E));
 
+        Debug.Log("[TutorialManager] Village intro E input accepted.");
         SetGrandmaInteractKeyVisible(false);
 
         // 9) 첫 대화
@@ -580,6 +585,44 @@ public class TutorialManager : MonoBehaviour
         ));
     }
 
+    private IEnumerator WarmupTutorialLocalization()
+    {
+        AsyncOperationHandle<LocalizationSettings> initHandle =
+            LocalizationSettings.InitializationOperation;
+
+        if (!initHandle.IsDone)
+        {
+            Debug.Log("[TutorialManager] Waiting for Localization initialization...");
+            yield return initHandle;
+        }
+
+        if (initHandle.Status != AsyncOperationStatus.Succeeded)
+        {
+            Debug.LogWarning(
+                "[TutorialManager] Localization initialization failed. " +
+                "Tutorial dialogue will continue with fallback text."
+            );
+        }
+    }
+
+    private IEnumerator WaitForTutorialDialogueManager(float timeoutSeconds = 5f)
+    {
+        float elapsed = 0f;
+
+        while (NPCDialogueUIManager.Instance == null && elapsed < timeoutSeconds)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (NPCDialogueUIManager.Instance == null)
+        {
+            Debug.LogError(
+                "[TutorialManager] NPCDialogueUIManager was not ready within timeout."
+            );
+        }
+    }
+
     private IEnumerator LocalizeTutorialDialoguesThen(
         System.Action onFinished,
         List<TutorialDialogueLine> lines,
@@ -587,6 +630,17 @@ public class TutorialManager : MonoBehaviour
         GameObject focusNpcObj)
     {
         if (lines == null || lines.Count == 0)
+        {
+            onFinished?.Invoke();
+            yield break;
+        }
+
+        // 최초 WebGL 실행에서는 Localization / 대화 UI 초기화가 늦어져
+        // E 입력은 됐는데 대화창이 열리지 않는 경우를 막는다.
+        yield return StartCoroutine(WarmupTutorialLocalization());
+        yield return StartCoroutine(WaitForTutorialDialogueManager());
+
+        if (NPCDialogueUIManager.Instance == null)
         {
             onFinished?.Invoke();
             yield break;
@@ -622,6 +676,12 @@ public class TutorialManager : MonoBehaviour
                 portrait = source.portrait
             });
         }
+
+        Debug.Log(
+            $"[TutorialManager] Tutorial dialogue dependencies ready. " +
+            $"lines={localizedLines.Count}, " +
+            $"dialogueManagerActive={NPCDialogueUIManager.Instance.gameObject.activeInHierarchy}"
+        );
 
         PlayDialogueThen(onFinished, localizedLines, focusNpcObj);
     }
