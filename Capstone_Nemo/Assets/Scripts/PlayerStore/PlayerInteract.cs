@@ -65,19 +65,8 @@ public class PlayerInteract : MonoBehaviour
         if (nearbySensors.Count > 0)
             RefreshCurrentSensor();
 
-        // 근처 상호작용 대상이 하나라도 있으면 가장 가까운 것 갱신
-        if (nearbyMakers.Count + nearbyBoxes.Count + nearbyTables.Count + nearbySinks.Count + nearbyTrashes.Count > 0)
-            RefreshCurrentInteractable();
-        else
-        {
-            currentInteractable = null;
-            currentMaker = null; isNearMaker = false;
-            nearbyBox = null; nearbyTable = null; nearbySink = null; nearbyTrash = null;
-            nearbyStorage = null;
-        }
-
-        if (nearbyMakers.Count > 0)
-            RefreshCurrentMaker();
+        // 가장 가까운 대상 선택과 타겟 초기화는 이 함수에서만 처리한다.
+        RefreshCurrentInteractable();
 
         // E키
         if (Input.GetKeyDown(interactKey))
@@ -113,7 +102,7 @@ public class PlayerInteract : MonoBehaviour
                 {
                     TutorialManager.Instance.GoToNextVillageSecondStep();
                 }*/
-                
+
 
                 return;
             }
@@ -179,7 +168,7 @@ public class PlayerInteract : MonoBehaviour
                     }
 
                     return;
-                    
+
                 }
 
                 // 3) 그 외 (이미 뭔가 들고 있거나, 진행 중이거나, 결과물이 있는데 손에 뭔가 들고 있을 때)는 무시
@@ -302,7 +291,7 @@ public class PlayerInteract : MonoBehaviour
                     }
 
                     //튜토리얼 아이템 유실방지
-                    if (!CanInsertForSecondStoreTutorial(currentMaker,heldItemName))
+                    if (!CanInsertForSecondStoreTutorial(currentMaker, heldItemName))
                     {
                         return;
                     }
@@ -322,7 +311,7 @@ public class PlayerInteract : MonoBehaviour
                     //튜토리얼 진행 트리거
                     if (StoreTutorialManager.Instance &&
                         StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.MixingInsert) &&
-                        currentMaker.makerId == "MIxing01" &&          
+                        currentMaker.makerId == "MIxing01" &&
                         heldItemName == "Sieve_Mepssalgaru")
                     {
                         StoreTutorialManager.Instance.GoToNextStep();
@@ -441,7 +430,7 @@ public class PlayerInteract : MonoBehaviour
                 }
             }
         }
-        
+
         // Space키: 제작 시도 (제작기 근처에서만)
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -655,7 +644,7 @@ public class PlayerInteract : MonoBehaviour
     }
 
     //튜토리얼 아이템 유실 방어
-    private bool CanInsertForSecondStoreTutorial(MakerInfo maker,string itemName)
+    private bool CanInsertForSecondStoreTutorial(MakerInfo maker, string itemName)
     {
         SecondStoreTutorialManager tutorial = SecondStoreTutorialManager.Instance;
 
@@ -801,7 +790,7 @@ public class PlayerInteract : MonoBehaviour
                 nearbyMakers.Add(maker);
 
             RefreshCurrentInteractable();
-            Debug.Log($"접근: {maker.makerId}, 현재 타겟: {currentMaker.makerId}");
+            Debug.Log($"접근: {maker.makerId}, 현재 타겟: {(currentMaker != null ? currentMaker.makerId : "없음")}");
         }
 
         if (other.CompareTag("StorageBox")) // 꼭 Tag 설정 필요
@@ -876,35 +865,15 @@ public class PlayerInteract : MonoBehaviour
         RefreshCurrentInteractable();
     }
 
-    private MakerInfo GetClosestMaker()
-    {
-        MakerInfo closest = null;
-        float best = float.PositiveInfinity;
-        Vector3 p = transform.position;
-
-        foreach (var m in nearbyMakers)
-        {
-            if (m == null) continue;
-            float d = (m.transform.position - p).sqrMagnitude;
-            if (d < best)
-            {
-                best = d;
-                closest = m;
-            }
-        }
-        return closest;
-    }
-
-    private void RefreshCurrentMaker()
-    {
-        nearbyMakers.RemoveAll(m => m == null);
-
-        currentMaker = GetClosestMaker();
-        isNearMaker = currentMaker != null;
-    }
-
     private void RefreshCurrentInteractable()
     {
+        // 파괴된 대상은 후보에서 제거한다 (Unity의 null 비교 사용).
+        nearbyMakers.RemoveAll(m => m == null);
+        nearbyBoxes.RemoveAll(b => b == null);
+        nearbyTables.RemoveAll(t => t == null);
+        nearbySinks.RemoveAll(s => s == null);
+        nearbyTrashes.RemoveAll(tr => tr == null);
+
         Component closest = null;
         float best = float.PositiveInfinity;
         Vector3 p = transform.position;
@@ -939,25 +908,25 @@ public class PlayerInteract : MonoBehaviour
         nearbyTrash = null;
         nearbyStorage = null;
 
-        if (closest is MakerInfo maker)
+        if (currentInteractable is MakerInfo maker)
         {
             currentMaker = maker;
             isNearMaker = true;
         }
-        else if (closest is BoxObject box)
+        else if (currentInteractable is BoxObject box)
         {
             nearbyBox = box;
             nearbyStorage = box.GetComponent<StorageInventory>(); // 혹시 기존에 할당 안 되던 문제도 같이 해결
         }
-        else if (closest is TableInfo table)
+        else if (currentInteractable is TableInfo table)
         {
             nearbyTable = table;
         }
-        else if (closest is SinkInfo sink)
+        else if (currentInteractable is SinkInfo sink)
         {
             nearbySink = sink;
         }
-        else if (closest is TrashCanInfo trash)
+        else if (currentInteractable is TrashCanInfo trash)
         {
             nearbyTrash = trash;
         }

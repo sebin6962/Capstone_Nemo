@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Globalization;
 using UnityEngine.SceneManagement;
+using UnityEngine.Localization.Settings;
 
 public class TimeManager : MonoBehaviour
 {
@@ -33,9 +34,13 @@ public class TimeManager : MonoBehaviour
     private long _cachedPlaySeconds;
 
     public GameObject dayEndPanel;      // 곧 하루가 끝남 팝업 패널
-    public CanvasGroup dayEndGroup;     
+    public CanvasGroup dayEndGroup;
     private Coroutine dayEndCo;         // 중복 실행 방지용 코루틴
     private bool dayEndWarningShown = false;  // 오늘 하루에 한 번만 뜨게
+
+    // 하루 종료 알림 슬라이드용
+    private RectTransform dayEndRect;
+    private Vector2 dayEndShownPosition;
 
     void Awake()
     {
@@ -49,8 +54,10 @@ public class TimeManager : MonoBehaviour
         {
             Destroy(gameObject); // 혹시라도 중복 방지
         }
+
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
+
     void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
@@ -66,18 +73,22 @@ public class TimeManager : MonoBehaviour
         dayText = GameObject.Find("DayText")?.GetComponent<TMP_Text>();
         //clockProgressImage = GameObject.Find("ClockProgress")?.GetComponent<Image>();
         clockHandImage = GameObject.Find("DayPanel_niddle")?.GetComponent<Image>();
+
         UpdateDayUI();
         UpdateClockProgressUI();
 
         var name = scene.name;
+
         bool shouldPause =
             name == "IntroScene" ||
             name == "SaveSelectScene" ||
             name == "StatementScene";
+
         isTimeFlow = !shouldPause;
 
         WireDayEndPanelInScene();
     }
+
     void Start()
     {
         // 동적으로 씬에서 오브젝트를 찾아 연결
@@ -95,23 +106,33 @@ public class TimeManager : MonoBehaviour
 
     void WireDayEndPanelInScene()
     {
-        if (dayEndPanel != null && dayEndGroup != null) return;
+        if (dayEndPanel != null && dayEndGroup != null)
+            return;
 
         // 비활성 포함해서 전부 스캔
         var groups = FindObjectsOfType<CanvasGroup>(true);
+
         foreach (var cg in groups)
         {
             if (cg.gameObject.name == "DayEndWarningPanel")
             {
                 // 프리팹 에셋이 아닌, 씬에 실제 배치된 객체만 채택
-                if (!cg.gameObject.scene.IsValid()) continue;
+                if (!cg.gameObject.scene.IsValid())
+                    continue;
 
                 dayEndPanel = cg.gameObject;
                 dayEndGroup = cg;
 
-                // 초기 상태 정리
-                dayEndGroup.alpha = 0f;
+                // 현재 씬에서 배치해 둔 위치를 알림의 원래 위치로 저장
+                dayEndRect = dayEndPanel.GetComponent<RectTransform>();
+
+                if (dayEndRect != null)
+                    dayEndShownPosition = dayEndRect.anchoredPosition;
+
+                // 페이드는 사용하지 않고 위치 이동만 사용
+                dayEndGroup.alpha = 1f;
                 dayEndPanel.SetActive(false);
+
                 Debug.Log("[TimeManager] DayEndWarningPanel auto-wired.");
                 break;
             }
@@ -120,17 +141,20 @@ public class TimeManager : MonoBehaviour
 
     void Update()
     {
-        if (!isTimeFlow) return;
+        if (!isTimeFlow)
+            return;
 
         // 명세서 씬(StatementScene)에서는 시간 진행 X
         if (SceneManager.GetActiveScene().name == "StatementScene")
             return;
 
         timer += Time.deltaTime;
+
         if (timer >= realSecondsPerGameMinute)
         {
             timer = 0f;
             minute += 1;
+
             if (minute >= 60)
             {
                 minute = 0;
@@ -154,13 +178,17 @@ public class TimeManager : MonoBehaviour
         // 하루 동안 지난 시간(분)
         int minutesPassed = (hour - 9) * 60 + minute;
 
-        int remainingMinutes = totalGameMinutes - minutesPassed;
+        int remainingMinutes =
+            totalGameMinutes - minutesPassed;
 
         // 남은 시간이 1분이고, 아직 경고를 안 띄웠다면
-        if (remainingMinutes == 60 && !dayEndWarningShown)
+        if (remainingMinutes == 60 &&
+            !dayEndWarningShown)
         {
             SFXManager.Instance.PlayDayOffSFX();
+
             ShowDayEndWarning();
+
             dayEndWarningShown = true;
         }
     }
@@ -170,42 +198,128 @@ public class TimeManager : MonoBehaviour
         if (dayEndCo != null)
             StopCoroutine(dayEndCo);
 
-        dayEndCo = StartCoroutine(DayEndWarningRoutine());
+        dayEndCo =
+            StartCoroutine(DayEndWarningRoutine());
     }
 
     private IEnumerator DayEndWarningRoutine()
     {
-        if (dayEndPanel == null || dayEndGroup == null)
+        if (dayEndPanel == null ||
+            dayEndGroup == null)
+        {
             yield break;
+        }
+
+        if (dayEndRect == null)
+        {
+            dayEndRect =
+                dayEndPanel.GetComponent<RectTransform>();
+
+            if (dayEndRect == null)
+                yield break;
+
+            dayEndShownPosition =
+                dayEndRect.anchoredPosition;
+        }
+
+        // 페이드 없이 항상 완전히 보이게
+        dayEndGroup.alpha = 1f;
 
         dayEndPanel.SetActive(true);
 
         float duration = 0.5f;
         float t = 0f;
 
-        // 페이드 인
+        // 부모 UI의 폭을 기준으로 화면 왼쪽 밖 위치 계산
+        float parentWidth = Screen.width;
+
+        if (dayEndRect.parent is RectTransform parentRect)
+        {
+            parentWidth = parentRect.rect.width;
+        }
+
+        Vector2 hiddenPosition =
+            dayEndShownPosition +
+            Vector2.left *
+            (parentWidth + dayEndRect.rect.width);
+
+        // 왼쪽 화면 밖에서 시작
+        dayEndRect.anchoredPosition =
+            hiddenPosition;
+
+        // -------------------------
+        // 슬라이드 인
+        // -------------------------
         while (t < duration)
         {
             t += Time.deltaTime;
-            dayEndGroup.alpha = Mathf.Lerp(0f, 1f, t / duration);
+
+            float progress =
+                Mathf.Clamp01(t / duration);
+
+            progress =
+                Mathf.SmoothStep(
+                    0f,
+                    1f,
+                    progress
+                );
+
+            dayEndRect.anchoredPosition =
+                Vector2.Lerp(
+                    hiddenPosition,
+                    dayEndShownPosition,
+                    progress
+                );
+
             yield return null;
         }
-        dayEndGroup.alpha = 1f;
 
-        // 화면에 유지
-        yield return new WaitForSeconds(2f);
+        dayEndRect.anchoredPosition =
+    dayEndShownPosition;
 
-        // 페이드 아웃
+        // 도착 후 좌우로 한 번 흔들기
+        yield return StartCoroutine(
+            ShakeAlertPanel(dayEndRect)
+        );
+
+        // 패널 유지
+        yield return new WaitForSeconds(3f);
+
+        // -------------------------
+        // 슬라이드 아웃
+        // -------------------------
         t = 0f;
+
         while (t < duration)
         {
             t += Time.deltaTime;
-            dayEndGroup.alpha = Mathf.Lerp(1f, 0f, t / duration);
+
+            float progress =
+                Mathf.Clamp01(t / duration);
+
+            progress =
+                Mathf.SmoothStep(
+                    0f,
+                    1f,
+                    progress
+                );
+
+            dayEndRect.anchoredPosition =
+                Vector2.Lerp(
+                    dayEndShownPosition,
+                    hiddenPosition,
+                    progress
+                );
+
             yield return null;
         }
-        dayEndGroup.alpha = 0f;
+
+        // 다음 호출을 위해 원래 위치 복원
+        dayEndRect.anchoredPosition =
+            dayEndShownPosition;
 
         dayEndPanel.SetActive(false);
+
         dayEndCo = null;
     }
 
@@ -253,9 +367,22 @@ public class TimeManager : MonoBehaviour
             WorldTimeSaveData timeData =
                 saveData.worldTimeData;
 
-            currentDay = Mathf.Max(1, timeData.day);
-            hour = Mathf.Clamp(timeData.hour, 0, 26);
-            minute = Mathf.Clamp(timeData.minute, 0, 59);
+            currentDay =
+                Mathf.Max(1, timeData.day);
+
+            hour =
+                Mathf.Clamp(
+                    timeData.hour,
+                    0,
+                    26
+                );
+
+            minute =
+                Mathf.Clamp(
+                    timeData.minute,
+                    0,
+                    59
+                );
 
             Debug.Log(
                 $"[TimeManager] 통합 세이브에서 불러옴: " +
@@ -279,40 +406,74 @@ public class TimeManager : MonoBehaviour
         //float progress = Mathf.Clamp01((float)minutesPassed / totalGameMinutes);
         //clockProgressImage.fillAmount = progress;
 
-        if (clockHandImage == null) return;
+        if (clockHandImage == null)
+            return;
 
-        int minutesPassed = (hour - 9) * 60 + minute;
-        float progress = Mathf.Clamp01((float)minutesPassed / totalGameMinutes);
+        int minutesPassed =
+            (hour - 9) * 60 + minute;
+
+        float progress =
+            Mathf.Clamp01(
+                (float)minutesPassed /
+                totalGameMinutes
+            );
+
         //float angle = Mathf.Lerp(0, 360, progress);
-        float zAngle = Mathf.Lerp(-90f, -360f, progress);
+
+        float zAngle =
+            Mathf.Lerp(
+                -90f,
+                -360f,
+                progress
+            );
 
         // 시계방향 회전(원하면 -angle)
-        clockHandImage.rectTransform.localEulerAngles = new Vector3(0, 0, zAngle);
+        clockHandImage.rectTransform.localEulerAngles =
+            new Vector3(
+                0,
+                0,
+                zAngle
+            );
     }
 
     void UpdateDayUI()
     {
-        if (dayText == null) return;
-        dayText.text = $"{currentDay}일차";
+        if (dayText == null)
+            return;
+
+        string dayFormat =
+            LocalizationSettings.StringDatabase.GetLocalizedString(
+                "UI",
+                "ui.day.count"
+            );
+
+        dayText.text =
+            string.Format(dayFormat, currentDay);
     }
 
     IEnumerator EndOfDayRoutine()
     {
         isTimeFlow = false;
 
-        if (NPCDialogueUIManager.Instance != null && NPCDialogueUIManager.Instance.IsOpen())
+        if (NPCDialogueUIManager.Instance != null &&
+            NPCDialogueUIManager.Instance.IsOpen())
+        {
             NPCDialogueUIManager.Instance.CloseDialogue();
+        }
 
         if (DialogueFocusManager.Instance != null)
+        {
             DialogueFocusManager.Instance.EndFocusImmediate();
+        }
 
         yield return null;
 
-        currentDay++;           // 날짜 먼저 증가
-        hour = 9;           // 날짜 넘길 때 시간 초기화
+        currentDay++; // 날짜 먼저 증가
+
+        hour = 9;
         minute = 0;
 
-        //날 넘어갈때 손님도 초기화
+        // 날 넘어갈때 손님도 초기화
         if (CustomerSaveManager.Instance != null)
         {
             CustomerSaveManager.Instance.ClearForNewDay();
@@ -321,16 +482,24 @@ public class TimeManager : MonoBehaviour
         // 다음 날로 넘어갈 때 플래그 리셋
         dayEndWarningShown = false;
 
-        SaveDayData();          // 증가한 날짜 저장
+        SaveDayData();
 
         OnNewDayStarted?.Invoke();
 
         yield return new WaitForSeconds(1f);
 
         if (FadeManager.Instance != null)
-            FadeManager.Instance.FadeToScene("StatementScene");
+        {
+            FadeManager.Instance.FadeToScene(
+                "StatementScene"
+            );
+        }
         else
-            SceneManager.LoadScene("StatementScene");
+        {
+            SceneManager.LoadScene(
+                "StatementScene"
+            );
+        }
     }
 
     public void SaveDayData()
@@ -359,9 +528,25 @@ public class TimeManager : MonoBehaviour
         SaveService.CurrentData.worldTimeData =
             new WorldTimeSaveData
             {
-                day = Mathf.Max(1, currentDay),
-                hour = Mathf.Clamp(hour, 0, 26),
-                minute = Mathf.Clamp(minute, 0, 59)
+                day =
+                    Mathf.Max(
+                        1,
+                        currentDay
+                    ),
+
+                hour =
+                    Mathf.Clamp(
+                        hour,
+                        0,
+                        26
+                    ),
+
+                minute =
+                    Mathf.Clamp(
+                        minute,
+                        0,
+                        59
+                    )
             };
 
         SaveService.CurrentData
@@ -377,14 +562,17 @@ public class TimeManager : MonoBehaviour
 
     void OnEnable()
     {
-        SceneManager.sceneLoaded += OnSceneLoaded_PlaySession;
+        SceneManager.sceneLoaded +=
+            OnSceneLoaded_PlaySession;
     }
 
     void OnDisable()
     {
         if (this == Instance)
             SaveDayData();
-        SceneManager.sceneLoaded -= OnSceneLoaded_PlaySession;
+
+        SceneManager.sceneLoaded -=
+            OnSceneLoaded_PlaySession;
     }
 
     // 외부에서 시간 흐름 On/Off
@@ -395,15 +583,25 @@ public class TimeManager : MonoBehaviour
 
     public void BeginSessionForSelectedSave()
     {
-        var server = PlayerPrefs.GetString("SelectedSave", "");
-        if (!string.IsNullOrEmpty(server)) BeginSession(server);
+        var server =
+            PlayerPrefs.GetString(
+                "SelectedSave",
+                ""
+            );
+
+        if (!string.IsNullOrEmpty(server))
+        {
+            BeginSession(server);
+        }
     }
 
     public void BeginSession(string serverName)
     {
         EndAndPersistSession();
 
-        _currentServerForPlay = serverName;
+        _currentServerForPlay =
+            serverName;
+
         _cachedPlaySeconds = 0;
 
         if (SaveService.EnsureLoaded(serverName))
@@ -413,14 +611,16 @@ public class TimeManager : MonoBehaviour
 
             if (playtimeData != null)
             {
-                _cachedPlaySeconds = Math.Max(
-                    0,
-                    playtimeData.seconds
-                );
+                _cachedPlaySeconds =
+                    Math.Max(
+                        0,
+                        playtimeData.seconds
+                    );
             }
         }
 
-        _sessionStartUtc = DateTime.UtcNow;
+        _sessionStartUtc =
+            DateTime.UtcNow;
     }
 
     public void EndAndPersistSession()
@@ -433,15 +633,17 @@ public class TimeManager : MonoBehaviour
             return;
         }
 
-        long elapsed = (long)Math.Max(
-            0,
-            (
-                DateTime.UtcNow -
-                _sessionStartUtc.Value
-            ).TotalSeconds
-        );
+        long elapsed =
+            (long)Math.Max(
+                0,
+                (
+                    DateTime.UtcNow -
+                    _sessionStartUtc.Value
+                ).TotalSeconds
+            );
 
-        _cachedPlaySeconds += elapsed;
+        _cachedPlaySeconds +=
+            elapsed;
 
         if (SaveService.EnsureLoaded(
             _currentServerForPlay
@@ -450,11 +652,14 @@ public class TimeManager : MonoBehaviour
             SaveService.CurrentData.playtimeData =
                 new PlaytimeSaveData
                 {
-                    seconds = _cachedPlaySeconds,
-                    lastPlayed = DateTime.Now.ToString(
-                        "yyyy-MM-dd HH:mm",
-                        CultureInfo.InvariantCulture
-                    )
+                    seconds =
+                        _cachedPlaySeconds,
+
+                    lastPlayed =
+                        DateTime.Now.ToString(
+                            "yyyy-MM-dd HH:mm",
+                            CultureInfo.InvariantCulture
+                        )
                 };
 
             SaveService.CurrentData
@@ -474,17 +679,25 @@ public class TimeManager : MonoBehaviour
         _sessionStartUtc = null;
     }
 
-    private void OnSceneLoaded_PlaySession(Scene scene, LoadSceneMode mode)
+    private void OnSceneLoaded_PlaySession(
+        Scene scene,
+        LoadSceneMode mode
+    )
     {
         var name = scene.name;
 
         // Intro/SaveSelect/Statement 씬에선 시간 멈춤 + 세션 종료
-        bool nonPlayScene = name == "IntroScene" || name == "SaveSelectScene" || name == "StatementScene";
-        isTimeFlow = !nonPlayScene;           // 시간 흐름 제어(이미 쓰고 있던 플래그)
+        bool nonPlayScene =
+            name == "IntroScene" ||
+            name == "SaveSelectScene" ||
+            name == "StatementScene";
+
+        isTimeFlow =
+            !nonPlayScene;
 
         if (nonPlayScene)
         {
-            EndAndPersistSession();           // 플레이 중이었다면 종료+저장
+            EndAndPersistSession();
         }
         else
         {
@@ -495,12 +708,15 @@ public class TimeManager : MonoBehaviour
 
     void OnApplicationPause(bool pause)
     {
-        if (pause) EndAndPersistSession();    // 일시정지 시 세션 저장
+        if (pause)
+        {
+            EndAndPersistSession();
+        }
     }
 
     void OnApplicationQuit()
     {
-        EndAndPersistSession();               // 종료 직전 세션 저장
+        EndAndPersistSession();
         SaveDayData();
     }
 
@@ -512,13 +728,56 @@ public class TimeManager : MonoBehaviour
         if (displayHour >= 24)
             displayHour -= 24;
 
-        string period = displayHour < 12 ? "오전" : "오후";
+        string period =
+            displayHour < 12
+            ? "오전"
+            : "오후";
 
-        int hour12 = displayHour % 12;
+        int hour12 =
+            displayHour % 12;
+
         if (hour12 == 0)
             hour12 = 12;
 
         return $"{period} {hour12}시";
+    }
+
+    private IEnumerator ShakeAlertPanel(RectTransform target)
+    {
+        if (target == null)
+            yield break;
+
+        Vector2 originalPos = target.anchoredPosition;
+
+        float duration = 0.22f;   // 흔들리는 시간
+        float strength = 8f;      // 좌우 흔들림 거리
+        float frequency = 32f;    // 흔들림 속도
+
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+
+            float normalized = Mathf.Clamp01(time / duration);
+
+            // 끝으로 갈수록 흔들림이 약해짐
+            float damping = 1f - normalized;
+
+            float offsetX =
+                Mathf.Sin(time * frequency) *
+                strength *
+                damping;
+
+            target.anchoredPosition =
+                originalPos +
+                new Vector2(offsetX, 0f);
+
+            yield return null;
+        }
+
+        // 정확히 원래 위치로 복귀
+        target.anchoredPosition = originalPos;
     }
 }
 

@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections;
 
 public class NewGamePopupManager : MonoBehaviour
 {
@@ -36,6 +37,9 @@ public class NewGamePopupManager : MonoBehaviour
 
     private Coroutine nameTooLongCo;
     private bool suppressWarnings;
+
+    private RectTransform nameTooLongRect;
+    private Vector2 nameTooLongShownPosition;
 
     void OnEnable()
     {
@@ -360,47 +364,209 @@ public class NewGamePopupManager : MonoBehaviour
     private void ResetWarningPanel()
     {
         if (nameTooLongGroup != null)
-            nameTooLongGroup.alpha = 0f;
+            nameTooLongGroup.alpha = 1f;
 
         if (nameTooLongPanel != null)
+        {
+            if (nameTooLongRect == null)
+            {
+                nameTooLongRect =
+                    nameTooLongPanel.GetComponent<RectTransform>();
+
+                if (nameTooLongRect != null)
+                {
+                    nameTooLongShownPosition =
+                        nameTooLongRect.anchoredPosition;
+                }
+            }
+
+            if (nameTooLongRect != null)
+            {
+                nameTooLongRect.anchoredPosition =
+                    nameTooLongShownPosition;
+            }
+
             nameTooLongPanel.SetActive(false);
+        }
     }
 
-    private System.Collections.IEnumerator NameTooLongRoutine()
+    private IEnumerator ShakeWarningPanel(RectTransform target)
     {
-        if (nameTooLongPanel == null || nameTooLongGroup == null)
+        if (target == null)
             yield break;
 
-        nameTooLongPanel.SetActive(true);
+        Vector2 originalPos =
+            target.anchoredPosition;
 
-        float duration = 0.5f;
-        float elapsed = 0f;
+        float duration = 0.22f;
+        float strength = 8f;
+        float frequency = 32f;
 
-        // Fade In
-        while (elapsed < duration)
+        float time = 0f;
+
+        while (time < duration)
         {
-            elapsed += Time.deltaTime;
-            nameTooLongGroup.alpha = Mathf.Lerp(0f, 1f, elapsed / duration);
+            time += Time.deltaTime;
+
+            float normalized =
+                Mathf.Clamp01(
+                    time / duration
+                );
+
+            float damping =
+                1f - normalized;
+
+            float offsetX =
+                Mathf.Sin(
+                    time * frequency
+                ) *
+                strength *
+                damping;
+
+            target.anchoredPosition =
+                originalPos +
+                new Vector2(
+                    offsetX,
+                    0f
+                );
+
             yield return null;
+        }
+
+        target.anchoredPosition =
+            originalPos;
+    }
+
+    private IEnumerator NameTooLongRoutine()
+    {
+        if (nameTooLongPanel == null ||
+            nameTooLongGroup == null)
+        {
+            yield break;
+        }
+
+        if (nameTooLongRect == null)
+        {
+            nameTooLongRect =
+                nameTooLongPanel.GetComponent<RectTransform>();
+
+            if (nameTooLongRect == null)
+                yield break;
+
+            nameTooLongShownPosition =
+                nameTooLongRect.anchoredPosition;
         }
 
         nameTooLongGroup.alpha = 1f;
 
-        // Hold
-        yield return new WaitForSeconds(1f);
+        nameTooLongPanel.SetActive(true);
 
-        // Fade Out
-        elapsed = 0f;
+        float slideDuration = 0.5f;
 
-        while (elapsed < duration)
+        float elapsed = 0f;
+
+        float parentWidth =
+            Screen.width;
+
+        if (nameTooLongRect.parent
+            is RectTransform parentRect)
+        {
+            parentWidth =
+                parentRect.rect.width;
+        }
+
+        Vector2 hiddenPosition =
+            nameTooLongShownPosition +
+            Vector2.left *
+            (
+                parentWidth +
+                nameTooLongRect.rect.width
+            );
+
+        // 화면 왼쪽 밖에서 시작
+        nameTooLongRect.anchoredPosition =
+            hiddenPosition;
+
+        // -------------------------
+        // 슬라이드 인
+        // -------------------------
+        while (elapsed < slideDuration)
         {
             elapsed += Time.deltaTime;
-            nameTooLongGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+
+            float progress =
+                Mathf.SmoothStep(
+                    0f,
+                    1f,
+                    Mathf.Clamp01(
+                        elapsed /
+                        slideDuration
+                    )
+                );
+
+            nameTooLongRect.anchoredPosition =
+                Vector2.Lerp(
+                    hiddenPosition,
+                    nameTooLongShownPosition,
+                    progress
+                );
+
             yield return null;
         }
 
-        nameTooLongGroup.alpha = 0f;
+        nameTooLongRect.anchoredPosition =
+            nameTooLongShownPosition;
+
+        // -------------------------
+        // 도착 후 좌우 흔들림
+        // -------------------------
+        yield return StartCoroutine(
+            ShakeWarningPanel(
+                nameTooLongRect
+            )
+        );
+
+        // -------------------------
+        // 유지 시간
+        // -------------------------
+        yield return new WaitForSeconds(3f);
+
+        // -------------------------
+        // 슬라이드 아웃
+        // -------------------------
+        elapsed = 0f;
+
+        while (elapsed < slideDuration)
+        {
+            elapsed += Time.deltaTime;
+
+            float progress =
+                Mathf.SmoothStep(
+                    0f,
+                    1f,
+                    Mathf.Clamp01(
+                        elapsed /
+                        slideDuration
+                    )
+                );
+
+            nameTooLongRect.anchoredPosition =
+                Vector2.Lerp(
+                    nameTooLongShownPosition,
+                    hiddenPosition,
+                    progress
+                );
+
+            yield return null;
+        }
+
+        // 다음에 다시 사용할 수 있도록
+        // 원래 위치로 돌려놓고 끄기
+        nameTooLongRect.anchoredPosition =
+            nameTooLongShownPosition;
+
         nameTooLongPanel.SetActive(false);
+
         nameTooLongCo = null;
     }
 }

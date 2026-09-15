@@ -80,17 +80,23 @@ public class PlayerSkinManager : MonoBehaviour
 
         string selectedSave = PlayerPrefs.GetString("SelectedSave", string.Empty);
 
-        // 선택된 세이브가 바뀌었는데 아직 스킨 매니저가 이전 세이브를 들고 있으면 다시 로드
-        if (!string.IsNullOrEmpty(selectedSave) && selectedSave != _currentServerName)
+        if (!string.IsNullOrEmpty(selectedSave) &&
+            selectedSave != _currentServerName)
         {
             SwitchToSave(selectedSave);
             yield break;
         }
 
-        // 새 씬의 플레이어 SpriteLibrary로 다시 바인딩
+        // 새 씬의 SpriteLibrary 다시 탐색
         targetLibrary = FindObjectOfType<SpriteLibrary>();
 
-        // 현재 선택된 세이브의 스킨/색상을 다시 적용
+        // 이전 씬의 SpriteRenderer 참조 제거
+        colorTargets = null;
+
+        // 필요하다면 제외 대상도 새 씬 기준으로 다시 잡도록 초기화
+        colorExcludeTargets = null;
+
+        // 현재 스킨 + 저장된 색상 다시 적용
         Apply(_data.equippedIndex, save: false);
     }
 
@@ -259,40 +265,45 @@ public class PlayerSkinManager : MonoBehaviour
         ApplyColorToPlayer(GetSavedColor());
     }
 
+    private static readonly int ReplaceColorID =
+    Shader.PropertyToID("_ReplaceColor");
+
     private void ApplyColorToPlayer(Color color)
     {
         SpriteRenderer[] targets = colorTargets;
 
-        // colorTargets를 Inspector에서 직접 지정하지 않았다면
-        // 현재 플레이어 SpriteLibrary 하위의 SpriteRenderer를 자동 탐색
-        if (targets == null || targets.Length == 0)
+        // 배열 자체가 없거나,
+        // 이전 씬 오브젝트라 전부 null이 된 경우 다시 탐색
+        if (!HasValidColorTargets(targets))
         {
             if (targetLibrary == null)
                 targetLibrary = FindObjectOfType<SpriteLibrary>();
 
             if (targetLibrary != null)
-                targets = targetLibrary.GetComponentsInChildren<SpriteRenderer>(true);
+            {
+                targets =
+                    targetLibrary.GetComponentsInChildren<SpriteRenderer>(true);
+
+                // 새 씬 Renderer들을 다시 저장
+                colorTargets = targets;
+            }
         }
 
-        if (targets == null)
+        if (targets == null || targets.Length == 0)
             return;
 
         if (_colorPropertyBlock == null)
             _colorPropertyBlock = new MaterialPropertyBlock();
-
-        int colorPropertyID = Shader.PropertyToID(shaderColorProperty);
 
         foreach (SpriteRenderer sr in targets)
         {
             if (sr == null)
                 continue;
 
-            // 그림자 등 색상 변경 제외 대상
             if (IsColorExcluded(sr))
                 continue;
 
-            // SpriteRenderer 자체 Tint는 사용하지 않음.
-            // 항상 원본 색상을 유지하도록 흰색.
+            // SpriteRenderer 자체 Tint 방지
             sr.color = Color.white;
 
             Material material = sr.sharedMaterial;
@@ -300,19 +311,33 @@ public class PlayerSkinManager : MonoBehaviour
             if (material == null)
                 continue;
 
-            // WhiteColorReplace Shader가 적용된 Renderer에만 적용
-            if (!material.HasProperty(colorPropertyID))
+            // WhiteColorReplaceLit Shader가 적용된 Renderer만 변경
+            if (!material.HasProperty(ReplaceColorID))
                 continue;
 
             sr.GetPropertyBlock(_colorPropertyBlock);
 
             _colorPropertyBlock.SetColor(
-                colorPropertyID,
+                ReplaceColorID,
                 color
             );
 
             sr.SetPropertyBlock(_colorPropertyBlock);
         }
+    }
+
+    private bool HasValidColorTargets(SpriteRenderer[] targets)
+    {
+        if (targets == null || targets.Length == 0)
+            return false;
+
+        foreach (SpriteRenderer sr in targets)
+        {
+            if (sr != null)
+                return true;
+        }
+
+        return false;
     }
 
     private bool IsColorExcluded(SpriteRenderer sr)
