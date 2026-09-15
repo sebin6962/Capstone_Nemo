@@ -246,6 +246,76 @@ public class NPCPatrolRoute : MonoBehaviour
     }
 
     // 시간 스케줄에서 켜고/끄기용
+    /// <summary>
+    /// 현재 Animator에 저장된 NPC의 바라보는 방향을 반환합니다.
+    /// </summary>
+    public Vector2 GetFacingDirection()
+    {
+        if (animator == null)
+            return Vector2.down;
+
+        Vector2 dir = new Vector2(
+            animator.GetFloat("moveX"),
+            animator.GetFloat("moveY")
+        );
+
+        // 아직 방향값이 설정되지 않은 경우 기본 방향은 아래쪽
+        if (dir.sqrMagnitude <= 0.0001f)
+            return Vector2.down;
+
+        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+            return new Vector2(Mathf.Sign(dir.x), 0f);
+
+        return new Vector2(0f, Mathf.Sign(dir.y));
+    }
+
+    /// <summary>
+    /// NPC를 이동시키지 않고 지정한 방향의 Idle 상태로 되돌립니다.
+    /// </summary>
+    public void SetFacingDirection(Vector2 direction)
+    {
+        if (animator == null) return;
+        if (direction.sqrMagnitude <= 0.0001f) return;
+
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+            direction = new Vector2(Mathf.Sign(direction.x), 0f);
+        else
+            direction = new Vector2(0f, Mathf.Sign(direction.y));
+
+        animator.SetBool("isMoving", false);
+        animator.SetFloat("moveX", direction.x);
+        animator.SetFloat("moveY", direction.y);
+    }
+
+    /// <summary>
+    /// 대화 시작 시 NPC가 지정한 대상을 바라보도록 방향을 변경합니다.
+    /// 상/하/좌/우 중 더 가까운 주축 방향을 선택하고 Idle 상태를 유지합니다.
+    /// </summary>
+    public void FaceTarget(Transform target)
+    {
+        if (target == null || animator == null) return;
+
+        Vector2 dir = target.position - transform.position;
+
+        // 같은 위치라면 현재 방향을 그대로 유지
+        if (dir.sqrMagnitude <= 0.0001f) return;
+
+        // 대각선 방향 대신 상/하/좌/우 중 한 방향만 선택
+        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+        {
+            dir = new Vector2(Mathf.Sign(dir.x), 0f);
+        }
+        else
+        {
+            dir = new Vector2(0f, Mathf.Sign(dir.y));
+        }
+
+        // 이동은 멈춘 상태에서 바라보는 방향만 갱신
+        animator.SetBool("isMoving", false);
+        animator.SetFloat("moveX", dir.x);
+        animator.SetFloat("moveY", dir.y);
+    }
+
     public void SetActive(bool value)
     {
         isActive = value;

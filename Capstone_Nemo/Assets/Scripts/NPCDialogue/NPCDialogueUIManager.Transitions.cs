@@ -171,54 +171,66 @@ public partial class NPCDialogueUIManager
 
     public void UnregisterSceneDialogueHud(UnityEngine.Object owner)
     {
-        // Remove only this binder's roots: safe for additive scene unloading.
+        if (owner == null)
+            return;
+
+        // 뒤에서부터 제거
         for (int i = dialogueHudTargets.Count - 1; i >= 0; i--)
         {
             DialogueHudTarget target = dialogueHudTargets[i];
-            if (target == null || target.root == null)
-                if (target == null || target.sceneOwner != owner)
-                    continue;
-            RectTransform root = target.root;
-            Canvas canvas = root.GetComponentInParent<Canvas>();
-            if (canvas == null || canvas.rootCanvas.renderMode == RenderMode.WorldSpace ||
-                root.parent == null || root == canvas.rootCanvas.transform ||
-                (dialoguePanel != null && dialoguePanel.transform.IsChildOf(root)))
-                for (int j = hudSnapshots.Count - 1; j >= 0; j--)
-                {
-                    Debug.LogWarning("Dialogue HUD: use a separate HUD wrapper under a screen-space Canvas.", root);
-                    continue;
-                    HudSnapshot snapshot = hudSnapshots[j];
-                    if (!ReferenceEquals(snapshot.root, target.root))
-                        continue;
-                    if (snapshot.root != null)
-                        snapshot.root.anchoredPosition = snapshot.home;
-                    if (snapshot.group != null)
-                        snapshot.group.interactable = snapshot.interactable;
-                    hudSnapshots.RemoveAt(j);
-                }
-            bool overlaps = hudSnapshots.Exists(s =>
-                root.IsChildOf(s.root) || s.root.IsChildOf(root));
-            if (overlaps)
+
+            if (target == null)
             {
-                Debug.LogWarning("Dialogue HUD: duplicate or nested target skipped.", root);
+                dialogueHudTargets.RemoveAt(i);
                 continue;
             }
-            CanvasGroup group = root.GetComponent<CanvasGroup>();
-            if (group == null)
-                group = root.gameObject.AddComponent<CanvasGroup>();
-            hudSnapshots.Add(new HudSnapshot
+
+            // 이 Binder가 등록한 HUD만 제거
+            if (target.sceneOwner != owner)
+                continue;
+
+            RectTransform targetRoot = target.root;
+
+            // 해당 HUD의 Snapshot도 정리
+            for (int j = hudSnapshots.Count - 1; j >= 0; j--)
             {
-                root = root,
-                viewport = (RectTransform)canvas.rootCanvas.transform,
-                group = group,
-                home = root.anchoredPosition,
-                moveUp = target.moveUp,
-                interactable = group.interactable
-            });
-            // Preserve raycast blocking to avoid clicks falling through moving UI.
-            group.interactable = false;
+                HudSnapshot snapshot = hudSnapshots[j];
+
+                if (snapshot == null)
+                {
+                    hudSnapshots.RemoveAt(j);
+                    continue;
+                }
+
+                bool isSameRoot =
+                    ReferenceEquals(snapshot.root, targetRoot);
+
+                // 씬 종료 과정에서 Unity Object가 이미 Destroy되어
+                // 둘 다 null처럼 보일 수도 있으므로 owner의 target이면
+                // 살아 있는 Snapshot에 대해서만 복구
+                if (!isSameRoot)
+                    continue;
+
+                if (snapshot.root != null)
+                    snapshot.root.anchoredPosition = snapshot.home;
+
+                if (snapshot.group != null)
+                    snapshot.group.interactable = snapshot.interactable;
+
+                hudSnapshots.RemoveAt(j);
+            }
+
             dialogueHudTargets.RemoveAt(i);
         }
+
+        // Destroy된 씬 오브젝트 참조가 남아 있다면 추가 정리
+        dialogueHudTargets.RemoveAll(
+            t => t == null || t.root == null
+        );
+
+        hudSnapshots.RemoveAll(
+            s => s == null || s.root == null
+        );
     }
 
     private Vector2 GetDialogueHudHiddenPosition(HudSnapshot s)

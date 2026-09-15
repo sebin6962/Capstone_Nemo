@@ -48,9 +48,17 @@ public class NPCInteractable : MonoBehaviour
     [Header("입력 설정")]
     [SerializeField] private bool useDirectInteractKey = true;
 
+    [Header("상호작용 UI")]
+    [SerializeField] private GameObject interactionBubbleUI;
+
     private bool canInteract = false;
     private bool isTalking = false;
     private bool waitForInteractKeyRelease = false;
+
+    // 대화 시작 직전 NPC가 바라보던 방향을 저장해 두었다가
+    // 대화가 끝나면 다시 원래 방향으로 되돌립니다.
+    private Vector2 facingDirectionBeforeDialogue = Vector2.down;
+    private bool hasStoredFacingDirection = false;
 
     public string NpcId => npcId;
     public string NpcName => npcName;
@@ -59,6 +67,9 @@ public class NPCInteractable : MonoBehaviour
     {
         if (patrolRoute == null)
             patrolRoute = GetComponent<NPCPatrolRoute>();
+
+        if (interactionBubbleUI != null)
+            interactionBubbleUI.SetActive(false);
     }
 
     private void Update()
@@ -111,13 +122,25 @@ public class NPCInteractable : MonoBehaviour
 
         isTalking = true;
 
+        if (interactionBubbleUI != null)
+            interactionBubbleUI.SetActive(false);
+
+        // 플레이어를 바라보기 전에 현재 NPC 방향을 먼저 기억합니다.
         if (patrolRoute != null)
+        {
+            facingDirectionBeforeDialogue = patrolRoute.GetFacingDirection();
+            hasStoredFacingDirection = true;
             patrolRoute.SetActive(false);
+        }
 
         if (TimeManager.Instance != null)
             TimeManager.Instance.SetTimeFlow(false);
 
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+
+        // 대화 시작 순간 NPC가 플레이어 방향을 바라보도록 변경
+        if (playerObj != null && patrolRoute != null)
+            patrolRoute.FaceTarget(playerObj.transform);
         if (DialogueFocusManager.Instance != null)
             DialogueFocusManager.Instance.BeginFocus(playerObj, gameObject);
 
@@ -132,13 +155,25 @@ public class NPCInteractable : MonoBehaviour
         waitForInteractKeyRelease = true;
 
         if (patrolRoute != null)
+        {
             patrolRoute.SetActive(true);
+
+            // 대화창이 닫히면 상호작용 직전 바라보던 방향으로 복원합니다.
+            if (hasStoredFacingDirection)
+                patrolRoute.SetFacingDirection(facingDirectionBeforeDialogue);
+        }
+
+        hasStoredFacingDirection = false;
 
         if (DialogueFocusManager.Instance != null)
             DialogueFocusManager.Instance.EndFocus();
 
         if (TimeManager.Instance != null)
             TimeManager.Instance.SetTimeFlow(true);
+
+        // 플레이어가 아직 상호작용 범위 안에 있다면 다시 표시
+        if (interactionBubbleUI != null && canInteract)
+            interactionBubbleUI.SetActive(true);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -148,6 +183,9 @@ public class NPCInteractable : MonoBehaviour
         playerCollidersInRange.Add(other);
         canInteract = true;
         interactableNpcsInRange.Add(this);
+
+        if (interactionBubbleUI != null && !isTalking)
+            interactionBubbleUI.SetActive(true);
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -160,6 +198,9 @@ public class NPCInteractable : MonoBehaviour
 
         canInteract = false;
         interactableNpcsInRange.Remove(this);
+
+        if (interactionBubbleUI != null)
+            interactionBubbleUI.SetActive(false);
     }
 
     private void OnDisable()
@@ -167,5 +208,8 @@ public class NPCInteractable : MonoBehaviour
         playerCollidersInRange.Clear();
         canInteract = false;
         interactableNpcsInRange.Remove(this);
+
+        if (interactionBubbleUI != null)
+            interactionBubbleUI.SetActive(false);
     }
 }
