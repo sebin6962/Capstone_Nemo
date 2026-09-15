@@ -2,30 +2,57 @@ using UnityEngine;
 
 public class StatueColorChangeInteract : MonoBehaviour
 {
-    public KeyCode interactKey = KeyCode.E;
+    [Header("Interaction")]
+    [SerializeField] private KeyCode interactKey = KeyCode.E;
 
-    private bool _canInteract = false;
+    [Header("Key Guide")]
+    [SerializeField] private GameObject keyGuideUI;
 
-    void Update()
+    private bool _canInteract;
+
+    private void Start()
     {
-        if (!_canInteract) return;
-        if (StatueColorChangeUIManager.Instance == null) return;
+        if (keyGuideUI != null)
+            keyGuideUI.SetActive(false);
+    }
 
-        if (Input.GetKeyDown(interactKey) && !StatueColorChangeUIManager.Instance.IsOpen())
+    private void Update()
+    {
+        if (!_canInteract)
+            return;
+
+        if (StatueColorChangeUIManager.Instance == null)
+            return;
+
+        if (Input.GetKeyDown(interactKey) &&
+            !StatueColorChangeUIManager.Instance.IsOpen())
         {
+            if (keyGuideUI != null)
+                keyGuideUI.SetActive(false);
+
             StatueColorChangeUIManager.Instance.Open();
         }
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
-            _canInteract = true;
+        if (!other.CompareTag("Player"))
+            return;
+
+        _canInteract = true;
+
+        if (keyGuideUI != null)
+            keyGuideUI.SetActive(true);
     }
 
-    void OnTriggerExit2D(Collider2D other)
+    private void OnTriggerExit2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
-            _canInteract = false;
+        if (!other.CompareTag("Player"))
+            return;
+
+        _canInteract = false;
+
+        if (keyGuideUI != null)
+            keyGuideUI.SetActive(false);
     }
 }

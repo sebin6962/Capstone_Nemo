@@ -51,6 +51,11 @@ public class PlayerSkinManager : MonoBehaviour
     [Header("색상 적용 대상 SpriteRenderers (비워두면 targetLibrary 하위에서 자동 탐색)")]
     public SpriteRenderer[] colorTargets;
 
+    [Header("색상 변경 Shader")]
+    [SerializeField] private string shaderColorProperty = "_ReplaceColor";
+
+    private MaterialPropertyBlock _colorPropertyBlock;
+
     private SkinSaveData _data = new SkinSaveData();
     private string _path = "";
 
@@ -258,8 +263,8 @@ public class PlayerSkinManager : MonoBehaviour
     {
         SpriteRenderer[] targets = colorTargets;
 
-        // colorTargets를 직접 지정하지 않았다면,
-        // 현재 플레이어 SpriteLibrary 하위 SpriteRenderer들을 자동 탐색
+        // colorTargets를 Inspector에서 직접 지정하지 않았다면
+        // 현재 플레이어 SpriteLibrary 하위의 SpriteRenderer를 자동 탐색
         if (targets == null || targets.Length == 0)
         {
             if (targetLibrary == null)
@@ -269,16 +274,44 @@ public class PlayerSkinManager : MonoBehaviour
                 targets = targetLibrary.GetComponentsInChildren<SpriteRenderer>(true);
         }
 
-        if (targets == null) return;
+        if (targets == null)
+            return;
 
-        foreach (var sr in targets)
+        if (_colorPropertyBlock == null)
+            _colorPropertyBlock = new MaterialPropertyBlock();
+
+        int colorPropertyID = Shader.PropertyToID(shaderColorProperty);
+
+        foreach (SpriteRenderer sr in targets)
         {
-            if (sr == null) continue;
+            if (sr == null)
+                continue;
 
-            // 그림자/제외 대상은 색상 변경하지 않음
-            if (IsColorExcluded(sr)) continue;
+            // 그림자 등 색상 변경 제외 대상
+            if (IsColorExcluded(sr))
+                continue;
 
-            sr.color = color;
+            // SpriteRenderer 자체 Tint는 사용하지 않음.
+            // 항상 원본 색상을 유지하도록 흰색.
+            sr.color = Color.white;
+
+            Material material = sr.sharedMaterial;
+
+            if (material == null)
+                continue;
+
+            // WhiteColorReplace Shader가 적용된 Renderer에만 적용
+            if (!material.HasProperty(colorPropertyID))
+                continue;
+
+            sr.GetPropertyBlock(_colorPropertyBlock);
+
+            _colorPropertyBlock.SetColor(
+                colorPropertyID,
+                color
+            );
+
+            sr.SetPropertyBlock(_colorPropertyBlock);
         }
     }
 
