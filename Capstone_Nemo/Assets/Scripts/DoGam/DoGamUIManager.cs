@@ -338,11 +338,13 @@ public class DoGamUIManager : MonoBehaviour
     private void OnEnable()
     {
         LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
+        DoGamRecordProgress.UnreadChanged += RefreshDogamAlertIcon;
     }
 
     private void OnDisable()
     {
         LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+        DoGamRecordProgress.UnreadChanged -= RefreshDogamAlertIcon;
     }
 
     private void OnSelectedLocaleChanged(Locale locale)
@@ -924,6 +926,7 @@ public class DoGamUIManager : MonoBehaviour
     {
         LoadSeenFinishKeys();
         RefreshUnseenFinishKeys();
+        RefreshDogamAlertIcon();
     }
 
     private void LoadSeenFinishKeys()
@@ -959,7 +962,7 @@ public class DoGamUIManager : MonoBehaviour
 
         if (allEntries == null || allEntries.Count == 0 || UnlockManager.Instance == null)
         {
-            if (dogamAlertIcon != null) dogamAlertIcon.SetActive(false);
+            RefreshDogamAlertIcon();
             return;
         }
 
@@ -975,8 +978,18 @@ public class DoGamUIManager : MonoBehaviour
         }
 
         // 도감 열기 버튼 느낌표 on/off
-        if (dogamAlertIcon != null)
-            dogamAlertIcon.SetActive(_unseenFinishKeys.Count > 0);
+        RefreshDogamAlertIcon();
+    }
+
+    private void RefreshDogamAlertIcon()
+    {
+        if (dogamAlertIcon == null)
+            return;
+
+        bool hasNewRecipe = _unseenFinishKeys.Count > 0;
+        bool hasNewDialogue = DoGamRecordProgress.HasUnreadDialogues();
+
+        dogamAlertIcon.SetActive(hasNewRecipe || hasNewDialogue);
     }
 
     /// <summary>
@@ -996,8 +1009,7 @@ public class DoGamUIManager : MonoBehaviour
         SaveSeenFinishKeys();
 
         // 더 이상 새 레시피가 없다면 도감 버튼 느낌표도 끈다
-        if (dogamAlertIcon != null && _unseenFinishKeys.Count == 0)
-            dogamAlertIcon.SetActive(false);
+        RefreshDogamAlertIcon();
     }
 
     // 도감 상태용 PlayerPrefs 키를 세이브(서버)별로 분리하는 유틸

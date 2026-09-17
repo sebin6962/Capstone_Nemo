@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -145,6 +146,12 @@ public class DoGamRecordTabController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI dialogueDetailBodyText;
     [SerializeField] private Button dialogueDetailBackButton;
 
+    [Header("Dialogue Transition")]
+    [SerializeField] private float dialogueTransitionDuration = 0.22f;
+    [SerializeField] private float dialogueTransitionOffset = 24f;
+    [SerializeField] private float dialogueTransitionScale = 0.97f;
+    private Coroutine dialogueTransitionCoroutine;
+
     [Header("World Record Tab Roots")]
     [Tooltip("마을 기록 탭에서만 보일 왼쪽 페이지 전체 Root")]
     [SerializeField] private GameObject worldRecordLeftRoot;
@@ -263,7 +270,7 @@ public class DoGamRecordTabController : MonoBehaviour
             dialogueDetailBackButton.onClick.AddListener(() =>
             {
                 PlayPageSound();
-                ShowDialogueList();
+                StartDialogueListTransition(false, null, null);
             });
 
             registerHover?.Invoke(dialogueDetailBackButton);
@@ -840,76 +847,235 @@ public class DoGamRecordTabController : MonoBehaviour
     }
 
     private void ShowDialogueDetail(
-    NPCDialogueData npcData,
-    NPCDialogueSetData set)
+        NPCDialogueData npcData,
+        NPCDialogueSetData set)
     {
-        Debug.Log(
-            $"[DoGamRecord] ShowDialogueDetail ENTER / setId={set?.setId}",
-            this);
-
-        if (dialogueListRoot != null)
-            dialogueListRoot.SetActive(false);
-
-        if (dialogueDetailRoot != null)
-            dialogueDetailRoot.SetActive(true);
-        else
-            Debug.LogError(
-                "[DoGamRecord] DialogueDetailRoot가 Inspector에 연결되지 않았습니다.",
-                this);
-
-        if (dialogueDetailTitleText != null)
-            dialogueDetailTitleText.text =
-                GetLocalizedDialogueTitle(npcData, set);
-
-        if (dialogueDetailBodyText != null)
-            dialogueDetailBodyText.text =
-                GetDialoguePreviewText(npcData, set);
-
-        Debug.Log(
-            $"[DoGamRecord] Detail Result / " +
-            $"List={(dialogueListRoot != null ? dialogueListRoot.activeSelf : false)}, " +
-            $"Detail={(dialogueDetailRoot != null ? dialogueDetailRoot.activeSelf : false)}",
-            this);
+        StartDialogueListTransition(true, npcData, set);
     }
 
     private void ShowLockedDialogueDetail()
     {
-        Debug.Log("[DoGamRecord] ShowLockedDialogueDetail", this);
-
-        if (dialogueListRoot != null)
-            dialogueListRoot.SetActive(false);
-
-        if (dialogueDetailRoot != null)
-            dialogueDetailRoot.SetActive(true);
-
         if (dialogueDetailTitleText != null)
             dialogueDetailTitleText.text = lockedDialogueTitle;
 
         if (dialogueDetailBodyText != null)
             dialogueDetailBodyText.text = lockedDialogueBody;
 
-        Canvas.ForceUpdateCanvases();
-
-        if (dialogueDetailRoot != null &&
-            dialogueDetailRoot.transform is RectTransform detailRect)
-        {
-            LayoutRebuilder.ForceRebuildLayoutImmediate(detailRect);
-        }
-
-        Debug.Log(
-            $"[DoGamRecord] Locked detail state / " +
-            $"list={(dialogueListRoot != null ? dialogueListRoot.activeSelf.ToString() : "NULL")}, " +
-            $"detail={(dialogueDetailRoot != null ? dialogueDetailRoot.activeSelf.ToString() : "NULL")}",
-            this);
+        StartDialogueListTransition(true, null, null);
     }
 
     private void ShowDialogueList()
     {
+        if (dialogueTransitionCoroutine != null)
+        {
+            StopCoroutine(dialogueTransitionCoroutine);
+            dialogueTransitionCoroutine = null;
+        }
+
+        SetDialoguePanelImmediate(true);
+    }
+
+    private void StartDialogueListTransition(
+        bool toDetail,
+        NPCDialogueData npcData,
+        NPCDialogueSetData set)
+    {
+        if (dialogueTransitionCoroutine != null)
+            StopCoroutine(dialogueTransitionCoroutine);
+
+        dialogueTransitionCoroutine =
+            StartCoroutine(DialogueTransitionRoutine(toDetail, npcData, set));
+    }
+
+    private IEnumerator DialogueTransitionRoutine(
+        bool toDetail,
+        NPCDialogueData npcData,
+        NPCDialogueSetData set)
+    {
+        if (dialogueListRoot == null || dialogueDetailRoot == null)
+        {
+            if (toDetail)
+            {
+                if (npcData != null && set != null)
+                {
+                    if (dialogueDetailTitleText != null)
+                        dialogueDetailTitleText.text = GetLocalizedDialogueTitle(npcData, set);
+
+                    if (dialogueDetailBodyText != null)
+                        dialogueDetailBodyText.text = GetDialoguePreviewText(npcData, set);
+                }
+            }
+
+            SetDialoguePanelImmediate(!toDetail);
+            yield break;
+        }
+
+        RectTransform listRect = dialogueListRoot.transform as RectTransform;
+        RectTransform detailRect = dialogueDetailRoot.transform as RectTransform;
+        CanvasGroup listGroup = GetOrAddCanvasGroup(dialogueListRoot);
+        CanvasGroup detailGroup = GetOrAddCanvasGroup(dialogueDetailRoot);
+
+        if (toDetail && npcData != null && set != null)
+        {
+            if (dialogueDetailTitleText != null)
+                dialogueDetailTitleText.text = GetLocalizedDialogueTitle(npcData, set);
+
+            if (dialogueDetailBodyText != null)
+                dialogueDetailBodyText.text = GetDialoguePreviewText(npcData, set);
+        }
+
+        dialogueListRoot.SetActive(true);
+        dialogueDetailRoot.SetActive(true);
+
+        Vector2 listBasePos = listRect != null ? listRect.anchoredPosition : Vector2.zero;
+        Vector2 detailBasePos = detailRect != null ? detailRect.anchoredPosition : Vector2.zero;
+        Vector3 listBaseScale = listRect != null ? listRect.localScale : Vector3.one;
+        Vector3 detailBaseScale = detailRect != null ? detailRect.localScale : Vector3.one;
+
+        Vector2 outOffset = new Vector2(-dialogueTransitionOffset, 0f);
+        Vector2 inOffset = new Vector2(dialogueTransitionOffset, 0f);
+        Vector3 smallListScale = listBaseScale * dialogueTransitionScale;
+        Vector3 smallDetailScale = detailBaseScale * dialogueTransitionScale;
+
+        if (toDetail)
+        {
+            if (detailRect != null)
+            {
+                detailRect.anchoredPosition = detailBasePos + inOffset;
+                detailRect.localScale = smallDetailScale;
+            }
+            if (detailGroup != null) detailGroup.alpha = 0f;
+            if (listGroup != null) listGroup.alpha = 1f;
+        }
+        else
+        {
+            if (listRect != null)
+            {
+                listRect.anchoredPosition = listBasePos + outOffset;
+                listRect.localScale = smallListScale;
+            }
+            if (listGroup != null) listGroup.alpha = 0f;
+            if (detailGroup != null) detailGroup.alpha = 1f;
+        }
+
+        float elapsed = 0f;
+        float duration = Mathf.Max(0.01f, dialogueTransitionDuration);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float eased = 1f - Mathf.Pow(1f - t, 3f);
+
+            if (toDetail)
+            {
+                if (listRect != null)
+                {
+                    listRect.anchoredPosition = Vector2.Lerp(listBasePos, listBasePos + outOffset, eased);
+                    listRect.localScale = Vector3.Lerp(listBaseScale, smallListScale, eased);
+                }
+                if (detailRect != null)
+                {
+                    detailRect.anchoredPosition = Vector2.Lerp(detailBasePos + inOffset, detailBasePos, eased);
+                    detailRect.localScale = Vector3.Lerp(smallDetailScale, detailBaseScale, eased);
+                }
+                if (listGroup != null) listGroup.alpha = 1f - eased;
+                if (detailGroup != null) detailGroup.alpha = eased;
+            }
+            else
+            {
+                if (detailRect != null)
+                {
+                    detailRect.anchoredPosition = Vector2.Lerp(detailBasePos, detailBasePos + inOffset, eased);
+                    detailRect.localScale = Vector3.Lerp(detailBaseScale, smallDetailScale, eased);
+                }
+                if (listRect != null)
+                {
+                    listRect.anchoredPosition = Vector2.Lerp(listBasePos + outOffset, listBasePos, eased);
+                    listRect.localScale = Vector3.Lerp(smallListScale, listBaseScale, eased);
+                }
+                if (detailGroup != null) detailGroup.alpha = 1f - eased;
+                if (listGroup != null) listGroup.alpha = eased;
+            }
+
+            yield return null;
+        }
+
+        if (toDetail)
+        {
+            if (listRect != null)
+            {
+                listRect.anchoredPosition = listBasePos;
+                listRect.localScale = listBaseScale;
+            }
+            if (detailRect != null)
+            {
+                detailRect.anchoredPosition = detailBasePos;
+                detailRect.localScale = detailBaseScale;
+            }
+            if (detailGroup != null) detailGroup.alpha = 1f;
+            dialogueListRoot.SetActive(false);
+        }
+        else
+        {
+            if (detailRect != null)
+            {
+                detailRect.anchoredPosition = detailBasePos;
+                detailRect.localScale = detailBaseScale;
+            }
+            if (listRect != null)
+            {
+                listRect.anchoredPosition = listBasePos;
+                listRect.localScale = listBaseScale;
+            }
+            if (listGroup != null) listGroup.alpha = 1f;
+            dialogueDetailRoot.SetActive(false);
+        }
+
+        dialogueTransitionCoroutine = null;
+    }
+
+    private void SetDialoguePanelImmediate(bool showList)
+    {
         if (dialogueListRoot != null)
-            dialogueListRoot.SetActive(true);
+        {
+            dialogueListRoot.SetActive(showList);
+            ResetDialoguePanelTransform(dialogueListRoot);
+            CanvasGroup group = GetOrAddCanvasGroup(dialogueListRoot);
+            if (group != null) group.alpha = 1f;
+        }
 
         if (dialogueDetailRoot != null)
-            dialogueDetailRoot.SetActive(false);
+        {
+            dialogueDetailRoot.SetActive(!showList);
+            ResetDialoguePanelTransform(dialogueDetailRoot);
+            CanvasGroup group = GetOrAddCanvasGroup(dialogueDetailRoot);
+            if (group != null) group.alpha = 1f;
+        }
+    }
+
+    private static CanvasGroup GetOrAddCanvasGroup(GameObject target)
+    {
+        if (target == null)
+            return null;
+
+        CanvasGroup group = target.GetComponent<CanvasGroup>();
+        if (group == null)
+            group = target.AddComponent<CanvasGroup>();
+
+        return group;
+    }
+
+    private static void ResetDialoguePanelTransform(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        RectTransform rect = target.transform as RectTransform;
+        if (rect == null)
+            return;
+
+        rect.localScale = Vector3.one;
     }
 
     private string GetDialoguePreviewText(

@@ -17,13 +17,16 @@ public static class DoGamRecordProgress
     }
 
     private const string DialogueKeyBase = "DoGam_Record_DiscoveredDialogues";
+    private const string UnreadDialogueKeyBase = "DoGam_Record_UnreadDialogues";
     private const string WorldRecordKeyBase = "DoGam_Record_DiscoveredWorldRecords";
 
     private static string cachedSlot;
     private static HashSet<string> dialogueIds;
+    private static HashSet<string> unreadDialogueIds;
     private static HashSet<string> worldRecordIds;
 
     public static event Action ProgressChanged;
+    public static event Action UnreadChanged;
 
     public static bool IsDialogueDiscovered(string npcId, string setId)
     {
@@ -38,11 +41,46 @@ public static class DoGamRecordProgress
 
         EnsureLoaded();
 
-        if (!dialogueIds.Add(MakeDialogueId(npcId, setId)))
+        string dialogueId = MakeDialogueId(npcId, setId);
+
+        if (!dialogueIds.Add(dialogueId))
             return;
 
+        unreadDialogueIds.Add(dialogueId);
+
         Save(DialogueKeyBase, dialogueIds);
+        Save(UnreadDialogueKeyBase, unreadDialogueIds);
         ProgressChanged?.Invoke();
+        UnreadChanged?.Invoke();
+    }
+
+    public static bool IsDialogueUnread(string npcId, string setId)
+    {
+        if (string.IsNullOrWhiteSpace(npcId) || string.IsNullOrWhiteSpace(setId))
+            return false;
+
+        EnsureLoaded();
+        return unreadDialogueIds.Contains(MakeDialogueId(npcId, setId));
+    }
+
+    public static bool HasUnreadDialogues()
+    {
+        EnsureLoaded();
+        return unreadDialogueIds.Count > 0;
+    }
+
+    public static void MarkDialogueRead(string npcId, string setId)
+    {
+        if (string.IsNullOrWhiteSpace(npcId) || string.IsNullOrWhiteSpace(setId))
+            return;
+
+        EnsureLoaded();
+
+        if (!unreadDialogueIds.Remove(MakeDialogueId(npcId, setId)))
+            return;
+
+        Save(UnreadDialogueKeyBase, unreadDialogueIds);
+        UnreadChanged?.Invoke();
     }
 
     /// <summary>
@@ -129,6 +167,7 @@ public static class DoGamRecordProgress
         cachedSlot = null;
         EnsureLoaded();
         ProgressChanged?.Invoke();
+        UnreadChanged?.Invoke();
     }
 
     private static void EnsureLoaded()
@@ -136,12 +175,14 @@ public static class DoGamRecordProgress
         string slot = PlayerPrefs.GetString("SelectedSave", "");
 
         if (dialogueIds != null &&
+            unreadDialogueIds != null &&
             worldRecordIds != null &&
             string.Equals(cachedSlot, slot, StringComparison.Ordinal))
             return;
 
         cachedSlot = slot;
         dialogueIds = Load(DialogueKeyBase);
+        unreadDialogueIds = Load(UnreadDialogueKeyBase);
         worldRecordIds = Load(WorldRecordKeyBase);
     }
 
