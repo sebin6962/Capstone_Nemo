@@ -91,8 +91,11 @@ public class SaveSelectManager : MonoBehaviour
         if (PlayerPrefs.GetString("SelectedSave", "") == serverName)
         {
             PlayerPrefs.DeleteKey("SelectedSave");
-            PlayerPrefs.Save();
         }
+
+        PlayerPrefs.DeleteKey("TutorialStep_" + serverName);
+
+        PlayerPrefs.Save();
     }
 
     void OnEnable()
@@ -236,7 +239,10 @@ public class SaveSelectManager : MonoBehaviour
                             .InitFromSelectedSave();
                     }
 
-                    TutorialFlowManager.ForceResetInstance();
+                    if (TutorialFlowManager.Instance != null)
+                    {
+                        TutorialFlowManager.Instance.InitializeForCurrentSave();
+                    }
 
                     if (QuestAcceptManager.Instance != null)
                     {
@@ -271,7 +277,7 @@ public class SaveSelectManager : MonoBehaviour
                         VillageSceneManager.Instance.ResetData();
                     }
 
-                    PlayerLocationSaveData location =
+                    /*PlayerLocationSaveData location =
                         SaveService.CurrentData.playerLocationData;
 
                     bool canRestoreVillageLocation =
@@ -282,17 +288,56 @@ public class SaveSelectManager : MonoBehaviour
                     SceneTransitionInfo.Instance.entranceID =
                         canRestoreVillageLocation
                             ? null
-                            : "FromPlayerStore";
+                            : "FromPlayerStore";*/
 
-                    // 이전 실행의 포털 브리지 값이 저장 위치 복원을
-                    // 덮어쓰지 않도록 세이브 선택 시 정리한다.
+                    PlayerLocationSaveData location =
+                    SaveService.CurrentData.playerLocationData;
+
+                    string tutorialKey =
+                        "TutorialStep_" + serverName;
+
+                    GlobalTutorialStep tutorialStep =
+                        (GlobalTutorialStep)PlayerPrefs.GetInt(
+                            tutorialKey,
+                            (int)GlobalTutorialStep.DogamIntro
+                        );
+
+                    string targetScene;
+
+                    switch (tutorialStep)
+                    {
+                        case GlobalTutorialStep.PlayerStore_First:
+                        case GlobalTutorialStep.PlayerStore_Second:
+                            targetScene = "PlayerStoreScene";
+                            break;
+
+                        case GlobalTutorialStep.Mill:
+                            targetScene = "MillScene";
+                            break;
+
+                        case GlobalTutorialStep.DogamIntro:
+                        case GlobalTutorialStep.Village_First:
+                        case GlobalTutorialStep.Village_Second:
+                            targetScene = "VillageScene";
+                            break;
+
+                        default:
+                            //튜토리얼 완료 후에는 기존 방식
+                            targetScene = "VillageScene";
+                            break;
+                    }
+
+                    //튜토리얼 중에는 entranceID도 사용하지 않음
+                    SceneTransitionInfo.Instance.entranceID = null;
+
+                    //이전 실행의 포털 브리지 값이 저장 위치 복원 덮어쓰지 않도록 세이브 선택 시 정리
                     PlayerPrefs.DeleteKey("__entranceID");
                     PlayerPrefs.DeleteKey("__fromScene");
                     PlayerPrefs.DeleteKey("__toScene");
                     PlayerPrefs.Save();
-
+               
                     FadeManager.Instance.FadeToScene(
-                        "VillageScene"
+                       targetScene
                     );
                 });
 

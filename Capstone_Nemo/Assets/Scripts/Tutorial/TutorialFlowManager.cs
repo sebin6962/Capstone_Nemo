@@ -16,6 +16,8 @@ public enum GlobalTutorialStep
     Done
 }
 
+
+
 public class TutorialFlowManager : MonoBehaviour
 {
     public static TutorialFlowManager Instance;
@@ -29,6 +31,8 @@ public class TutorialFlowManager : MonoBehaviour
 
     private string server;
     private TutorialStateData state;
+
+    private const string TutorialStepKeyPrefix = "TutorialStep_";
 
     private int timePauseRequestCount = 0;
 
@@ -84,7 +88,17 @@ public class TutorialFlowManager : MonoBehaviour
         }
         else
         {
-            currentStep = GlobalTutorialStep.DogamIntro;
+            string key = GetTutorialStepKey();
+
+            if (PlayerPrefs.HasKey(key))
+            {
+                currentStep =
+                    (GlobalTutorialStep)PlayerPrefs.GetInt(key);
+            }
+            else
+            {
+                currentStep = GlobalTutorialStep.DogamIntro;
+            }
         }
 
         Debug.Log($"[TutorialFlow] InitializeForCurrentSave : server={server}, tutorialDone={state.tutorialDone}, step={currentStep}");
@@ -128,12 +142,18 @@ public class TutorialFlowManager : MonoBehaviour
     public void SetStep(GlobalTutorialStep step)
     {
         currentStep = step;
-        //후에 기능 확장.... 안할지도?굳이.., 중간세이브..
+
+        string key = GetTutorialStepKey();
+
+        PlayerPrefs.SetInt(key, (int)currentStep);
+        PlayerPrefs.Save();
+
+        Debug.Log($"[TutorialFlow] Step Saved : server={server}, step={currentStep}");
     }
 
     public void FinishAllTutorial()
     {
-        currentStep = GlobalTutorialStep.Done;
+        SetStep(GlobalTutorialStep.Done);
         state.tutorialDone = true;
         TutorialState.Save(server, state);
 
@@ -148,6 +168,11 @@ public class TutorialFlowManager : MonoBehaviour
         {
             RecipeQuickViewUI.Instance.infoText.SetActive(true);
         }
+    }
+
+    private string GetTutorialStepKey()
+    {
+        return TutorialStepKeyPrefix + server;
     }
 
 }

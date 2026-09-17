@@ -105,7 +105,7 @@ public class StoreTutorialManager : MonoBehaviour
 
         var flow = TutorialFlowManager.Instance;
 
-        if (state.tutorialDone || TutorialFlowManager.Instance.currentStep == GlobalTutorialStep.Done)
+        if (flow == null || state.tutorialDone || flow.currentStep == GlobalTutorialStep.Done)
         {
             HideAllPanels();
             IsStoreTutorialRunning = false;

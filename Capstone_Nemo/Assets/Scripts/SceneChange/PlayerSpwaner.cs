@@ -33,12 +33,49 @@ public class PlayerSpwaner : MonoBehaviour
 
         // 여기까지 왔다는 건 VSD가 없거나 또는 아직 처리를 못 했다는 뜻
         var info = SceneTransitionInfo.Instance;
-        if (info == null || string.IsNullOrEmpty(info.entranceID))
+        /*if (info == null || string.IsNullOrEmpty(info.entranceID))
         {
             if (!hasDirector)
             {
                 GetComponent<PlayerManager>()
                     ?.TryRestoreSavedLocationForCurrentScene();
+            }
+
+            yield break;
+        }*/
+
+        if (info == null || string.IsNullOrEmpty(info.entranceID))
+        {
+            if (!hasDirector)
+            {
+                string server =
+                    PlayerPrefs.GetString("SelectedSave", "default");
+
+                string tutorialKey =
+                    "TutorialStep_" + server;
+
+                GlobalTutorialStep tutorialStep =
+                    (GlobalTutorialStep)PlayerPrefs.GetInt(
+                        tutorialKey,
+                        (int)GlobalTutorialStep.DogamIntro
+                    );
+
+                bool isTutorialRunning =
+                    tutorialStep != GlobalTutorialStep.Done;
+
+                if (!isTutorialRunning)
+                {
+                    //튜토리얼이 끝났을 때만 마지막 저장 위치 복원
+                    GetComponent<PlayerManager>()
+                        ?.TryRestoreSavedLocationForCurrentScene();
+                }
+                else
+                {
+                    //씬에 배치되어 있던 Player의 원래 위치 그대로 사용
+                    Debug.Log(
+                        $"[PlayerSpawner] Tutorial Start Position : {tutorialStep}"
+                    );
+                }
             }
 
             yield break;

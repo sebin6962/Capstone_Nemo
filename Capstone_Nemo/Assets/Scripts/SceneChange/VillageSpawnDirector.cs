@@ -85,7 +85,7 @@ public class VillageSpawnDirector : MonoBehaviour
 
         if (string.IsNullOrEmpty(id))
         {
-            bool restored =
+            /*bool restored =
                 playerManager != null &&
                 playerManager.TryRestoreSavedLocationForCurrentScene();
 
@@ -94,21 +94,56 @@ public class VillageSpawnDirector : MonoBehaviour
                 Vector3 defaultPosition = defaultSpawnPoint.position;
                 defaultPosition.z = 0f;
                 player.transform.position = defaultPosition;
-            }
+            }*/
 
-            var directVcam =
+            if (string.IsNullOrEmpty(id))
+            {
+                string server =
+                    PlayerPrefs.GetString("SelectedSave", "default");
+
+                string tutorialKey =
+                    "TutorialStep_" + server;
+
+                GlobalTutorialStep tutorialStep =
+                    (GlobalTutorialStep)PlayerPrefs.GetInt(
+                        tutorialKey,
+                        (int)GlobalTutorialStep.DogamIntro
+                    );
+
+                bool isTutorialRunning =
+                    tutorialStep != GlobalTutorialStep.Done;
+
+                bool restored = false;
+
+                if (!isTutorialRunning)
+                {
+                    //일반 플레이일 때만 마지막 저장 위치 복원
+                    restored =
+                        playerManager != null &&
+                        playerManager.TryRestoreSavedLocationForCurrentScene();
+                }
+
+                if (!restored && defaultSpawnPoint != null)
+                {
+                    //튜토리얼 중이면 Village 기본 시작 위치
+                    Vector3 defaultPosition = defaultSpawnPoint.position;
+                    defaultPosition.z = 0f;
+                    player.transform.position = defaultPosition;
+                }
+
+                var directVcam =
                 FindObjectOfType<CinemachineVirtualCamera>();
 
-            if (directVcam != null)
-                directVcam.PreviousStateIsValid = false;
+                if (directVcam != null)
+                    directVcam.PreviousStateIsValid = false;
 
-            Debug.Log(
-                restored
-                    ? "[VillageSpawnDirector] 저장 위치 복원 완료"
-                    : "[VillageSpawnDirector] 저장 위치 없음 → 기본 위치 적용"
-            );
+                Debug.Log(
+                    restored
+                        ? "[VillageSpawnDirector] 저장 위치 복원 완료"
+                        : "[VillageSpawnDirector] 저장 위치 없음 → 기본 위치 적용"
+                );
 
-            Time.timeScale = 1f;
+                Time.timeScale = 1f;
 
 #if ENABLE_INPUT_SYSTEM
     var pi = FindObjectOfType<UnityEngine.InputSystem.PlayerInput>();
@@ -123,46 +158,47 @@ public class VillageSpawnDirector : MonoBehaviour
     }
 #endif
 
-            // 브리지 키 정리(혹시 남아 있던 값 제거)
-            PlayerPrefs.DeleteKey("__entranceID");
-            PlayerPrefs.DeleteKey("__fromScene");
-            PlayerPrefs.DeleteKey("__toScene");
+                // 브리지 키 정리(혹시 남아 있던 값 제거)
+                PlayerPrefs.DeleteKey("__entranceID");
+                PlayerPrefs.DeleteKey("__fromScene");
+                PlayerPrefs.DeleteKey("__toScene");
 
-            // 중복 실행 방지
-            _spawnedOnce = true;
-            yield break;
-        }
+                // 중복 실행 방지
+                _spawnedOnce = true;
+                yield break;
+            }
 
-        // 3) 스폰 지점 찾기 (매핑 우선, 실패 시 이름 탐색 폴백)
-        if (spawnPoints == null) spawnPoints = GetComponent<SpawnPointCollection>();
+            // 3) 스폰 지점 찾기 (매핑 우선, 실패 시 이름 탐색 폴백)
+            if (spawnPoints == null) spawnPoints = GetComponent<SpawnPointCollection>();
 
-        Transform t = null;
-        if (spawnPoints != null && spawnPoints.TryGet(id, out var mapped) && mapped != null)
-            t = mapped;
-        else
-        {
-            var go = GameObject.Find(id); // 최종 폴백
-            if (go != null) t = go.transform;
-        }
+            Transform t = null;
+            if (spawnPoints != null && spawnPoints.TryGet(id, out var mapped) && mapped != null)
+                t = mapped;
+            else
+            {
+                var go = GameObject.Find(id); // 최종 폴백
+                if (go != null) t = go.transform;
+            }
 
-        if (t != null)
-        {
-            var pos = t.position; pos.z = 0f;
-            player.transform.position = pos;
+            if (t != null)
+            {
+                var pos = t.position; pos.z = 0f;
+                player.transform.position = pos;
 
 
-            var vcam = FindObjectOfType<CinemachineVirtualCamera>();
-            if (vcam) vcam.PreviousStateIsValid = false;
+                var vcam = FindObjectOfType<CinemachineVirtualCamera>();
+                if (vcam) vcam.PreviousStateIsValid = false;
 
-            // 4) 값 소비 및 정리 (다음 진입에 영향 없게)
-            if (info != null) info.entranceID = null;
-            PlayerPrefs.DeleteKey("__entranceID");
-            PlayerPrefs.DeleteKey("__fromScene");
-            PlayerPrefs.DeleteKey("__toScene");
-        }
-        else
-        {
-            Debug.LogWarning($"[VillageSpawnDirector] 스폰 실패: id={id}");
+                // 4) 값 소비 및 정리 (다음 진입에 영향 없게)
+                if (info != null) info.entranceID = null;
+                PlayerPrefs.DeleteKey("__entranceID");
+                PlayerPrefs.DeleteKey("__fromScene");
+                PlayerPrefs.DeleteKey("__toScene");
+            }
+            else
+            {
+                Debug.LogWarning($"[VillageSpawnDirector] 스폰 실패: id={id}");
+            }
         }
     }
 }
