@@ -75,6 +75,28 @@ public partial class NPCDialogueUIManager : MonoBehaviour
     private string currentFullLine = "";
     private bool isTyping = false;
     private string currentCategoryId = null;
+    private bool isFirstNpcDialogue;
+    private bool closeButtonStateCaptured;
+    private bool closeButtonWasInteractable;
+
+    private void ConfigureFirstDialogueCloseButton(string npcId)
+    {
+        // Capture before the selector changes hasMetNpc; keep this for the session.
+        isFirstNpcDialogue = NPCDialogueProgressManager.Instance == null ||
+            !NPCDialogueProgressManager.Instance.HasMetNpc(npcId);
+        if (closeButton == null) return;
+        closeButtonWasInteractable = closeButton.interactable;
+        closeButtonStateCaptured = true;
+        if (isFirstNpcDialogue) closeButton.interactable = false;
+    }
+
+    private void RestoreFirstDialogueCloseButton()
+    {
+        isFirstNpcDialogue = false;
+        if (closeButtonStateCaptured && closeButton != null)
+            closeButton.interactable = closeButtonWasInteractable;
+        closeButtonStateCaptured = false;
+    }
 
     private string GetLocalizedText(string key, string fallback)
     {
@@ -579,6 +601,8 @@ public partial class NPCDialogueUIManager : MonoBehaviour
         pendingLines.Clear();
         nextNodeAfterLines = null;
 
+        ConfigureFirstDialogueCloseButton(currentDialogueData.npcId);
+
         string entryNodeId =
             GetEntryNodeId(
                 currentDialogueData,
@@ -760,6 +784,12 @@ public partial class NPCDialogueUIManager : MonoBehaviour
     $"nodeId={entryNodeId}"
 );
 
+        // Legacy data without a dedicated first-interaction node must also be
+        // marked met when a valid conversation is selected. No completion check.
+        if (npcProgress != null && !string.IsNullOrEmpty(entryNodeId) &&
+            nodeDict.ContainsKey(entryNodeId))
+            npcProgress.hasMetNpc = true;
+
         if (NPCDialogueProgressManager.Instance != null)
         {
             NPCDialogueProgressManager
@@ -793,6 +823,11 @@ public partial class NPCDialogueUIManager : MonoBehaviour
             CloseDialogue();
             return;
         }
+
+        DoGamRecordProgress.MarkDialogueFromStartNode(
+       currentDialogueData,
+       nodeId
+   );
 
         string nodeType =
             currentNode.type?
@@ -1060,6 +1095,9 @@ public partial class NPCDialogueUIManager : MonoBehaviour
 
     public void OnClickCloseButton()
     {
+        // Also block direct UnityEvent calls while the first conversation is open.
+        if (isFirstNpcDialogue && !isTutorialDialogueMode) return;
+
         if (dialoguePanel == null ||
             !dialoguePanel.activeSelf)
         {
@@ -1546,6 +1584,8 @@ public partial class NPCDialogueUIManager : MonoBehaviour
 
     private void CloseDialogueCore()
     {
+        RestoreFirstDialogueCloseButton();
+
         if (BGMPlayer.Instance != null)
         {
             BGMPlayer.Instance
