@@ -178,9 +178,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.000057429075
+    y: 0.00006496906
     width: 1
-    height: 0.99988514
+    height: 0.99987006
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -9569,7 +9569,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -392.27002, y: 301.61}
+  m_AnchoredPosition: {x: -392.27, y: 301.61}
   m_SizeDelta: {x: 3192.45, y: 1910.13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &842494595
@@ -14448,6 +14448,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1573597060 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4040071787486949470, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 120827710}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6d4561a2551fa24eb547f16c1ef91d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1573597061 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1912911542287075879, guid: c25dcca2cacaca24fb9b7a66a12d063b, type: 3}
+  m_PrefabInstance: {fileID: 120827710}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1583014160
 GameObject:
   m_ObjectHideFlags: 0
@@ -15103,6 +15125,8 @@ MonoBehaviour:
   lockCoverPanel: {fileID: 43168122}
   tabNormalSprite: {fileID: 288664982, guid: c5f9803a935031f40a467d2ab6e8f60d, type: 3}
   tabPressedSprite: {fileID: -1386077437, guid: c5f9803a935031f40a467d2ab6e8f60d, type: 3}
+  recordButton: {fileID: 1573597061}
+  recordTabController: {fileID: 1573597060}
   dogamAlertIcon: {fileID: 435332633}
   recipeAlertIcon: {fileID: 435332634}
   recipeRoot: {fileID: 43168130}

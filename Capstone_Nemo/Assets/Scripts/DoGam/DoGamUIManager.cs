@@ -11,6 +11,7 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Serialization;
 
 public class DoGamUIManager : MonoBehaviour
 {
@@ -44,6 +45,10 @@ public class DoGamUIManager : MonoBehaviour
     [Header("Tab Sprites")]
     public Sprite tabNormalSprite;
     public Sprite tabPressedSprite;
+
+    [Header("NPC Tab")]
+    [SerializeField] private Button recordButton;
+    [SerializeField] private DoGamRecordTabController recordTabController;
 
     private Button _activeTabButton = null; // 현재 선택된 탭
 
@@ -306,6 +311,16 @@ public class DoGamUIManager : MonoBehaviour
 
 
 
+        if (recordButton != null) recordButton.onClick.AddListener(() => {
+            if (SFXManager.Instance) SFXManager.Instance.PlayBbyongSFX();
+            OpenRecordTab();
+        });
+        if (recordTabController != null)
+        {
+            recordTabController.Initialize(RegisterButtonHoverMaterial);
+            recordTabController.CloseTab();
+        }
+
         // 초기 표시 상태
         panel.SetActive(false);
         SubTitle.SetActive(false);
@@ -323,16 +338,24 @@ public class DoGamUIManager : MonoBehaviour
     private void OnEnable()
     {
         LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
+        DoGamRecordProgress.UnreadChanged += RefreshDogamAlertIcon;
     }
 
     private void OnDisable()
     {
         LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+        DoGamRecordProgress.UnreadChanged -= RefreshDogamAlertIcon;
     }
 
     private void OnSelectedLocaleChanged(Locale locale)
     {
         if (!IsOpen()) return;
+
+        if (recordTabController != null && recordTabController.IsOpen)
+        {
+            recordTabController.RefreshDetail();
+            return;
+        }
 
         if (howToRoot != null && howToRoot.activeSelf)
         {
@@ -451,6 +474,7 @@ public class DoGamUIManager : MonoBehaviour
         RegisterButtonHoverMaterial(howToPrevButton);
         RegisterButtonHoverMaterial(howToNextButton);
 
+        RegisterButtonHoverMaterial(recordButton);
         RegisterButtonHoverMaterial(makerButton);
         RegisterButtonHoverMaterial(makerPrevButton);
         RegisterButtonHoverMaterial(makerNextButton);
@@ -551,6 +575,8 @@ public class DoGamUIManager : MonoBehaviour
 
     private Button GetCurrentPrevButton()
     {
+        if (recordTabController != null && recordTabController.IsOpen) return null;
+
         if (howToRoot != null && howToRoot.activeSelf)
             return howToPrevButton;
 
@@ -562,6 +588,8 @@ public class DoGamUIManager : MonoBehaviour
 
     private Button GetCurrentNextButton()
     {
+        if (recordTabController != null && recordTabController.IsOpen) return null;
+
         if (howToRoot != null && howToRoot.activeSelf)
             return howToNextButton;
 
@@ -584,11 +612,13 @@ public class DoGamUIManager : MonoBehaviour
     // ===================== 공통 토글 =====================
     private void SetRecipeLayout(bool on)
     {
+        if (on && recordTabController != null) recordTabController.CloseTab();
         if (recipeRoot != null) recipeRoot.SetActive(on);
         SetRecipeNavVisible(on && (entryList.Count > 0 || _unlockedCount >= 0));
     }
     private void SetHowToLayout(bool on)
     {
+        if (on && recordTabController != null) recordTabController.CloseTab();
         if (howToRoot != null) howToRoot.SetActive(on);
         SetHowToNavVisible(on && howToPages.Count > 0);
 
@@ -756,8 +786,12 @@ public class DoGamUIManager : MonoBehaviour
 
         int lastTab = PlayerPrefs.GetInt(GetDoGamStateKey("DoGam_LastTab"), 0);
 
-        // 0: 레시피, 1: 게임방법, 2: 제작대
-        if (lastTab == 1)
+        // 0: 레시피, 1: 게임방법, 2: 제작대, 3: 기록
+        if (lastTab == 3 && recordTabController != null && recordTabController.IsConfigured)
+        {
+            OpenRecordTab();
+        }
+        else if (lastTab == 1)
         {
             // 게임방법 탭으로 복원
             SetRecipeLayout(false);
@@ -825,6 +859,7 @@ public class DoGamUIManager : MonoBehaviour
 
         // 현재 보고 있던 페이지 상태 저장
         SaveLastDoGamState();
+        if (recordTabController != null) recordTabController.CloseTab();
 
         SFXManager.Instance.PlayBbyongSFX();
         panel.SetActive(false);
@@ -853,6 +888,7 @@ public class DoGamUIManager : MonoBehaviour
         int tab = 0; // 0: 레시피
         if (howToRoot != null && howToRoot.activeSelf) tab = 1;
         else if (makerRoot != null && makerRoot.activeSelf) tab = 2;
+        else if (recordTabController != null && recordTabController.IsOpen) tab = 3;
 
         // 세이브별로 분리된 키 사용
         PlayerPrefs.SetInt(GetDoGamStateKey("DoGam_LastTab"), tab);
@@ -890,6 +926,7 @@ public class DoGamUIManager : MonoBehaviour
     {
         LoadSeenFinishKeys();
         RefreshUnseenFinishKeys();
+        RefreshDogamAlertIcon();
     }
 
     private void LoadSeenFinishKeys()
@@ -925,7 +962,7 @@ public class DoGamUIManager : MonoBehaviour
 
         if (allEntries == null || allEntries.Count == 0 || UnlockManager.Instance == null)
         {
-            if (dogamAlertIcon != null) dogamAlertIcon.SetActive(false);
+            RefreshDogamAlertIcon();
             return;
         }
 
@@ -941,8 +978,18 @@ public class DoGamUIManager : MonoBehaviour
         }
 
         // 도감 열기 버튼 느낌표 on/off
-        if (dogamAlertIcon != null)
-            dogamAlertIcon.SetActive(_unseenFinishKeys.Count > 0);
+        RefreshDogamAlertIcon();
+    }
+
+    private void RefreshDogamAlertIcon()
+    {
+        if (dogamAlertIcon == null)
+            return;
+
+        bool hasNewRecipe = _unseenFinishKeys.Count > 0;
+        bool hasNewDialogue = DoGamRecordProgress.HasUnreadDialogues();
+
+        dogamAlertIcon.SetActive(hasNewRecipe || hasNewDialogue);
     }
 
     /// <summary>
@@ -962,8 +1009,7 @@ public class DoGamUIManager : MonoBehaviour
         SaveSeenFinishKeys();
 
         // 더 이상 새 레시피가 없다면 도감 버튼 느낌표도 끈다
-        if (dogamAlertIcon != null && _unseenFinishKeys.Count == 0)
-            dogamAlertIcon.SetActive(false);
+        RefreshDogamAlertIcon();
     }
 
     // 도감 상태용 PlayerPrefs 키를 세이브(서버)별로 분리하는 유틸
@@ -1044,6 +1090,7 @@ public class DoGamUIManager : MonoBehaviour
         if (drinkButton) drinkButton.image.sprite = tabNormalSprite;
         if (howToButton) howToButton.image.sprite = tabNormalSprite;
         if (makerButton) makerButton.image.sprite = tabNormalSprite;
+        if (recordButton) recordButton.image.sprite = tabNormalSprite;
 
         // 현재 탭만 pressed 스프라이트로 고정
         _activeTabButton = b;
@@ -1054,6 +1101,7 @@ public class DoGamUIManager : MonoBehaviour
         if (drinkButton) drinkButton.transition = Selectable.Transition.None;
         if (howToButton) howToButton.transition = Selectable.Transition.None;
         if (makerButton) makerButton.transition = Selectable.Transition.None;
+        if (recordButton) recordButton.transition = Selectable.Transition.None;
     }
 
     private void ApplyTabSpritesForCategory(string category)
@@ -1579,6 +1627,7 @@ public class DoGamUIManager : MonoBehaviour
     //==========제작기 탭==============
     private void SetMakerLayout(bool on)
     {
+        if (on && recordTabController != null) recordTabController.CloseTab();
         if (makerRoot != null) makerRoot.SetActive(on);
         SetMakerNavVisible(on);
         if (on && lockCoverPanel) lockCoverPanel.SetActive(false);
@@ -1631,6 +1680,37 @@ public class DoGamUIManager : MonoBehaviour
             Debug.LogError("[Maker] JSON 파싱 실패: " + e.Message);
             makerItems = new List<MakerItemData>();
         }
+    }
+
+    public void OpenRecordTab()
+    {
+        if (recordTabController == null || !recordTabController.IsConfigured)
+        {
+            Debug.LogWarning("[DoGam] 기록 탭 컨트롤러/UI 참조가 비어 있습니다.");
+            return;
+        }
+
+        panel.SetActive(true);
+        if (RecipeQuickViewUI.Instance != null)
+            RecipeQuickViewUI.Instance.ForceCloseMiniPanel();
+        if (SubTitle != null) SubTitle.SetActive(false);
+        if (openButton != null) openButton.interactable = false;
+
+        SetRecipeLayout(false);
+        SetHowToLayout(false);
+        SetMakerLayout(false);
+        isHowToOpen = false;
+        if (lockCoverPanel) lockCoverPanel.SetActive(false);
+
+        recordTabController.OpenTab();
+        SetActiveTab(recordButton);
+    }
+
+    // 기존 UnityEvent나 외부 스크립트가 OpenNPCTab()을 호출하고 있어도 깨지지 않도록 유지
+    [System.Obsolete("OpenRecordTab()을 사용하세요.")]
+    public void OpenNPCTab()
+    {
+        OpenRecordTab();
     }
 
     public void OpenMakerTab()

@@ -45,6 +45,16 @@ public class NPCDialogueProgressManager : MonoBehaviour
         Load();
     }
 
+    // Read-only lookup: opening the book must not create progress records.
+    public bool HasMetNpc(string npcId)
+    {
+        if (string.IsNullOrEmpty(npcId) || progressData?.npcProgressList == null)
+            return false;
+        NPCDialogueNpcProgressData progress = progressData.npcProgressList.Find(
+            p => p != null && p.npcId == npcId);
+        return progress != null && progress.hasMetNpc;
+    }
+
     public NPCDialogueNpcProgressData GetOrCreateNpcProgress(string npcId)
     {
         if (string.IsNullOrEmpty(npcId))
