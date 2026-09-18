@@ -191,8 +191,6 @@ public class IntroSceneManager : MonoBehaviour
     }
     void Start()
     {
-        AudioListener.volume = 0f;
-
         bool openSaveSelectImmediately =
             ConsumeOpenSaveSelectRequest();
 
@@ -230,9 +228,13 @@ public class IntroSceneManager : MonoBehaviour
 
         if (openSaveSelectImmediately)
         {
-            AudioListener.volume = 1f;
-
             HideTeamLogoPanelImmediately();
+
+            if (BGMPlayer.Instance != null)
+            {
+                BGMPlayer.Instance.PlayIntroBGMFromStart();
+            }
+
             PrepareReturnedSaveSelectState();
             StartCoroutine(OpenSaveSelectAfterSceneReturn());
             return;
@@ -309,13 +311,23 @@ public class IntroSceneManager : MonoBehaviour
                 )
             );
 
+            /* teamLogoPanel.blocksRaycasts = false;
+             teamLogoPanel.gameObject.SetActive(false);
+         }
+
+
+         // 팀 로고 패널이 완전히 사라진 뒤 기존 인트로를 그대로 시작한다.
+         yield return StartCoroutine(FlowSequence());*/
             teamLogoPanel.blocksRaycasts = false;
             teamLogoPanel.gameObject.SetActive(false);
         }
 
-        AudioListener.volume = 1f;
+        if (BGMPlayer.Instance != null)
+        {
+            BGMPlayer.Instance.PlayIntroBGMFromStart();
+        }
 
-        // 팀 로고 패널이 완전히 사라진 뒤 기존 인트로를 그대로 시작한다.
+        //기존 인트로 시작
         yield return StartCoroutine(FlowSequence());
     }
 

@@ -127,6 +127,9 @@ public class BGMPlayer : MonoBehaviour
         switch (sceneName)
         {
             case "IntroScene":
+                StopBGMImmediately();
+                return;
+
             case "SaveSelectScene":
                 sceneDayBGM = startBGM;
                 break;
@@ -374,6 +377,53 @@ public class BGMPlayer : MonoBehaviour
         pausedSceneClip = null;
         pausedSceneTimeSamples = 0;
         hasPausedScenePosition = false;
+    }
+
+    public void PlayIntroBGMFromStart()
+    {
+        if (startBGM == null)
+            return;
+
+        if (currentFade != null)
+        {
+            StopCoroutine(currentFade);
+            currentFade = null;
+        }
+
+        requestedClip = startBGM;
+        requestedTargetVolume = targetVolume;
+
+        audioSource.Stop();
+        audioSource.clip = startBGM;
+        audioSource.time = 0f;
+        audioSource.volume = targetVolume;
+
+        StartCoroutine(PlayIntroNextFrame());
+    }
+
+    private IEnumerator PlayIntroNextFrame()
+    {
+        //AudioSource에 Clip이 적용된 뒤 한 프레임 기다림
+        yield return null;
+
+        audioSource.time = 0f;
+        audioSource.Play();
+    }
+
+    public void StopBGMImmediately()
+    {
+        if (currentFade != null)
+        {
+            StopCoroutine(currentFade);
+            currentFade = null;
+        }
+
+        audioSource.Stop();
+        audioSource.clip = null;
+        audioSource.volume = 0f;
+
+        requestedClip = null;
+        requestedTargetVolume = 0f;
     }
 
     // 일반 BGM 볼륨으로 재생
