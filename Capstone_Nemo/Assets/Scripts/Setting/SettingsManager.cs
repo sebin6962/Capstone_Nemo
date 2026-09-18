@@ -36,9 +36,9 @@ public class SettingsManager : MonoBehaviour
     public float bgmVolume = 1f;
     public float sfxVolume = 1f;
 
-    public bool masterMute = false;
-    public bool bgmMute = false;
-    public bool sfxMute = false;
+    public bool masterMute = true;
+    public bool bgmMute = true;
+    public bool sfxMute = true;
 
     public float UIScale = 1f;
     public float brightness = 1f;
@@ -108,9 +108,9 @@ public class SettingsManager : MonoBehaviour
         bgmVolume = PlayerPrefs.GetFloat("BGMVolume", 1f);
         sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 1f);
 
-        masterMute = PlayerPrefs.GetInt("MasterMute", 0) == 1;
-        bgmMute = PlayerPrefs.GetInt("BGMMute", 0) == 1;
-        sfxMute = PlayerPrefs.GetInt("SFXMute", 0) == 1;
+        masterMute = PlayerPrefs.GetInt("MasterMute", 1) == 1;
+        bgmMute = PlayerPrefs.GetInt("BGMMute", 1) == 1;
+        sfxMute = PlayerPrefs.GetInt("SFXMute", 1) == 1;
 
         UIScale = PlayerPrefs.GetFloat("UIScale", 1f);
         brightness = PlayerPrefs.GetFloat("Brightness", 1f);
