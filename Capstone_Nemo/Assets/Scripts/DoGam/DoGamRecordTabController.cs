@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +16,7 @@ public class RecordNPCBookItemData
     public string dialogueNpcId;
     public string name;
     public string nameKey;
+    public string baseDescription;
     public string image;
 }
 
@@ -37,8 +38,8 @@ public class WorldRecordItemData
     public string locationKey;
     public string image;
 
-    // -1ÀÌ¸é Ã³À½ºÎÅÍ ¸ñ·Ï ÈÄº¸¿¡ Æ÷ÇÔ.
-    // 0~7ÀÌ¸é ÇöÀç °è¼ö³ª¹« ´Ü°è¿¡ µµ´ŞÇÑ µÚ¿¡¸¸ ¸ñ·Ï¿¡ ³ªÅ¸³².
+    // -1ì´ë©´ ì²˜ìŒë¶€í„° ëª©ë¡ í›„ë³´ì— í¬í•¨.
+    // 0~7ì´ë©´ í˜„ì¬ ê³„ìˆ˜ë‚˜ë¬´ ë‹¨ê³„ì— ë„ë‹¬í•œ ë’¤ì—ë§Œ ëª©ë¡ì— ë‚˜íƒ€ë‚¨.
     public int requiredTreeLevel = -1;
 }
 
@@ -52,10 +53,10 @@ public class WorldRecordBookData
 
 
 /// <summary>
-/// ±âÁ¸ NPC µµ°¨ ÅÇÀ» ´ëÃ¼ÇÏ´Â '±â·Ï' ÅÇ ÄÁÆ®·Ñ·¯.
-/// ¼­ºêÅÇ:
-/// 1) ÀÎ¹° - NPCº° ´ëÈ­ ¼öÁı ±â·Ï
-/// 2) ¸¶À» ±â·Ï - »óÈ£ÀÛ¿ë ±â·Ï ¾ÆÀÌÅÛ
+/// ê¸°ì¡´ NPC ë„ê° íƒ­ì„ ëŒ€ì²´í•˜ëŠ” 'ê¸°ë¡' íƒ­ ì»¨íŠ¸ë¡¤ëŸ¬.
+/// ì„œë¸Œíƒ­:
+/// 1) ì¸ë¬¼ - NPCë³„ ëŒ€í™” ìˆ˜ì§‘ ê¸°ë¡
+/// 2) ë§ˆì„ ê¸°ë¡ - ìƒí˜¸ì‘ìš© ê¸°ë¡ ì•„ì´í…œ
 /// </summary>
 public class DoGamRecordTabController : MonoBehaviour
 {
@@ -79,13 +80,13 @@ public class DoGamRecordTabController : MonoBehaviour
 
         if (!discovered)
         {
-            // ¿øº» RGB¸¦ ¹ö¸®°í Alpha ÇüÅÂ¸¸ ³²±ä ´Ü»ö ½Ç·ç¿§
+            // ì›ë³¸ RGBë¥¼ ë²„ë¦¬ê³  Alpha í˜•íƒœë§Œ ë‚¨ê¸´ ë‹¨ìƒ‰ ì‹¤ë£¨ì—£
             image.material = lockedSilhouetteMaterial;
             image.color = lockedSilhouetteColor;
         }
         else
         {
-            // ´Ù½Ã ÀÏ¹İ UI Sprite ·»´õ¸µ
+            // ë‹¤ì‹œ ì¼ë°˜ UI Sprite ë Œë”ë§
             image.material = null;
             image.color = discoveredColor;
         }
@@ -119,10 +120,10 @@ public class DoGamRecordTabController : MonoBehaviour
     [SerializeField] private Sprite subTabPressedSprite;
 
     [Header("Character Tab Roots")]
-    [Tooltip("ÀÎ¹° ÅÇ¿¡¼­¸¸ º¸ÀÏ ¿ŞÂÊ ÆäÀÌÁö ÀüÃ¼ Root")]
+    [Tooltip("ì¸ë¬¼ íƒ­ì—ì„œë§Œ ë³´ì¼ ì™¼ìª½ í˜ì´ì§€ ì „ì²´ Root")]
     [SerializeField] private GameObject characterLeftRoot;
 
-    [Tooltip("ÀÎ¹° ÅÇ¿¡¼­¸¸ º¸ÀÏ ¿À¸¥ÂÊ ÆäÀÌÁö ÀüÃ¼ Root")]
+    [Tooltip("ì¸ë¬¼ íƒ­ì—ì„œë§Œ ë³´ì¼ ì˜¤ë¥¸ìª½ í˜ì´ì§€ ì „ì²´ Root")]
     [SerializeField] private GameObject characterRightRoot;
 
     [Header("Character - Left Page")]
@@ -132,7 +133,13 @@ public class DoGamRecordTabController : MonoBehaviour
     [Header("Character - Right Page Header")]
     [SerializeField] private Image npcDetailImage;
     [SerializeField] private TextMeshProUGUI npcDetailNameText;
-    [SerializeField] private TextMeshProUGUI npcProgressText;
+
+    [Header("Character - Story Progress UI")]
+    [SerializeField] private TextMeshProUGUI npcProgressTitleText;
+    [SerializeField] private TextMeshProUGUI npcProgressCountText;
+    [SerializeField] private Image npcProgressFillImage;
+    [SerializeField] private string npcProgressCountKey = "record.dialogue.progress";
+    [SerializeField] private string npcProgressCountFallback = "\uC774\uC57C\uAE30 \uC218\uC9D1\uB3C4";
 
     [Header("Character - Dialogue List")]
     [SerializeField] private GameObject dialogueListRoot;
@@ -146,17 +153,16 @@ public class DoGamRecordTabController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI dialogueDetailBodyText;
     [SerializeField] private Button dialogueDetailBackButton;
 
-    [Header("Dialogue Transition")]
+    [Header("Dialogue List / Detail Transition")]
     [SerializeField] private float dialogueTransitionDuration = 0.22f;
-    [SerializeField] private float dialogueTransitionOffset = 24f;
-    [SerializeField] private float dialogueTransitionScale = 0.97f;
-    private Coroutine dialogueTransitionCoroutine;
+    [SerializeField] private float dialogueTransitionDistance = 42f;
+    [SerializeField] private float dialogueTransitionMinScale = 0.98f;
 
     [Header("World Record Tab Roots")]
-    [Tooltip("¸¶À» ±â·Ï ÅÇ¿¡¼­¸¸ º¸ÀÏ ¿ŞÂÊ ÆäÀÌÁö ÀüÃ¼ Root")]
+    [Tooltip("ë§ˆì„ ê¸°ë¡ íƒ­ì—ì„œë§Œ ë³´ì¼ ì™¼ìª½ í˜ì´ì§€ ì „ì²´ Root")]
     [SerializeField] private GameObject worldRecordLeftRoot;
 
-    [Tooltip("¸¶À» ±â·Ï ÅÇ¿¡¼­¸¸ º¸ÀÏ ¿À¸¥ÂÊ ÆäÀÌÁö ÀüÃ¼ Root")]
+    [Tooltip("ë§ˆì„ ê¸°ë¡ íƒ­ì—ì„œë§Œ ë³´ì¼ ì˜¤ë¥¸ìª½ í˜ì´ì§€ ì „ì²´ Root")]
     [SerializeField] private GameObject worldRecordRightRoot;
 
     [Header("World Record")]
@@ -186,10 +192,10 @@ public class DoGamRecordTabController : MonoBehaviour
 
     [Header("Fallback Text")]
     [SerializeField] private string lockedDialogueTitle = "????";
-    [SerializeField] private string lockedDialogueBody = "¾ÆÁ÷ ³ª´©Áö ¾ÊÀº ÀÌ¾ß±âÀÔ´Ï´Ù.";
-    [SerializeField] private string lockedNpcText = "¾ÆÁ÷ ¸¸³ªÁö ¾ÊÀº Åä³¢ÀÔ´Ï´Ù.";
+    [SerializeField] private string lockedDialogueBody = "ì•„ì§ ë‚˜ëˆ„ì§€ ì•Šì€ ì´ì•¼ê¸°ì…ë‹ˆë‹¤.";
+    [SerializeField] private string lockedNpcText = "ì•„ì§ ë§Œë‚˜ì§€ ì•Šì€ í† ë¼ì…ë‹ˆë‹¤.";
     [SerializeField] private string lockedWorldRecordTitle = "????";
-    [SerializeField] private string lockedWorldRecordBody = "¾ÆÁ÷ ¹ß°ßÇÏÁö ¸øÇÑ ±â·ÏÀÔ´Ï´Ù.";
+    [SerializeField] private string lockedWorldRecordBody = "ì•„ì§ ë°œê²¬í•˜ì§€ ëª»í•œ ê¸°ë¡ì…ë‹ˆë‹¤.";
 
     private class NPCButtonView
     {
@@ -208,6 +214,45 @@ public class DoGamRecordTabController : MonoBehaviour
         new Dictionary<string, NPCDialogueData>(StringComparer.Ordinal);
 
     private Action<Button> registerHover;
+    private Coroutine dialogueTransitionCoroutine;
+    private bool dialogueTransitionBaseCached;
+    private Vector2 dialogueListBasePosition;
+    private Vector2 dialogueDetailBasePosition;
+    private Vector3 dialogueListBaseScale;
+    private Vector3 dialogueDetailBaseScale;
+
+    [Header("Scroll Hover Guard")]
+    [SerializeField, Range(0f, 1f)]
+    private float minimumVisibleRatioForHover = 0.5f;
+
+    [Header("Left Slot Scale Effect")]
+    [SerializeField] private float leftSlotNormalScale = 1f;
+    [SerializeField] private float leftSlotHoverScale = 1.08f;
+    [SerializeField] private float leftSlotSelectedScale = 1.12f;
+    [SerializeField] private float leftSlotClickScale = 1f;
+
+    private class ScrollHoverGuard
+    {
+        public Button button;
+        public RectTransform buttonRect;
+        public RectTransform viewportRect;
+        public CanvasGroup canvasGroup;
+        public Graphic hoverGraphic;
+        public Material originalMaterial;
+        public bool lastAllowed = true;
+    }
+
+    private readonly List<ScrollHoverGuard> scrollHoverGuards =
+        new List<ScrollHoverGuard>();
+
+
+    private readonly Dictionary<Button, RectTransform> leftSlotScaleTargets =
+        new Dictionary<Button, RectTransform>();
+    private readonly Dictionary<Button, Vector3> leftSlotBaseScales =
+        new Dictionary<Button, Vector3>();
+    private readonly HashSet<Button> leftSlotHovering =
+        new HashSet<Button>();
+
     private RecordNPCBookItemData selectedNpc;
     private SubTab currentSubTab = SubTab.Character;
     private bool loaded;
@@ -226,7 +271,6 @@ public class DoGamRecordTabController : MonoBehaviour
         npcGridParent != null &&
         npcItemPrefab != null &&
         npcDetailNameText != null &&
-        npcProgressText != null &&
         dialogueListRoot != null &&
         dialogueListParent != null &&
         dialogueItemPrefab != null &&
@@ -270,7 +314,7 @@ public class DoGamRecordTabController : MonoBehaviour
             dialogueDetailBackButton.onClick.AddListener(() =>
             {
                 PlayPageSound();
-                StartDialogueListTransition(false, null, null);
+                ShowDialogueList();
             });
 
             registerHover?.Invoke(dialogueDetailBackButton);
@@ -285,7 +329,7 @@ public class DoGamRecordTabController : MonoBehaviour
         if (button == null)
             return;
 
-        // ±âÁ¸ Button.onClickÀº »ç¿ëÇÏÁö ¾Ê´Â´Ù.
+        // ê¸°ì¡´ Button.onClickì€ ì‚¬ìš©í•˜ì§€ ì•ŠëŠ”ë‹¤.
         button.onClick.RemoveAllListeners();
 
         EventTrigger trigger =
@@ -299,8 +343,8 @@ public class DoGamRecordTabController : MonoBehaviour
         if (trigger.triggers == null)
             trigger.triggers = new List<EventTrigger.Entry>();
 
-        // ±âÁ¸ PointerClick¸¸ Á¦°Å.
-        // PointerEnter / PointerExit °°Àº hover ÀÌº¥Æ®´Â º¸Á¸ÇÑ´Ù.
+        // ê¸°ì¡´ PointerClickë§Œ ì œê±°.
+        // PointerEnter / PointerExit ê°™ì€ hover ì´ë²¤íŠ¸ëŠ” ë³´ì¡´í•œë‹¤.
         trigger.triggers.RemoveAll(
             x => x != null &&
                  x.eventID == EventTriggerType.PointerClick);
@@ -336,7 +380,7 @@ public class DoGamRecordTabController : MonoBehaviour
     {
         if (!IsConfigured)
         {
-            Debug.LogWarning("[DoGamRecord] InspectorÀÇ ±â·Ï ÅÇ UI ÂüÁ¶¸¦ È®ÀÎÇØÁÖ¼¼¿ä.", this);
+            Debug.LogWarning("[DoGamRecord] Inspectorì˜ ê¸°ë¡ íƒ­ UI ì°¸ì¡°ë¥¼ í™•ì¸í•´ì£¼ì„¸ìš”.", this);
             return;
         }
 
@@ -348,8 +392,8 @@ public class DoGamRecordTabController : MonoBehaviour
 
         recordRoot.SetActive(true);
 
-        // ÀÌÀü Play »óÅÂ³ª ÀÎ½ºÆåÅÍ È°¼º°ªÀÌ ³²¾Æ ÀÖ¾îµµ
-        // ±â·Ï ÅÇÀ» ¿­ ¶§ »óÅÂ¸¦ °­Á¦·Î ÃÊ±âÈ­ÇÑ´Ù.
+        // ì´ì „ Play ìƒíƒœë‚˜ ì¸ìŠ¤í™í„° í™œì„±ê°’ì´ ë‚¨ì•„ ìˆì–´ë„
+        // ê¸°ë¡ íƒ­ì„ ì—´ ë•Œ ìƒíƒœë¥¼ ê°•ì œë¡œ ì´ˆê¸°í™”í•œë‹¤.
         SetCharacterRoots(false);
         SetWorldRecordRoots(false);
         ShowCharacterSubTab();
@@ -386,7 +430,7 @@ public class DoGamRecordTabController : MonoBehaviour
         }
     }
 
-    // DoGamUIManagerÀÇ ±âÁ¸ locale º¯°æ È£Ãâ°ú È£È¯ÇÏ±â À§ÇÑ º°Äª.
+    // DoGamUIManagerì˜ ê¸°ì¡´ locale ë³€ê²½ í˜¸ì¶œê³¼ í˜¸í™˜í•˜ê¸° ìœ„í•œ ë³„ì¹­.
     public void RefreshDetail()
     {
         RefreshCurrentView();
@@ -402,7 +446,7 @@ public class DoGamRecordTabController : MonoBehaviour
         SetWorldRecordRoots(false);
 
         Debug.Log(
-            "[DoGamRecord] Character Àû¿ë °á°ú / " +
+            "[DoGamRecord] Character ì ìš© ê²°ê³¼ / " +
             $"CharacterLeft={characterLeftRoot?.activeSelf}, " +
             $"CharacterRight={characterRightRoot?.activeSelf}, " +
             $"WorldLeft={worldRecordLeftRoot?.activeSelf}, " +
@@ -432,7 +476,7 @@ public class DoGamRecordTabController : MonoBehaviour
         SetWorldRecordRoots(true);
 
         Debug.Log(
-            "[DoGamRecord] WorldRecord Àû¿ë °á°ú / " +
+            "[DoGamRecord] WorldRecord ì ìš© ê²°ê³¼ / " +
             $"CharacterLeft={characterLeftRoot?.activeSelf}, " +
             $"CharacterRight={characterRightRoot?.activeSelf}, " +
             $"WorldLeft={worldRecordLeftRoot?.activeSelf}, " +
@@ -563,7 +607,7 @@ public class DoGamRecordTabController : MonoBehaviour
         {
             Debug.LogWarning(
                 "[DoGamRecord] Resources/" + worldRecordResourcePath +
-                ".json ÀÌ ¾ÆÁ÷ ¾ø½À´Ï´Ù. ¸¶À» ±â·Ï ¼­ºêÅÇÀº ºó »óÅÂ·Î Ç¥½ÃµË´Ï´Ù.",
+                ".json ì´ ì•„ì§ ì—†ìŠµë‹ˆë‹¤. ë§ˆì„ ê¸°ë¡ ì„œë¸Œíƒ­ì€ ë¹ˆ ìƒíƒœë¡œ í‘œì‹œë©ë‹ˆë‹¤.",
                 this);
             worldRecords = new List<WorldRecordItemData>();
             return;
@@ -604,7 +648,7 @@ public class DoGamRecordTabController : MonoBehaviour
             if (button == null || icon == null)
             {
                 Debug.LogError(
-                    "[DoGamRecord] npcItemPrefab¿¡´Â Button°ú Icon(Image)ÀÌ ÇÊ¿äÇÕ´Ï´Ù.",
+                    "[DoGamRecord] npcItemPrefabì—ëŠ” Buttonê³¼ Icon(Image)ì´ í•„ìš”í•©ë‹ˆë‹¤.",
                     instance);
                 Destroy(instance);
                 continue;
@@ -625,7 +669,10 @@ public class DoGamRecordTabController : MonoBehaviour
             });
 
             EnsureButtonHoverDoesNotUseIcon(button, icon);
-            registerHover?.Invoke(button);
+            RegisterViewportAwareHover(button, npcGridParent);
+            RegisterLeftSlotScaleEffect(
+                button,
+                instance.transform as RectTransform);
         }
 
         npcGridBuilt = true;
@@ -679,7 +726,9 @@ public class DoGamRecordTabController : MonoBehaviour
         if (!hasMet)
         {
             if (npcDetailNameText != null) npcDetailNameText.text = "????";
-            if (npcProgressText != null) npcProgressText.text = lockedNpcText;
+            if (npcProgressTitleText != null)
+                npcProgressTitleText.text = lockedNpcText;
+            ClearNpcProgressUI();
             return;
         }
 
@@ -688,11 +737,12 @@ public class DoGamRecordTabController : MonoBehaviour
 
         if (dialogueData == null || dialogueData.dialogueSets == null)
         {
-            if (npcProgressText != null) npcProgressText.text = "ÀÌ¾ß±â 0 / 0";
+            SetNpcProgressTitle();
+            ClearNpcProgressUI();
             return;
         }
 
-        // ±âÁ¸ ÁøÇà µ¥ÀÌÅÍ¿¡ ³²¾Æ ÀÖ´Â seenSetIds¸¦ ¿µ±¸ µµ°¨ ±â·ÏÀ¸·Î Èí¼ö.
+        // ê¸°ì¡´ ì§„í–‰ ë°ì´í„°ì— ë‚¨ì•„ ìˆëŠ” seenSetIdsë¥¼ ì˜êµ¬ ë„ê° ê¸°ë¡ìœ¼ë¡œ í¡ìˆ˜.
         if (NPCDialogueProgressManager.Instance != null)
         {
             NPCDialogueNpcProgressData progress =
@@ -705,24 +755,22 @@ public class DoGamRecordTabController : MonoBehaviour
 
         int treeLevel = GetCurrentTreeLevel();
 
+        List<NPCDialogueSetData> allSets =
+            dialogueData.dialogueSets
+                .Where(x => x != null)
+                .OrderBy(x =>
+                    x.useTreeLevel ? x.treeLevel : 0)
+                .ThenBy(x =>
+                    dialogueData.dialogueSets.IndexOf(x))
+                .ToList();
+
         List<NPCDialogueSetData> availableSets =
-     dialogueData.dialogueSets
-         .Where(x =>
-             x != null &&
-             (!x.useTreeLevel || x.treeLevel <= treeLevel))
-         .OrderBy(x =>
-             x.useTreeLevel ? x.treeLevel : 0)
-         .ThenBy(x =>
-             dialogueData.dialogueSets.IndexOf(x))
-         .ToList();
+            allSets
+                .Where(x =>
+                    !x.useTreeLevel || x.treeLevel <= treeLevel)
+                .ToList();
 
-        int discoveredCount = availableSets.Count(x =>
-            DoGamRecordProgress.IsDialogueDiscovered(
-                selectedNpc.dialogueNpcId,
-                x.setId));
-
-        if (npcProgressText != null)
-            npcProgressText.text = $"ÀÌ¾ß±â {discoveredCount} / {availableSets.Count}";
+        RefreshNpcProgressUI(allSets);
 
         int lastLevel = int.MinValue;
 
@@ -735,8 +783,8 @@ public class DoGamRecordTabController : MonoBehaviour
                     ? set.treeLevel
                     : 0;
 
-            // ÀÌÀü ´Ü°è¿Í ´Ş¶óÁ³´Ù¸é
-            // ´ÙÀ½ ´Ü°è ½ÃÀÛ Àü¿¡ ±¸ºĞ ÀÌ¹ÌÁö¸¦ ³Ö´Â´Ù.
+            // ì´ì „ ë‹¨ê³„ì™€ ë‹¬ë¼ì¡Œë‹¤ë©´
+            // ë‹¤ìŒ ë‹¨ê³„ ì‹œì‘ ì „ì— êµ¬ë¶„ ì´ë¯¸ì§€ë¥¼ ë„£ëŠ”ë‹¤.
             if (previousLevel.HasValue &&
                 previousLevel.Value != currentLevel)
             {
@@ -790,6 +838,27 @@ public class DoGamRecordTabController : MonoBehaviour
 
         TMP_Text titleText = FindNamedText(instance, "Title");
 
+        Transform newIconTransform =
+            instance.GetComponentsInChildren<Transform>(true)
+                .FirstOrDefault(x =>
+                    x != null && x.name == "NewIcon");
+
+        GameObject newIcon =
+            newIconTransform != null
+                ? newIconTransform.gameObject
+                : null;
+
+        if (newIcon != null)
+        {
+            bool isUnread =
+                discovered &&
+                DoGamRecordProgress.IsDialogueUnread(
+                    npcData.npcId,
+                    set.setId);
+
+            newIcon.SetActive(isUnread);
+        }
+
         if (titleText == null)
             titleText = instance.GetComponentInChildren<TMP_Text>(true);
 
@@ -800,21 +869,21 @@ public class DoGamRecordTabController : MonoBehaviour
                 : lockedDialogueTitle;
         }
 
-        // ÀÌ Ç×¸ñ ¾ÈÀÇ ½ÇÁ¦ ButtonµéÀ» ¸ğµÎ °¡Á®¿Â´Ù.
+        // ì´ í•­ëª© ì•ˆì˜ ì‹¤ì œ Buttonë“¤ì„ ëª¨ë‘ ê°€ì ¸ì˜¨ë‹¤.
         Button[] buttons =
             instance.GetComponentsInChildren<Button>(true);
 
         if (buttons == null || buttons.Length == 0)
         {
             Debug.LogError(
-                $"[DoGamRecord] DialogueItem¿¡ ButtonÀÌ ¾ø½À´Ï´Ù. setId={set.setId}",
+                $"[DoGamRecord] DialogueItemì— Buttonì´ ì—†ìŠµë‹ˆë‹¤. setId={set.setId}",
                 instance);
 
             return;
         }
 
         Debug.Log(
-            $"[DoGamRecord] DialogueItem »ı¼º / " +
+            $"[DoGamRecord] DialogueItem ìƒì„± / " +
             $"setId={set.setId}, buttonCount={buttons.Length}",
             instance);
 
@@ -837,12 +906,23 @@ public class DoGamRecordTabController : MonoBehaviour
                 PlayPageSound();
 
                 if (discovered)
+                {
+                    DoGamRecordProgress.MarkDialogueRead(
+                        npcData.npcId,
+                        set.setId);
+
+                    if (newIcon != null)
+                        newIcon.SetActive(false);
+
                     ShowDialogueDetail(npcData, set);
+                }
                 else
+                {
                     ShowLockedDialogueDetail();
+                }
             });
 
-            registerHover?.Invoke(button);
+            RegisterViewportAwareHover(button, dialogueListParent);
         }
     }
 
@@ -850,7 +930,15 @@ public class DoGamRecordTabController : MonoBehaviour
         NPCDialogueData npcData,
         NPCDialogueSetData set)
     {
-        StartDialogueListTransition(true, npcData, set);
+        if (dialogueDetailTitleText != null)
+            dialogueDetailTitleText.text =
+                GetLocalizedDialogueTitle(npcData, set);
+
+        if (dialogueDetailBodyText != null)
+            dialogueDetailBodyText.text =
+                GetDialoguePreviewText(npcData, set);
+
+        PlayDialoguePanelTransition(true);
     }
 
     private void ShowLockedDialogueDetail()
@@ -861,197 +949,230 @@ public class DoGamRecordTabController : MonoBehaviour
         if (dialogueDetailBodyText != null)
             dialogueDetailBodyText.text = lockedDialogueBody;
 
-        StartDialogueListTransition(true, null, null);
+        PlayDialoguePanelTransition(true);
     }
 
     private void ShowDialogueList()
     {
+        bool detailIsOpen =
+            dialogueDetailRoot != null &&
+            dialogueDetailRoot.activeSelf;
+
+        if (!detailIsOpen)
+        {
+            SetDialoguePanelState(false);
+            return;
+        }
+
+        PlayDialoguePanelTransition(false);
+    }
+
+    private void PlayDialoguePanelTransition(bool toDetail)
+    {
+        CacheDialogueTransitionBaseIfNeeded();
+
+        if (!isActiveAndEnabled)
+        {
+            RestoreDialogueTransitionBaseTransforms();
+            SetDialoguePanelState(toDetail);
+            return;
+        }
+
         if (dialogueTransitionCoroutine != null)
         {
             StopCoroutine(dialogueTransitionCoroutine);
             dialogueTransitionCoroutine = null;
+            RestoreDialogueTransitionBaseTransforms();
         }
 
-        SetDialoguePanelImmediate(true);
-    }
-
-    private void StartDialogueListTransition(
-        bool toDetail,
-        NPCDialogueData npcData,
-        NPCDialogueSetData set)
-    {
-        if (dialogueTransitionCoroutine != null)
-            StopCoroutine(dialogueTransitionCoroutine);
-
         dialogueTransitionCoroutine =
-            StartCoroutine(DialogueTransitionRoutine(toDetail, npcData, set));
+            StartCoroutine(DialoguePanelTransitionRoutine(toDetail));
     }
 
-    private IEnumerator DialogueTransitionRoutine(
-        bool toDetail,
-        NPCDialogueData npcData,
-        NPCDialogueSetData set)
+    private IEnumerator DialoguePanelTransitionRoutine(bool toDetail)
     {
-        if (dialogueListRoot == null || dialogueDetailRoot == null)
+        GameObject outgoingRoot =
+            toDetail ? dialogueListRoot : dialogueDetailRoot;
+        GameObject incomingRoot =
+            toDetail ? dialogueDetailRoot : dialogueListRoot;
+
+        RectTransform outgoingRect =
+            outgoingRoot != null
+                ? outgoingRoot.transform as RectTransform
+                : null;
+        RectTransform incomingRect =
+            incomingRoot != null
+                ? incomingRoot.transform as RectTransform
+                : null;
+
+        if (outgoingRect == null || incomingRect == null)
         {
-            if (toDetail)
-            {
-                if (npcData != null && set != null)
-                {
-                    if (dialogueDetailTitleText != null)
-                        dialogueDetailTitleText.text = GetLocalizedDialogueTitle(npcData, set);
-
-                    if (dialogueDetailBodyText != null)
-                        dialogueDetailBodyText.text = GetDialoguePreviewText(npcData, set);
-                }
-            }
-
-            SetDialoguePanelImmediate(!toDetail);
+            SetDialoguePanelState(toDetail);
+            dialogueTransitionCoroutine = null;
             yield break;
         }
 
-        RectTransform listRect = dialogueListRoot.transform as RectTransform;
-        RectTransform detailRect = dialogueDetailRoot.transform as RectTransform;
-        CanvasGroup listGroup = GetOrAddCanvasGroup(dialogueListRoot);
-        CanvasGroup detailGroup = GetOrAddCanvasGroup(dialogueDetailRoot);
+        CanvasGroup outgoingGroup = GetOrAddCanvasGroup(outgoingRoot);
+        CanvasGroup incomingGroup = GetOrAddCanvasGroup(incomingRoot);
 
-        if (toDetail && npcData != null && set != null)
-        {
-            if (dialogueDetailTitleText != null)
-                dialogueDetailTitleText.text = GetLocalizedDialogueTitle(npcData, set);
+        CacheDialogueTransitionBaseIfNeeded();
 
-            if (dialogueDetailBodyText != null)
-                dialogueDetailBodyText.text = GetDialoguePreviewText(npcData, set);
-        }
+        Vector2 outgoingBasePos = toDetail
+            ? dialogueListBasePosition
+            : dialogueDetailBasePosition;
+        Vector3 outgoingBaseScale = toDetail
+            ? dialogueListBaseScale
+            : dialogueDetailBaseScale;
+        Vector2 incomingBasePos = toDetail
+            ? dialogueDetailBasePosition
+            : dialogueListBasePosition;
+        Vector3 incomingBaseScale = toDetail
+            ? dialogueDetailBaseScale
+            : dialogueListBaseScale;
 
-        dialogueListRoot.SetActive(true);
-        dialogueDetailRoot.SetActive(true);
+        float direction = toDetail ? 1f : -1f;
+        float halfDuration =
+            Mathf.Max(0.01f, dialogueTransitionDuration * 0.5f);
 
-        Vector2 listBasePos = listRect != null ? listRect.anchoredPosition : Vector2.zero;
-        Vector2 detailBasePos = detailRect != null ? detailRect.anchoredPosition : Vector2.zero;
-        Vector3 listBaseScale = listRect != null ? listRect.localScale : Vector3.one;
-        Vector3 detailBaseScale = detailRect != null ? detailRect.localScale : Vector3.one;
+        Vector2 outgoingEnd =
+            outgoingBasePos +
+            new Vector2(-dialogueTransitionDistance * direction, 0f);
+        Vector3 outgoingEndScale =
+            ScaleFrom(outgoingBaseScale, dialogueTransitionMinScale);
 
-        Vector2 outOffset = new Vector2(-dialogueTransitionOffset, 0f);
-        Vector2 inOffset = new Vector2(dialogueTransitionOffset, 0f);
-        Vector3 smallListScale = listBaseScale * dialogueTransitionScale;
-        Vector3 smallDetailScale = detailBaseScale * dialogueTransitionScale;
-
-        if (toDetail)
-        {
-            if (detailRect != null)
-            {
-                detailRect.anchoredPosition = detailBasePos + inOffset;
-                detailRect.localScale = smallDetailScale;
-            }
-            if (detailGroup != null) detailGroup.alpha = 0f;
-            if (listGroup != null) listGroup.alpha = 1f;
-        }
-        else
-        {
-            if (listRect != null)
-            {
-                listRect.anchoredPosition = listBasePos + outOffset;
-                listRect.localScale = smallListScale;
-            }
-            if (listGroup != null) listGroup.alpha = 0f;
-            if (detailGroup != null) detailGroup.alpha = 1f;
-        }
+        if (outgoingRoot != null)
+            outgoingRoot.SetActive(true);
 
         float elapsed = 0f;
-        float duration = Mathf.Max(0.01f, dialogueTransitionDuration);
-
-        while (elapsed < duration)
+        while (elapsed < halfDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / duration);
+            float t = Mathf.Clamp01(elapsed / halfDuration);
             float eased = 1f - Mathf.Pow(1f - t, 3f);
 
-            if (toDetail)
-            {
-                if (listRect != null)
-                {
-                    listRect.anchoredPosition = Vector2.Lerp(listBasePos, listBasePos + outOffset, eased);
-                    listRect.localScale = Vector3.Lerp(listBaseScale, smallListScale, eased);
-                }
-                if (detailRect != null)
-                {
-                    detailRect.anchoredPosition = Vector2.Lerp(detailBasePos + inOffset, detailBasePos, eased);
-                    detailRect.localScale = Vector3.Lerp(smallDetailScale, detailBaseScale, eased);
-                }
-                if (listGroup != null) listGroup.alpha = 1f - eased;
-                if (detailGroup != null) detailGroup.alpha = eased;
-            }
-            else
-            {
-                if (detailRect != null)
-                {
-                    detailRect.anchoredPosition = Vector2.Lerp(detailBasePos, detailBasePos + inOffset, eased);
-                    detailRect.localScale = Vector3.Lerp(detailBaseScale, smallDetailScale, eased);
-                }
-                if (listRect != null)
-                {
-                    listRect.anchoredPosition = Vector2.Lerp(listBasePos + outOffset, listBasePos, eased);
-                    listRect.localScale = Vector3.Lerp(smallListScale, listBaseScale, eased);
-                }
-                if (detailGroup != null) detailGroup.alpha = 1f - eased;
-                if (listGroup != null) listGroup.alpha = eased;
-            }
-
+            outgoingRect.anchoredPosition =
+                Vector2.Lerp(outgoingBasePos, outgoingEnd, eased);
+            outgoingRect.localScale =
+                Vector3.Lerp(outgoingBaseScale, outgoingEndScale, eased);
+            outgoingGroup.alpha = 1f - eased;
             yield return null;
         }
 
-        if (toDetail)
+        outgoingRect.anchoredPosition = outgoingBasePos;
+        outgoingRect.localScale = outgoingBaseScale;
+        outgoingGroup.alpha = 1f;
+        outgoingRoot.SetActive(false);
+
+        incomingRoot.SetActive(true);
+        Canvas.ForceUpdateCanvases();
+
+        Vector2 incomingStart =
+            incomingBasePos +
+            new Vector2(dialogueTransitionDistance * direction, 0f);
+        Vector3 incomingStartScale =
+            ScaleFrom(incomingBaseScale, dialogueTransitionMinScale);
+
+        incomingRect.anchoredPosition = incomingStart;
+        incomingRect.localScale = incomingStartScale;
+        incomingGroup.alpha = 0f;
+
+        elapsed = 0f;
+        while (elapsed < halfDuration)
         {
-            if (listRect != null)
-            {
-                listRect.anchoredPosition = listBasePos;
-                listRect.localScale = listBaseScale;
-            }
-            if (detailRect != null)
-            {
-                detailRect.anchoredPosition = detailBasePos;
-                detailRect.localScale = detailBaseScale;
-            }
-            if (detailGroup != null) detailGroup.alpha = 1f;
-            dialogueListRoot.SetActive(false);
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / halfDuration);
+            float eased = 1f - Mathf.Pow(1f - t, 3f);
+
+            incomingRect.anchoredPosition =
+                Vector2.Lerp(incomingStart, incomingBasePos, eased);
+            incomingRect.localScale =
+                Vector3.Lerp(incomingStartScale, incomingBaseScale, eased);
+            incomingGroup.alpha = eased;
+            yield return null;
         }
-        else
-        {
-            if (detailRect != null)
-            {
-                detailRect.anchoredPosition = detailBasePos;
-                detailRect.localScale = detailBaseScale;
-            }
-            if (listRect != null)
-            {
-                listRect.anchoredPosition = listBasePos;
-                listRect.localScale = listBaseScale;
-            }
-            if (listGroup != null) listGroup.alpha = 1f;
-            dialogueDetailRoot.SetActive(false);
-        }
+
+        Canvas.ForceUpdateCanvases();
+        incomingRect.anchoredPosition = incomingBasePos;
+        incomingRect.localScale = incomingBaseScale;
+        incomingGroup.alpha = 1f;
 
         dialogueTransitionCoroutine = null;
     }
 
-    private void SetDialoguePanelImmediate(bool showList)
+    private void CacheDialogueTransitionBaseIfNeeded()
     {
-        if (dialogueListRoot != null)
+        if (dialogueTransitionBaseCached)
+            return;
+
+        RectTransform listRect =
+            dialogueListRoot != null
+                ? dialogueListRoot.transform as RectTransform
+                : null;
+        RectTransform detailRect =
+            dialogueDetailRoot != null
+                ? dialogueDetailRoot.transform as RectTransform
+                : null;
+
+        if (listRect == null || detailRect == null)
+            return;
+
+        // These are the authored positions from the inactive/normal UI state.
+        // Never recalculate them from a panel that may already be mid-transition.
+        dialogueListBasePosition = listRect.anchoredPosition;
+        dialogueDetailBasePosition = detailRect.anchoredPosition;
+        dialogueListBaseScale = listRect.localScale;
+        dialogueDetailBaseScale = detailRect.localScale;
+        dialogueTransitionBaseCached = true;
+    }
+
+    private void RestoreDialogueTransitionBaseTransforms()
+    {
+        if (!dialogueTransitionBaseCached)
+            return;
+
+        RestoreDialogueTransitionBase(
+            dialogueListRoot,
+            dialogueListBasePosition,
+            dialogueListBaseScale);
+        RestoreDialogueTransitionBase(
+            dialogueDetailRoot,
+            dialogueDetailBasePosition,
+            dialogueDetailBaseScale);
+    }
+
+    private static void RestoreDialogueTransitionBase(
+        GameObject root,
+        Vector2 basePosition,
+        Vector3 baseScale)
+    {
+        if (root == null)
+            return;
+
+        RectTransform rect = root.transform as RectTransform;
+        if (rect != null)
         {
-            dialogueListRoot.SetActive(showList);
-            ResetDialoguePanelTransform(dialogueListRoot);
-            CanvasGroup group = GetOrAddCanvasGroup(dialogueListRoot);
-            if (group != null) group.alpha = 1f;
+            rect.anchoredPosition = basePosition;
+            rect.localScale = baseScale;
         }
 
+        CanvasGroup group = root.GetComponent<CanvasGroup>();
+        if (group != null)
+            group.alpha = 1f;
+    }
+
+    private void SetDialoguePanelState(bool showDetail)
+    {
+        CacheDialogueTransitionBaseIfNeeded();
+        RestoreDialogueTransitionBaseTransforms();
+
+        if (dialogueListRoot != null)
+            dialogueListRoot.SetActive(!showDetail);
+
         if (dialogueDetailRoot != null)
-        {
-            dialogueDetailRoot.SetActive(!showList);
-            ResetDialoguePanelTransform(dialogueDetailRoot);
-            CanvasGroup group = GetOrAddCanvasGroup(dialogueDetailRoot);
-            if (group != null) group.alpha = 1f;
-        }
+            dialogueDetailRoot.SetActive(showDetail);
+
+        ResetDialoguePanelTransform(dialogueListRoot);
+        ResetDialoguePanelTransform(dialogueDetailRoot);
     }
 
     private static CanvasGroup GetOrAddCanvasGroup(GameObject target)
@@ -1062,7 +1183,6 @@ public class DoGamRecordTabController : MonoBehaviour
         CanvasGroup group = target.GetComponent<CanvasGroup>();
         if (group == null)
             group = target.AddComponent<CanvasGroup>();
-
         return group;
     }
 
@@ -1071,11 +1191,17 @@ public class DoGamRecordTabController : MonoBehaviour
         if (target == null)
             return;
 
-        RectTransform rect = target.transform as RectTransform;
-        if (rect == null)
-            return;
+        CanvasGroup group = target.GetComponent<CanvasGroup>();
+        if (group != null)
+            group.alpha = 1f;
+    }
 
-        rect.localScale = Vector3.one;
+    private static Vector3 ScaleFrom(Vector3 baseScale, float multiplier)
+    {
+        return new Vector3(
+            baseScale.x * multiplier,
+            baseScale.y * multiplier,
+            baseScale.z);
     }
 
     private string GetDialoguePreviewText(
@@ -1139,7 +1265,7 @@ public class DoGamRecordTabController : MonoBehaviour
         if (worldRecordProgressText != null)
         {
             worldRecordProgressText.text =
-                $"±â·Ï {discoveredCount} / {visible.Count}";
+                $"ê¸°ë¡ {discoveredCount} / {visible.Count}";
         }
 
         foreach (WorldRecordItemData record in visible)
@@ -1160,7 +1286,7 @@ public class DoGamRecordTabController : MonoBehaviour
             return;
         }
 
-        // ±â·Ï ÅÇ¿¡ µé¾î¿Ã ¶§ Ç×»ó Ã¹ ¹øÂ° Ç×¸ñ ¼±ÅÃ
+        // ê¸°ë¡ íƒ­ì— ë“¤ì–´ì˜¬ ë•Œ í•­ìƒ ì²« ë²ˆì§¸ í•­ëª© ì„ íƒ
         SelectWorldRecord(
             visible[0],
             false
@@ -1240,7 +1366,10 @@ public class DoGamRecordTabController : MonoBehaviour
             });
 
             EnsureButtonHoverDoesNotUseIcon(button, icon);
-            registerHover?.Invoke(button);
+            RegisterViewportAwareHover(button, worldRecordListParent);
+            RegisterLeftSlotScaleEffect(
+                button,
+                instance.transform as RectTransform);
         }
 
         worldRecordViews.Add(
@@ -1314,6 +1443,8 @@ public class DoGamRecordTabController : MonoBehaviour
                     : unselectedColor
             );
         }
+
+        RefreshLeftSlotScaleEffects();
     }
 
     private void ShowWorldRecordDetail(
@@ -1388,6 +1519,65 @@ public class DoGamRecordTabController : MonoBehaviour
         }
     }
 
+    private void SetNpcProgressTitle()
+    {
+        if (npcProgressTitleText == null)
+            return;
+
+        npcProgressTitleText.text =
+            selectedNpc != null
+                ? (selectedNpc.baseDescription ?? string.Empty)
+                : string.Empty;
+    }
+
+    private void RefreshNpcProgressUI(
+        List<NPCDialogueSetData> allSets)
+    {
+        SetNpcProgressTitle();
+
+        int totalCount = allSets != null
+            ? allSets.Count(x => x != null)
+            : 0;
+
+        int discoveredCount = 0;
+        if (selectedNpc != null && allSets != null)
+        {
+            discoveredCount = allSets.Count(set =>
+                set != null &&
+                DoGamRecordProgress.IsDialogueDiscovered(
+                    selectedNpc.dialogueNpcId,
+                    set.setId));
+        }
+
+        if (npcProgressCountText != null)
+        {
+            string label = GetLocalizedText(
+                doGamLocalizationTable,
+                npcProgressCountKey,
+                npcProgressCountFallback);
+
+            npcProgressCountText.text =
+                $"{label}  {discoveredCount} / {totalCount}";
+        }
+
+        if (npcProgressFillImage != null)
+        {
+            npcProgressFillImage.fillAmount =
+                totalCount > 0
+                    ? Mathf.Clamp01((float)discoveredCount / totalCount)
+                    : 0f;
+        }
+    }
+
+    private void ClearNpcProgressUI()
+    {
+        if (npcProgressCountText != null)
+            npcProgressCountText.text = string.Empty;
+
+        if (npcProgressFillImage != null)
+            npcProgressFillImage.fillAmount = 0f;
+    }
+
     private void ClearNpcRightPage()
     {
         if (npcDetailImage != null)
@@ -1399,7 +1589,8 @@ public class DoGamRecordTabController : MonoBehaviour
         }
 
         if (npcDetailNameText != null) npcDetailNameText.text = string.Empty;
-        if (npcProgressText != null) npcProgressText.text = string.Empty;
+        if (npcProgressTitleText != null) npcProgressTitleText.text = string.Empty;
+        ClearNpcProgressUI();
 
         ClearChildren(dialogueListParent);
         ShowDialogueList();
@@ -1456,6 +1647,8 @@ public class DoGamRecordTabController : MonoBehaviour
                 color
             );
         }
+
+        RefreshLeftSlotScaleEffects();
     }
 
     private bool HasMetNpc(RecordNPCBookItemData item)
@@ -1502,7 +1695,7 @@ public class DoGamRecordTabController : MonoBehaviour
         if (npcData == null || set == null)
             return string.Empty;
 
-        // ÀÌ Å°°¡ Localization Table¿¡ ¾øÀ¸¸é JSON titleÀ» ±×´ë·Î »ç¿ëÇÑ´Ù.
+        // ì´ í‚¤ê°€ Localization Tableì— ì—†ìœ¼ë©´ JSON titleì„ ê·¸ëŒ€ë¡œ ì‚¬ìš©í•œë‹¤.
         string key =
             $"npc.{npcData.npcId}.set.{set.setId}.title";
 
@@ -1617,6 +1810,361 @@ public class DoGamRecordTabController : MonoBehaviour
 
         cache[imageName] = sprite;
         return sprite;
+    }
+
+    private void RegisterLeftSlotScaleEffect(
+        Button button,
+        RectTransform scaleTarget)
+    {
+        if (button == null || scaleTarget == null)
+            return;
+
+        leftSlotScaleTargets[button] = scaleTarget;
+
+        if (!leftSlotBaseScales.ContainsKey(button))
+            leftSlotBaseScales[button] = scaleTarget.localScale;
+
+        EventTrigger trigger = button.GetComponent<EventTrigger>();
+        if (trigger == null)
+            trigger = button.gameObject.AddComponent<EventTrigger>();
+
+        if (trigger.triggers == null)
+            trigger.triggers = new List<EventTrigger.Entry>();
+
+        AddLeftSlotScaleTrigger(
+            trigger,
+            EventTriggerType.PointerEnter,
+            _ =>
+            {
+                if (!button.interactable)
+                    return;
+
+                leftSlotHovering.Add(button);
+                ApplyLeftSlotScaleState(button);
+            });
+
+        AddLeftSlotScaleTrigger(
+            trigger,
+            EventTriggerType.PointerExit,
+            _ =>
+            {
+                leftSlotHovering.Remove(button);
+                ApplyLeftSlotScaleState(button);
+            });
+
+        AddLeftSlotScaleTrigger(
+            trigger,
+            EventTriggerType.PointerDown,
+            _ =>
+            {
+                SetLeftSlotScale(button, leftSlotClickScale);
+            });
+
+        AddLeftSlotScaleTrigger(
+            trigger,
+            EventTriggerType.PointerUp,
+            _ =>
+            {
+                ApplyLeftSlotScaleState(button);
+            });
+
+        ApplyLeftSlotScaleState(button);
+    }
+
+    private static void AddLeftSlotScaleTrigger(
+        EventTrigger trigger,
+        EventTriggerType eventType,
+        UnityEngine.Events.UnityAction<BaseEventData> action)
+    {
+        if (trigger == null || action == null)
+            return;
+
+        EventTrigger.Entry entry = new EventTrigger.Entry
+        {
+            eventID = eventType
+        };
+
+        entry.callback.AddListener(action);
+        trigger.triggers.Add(entry);
+    }
+
+    private void RefreshLeftSlotScaleEffects()
+    {
+        List<Button> deadButtons = null;
+
+        foreach (KeyValuePair<Button, RectTransform> pair
+                 in leftSlotScaleTargets)
+        {
+            Button button = pair.Key;
+            RectTransform target = pair.Value;
+
+            if (button == null || target == null)
+            {
+                if (deadButtons == null)
+                    deadButtons = new List<Button>();
+
+                deadButtons.Add(button);
+                continue;
+            }
+
+            ApplyLeftSlotScaleState(button);
+        }
+
+        if (deadButtons == null)
+            return;
+
+        foreach (Button button in deadButtons)
+        {
+            leftSlotScaleTargets.Remove(button);
+            leftSlotBaseScales.Remove(button);
+            leftSlotHovering.Remove(button);
+        }
+    }
+
+    private void ApplyLeftSlotScaleState(Button button)
+    {
+        if (button == null)
+            return;
+
+        float targetScale = leftSlotNormalScale;
+
+        if (IsLeftSlotSelected(button))
+            targetScale = leftSlotSelectedScale;
+        else if (leftSlotHovering.Contains(button))
+            targetScale = leftSlotHoverScale;
+
+        SetLeftSlotScale(button, targetScale);
+    }
+
+    private void SetLeftSlotScale(
+        Button button,
+        float scaleMultiplier)
+    {
+        if (button == null ||
+            !leftSlotScaleTargets.TryGetValue(
+                button,
+                out RectTransform target) ||
+            target == null)
+        {
+            return;
+        }
+
+        Vector3 baseScale = Vector3.one;
+        if (leftSlotBaseScales.TryGetValue(button, out Vector3 savedScale))
+            baseScale = savedScale;
+
+        target.localScale = baseScale * scaleMultiplier;
+    }
+
+    private bool IsLeftSlotSelected(Button button)
+    {
+        if (button == null)
+            return false;
+
+        foreach (NPCButtonView view in npcViews)
+        {
+            if (view != null &&
+                view.button == button &&
+                ReferenceEquals(view.data, selectedNpc))
+            {
+                return true;
+            }
+        }
+
+        foreach (WorldRecordButtonView view in worldRecordViews)
+        {
+            if (view != null &&
+                view.button == button &&
+                ReferenceEquals(view.data, selectedWorldRecord))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void RegisterViewportAwareHover(
+        Button button,
+        Transform listParent)
+    {
+        if (button == null)
+            return;
+
+        RectTransform viewportRect = FindScrollViewport(listParent);
+
+        if (viewportRect == null)
+        {
+            registerHover?.Invoke(button);
+            return;
+        }
+
+        RectTransform buttonRect = button.transform as RectTransform;
+        if (buttonRect == null)
+        {
+            registerHover?.Invoke(button);
+            return;
+        }
+
+        Graphic hoverGraphic = button.targetGraphic != null
+            ? button.targetGraphic
+            : button.GetComponent<Graphic>();
+
+        Material originalMaterial =
+            hoverGraphic != null ? hoverGraphic.material : null;
+
+        CanvasGroup canvasGroup = button.GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+            canvasGroup = button.gameObject.AddComponent<CanvasGroup>();
+
+        ScrollHoverGuard guard = new ScrollHoverGuard
+        {
+            button = button,
+            buttonRect = buttonRect,
+            viewportRect = viewportRect,
+            canvasGroup = canvasGroup,
+            hoverGraphic = hoverGraphic,
+            originalMaterial = originalMaterial,
+            lastAllowed = true
+        };
+
+        scrollHoverGuards.Add(guard);
+
+        UpdateScrollHoverGuard(guard, true);
+        registerHover?.Invoke(button);
+    }
+
+    private RectTransform FindScrollViewport(Transform listParent)
+    {
+        if (listParent == null)
+            return null;
+
+        ScrollRect scrollRect =
+            listParent.GetComponentInParent<ScrollRect>(true);
+
+        if (scrollRect == null)
+            return null;
+
+        if (scrollRect.viewport != null)
+            return scrollRect.viewport;
+
+        return scrollRect.transform as RectTransform;
+    }
+
+    private void Update()
+    {
+        for (int i = scrollHoverGuards.Count - 1; i >= 0; i--)
+        {
+            ScrollHoverGuard guard = scrollHoverGuards[i];
+
+            if (guard == null ||
+                guard.button == null ||
+                guard.buttonRect == null ||
+                guard.viewportRect == null ||
+                guard.canvasGroup == null)
+            {
+                scrollHoverGuards.RemoveAt(i);
+                continue;
+            }
+
+            if (!guard.button.gameObject.activeInHierarchy)
+                continue;
+
+            UpdateScrollHoverGuard(guard, false);
+        }
+    }
+
+    private void UpdateScrollHoverGuard(
+        ScrollHoverGuard guard,
+        bool force)
+    {
+        if (guard == null ||
+            guard.buttonRect == null ||
+            guard.viewportRect == null ||
+            guard.canvasGroup == null)
+        {
+            return;
+        }
+
+        float visibleRatio =
+            GetVisibleAreaRatio(
+                guard.buttonRect,
+                guard.viewportRect
+            );
+
+        bool allowed =
+            visibleRatio >= minimumVisibleRatioForHover;
+
+        if (!force && allowed == guard.lastAllowed)
+            return;
+
+        guard.lastAllowed = allowed;
+        guard.canvasGroup.blocksRaycasts = allowed;
+
+        if (!allowed)
+        {
+            leftSlotHovering.Remove(guard.button);
+            ApplyLeftSlotScaleState(guard.button);
+
+            if (guard.hoverGraphic != null)
+            {
+                guard.hoverGraphic.material =
+                    guard.originalMaterial;
+            }
+        }
+    }
+
+    private static float GetVisibleAreaRatio(
+        RectTransform target,
+        RectTransform viewport)
+    {
+        if (target == null || viewport == null)
+            return 1f;
+
+        Vector3[] targetCorners = new Vector3[4];
+        Vector3[] viewportCorners = new Vector3[4];
+
+        target.GetWorldCorners(targetCorners);
+        viewport.GetWorldCorners(viewportCorners);
+
+        float targetMinX = targetCorners[0].x;
+        float targetMaxX = targetCorners[2].x;
+        float targetMinY = targetCorners[0].y;
+        float targetMaxY = targetCorners[2].y;
+
+        float viewportMinX = viewportCorners[0].x;
+        float viewportMaxX = viewportCorners[2].x;
+        float viewportMinY = viewportCorners[0].y;
+        float viewportMaxY = viewportCorners[2].y;
+
+        float targetWidth =
+            Mathf.Max(0f, targetMaxX - targetMinX);
+
+        float targetHeight =
+            Mathf.Max(0f, targetMaxY - targetMinY);
+
+        float targetArea = targetWidth * targetHeight;
+
+        if (targetArea <= 0.0001f)
+            return 0f;
+
+        float overlapWidth =
+            Mathf.Max(
+                0f,
+                Mathf.Min(targetMaxX, viewportMaxX) -
+                Mathf.Max(targetMinX, viewportMinX)
+            );
+
+        float overlapHeight =
+            Mathf.Max(
+                0f,
+                Mathf.Min(targetMaxY, viewportMaxY) -
+                Mathf.Max(targetMinY, viewportMinY)
+            );
+
+        return Mathf.Clamp01(
+            (overlapWidth * overlapHeight) / targetArea
+        );
     }
 
     private void EnsureButtonHoverDoesNotUseIcon(
