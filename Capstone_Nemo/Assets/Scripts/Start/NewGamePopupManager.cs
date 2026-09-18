@@ -226,7 +226,7 @@ public class NewGamePopupManager : MonoBehaviour
 
             starData = new StarSaveData
             {
-                starlight = 0
+                starlight = 50000
             },
 
             // 새 세이브는 기존 별빛 파일을 옮길 필요가 없음
