@@ -35,26 +35,26 @@ public class SettingsApply : MonoBehaviour
     {
         if (sm == null) return;
 
-        if (masterVolumeSlider) masterVolumeSlider.value = sm.masterVolume;
-        if (bgmVolumeSlider) bgmVolumeSlider.value = sm.bgmVolume;
-        if (sfxVolumeSlider) sfxVolumeSlider.value = sm.sfxVolume;
+        if (masterVolumeSlider)
+            masterVolumeSlider.SetValueWithoutNotify(sm.masterVolume);
 
-        if (brightnessSlider) brightnessSlider.value = sm.brightness;
+        if (bgmVolumeSlider)
+            bgmVolumeSlider.SetValueWithoutNotify(sm.bgmVolume);
+
+        if (sfxVolumeSlider)
+            sfxVolumeSlider.SetValueWithoutNotify(sm.sfxVolume);
+
+        if (brightnessSlider)
+            brightnessSlider.SetValueWithoutNotify(sm.brightness);
 
         if (masterMuteToggle)
-        {
             masterMuteToggle.SetIsOnWithoutNotify(sm.masterMute);
-        }
 
         if (bgmMuteToggle)
-        {
             bgmMuteToggle.SetIsOnWithoutNotify(sm.bgmMute);
-        }
 
         if (sfxMuteToggle)
-        {
             sfxMuteToggle.SetIsOnWithoutNotify(sm.sfxMute);
-        }
     }
 
     public void OnApplySettingsPressed()
