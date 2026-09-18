@@ -116,26 +116,22 @@ public class MillTutorialManager : MonoBehaviour
         IsMillTutorialRunning = true;
         currentStep = MillTutorialStep.TalkToNpc;
 
-        ShowNpcNumber(
-        talkToNpcNumberObject,
-        talkToNpcTarget
-    );
-
-
-        //시간 정지
+        // 시간 정지
         if (TutorialFlowManager.Instance != null)
         {
             TutorialFlowManager.Instance.RequestTutorialTimePause();
             TutorialFlowManager.Instance.LockScenePortal();
         }
 
-
-        /*if (customerSpawner)
-            customerSpawner.SpawnTutorialCustomer("baekseolgi_finish", 15f);*/
-
         PlayDialogueThen(() =>
         {
+            ShowNpcNumber(
+                talkToNpcNumberObject,
+                talkToNpcTarget
+            );
+
             ShowStepPanel(currentStep);
+
         }, millStartDialogues, "tutorial.mill.start");
     }
 

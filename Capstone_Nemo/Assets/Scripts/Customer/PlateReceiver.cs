@@ -65,8 +65,11 @@ public class PlateReceiver : MonoBehaviour
             Vector3 basePos = plateAnchor != null ? plateAnchor.position : transform.position;
             uiItem.transform.position = basePos + new Vector3(0, 0.3f, 0.01f);
 
-            if (plateAnchor != null) uiItem.transform.SetParent(plateAnchor, true);
-            else if (worldCanvas != null) uiItem.transform.SetParent(worldCanvas, true);
+            /*if (plateAnchor != null) uiItem.transform.SetParent(plateAnchor, true);
+            else if (worldCanvas != null) uiItem.transform.SetParent(worldCanvas, true);*/
+
+            if (worldCanvas != null)
+                uiItem.transform.SetParent(worldCanvas, true);
 
             var uiComp = uiItem.GetComponent<ResultItemUI>();
             if (uiComp != null) uiComp.Initialize(sprite, itemName);
