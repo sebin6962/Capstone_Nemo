@@ -22,16 +22,17 @@ public enum VillageSecondStep
     GoToField = 0,
     OpenStorage = 1,
     PickUpSeed = 2,
-    PlantSeed = 3,
-    OpenStorage2 = 4,
-    RestoreSeed = 5,
-    PickUp_WateringCan = 6,
-    Water = 7,
-    CropGrowing = 8,
-    Restore_WateringCan = 9,
-    HarvestCrop = 10,
-    GoToMill = 11,
-    VillageSecond_Finish = 12
+    CloseStorage = 3,
+    PlantSeed = 4,
+    OpenStorage2 = 5,
+    RestoreSeed = 6,
+    PickUp_WateringCan = 7,
+    Water = 8,
+    CropGrowing = 9,
+    Restore_WateringCan = 10,
+    HarvestCrop = 11,
+    GoToMill = 12,
+    VillageSecond_Finish = 13
 }
 
 [Serializable]
@@ -934,6 +935,9 @@ public class TutorialManager : MonoBehaviour
                 break;
             //HeldItemManager.cs
             case VillageSecondStep.PickUpSeed:
+                villageSecondStep = VillageSecondStep.CloseStorage;
+                break;
+            case VillageSecondStep.CloseStorage:
                 villageSecondStep = VillageSecondStep.PlantSeed;
                 break;
             case VillageSecondStep.PlantSeed:

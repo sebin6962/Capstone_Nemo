@@ -34,16 +34,30 @@ public class BoxInventoryManager : MonoBehaviour
             ToggleInventory();
             SFXManager.Instance.PlayBoxOpenSFX();
 
-            //village2 튜토리얼 진행 트리거 2
-                if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.OpenStorage))
-                {
-                    TutorialManager.Instance.GoToNextVillageSecondStep();
-                }
+            //village2 튜토리얼 진행 트리거 2,3
+            if (TutorialManager.Instance == null)
+                return;
 
-                if (TutorialManager.Instance && TutorialManager.Instance.IsCurrentStep(VillageSecondStep.OpenStorage2))
+            //상자를 연 경우
+            if (inventoryPanel.activeSelf)
+            {
+                if (TutorialManager.Instance.IsCurrentStep(VillageSecondStep.OpenStorage))
                 {
                     TutorialManager.Instance.GoToNextVillageSecondStep();
                 }
+                else if (TutorialManager.Instance.IsCurrentStep(VillageSecondStep.OpenStorage2))
+                {
+                    TutorialManager.Instance.GoToNextVillageSecondStep();
+                }
+            }
+            //상자를 닫은 경우
+            else
+            {
+                if (TutorialManager.Instance.IsCurrentStep(VillageSecondStep.CloseStorage))
+                {
+                    TutorialManager.Instance.GoToNextVillageSecondStep();
+                }
+            }
         }
     }
 
