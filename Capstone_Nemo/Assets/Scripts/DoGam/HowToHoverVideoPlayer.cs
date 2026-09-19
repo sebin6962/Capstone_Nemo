@@ -1,19 +1,32 @@
-using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
 /// <summary>
-/// Hover video player for the How-To page.
-/// Videos are loaded from StreamingAssets/Videos/Guide by URL so WebGL can play them.
-/// A PNG thumbnail is shown immediately; the video is prepared only on first hover.
+/// 게임 방법 도감용 영상 플레이어.
+///
+/// 기본 상태:
+/// - PNG 썸네일만 즉시 표시
+/// - VideoPlayer는 준비하지 않음
+///
+/// 마우스를 처음 올렸을 때:
+/// - 해당 영상만 Prepare
+/// - 준비가 끝나면 썸네일을 숨기고 영상 재생
+///
+/// 영상 종료 후:
+/// - 마지막 프레임에서 정지
+/// - 다시 마우스를 올리면 처음부터 재생
+///
+/// 마우스가 영상 영역에서 나가더라도
+/// 이미 시작한 영상은 끝까지 재생.
 /// </summary>
 public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
 {
     private const int MaxRenderTextureSize = 512;
 
     private VideoPlayer videoPlayer;
+
     private RawImage videoImage;
     private Image thumbnailImage;
 
@@ -22,24 +35,29 @@ public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
 
     private RenderTexture renderTexture;
 
-    private string currentVideoFileName;
+    private VideoClip currentClip;
     private Sprite currentThumbnail;
 
+    // Prepare가 이미 요청되었는지
     private bool prepareRequested;
+
+    // Prepare가 끝나는 즉시 재생해야 하는지
     private bool playWhenPrepared;
 
-    /// <summary>
-    /// videoFileName example: "Ctrl_guide_01.mp4"
-    /// The file must exist under Assets/StreamingAssets/Videos/Guide/.
-    /// </summary>
-    public void Setup(string videoFileName, Sprite thumbnail)
+
+    public void Setup(VideoClip clip, Sprite thumbnail)
     {
         EnsureComponents();
+
+        // 이전 영상 정리
         ResetVideo();
 
-        currentVideoFileName = NormalizeVideoFileName(videoFileName);
+        currentClip = clip;
         currentThumbnail = thumbnail;
 
+        // -------------------------
+        // 썸네일 즉시 표시
+        // -------------------------
         if (thumbnailImage != null)
         {
             thumbnailImage.sprite = thumbnail;
@@ -47,35 +65,43 @@ public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
             thumbnailImage.preserveAspect = true;
         }
 
+        // 영상은 처음에는 숨김
         if (videoImage != null)
         {
             videoImage.enabled = false;
             videoImage.texture = null;
         }
 
+        // 아직 영상 Prepare 하지 않음
+        if (videoPlayer != null)
+        {
+            videoPlayer.clip = clip;
+        }
+
+        // 썸네일 비율 설정
         if (thumbnail != null && thumbnailAspectRatioFitter != null)
         {
             Rect spriteRect = thumbnail.rect;
+
             float width = Mathf.Max(1f, spriteRect.width);
             float height = Mathf.Max(1f, spriteRect.height);
-            thumbnailAspectRatioFitter.aspectRatio = width / height;
-        }
 
-        if (videoPlayer != null)
-        {
-            videoPlayer.source = VideoSource.Url;
-            videoPlayer.url = string.Empty;
+            thumbnailAspectRatioFitter.aspectRatio = width / height;
         }
     }
 
+
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (string.IsNullOrWhiteSpace(currentVideoFileName))
+        if (currentClip == null)
             return;
 
+        // 이미 재생 중이면 아무것도 하지 않음
         if (videoPlayer != null && videoPlayer.isPlaying)
             return;
 
+        // 이미 Prepare 완료된 영상이라면
+        // 바로 처음부터 다시 재생
         if (videoPlayer != null && videoPlayer.isPrepared)
         {
             ShowVideo();
@@ -83,95 +109,85 @@ public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
             return;
         }
 
+        // Prepare 중이라면 완료되는 순간 재생
         if (prepareRequested)
         {
             playWhenPrepared = true;
             return;
         }
 
+        // 최초 마우스 오버
         PrepareVideo();
     }
 
+
     private void PrepareVideo()
     {
-        if (string.IsNullOrWhiteSpace(currentVideoFileName) || videoPlayer == null)
+        if (currentClip == null || videoPlayer == null)
             return;
 
         prepareRequested = true;
         playWhenPrepared = true;
 
-        videoPlayer.source = VideoSource.Url;
-        videoPlayer.url = BuildVideoUrl(currentVideoFileName);
-        videoPlayer.targetTexture = null;
+        // 실제 영상을 재생하려는 순간에만
+        // RenderTexture 생성
+        CreateRenderTexture(currentClip);
 
-        // For URL playback, width/height are reliable after Prepare completes.
+        videoPlayer.clip = currentClip;
+        videoPlayer.targetTexture = renderTexture;
+
+        if (videoImage != null)
+        {
+            videoImage.texture = renderTexture;
+        }
+
+        // 영상 비율 설정
+        if (videoAspectRatioFitter != null)
+        {
+            float width = Mathf.Max(1f, currentClip.width);
+            float height = Mathf.Max(1f, currentClip.height);
+
+            videoAspectRatioFitter.aspectRatio = width / height;
+        }
+
+        // 여기서 처음으로 영상 준비
         videoPlayer.Prepare();
     }
+
 
     private void OnPrepared(VideoPlayer source)
     {
         prepareRequested = false;
 
-        int sourceWidth = Mathf.Max(1, (int)source.width);
-        int sourceHeight = Mathf.Max(1, (int)source.height);
-
-        // Some platforms may not report dimensions. Fall back to thumbnail ratio.
-        if (sourceWidth <= 1 || sourceHeight <= 1)
-        {
-            GetThumbnailSize(out sourceWidth, out sourceHeight);
-        }
-
-        CreateRenderTexture(sourceWidth, sourceHeight);
-        source.targetTexture = renderTexture;
-
-        if (videoImage != null)
-            videoImage.texture = renderTexture;
-
-        if (videoAspectRatioFitter != null)
-            videoAspectRatioFitter.aspectRatio = sourceWidth / (float)Mathf.Max(1, sourceHeight);
-
+        // 첫 프레임부터 시작
         source.frame = 0;
 
         if (playWhenPrepared)
         {
             playWhenPrepared = false;
+
             ShowVideo();
             PlayFromBeginning();
         }
     }
 
-    private void OnVideoError(VideoPlayer source, string message)
-    {
-        prepareRequested = false;
-        playWhenPrepared = false;
-
-        Debug.LogWarning(
-            $"[HowTo] Video load failed: {currentVideoFileName}\n" +
-            $"URL: {source.url}\n" +
-            $"Reason: {message}"
-        );
-
-        if (thumbnailImage != null)
-            thumbnailImage.enabled = currentThumbnail != null;
-
-        if (videoImage != null)
-            videoImage.enabled = false;
-    }
 
     private void ShowVideo()
     {
+        // PNG 썸네일 숨김
         if (thumbnailImage != null)
             thumbnailImage.enabled = false;
 
+        // 실제 영상 표시
         if (videoImage != null)
             videoImage.enabled = true;
     }
 
+
     private void PlayFromBeginning()
     {
         if (videoPlayer == null ||
-            videoPlayer.source != VideoSource.Url ||
-            string.IsNullOrEmpty(videoPlayer.url) ||
+            videoPlayer.clip == null ||
             !videoPlayer.isPrepared)
         {
             return;
@@ -181,14 +197,22 @@ public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
         videoPlayer.Play();
     }
 
+
     private void OnPlaybackCompleted(VideoPlayer source)
     {
-        // Keep the final frame visible.
+        // 마지막 프레임에서 정지
         source.Pause();
+
+        // 다시 마우스를 올리면
+        // OnPointerEnter에서 처음부터 재생
     }
+
 
     private void EnsureComponents()
     {
+        // ==================================
+        // VideoPlayer
+        // ==================================
         if (videoPlayer == null)
         {
             videoPlayer = GetComponent<VideoPlayer>();
@@ -198,40 +222,59 @@ public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
 
             videoPlayer.playOnAwake = false;
             videoPlayer.isLooping = false;
-            videoPlayer.source = VideoSource.Url;
-            videoPlayer.renderMode = VideoRenderMode.RenderTexture;
-            videoPlayer.audioOutputMode = VideoAudioOutputMode.None;
+
+            videoPlayer.renderMode =
+                VideoRenderMode.RenderTexture;
+
+            videoPlayer.audioOutputMode =
+                VideoAudioOutputMode.None;
+
             videoPlayer.waitForFirstFrame = true;
             videoPlayer.skipOnDrop = true;
 
             videoPlayer.prepareCompleted += OnPrepared;
             videoPlayer.loopPointReached += OnPlaybackCompleted;
-            videoPlayer.errorReceived += OnVideoError;
         }
 
+
+        // ==================================
+        // ThumbnailImage
+        // ==================================
         if (thumbnailImage == null)
         {
-            Transform existing = transform.Find("ThumbnailImage");
+            Transform existing =
+                transform.Find("ThumbnailImage");
 
             if (existing != null)
-                thumbnailImage = existing.GetComponent<Image>();
+                thumbnailImage =
+                    existing.GetComponent<Image>();
+
 
             if (thumbnailImage == null)
             {
-                GameObject thumbnailObject = new GameObject(
-                    "ThumbnailImage",
-                    typeof(RectTransform),
-                    typeof(CanvasRenderer),
-                    typeof(Image),
-                    typeof(AspectRatioFitter)
+                GameObject thumbnailObject =
+                    new GameObject(
+                        "ThumbnailImage",
+                        typeof(RectTransform),
+                        typeof(CanvasRenderer),
+                        typeof(Image),
+                        typeof(AspectRatioFitter)
+                    );
+
+                thumbnailObject.transform.SetParent(
+                    transform,
+                    false
                 );
 
-                thumbnailObject.transform.SetParent(transform, false);
-                thumbnailImage = thumbnailObject.GetComponent<Image>();
+                thumbnailImage =
+                    thumbnailObject.GetComponent<Image>();
 
-                RectTransform rect = thumbnailImage.rectTransform;
+                RectTransform rect =
+                    thumbnailImage.rectTransform;
+
                 rect.anchorMin = Vector2.zero;
                 rect.anchorMax = Vector2.one;
+
                 rect.offsetMin = Vector2.zero;
                 rect.offsetMax = Vector2.zero;
             }
@@ -239,49 +282,80 @@ public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
             thumbnailImage.raycastTarget = true;
             thumbnailImage.preserveAspect = true;
 
-            thumbnailAspectRatioFitter = thumbnailImage.GetComponent<AspectRatioFitter>();
-            if (thumbnailAspectRatioFitter == null)
-                thumbnailAspectRatioFitter = thumbnailImage.gameObject.AddComponent<AspectRatioFitter>();
+            thumbnailAspectRatioFitter =
+                thumbnailImage.GetComponent<AspectRatioFitter>();
 
-            thumbnailAspectRatioFitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            if (thumbnailAspectRatioFitter == null)
+            {
+                thumbnailAspectRatioFitter =
+                    thumbnailImage.gameObject
+                        .AddComponent<AspectRatioFitter>();
+            }
+
+            thumbnailAspectRatioFitter.aspectMode =
+                AspectRatioFitter.AspectMode.FitInParent;
         }
 
+
+        // ==================================
+        // VideoImage
+        // ==================================
         if (videoImage == null)
         {
-            Transform existing = transform.Find("VideoImage");
+            Transform existing =
+                transform.Find("VideoImage");
 
             if (existing != null)
-                videoImage = existing.GetComponent<RawImage>();
+                videoImage =
+                    existing.GetComponent<RawImage>();
+
 
             if (videoImage == null)
             {
-                GameObject videoObject = new GameObject(
-                    "VideoImage",
-                    typeof(RectTransform),
-                    typeof(CanvasRenderer),
-                    typeof(RawImage),
-                    typeof(AspectRatioFitter)
+                GameObject videoObject =
+                    new GameObject(
+                        "VideoImage",
+                        typeof(RectTransform),
+                        typeof(CanvasRenderer),
+                        typeof(RawImage),
+                        typeof(AspectRatioFitter)
+                    );
+
+                videoObject.transform.SetParent(
+                    transform,
+                    false
                 );
 
-                videoObject.transform.SetParent(transform, false);
-                videoImage = videoObject.GetComponent<RawImage>();
+                videoImage =
+                    videoObject.GetComponent<RawImage>();
 
-                RectTransform rect = videoImage.rectTransform;
+                RectTransform rect =
+                    videoImage.rectTransform;
+
                 rect.anchorMin = Vector2.zero;
                 rect.anchorMax = Vector2.one;
+
                 rect.offsetMin = Vector2.zero;
                 rect.offsetMax = Vector2.zero;
             }
 
             videoImage.raycastTarget = true;
 
-            videoAspectRatioFitter = videoImage.GetComponent<AspectRatioFitter>();
-            if (videoAspectRatioFitter == null)
-                videoAspectRatioFitter = videoImage.gameObject.AddComponent<AspectRatioFitter>();
+            videoAspectRatioFitter =
+                videoImage.GetComponent<AspectRatioFitter>();
 
-            videoAspectRatioFitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            if (videoAspectRatioFitter == null)
+            {
+                videoAspectRatioFitter =
+                    videoImage.gameObject
+                        .AddComponent<AspectRatioFitter>();
+            }
+
+            videoAspectRatioFitter.aspectMode =
+                AspectRatioFitter.AspectMode.FitInParent;
         }
 
+        // 영상이 썸네일보다 위에 오도록
         if (thumbnailImage != null)
             thumbnailImage.transform.SetAsLastSibling();
 
@@ -289,68 +363,67 @@ public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
             videoImage.transform.SetAsLastSibling();
     }
 
-    private void CreateRenderTexture(int sourceWidth, int sourceHeight)
+
+    private void CreateRenderTexture(VideoClip clip)
     {
         ReleaseRenderTexture();
 
-        sourceWidth = Mathf.Max(1, sourceWidth);
-        sourceHeight = Mathf.Max(1, sourceHeight);
+        int sourceWidth =
+            Mathf.Max(1, (int)clip.width);
 
-        float scale = Mathf.Min(
-            1f,
-            MaxRenderTextureSize / (float)Mathf.Max(sourceWidth, sourceHeight)
-        );
+        int sourceHeight =
+            Mathf.Max(1, (int)clip.height);
 
-        int width = Mathf.Max(16, Mathf.RoundToInt(sourceWidth * scale));
-        int height = Mathf.Max(16, Mathf.RoundToInt(sourceHeight * scale));
 
-        renderTexture = new RenderTexture(
-            width,
-            height,
-            0,
-            RenderTextureFormat.ARGB32
-        )
-        {
-            name = $"HowToVideo_{System.IO.Path.GetFileNameWithoutExtension(currentVideoFileName)}",
-            filterMode = FilterMode.Bilinear,
-            wrapMode = TextureWrapMode.Clamp
-        };
+        float scale =
+            Mathf.Min(
+                1f,
+                MaxRenderTextureSize /
+                (float)Mathf.Max(
+                    sourceWidth,
+                    sourceHeight
+                )
+            );
+
+
+        int width =
+            Mathf.Max(
+                16,
+                Mathf.RoundToInt(
+                    sourceWidth * scale
+                )
+            );
+
+        int height =
+            Mathf.Max(
+                16,
+                Mathf.RoundToInt(
+                    sourceHeight * scale
+                )
+            );
+
+
+        renderTexture =
+            new RenderTexture(
+                width,
+                height,
+                0,
+                RenderTextureFormat.ARGB32
+            )
+            {
+                name =
+                    $"HowToVideo_{clip.name}",
+
+                filterMode =
+                    FilterMode.Bilinear,
+
+                wrapMode =
+                    TextureWrapMode.Clamp
+            };
 
         renderTexture.Create();
     }
 
-    private void GetThumbnailSize(out int width, out int height)
-    {
-        width = 512;
-        height = 288;
-
-        if (currentThumbnail == null)
-            return;
-
-        Rect rect = currentThumbnail.rect;
-        width = Mathf.Max(1, Mathf.RoundToInt(rect.width));
-        height = Mathf.Max(1, Mathf.RoundToInt(rect.height));
-    }
-
-    private string BuildVideoUrl(string fileName)
-    {
-        string basePath = Application.streamingAssetsPath.TrimEnd('/', '\\');
-        string relativePath = "Videos/Guide/" + fileName;
-        return basePath + "/" + relativePath.Replace("\\", "/");
-    }
-
-    private static string NormalizeVideoFileName(string fileName)
-    {
-        if (string.IsNullOrWhiteSpace(fileName))
-            return string.Empty;
-
-        fileName = System.IO.Path.GetFileName(fileName.Trim());
-
-        if (string.IsNullOrEmpty(System.IO.Path.GetExtension(fileName)))
-            fileName += ".mp4";
-
-        return fileName;
-    }
 
     private void ResetVideo()
     {
@@ -362,8 +435,6 @@ public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
             videoPlayer.Stop();
             videoPlayer.targetTexture = null;
             videoPlayer.clip = null;
-            videoPlayer.url = string.Empty;
-            videoPlayer.source = VideoSource.Url;
         }
 
         ReleaseRenderTexture();
@@ -374,6 +445,7 @@ public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
             videoImage.enabled = false;
         }
     }
+
 
     private void ReleaseRenderTexture()
     {
@@ -393,13 +465,14 @@ public class HowToHoverVideoPlayer : MonoBehaviour, IPointerEnterHandler
         renderTexture = null;
     }
 
+
     private void OnDestroy()
     {
         if (videoPlayer != null)
         {
             videoPlayer.prepareCompleted -= OnPrepared;
-            videoPlayer.loopPointReached -= OnPlaybackCompleted;
-            videoPlayer.errorReceived -= OnVideoError;
+            videoPlayer.loopPointReached -=
+                OnPlaybackCompleted;
         }
 
         ReleaseRenderTexture();
