@@ -325,12 +325,22 @@ public class Customer : MonoBehaviour
 
             if (isTutorialCustomer)
             {
+                //첫 번째 Store 튜토리얼
                 var tutorMgr = StoreTutorialManager.Instance;
 
                 if (tutorMgr != null &&
                     tutorMgr.IsCurrentStep(StoreTutorialStep.Serve))
                 {
                     tutorMgr.GoToNextStep();
+                }
+
+                //두 번째 Store 튜토리얼
+                var secondTutorMgr = SecondStoreTutorialManager.Instance;
+
+                if (secondTutorMgr != null &&
+                    secondTutorMgr.IsCurrentStep(SecondStoreTutorialStep.Serve))
+                {
+                    secondTutorMgr.GoToNextStep();
                 }
             }
 

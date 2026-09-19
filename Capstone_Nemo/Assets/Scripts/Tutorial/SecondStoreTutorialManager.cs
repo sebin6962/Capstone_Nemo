@@ -103,7 +103,7 @@ public class SecondStoreTutorialManager : MonoBehaviour
     {
         switch (step)
         {
-            case SecondStoreTutorialStep.Serve:
+            case SecondStoreTutorialStep.StoreSecond_Finish:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);

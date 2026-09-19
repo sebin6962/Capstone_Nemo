@@ -159,7 +159,7 @@ public class MillTutorialManager : MonoBehaviour
 
     private IEnumerator ShowStepPanelAfterDelay(MillTutorialStep step, float delay)
     {
-        yield return new WaitForSeconds(delay);
+        yield return new WaitForSecondsRealtime(delay);
 
         SFXManager.Instance.PlayTutorialSFX();
         HideAllPanels();
@@ -220,11 +220,13 @@ public class MillTutorialManager : MonoBehaviour
 
             case MillTutorialStep.OpenStore:
                 HideNpcNumber(openStoreNumberObject);
+                HideAllPanels();
                 currentStep = MillTutorialStep.QuitStore;
                 break;
 
             case MillTutorialStep.QuitStore:
                 currentStep = MillTutorialStep.Mill_Finish;
+                HideAllPanels();
                 break;
 
             case MillTutorialStep.Mill_Finish:
