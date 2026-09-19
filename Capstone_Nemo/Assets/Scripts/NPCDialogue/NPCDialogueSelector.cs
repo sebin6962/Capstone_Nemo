@@ -204,65 +204,239 @@ public static class NPCDialogueSelector
         NPCDialogueNpcProgressData npcProgress,
         int treeLevel)
     {
-        int resolvedTreeLevel = treeLevel;
-        List<NPCDialogueSetData> levelSets = npcData.dialogueSets.FindAll(
-            s => s != null && s.useTreeLevel && s.treeLevel == resolvedTreeLevel);
-
-        // ÇöÀç ´Ü°è ´ë»ç°¡ µû·Î ¾ø´Â NPC´Â ÇöÀç ´Ü°èº¸´Ù ³·Àº ´Ü°è Áß
-        // °¡Àå ÃÖ±Ù¿¡ µî·ÏµÈ ´ëÈ­¸¦ À¯ÁöÇÑ´Ù.
-        // ¿¹: ´ë»ç°¡ 4´Ü°è±îÁöÀÎ NPC°¡ °è¼ö³ª¹« 5´Ü°è¿¡ µµ´ŞÇÑ °æ¿ì.
-        if (levelSets == null || levelSets.Count == 0)
+        if (npcData == null ||
+            npcData.dialogueSets == null ||
+            npcData.dialogueSets.Count == 0)
         {
-            int latestRegisteredLevel = int.MinValue;
+            return null;
+        }
 
-            for (int i = 0; i < npcData.dialogueSets.Count; i++)
+        // 1) ?´ì „ ?¨ê³„???„ì§ ë³´ì? ?Šì? ?€?”ê? ?ˆìœ¼ë©?
+        //    ê°€???¤ë˜???¨ê³„ë¶€???°ì„  ì²˜ë¦¬?œë‹¤.
+        List<int> previousLevels = new List<int>();
+
+        for (int i = 0; i < npcData.dialogueSets.Count; i++)
+        {
+            NPCDialogueSetData set = npcData.dialogueSets[i];
+
+            if (set == null ||
+                !set.useTreeLevel ||
+                set.treeLevel >= treeLevel)
             {
-                NPCDialogueSetData set = npcData.dialogueSets[i];
-
-                if (set == null || !set.useTreeLevel)
-                    continue;
-
-                if (set.treeLevel <= treeLevel &&
-                    set.treeLevel > latestRegisteredLevel)
-                {
-                    latestRegisteredLevel = set.treeLevel;
-                }
+                continue;
             }
 
-            if (latestRegisteredLevel != int.MinValue)
+            if (!previousLevels.Contains(set.treeLevel))
+                previousLevels.Add(set.treeLevel);
+        }
+
+        previousLevels.Sort();
+
+        for (int i = 0; i < previousLevels.Count; i++)
+        {
+            int previousLevel = previousLevels[i];
+
+            List<NPCDialogueSetData> previousLevelSets =
+                GetSetsForTreeLevel(npcData, previousLevel);
+
+            NPCDialogueCategoryProgressData previousProgress =
+                GetOrCreateCategoryProgress(
+                    npcProgress,
+                    $"tree_level_{previousLevel}");
+
+            List<NPCDialogueSetData> unfinishedPrevious =
+                GetUnseenSets(previousLevelSets, previousProgress);
+
+            if (unfinishedPrevious.Count > 0)
             {
-                resolvedTreeLevel = latestRegisteredLevel;
-                levelSets = npcData.dialogueSets.FindAll(
-                    s => s != null &&
-                         s.useTreeLevel &&
-                         s.treeLevel == resolvedTreeLevel);
+                return SelectAndMarkTreeLevelSet(
+                    unfinishedPrevious,
+                    previousProgress,
+                    npcProgress);
             }
         }
 
-        if (levelSets == null || levelSets.Count == 0)
+        // 2) ?„ì¬ ?¨ê³„?ì„œ???¤í† ë¦?ê´€???€??> ?¼ìƒ ?€???œì„œë¡??°ì„ ?œë‹¤.
+        List<NPCDialogueSetData> currentLevelSets =
+            GetSetsForTreeLevel(npcData, treeLevel);
+
+        if (currentLevelSets.Count > 0)
+        {
+            NPCDialogueCategoryProgressData currentProgress =
+                GetOrCreateCategoryProgress(
+                    npcProgress,
+                    $"tree_level_{treeLevel}");
+
+            List<NPCDialogueSetData> unseenCurrent =
+                GetUnseenSets(currentLevelSets, currentProgress);
+
+            // ?„ì¬ ?¨ê³„ ?€?”ë? ?„ë? ë³??¤ì—??ê¸°ì¡´ì²˜ëŸ¼ ?¤ì‹œ ?œí™˜?œë‹¤.
+            if (unseenCurrent.Count == 0)
+            {
+                currentProgress.seenSetIds.Clear();
+                unseenCurrent.AddRange(currentLevelSets);
+            }
+
+            return SelectAndMarkTreeLevelSet(
+                unseenCurrent,
+                currentProgress,
+                npcProgress);
+        }
+
+        // 3) ?„ì¬ ?¨ê³„???±ë¡???€?”ê? ?„ì˜ˆ ?†ëŠ” NPC??
+        //    ?´ì „ ?¨ê³„ ë¯¸ì™„ë£Œë¶„??ëª¨ë‘ ì²˜ë¦¬????ê°€??ìµœê·¼ ?¨ê³„ ?€?”ë? ?œí™˜?œë‹¤.
+        int latestRegisteredLevel = int.MinValue;
+
+        for (int i = 0; i < npcData.dialogueSets.Count; i++)
+        {
+            NPCDialogueSetData set = npcData.dialogueSets[i];
+
+            if (set == null || !set.useTreeLevel)
+                continue;
+
+            if (set.treeLevel <= treeLevel &&
+                set.treeLevel > latestRegisteredLevel)
+            {
+                latestRegisteredLevel = set.treeLevel;
+            }
+        }
+
+        if (latestRegisteredLevel == int.MinValue)
             return null;
 
-        string progressCategoryId = $"tree_level_{resolvedTreeLevel}";
-        NPCDialogueCategoryProgressData levelProgress =
-            GetOrCreateCategoryProgress(npcProgress, progressCategoryId);
+        List<NPCDialogueSetData> latestSets =
+            GetSetsForTreeLevel(npcData, latestRegisteredLevel);
 
-        List<NPCDialogueSetData> pool = levelSets.FindAll(
-            s => !levelProgress.seenSetIds.Contains(s.setId));
+        if (latestSets.Count == 0)
+            return null;
 
-        // ÇöÀç ´Ü°èÀÇ ´ëÈ­¸¦ ¸ğµÎ º» °æ¿ì ±â·ÏÀ» ÃÊ±âÈ­ÇÏ°í ´Ù½Ã ¼øÈ¯ÇÑ´Ù.
-        if (pool.Count == 0)
+        NPCDialogueCategoryProgressData latestProgress =
+            GetOrCreateCategoryProgress(
+                npcProgress,
+                $"tree_level_{latestRegisteredLevel}");
+
+        latestProgress.seenSetIds.Clear();
+
+        return SelectAndMarkTreeLevelSet(
+            latestSets,
+            latestProgress,
+            npcProgress);
+    }
+
+    private static List<NPCDialogueSetData> GetSetsForTreeLevel(
+        NPCDialogueData npcData,
+        int treeLevel)
+    {
+        List<NPCDialogueSetData> result =
+            new List<NPCDialogueSetData>();
+
+        if (npcData == null || npcData.dialogueSets == null)
+            return result;
+
+        for (int i = 0; i < npcData.dialogueSets.Count; i++)
         {
-            levelProgress.seenSetIds.Clear();
-            pool.AddRange(levelSets);
+            NPCDialogueSetData set = npcData.dialogueSets[i];
+
+            if (set != null &&
+                set.useTreeLevel &&
+                set.treeLevel == treeLevel)
+            {
+                result.Add(set);
+            }
         }
 
-        NPCDialogueSetData selectedSet = pool[Random.Range(0, pool.Count)];
+        return result;
+    }
+
+    private static List<NPCDialogueSetData> GetUnseenSets(
+        List<NPCDialogueSetData> source,
+        NPCDialogueCategoryProgressData progress)
+    {
+        List<NPCDialogueSetData> result =
+            new List<NPCDialogueSetData>();
+
+        if (source == null || progress == null)
+            return result;
+
+        if (progress.seenSetIds == null)
+            progress.seenSetIds = new List<string>();
+
+        for (int i = 0; i < source.Count; i++)
+        {
+            NPCDialogueSetData set = source[i];
+
+            if (set != null &&
+                !progress.seenSetIds.Contains(set.setId))
+            {
+                result.Add(set);
+            }
+        }
+
+        return result;
+    }
+
+    private static string SelectAndMarkTreeLevelSet(
+        List<NPCDialogueSetData> candidates,
+        NPCDialogueCategoryProgressData levelProgress,
+        NPCDialogueNpcProgressData npcProgress)
+    {
+        if (candidates == null || candidates.Count == 0)
+            return null;
+
+        List<NPCDialogueSetData> storyPool =
+            new List<NPCDialogueSetData>();
+
+        List<NPCDialogueSetData> dailyPool =
+            new List<NPCDialogueSetData>();
+
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            NPCDialogueSetData set = candidates[i];
+
+            if (IsStoryRelatedSet(set))
+                storyPool.Add(set);
+            else
+                dailyPool.Add(set);
+        }
+
+        List<NPCDialogueSetData> selectedPool =
+            storyPool.Count > 0
+                ? storyPool
+                : dailyPool;
+
+        if (selectedPool.Count == 0)
+            return null;
+
+        NPCDialogueSetData selectedSet =
+            selectedPool[Random.Range(0, selectedPool.Count)];
+
+        if (levelProgress.seenSetIds == null)
+            levelProgress.seenSetIds = new List<string>();
 
         if (!levelProgress.seenSetIds.Contains(selectedSet.setId))
             levelProgress.seenSetIds.Add(selectedSet.setId);
 
         npcProgress.hasMetNpc = true;
         return selectedSet.startNodeId;
+    }
+
+    private static bool IsStoryRelatedSet(
+        NPCDialogueSetData set)
+    {
+        if (set == null)
+            return false;
+
+        // ?„ì¬ ?°ì´?°ì— ë³„ë„ isStory ?Œë˜ê·¸ê? ?†ì–´??
+        // daily_talk ?´ì™¸ ì¹´í…Œê³ ë¦¬???¤í† ë¦?ê´€ê³?ê³¼ê±° ?€?”ë¡œ ?°ì„  ì²˜ë¦¬?˜ê³ ,
+        // daily_talk ?ˆì— ?¤ì–´?ˆëŠ” *_story_* ?¸íŠ¸???¤í† ë¦??€?”ë¡œ ë³¸ë‹¤.
+        if (!string.IsNullOrEmpty(set.categoryId) &&
+            set.categoryId != "daily_talk")
+        {
+            return true;
+        }
+
+        return !string.IsNullOrEmpty(set.setId) &&
+               set.setId.Contains("_story_");
     }
 
     private static NPCDialogueCategoryProgressData GetOrCreateCategoryProgress(

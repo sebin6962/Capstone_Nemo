@@ -34,6 +34,7 @@ public class MillNpc : MonoBehaviour
     public Vector3 dialogueIdleLocalPosition;
 
     private bool wasPlayerNear = false;
+    private bool isActionMenuActive = false;
     private bool wasThisNpcDialogueOpen = false;
     private bool animatorWasEnabledBeforeDialogue = false;
     private Vector3 originalSpriteLocalPosition;
@@ -101,6 +102,11 @@ public class MillNpc : MonoBehaviour
 
         wasPlayerNear = isNear;
 
+        // 메뉴의 논리 상태와 실제 화면 표시를 분리한다.
+        // 방앗간 튜토리얼 중에는 actionPanel만 숨기고 입력/액션은 그대로 유지한다.
+        RefreshActionPanelVisibility(isAnyDialogueOpen);
+
+        // actionPanel이 화면에 보이지 않아도 논리적으로 메뉴가 열려 있으면 입력 처리
         if (IsActionMenuOpen() && !IsMillOpen() && !isAnyDialogueOpen)
         {
             HandleMenuInput();
@@ -127,16 +133,37 @@ public class MillNpc : MonoBehaviour
 
     private void OpenActionMenu()
     {
-        if (actionPanel == null)
-            return;
-
-        actionPanel.SetActive(true);
+        isActionMenuActive = true;
+        RefreshActionPanelVisibility(IsAnyDialogueOpen());
     }
 
     private void CloseActionMenu()
     {
+        isActionMenuActive = false;
+
         if (actionPanel != null)
             actionPanel.SetActive(false);
+    }
+
+    private void RefreshActionPanelVisibility(bool isAnyDialogueOpen)
+    {
+        if (actionPanel == null)
+            return;
+
+        bool isMillTutorialRunning =
+            MillTutorialManager.Instance != null &&
+            MillTutorialManager.Instance.IsMillTutorialRunning;
+
+        bool shouldShow =
+            isActionMenuActive &&
+            !isMillTutorialRunning &&
+            trigger != null &&
+            trigger.isPlayerNearNpc &&
+            !IsMillOpen() &&
+            !isAnyDialogueOpen;
+
+        if (actionPanel.activeSelf != shouldShow)
+            actionPanel.SetActive(shouldShow);
     }
 
     private void OpenMillByMenu()
@@ -245,7 +272,7 @@ public class MillNpc : MonoBehaviour
 
     public bool IsActionMenuOpen()
     {
-        return actionPanel != null && actionPanel.activeSelf;
+        return isActionMenuActive;
     }
 
     private bool IsAnyDialogueOpen()
