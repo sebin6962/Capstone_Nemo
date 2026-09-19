@@ -1,46 +1,3 @@
-//using System.Collections;
-//using System.Collections.Generic;
-//using UnityEngine;
-
-//public class MillNpc : MonoBehaviour
-//{
-//    public GameObject MillPanel;
-//    public NpcTrigger trigger;
-
-//    // Update is called once per frame
-//    void Update()
-//    {
-//        if (Input.GetKeyDown(KeyCode.E) && trigger.isPlayerNearNpc && !IsMillOpen())
-//        {
-//            Debug.Log("E키 눌림 - 방앗간 토글 시도");
-//            OpenMill();
-
-//            //Mill 튜토리얼 진행 트리거 1
-//            if (MillTutorialManager.Instance && MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.TalkToNpc))
-//            {
-//                MillTutorialManager.Instance.GoToNextMillStep();
-//            }
-//        }
-//    }
-
-//    private void OpenMill()
-//    {
-//        MillPanel.SetActive(true);
-
-//        if (SFXManager.Instance != null)
-//        {
-//            SFXManager.Instance.PlayBbyongSFX();
-//        }
-//    }
-
-//    public bool IsMillOpen()
-//    {
-//        return MillPanel.activeSelf;
-//    }
-//}
-
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -59,7 +16,28 @@ public class MillNpc : MonoBehaviour
     [Header("대화 연결")]
     public NPCInteractable npcInteractable;
 
+    [Header("대화 중 NPC 애니메이션")]
+    [Tooltip("대화 중 멈출 NPC Animator")]
+    public Animator npcAnimator;
+
+    [Tooltip("idle 스프라이트를 표시할 SpriteRenderer")]
+    public SpriteRenderer npcSpriteRenderer;
+
+    [Tooltip("대화 중 위치를 이동시킬 자식 Visual 오브젝트")]
+    public Transform npcVisual;
+
+    [Tooltip("이 NPC가 대화 중 사용할 idle 스프라이트")]
+    public Sprite dialogueIdleSprite;
+
+    [Header("대화 중 idle 위치")]
+    [Tooltip("대화 중 idle 스프라이트를 표시할 로컬 위치")]
+    public Vector3 dialogueIdleLocalPosition;
+
     private bool wasPlayerNear = false;
+    private bool wasThisNpcDialogueOpen = false;
+    private bool animatorWasEnabledBeforeDialogue = false;
+    private Vector3 originalSpriteLocalPosition;
+    private bool originalSpritePositionCaptured = false;
 
     void Start()
     {
@@ -80,21 +58,42 @@ public class MillNpc : MonoBehaviour
 
         if (npcInteractable == null)
             npcInteractable = GetComponent<NPCInteractable>();
+
+        if (npcAnimator == null)
+            npcAnimator = GetComponentInChildren<Animator>(true);
+
+        if (npcSpriteRenderer == null)
+            npcSpriteRenderer = GetComponentInChildren<SpriteRenderer>(true);
+
+        if (npcVisual == null && npcSpriteRenderer != null)
+            npcVisual = npcSpriteRenderer.transform;
     }
 
     void Update()
     {
-        if (trigger == null) return;
+        if (trigger == null)
+            return;
 
         bool isNear = trigger.isPlayerNearNpc;
+        bool isAnyDialogueOpen = IsAnyDialogueOpen();
+        bool isThisNpcDialogueOpen = IsThisNpcDialogueOpen();
 
-        // NPC 범위에 처음 들어왔을 때 행동 선택 UI 열기
-        if (isNear && !wasPlayerNear && !IsMillOpen() && !IsDialogueOpen())
+        if (isThisNpcDialogueOpen && !wasThisNpcDialogueOpen)
+        {
+            EnterDialogueIdle();
+        }
+        else if (!isThisNpcDialogueOpen && wasThisNpcDialogueOpen)
+        {
+            ExitDialogueIdle();
+        }
+
+        wasThisNpcDialogueOpen = isThisNpcDialogueOpen;
+
+        if (isNear && !wasPlayerNear && !IsMillOpen() && !isAnyDialogueOpen)
         {
             OpenActionMenu();
         }
 
-        // NPC 범위에서 벗어나면 행동 선택 UI 닫기
         if (!isNear && wasPlayerNear)
         {
             CloseActionMenu();
@@ -102,8 +101,7 @@ public class MillNpc : MonoBehaviour
 
         wasPlayerNear = isNear;
 
-        // 행동 선택 UI가 열려 있을 때만 키 입력 처리
-        if (IsActionMenuOpen() && !IsMillOpen() && !IsDialogueOpen())
+        if (IsActionMenuOpen() && !IsMillOpen() && !isAnyDialogueOpen)
         {
             HandleMenuInput();
         }
@@ -129,7 +127,8 @@ public class MillNpc : MonoBehaviour
 
     private void OpenActionMenu()
     {
-        if (actionPanel == null) return;
+        if (actionPanel == null)
+            return;
 
         actionPanel.SetActive(true);
     }
@@ -142,8 +141,11 @@ public class MillNpc : MonoBehaviour
 
     private void OpenMillByMenu()
     {
-        if (trigger != null && !trigger.isPlayerNearNpc) return;
-        if (IsMillOpen()) return;
+        if (trigger != null && !trigger.isPlayerNearNpc)
+            return;
+
+        if (IsMillOpen())
+            return;
 
         CloseActionMenu();
         OpenMill();
@@ -151,12 +153,16 @@ public class MillNpc : MonoBehaviour
 
     private void StartTalk()
     {
-        if (trigger != null && !trigger.isPlayerNearNpc) return;
-        if (npcInteractable == null) return;
-        if (NPCDialogueUIManager.Instance == null) return;
+        if (trigger != null && !trigger.isPlayerNearNpc)
+            return;
+
+        if (npcInteractable == null)
+            return;
+
+        if (NPCDialogueUIManager.Instance == null)
+            return;
 
         CloseActionMenu();
-
         npcInteractable.StartDialogueExternally();
     }
 
@@ -187,10 +193,48 @@ public class MillNpc : MonoBehaviour
             SFXManager.Instance.PlayBbyongSFX();
         }
 
-        // Mill 튜토리얼 진행 트리거 1
-        if (MillTutorialManager.Instance && MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.TalkToNpc))
+        if (MillTutorialManager.Instance &&
+            MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.TalkToNpc))
         {
             MillTutorialManager.Instance.GoToNextMillStep();
+        }
+    }
+
+    private void EnterDialogueIdle()
+    {
+        if (npcAnimator != null)
+        {
+            animatorWasEnabledBeforeDialogue = npcAnimator.enabled;
+            npcAnimator.enabled = false;
+        }
+
+        if (npcSpriteRenderer != null && dialogueIdleSprite != null)
+        {
+            npcSpriteRenderer.sprite = dialogueIdleSprite;
+        }
+
+        if (npcVisual != null)
+        {
+            if (!originalSpritePositionCaptured)
+            {
+                originalSpriteLocalPosition = npcVisual.localPosition;
+                originalSpritePositionCaptured = true;
+            }
+
+            npcVisual.localPosition = dialogueIdleLocalPosition;
+        }
+    }
+
+    private void ExitDialogueIdle()
+    {
+        if (npcVisual != null && originalSpritePositionCaptured)
+        {
+            npcVisual.localPosition = originalSpriteLocalPosition;
+        }
+
+        if (npcAnimator != null && animatorWasEnabledBeforeDialogue)
+        {
+            npcAnimator.enabled = true;
         }
     }
 
@@ -204,8 +248,15 @@ public class MillNpc : MonoBehaviour
         return actionPanel != null && actionPanel.activeSelf;
     }
 
-    private bool IsDialogueOpen()
+    private bool IsAnyDialogueOpen()
     {
-        return NPCDialogueUIManager.Instance != null && NPCDialogueUIManager.Instance.IsOpen();
+        return NPCDialogueUIManager.Instance != null &&
+               NPCDialogueUIManager.Instance.IsOpen();
+    }
+
+    private bool IsThisNpcDialogueOpen()
+    {
+        return NPCDialogueUIManager.Instance != null &&
+               NPCDialogueUIManager.Instance.IsDialogueOpenFor(npcInteractable);
     }
 }

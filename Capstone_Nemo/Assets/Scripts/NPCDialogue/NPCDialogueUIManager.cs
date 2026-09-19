@@ -159,6 +159,14 @@ public partial class NPCDialogueUIManager : MonoBehaviour
                 (dialoguePanel != null && dialoguePanel.activeSelf);
     }
 
+    public bool IsDialogueOpenFor(NPCInteractable npc)
+    {
+        if (npc == null)
+            return false;
+
+        return currentNpc == npc && IsOpen();
+    }
+
     public bool IsDialogueOpen
     {
         get
