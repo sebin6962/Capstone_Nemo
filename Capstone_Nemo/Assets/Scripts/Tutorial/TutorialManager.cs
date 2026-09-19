@@ -923,6 +923,7 @@ public class TutorialManager : MonoBehaviour
         {
             //TutorialTriggerArea.cs
             case VillageSecondStep.GoToField:
+                HideAllPanels();
                 //secondTutorialBlocker.gameObject.SetActive(true);
                 villageSecondStep = VillageSecondStep.OpenStorage;
                 break;
@@ -968,6 +969,7 @@ public class TutorialManager : MonoBehaviour
             case VillageSecondStep.HarvestCrop:
                 if (TutorialFlowManager.Instance != null)
                     TutorialFlowManager.Instance.UnlockScenePortal();
+                HideAllPanels();
                 villageSecondStep = VillageSecondStep.GoToMill;
                 break;
             case VillageSecondStep.GoToMill:
