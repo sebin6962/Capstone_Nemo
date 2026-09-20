@@ -139,22 +139,67 @@ public class PlayerHoldingResolverMotion : MonoBehaviour
         currentWalkFrame = 0;
         walkTimer = 0f;
 
-        if (playerAnimator != null)
+        if (playerAnimator == null || playerManager == null)
+            return;
+
+        // 현재 플레이어가 실제로 바라보던 방향을 그대로 사용
+        Vector2 direction = playerManager.LastMoveDirection;
+        bool isMoving = playerManager.IsMoving;
+
+        // Animator 다시 활성화
+        playerAnimator.enabled = true;
+
+        // 현재 방향을 Animator 파라미터에 정확하게 반영
+        playerAnimator.SetFloat("MoveX", direction.x);
+        playerAnimator.SetFloat("MoveY", direction.y);
+        playerAnimator.SetBool("IsWalking", isMoving);
+
+        /*
+         * 아이템을 내려놓은 순간 정지 상태라면
+         * 이전 Animator State가 남아있지 않도록
+         * 현재 방향의 Idle State를 직접 재생한다.
+         *
+         * PlayerManager에서 사용하는 Idle State 이름과 동일.
+         */
+        if (!isMoving)
         {
-            playerAnimator.enabled = true;
+            string idleStateName = GetIdleStateName(direction);
 
-            playerAnimator.SetBool(
-                "IsWalking",
-                playerManager.IsMoving
-            );
+            if (!string.IsNullOrEmpty(idleStateName))
+            {
+                int stateHash =
+                    Animator.StringToHash("Base Layer." + idleStateName);
 
-            Vector2 direction =
-                playerManager.LastMoveDirection;
-
-            playerAnimator.SetFloat("MoveX", direction.x);
-            playerAnimator.SetFloat("MoveY", direction.y);
-            playerAnimator.Update(0f);
+                if (playerAnimator.HasState(0, stateHash))
+                {
+                    playerAnimator.Play(
+                        "Base Layer." + idleStateName,
+                        0,
+                        0f
+                    );
+                }
+            }
         }
+
+        // 즉시 반영
+        playerAnimator.Update(0f);
+    }
+
+    private string GetIdleStateName(Vector2 direction)
+    {
+        if (direction.sqrMagnitude <= 0.001f)
+            return "Idle_Front";
+
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+        {
+            return direction.x >= 0f
+                ? "Idle_Right"
+                : "Idle_Left";
+        }
+
+        return direction.y >= 0f
+            ? "Idle_Back"
+            : "Idle_Front";
     }
 
     private void UpdateWalkAnimation(string direction)

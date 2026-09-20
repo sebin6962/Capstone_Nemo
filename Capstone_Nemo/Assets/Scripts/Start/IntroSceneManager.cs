@@ -4,6 +4,9 @@ using System.Collections;
 using TMPro;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
+using UnityEngine.Localization.Components;
+using UnityEngine.Localization.Settings;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class IntroSceneManager : MonoBehaviour
 {
@@ -29,6 +32,20 @@ public class IntroSceneManager : MonoBehaviour
     public CanvasGroup logoUI;
     public CanvasGroup clickTextUI;
     public TextMeshProUGUI clickText;
+
+    [Header("Localization Initialization")]
+    [SerializeField] private string localizationLoadingText = "초기화 중...";
+    [SerializeField] private float localizationTypingInterval = 0.22f;
+    [SerializeField] private float localizationTypingRestartDelay = 0.45f;
+
+    private bool localizationReady = false;
+    private bool localizationFailed = false;
+    private Coroutine localizationInitCoroutine;
+    private Coroutine localizationTypingCoroutine;
+    private Coroutine blinkCoroutine;
+    private bool clickTextFadeCompleted = false;
+    private LocalizeStringEvent clickTextLocalizeEvent;
+    private string originalClickText = string.Empty;
 
     [Header("Timing Settings")]
     public float delayBeforeLogo = 2f;
@@ -191,6 +208,10 @@ public class IntroSceneManager : MonoBehaviour
     }
     void Start()
     {
+        CacheClickTextLocalization();
+
+        localizationInitCoroutine = StartCoroutine(PrepareLocalization());
+
         bool openSaveSelectImmediately =
             ConsumeOpenSaveSelectRequest();
 
@@ -508,6 +529,13 @@ public class IntroSceneManager : MonoBehaviour
     /// </summary>
     private IEnumerator OpenSaveSelectAfterSceneReturn()
     {
+        // 같은 실행 세션에서는 보통 이미 준비되어 있지만,
+        // 직접 IntroScene으로 복귀한 경우에도 Localization 준비가 끝난 뒤 열도록 보장한다.
+        yield return new WaitUntil(() => localizationReady || localizationFailed);
+
+        if (localizationFailed)
+            yield break;
+
         yield return null;
 
         if (saveSelectOpenAnimator != null)
@@ -532,7 +560,7 @@ public class IntroSceneManager : MonoBehaviour
         if (!clicked && Input.GetMouseButtonDown(0))
         {
             // 안내 문구가 활성화된 뒤에는 첫 클릭으로 바로 씬 전환
-            if (canClick && !openingSaveSelect)
+            if (canClick && localizationReady && !openingSaveSelect)
             {
                 clicked = true;
                 blinking = false;
@@ -837,14 +865,22 @@ public class IntroSceneManager : MonoBehaviour
             yield break;
 
         textStarted = true;
+        clickTextFadeCompleted = false;
 
         clickTextUI.gameObject.SetActive(true);
 
-        // 문구가 켜지는 순간부터 클릭 허용
-        canClick = true;
-
-        // 화면 어디를 클릭해도 되는 상태이므로 손 커서 표시
-        RegisterIntroHandCursor();
+        if (localizationReady)
+        {
+            ApplyReadyClickState();
+        }
+        else if (localizationFailed)
+        {
+            ApplyLocalizationFailedState();
+        }
+        else
+        {
+            StartLocalizationLoadingTyping();
+        }
 
         yield return StartCoroutine(
             FadeCanvasGroup(
@@ -855,10 +891,8 @@ public class IntroSceneManager : MonoBehaviour
             )
         );
 
-        yield return StartCoroutine(FadeCanvasGroup(clickTextUI, 0, 1, textFadeDuration));
-
-        blinking = true;
-        StartCoroutine(BlinkText());
+        clickTextFadeCompleted = true;
+        TryStartBlinking();
     }
 
     private void StartShipOnce()
@@ -909,18 +943,219 @@ public class IntroSceneManager : MonoBehaviour
         cg.alpha = to;
     }
 
+    private void CacheClickTextLocalization()
+    {
+        if (clickText == null)
+            return;
+
+        originalClickText = clickText.text;
+        clickTextLocalizeEvent = clickText.GetComponent<LocalizeStringEvent>();
+    }
+
+    private IEnumerator PrepareLocalization()
+    {
+        localizationReady = false;
+        localizationFailed = false;
+
+        AsyncOperationHandle<LocalizationSettings> initOperation =
+            LocalizationSettings.InitializationOperation;
+
+        if (!initOperation.IsDone)
+            yield return initOperation;
+
+        if (initOperation.Status != AsyncOperationStatus.Succeeded)
+        {
+            localizationFailed = true;
+            Debug.LogError("[IntroSceneManager] Localization initialization failed.");
+
+            if (textStarted)
+                ApplyLocalizationFailedState();
+
+            localizationInitCoroutine = null;
+            yield break;
+        }
+
+        // Localization Tables 창에서 Preload로 지정한 String Table이 모두 준비될 때까지 기다린다.
+        AsyncOperationHandle preloadOperation =
+            LocalizationSettings.StringDatabase.PreloadOperation;
+
+        if (!preloadOperation.IsDone)
+            yield return preloadOperation;
+
+        if (preloadOperation.Status != AsyncOperationStatus.Succeeded)
+        {
+            localizationFailed = true;
+            Debug.LogError("[IntroSceneManager] String Table preload failed.");
+
+            if (textStarted)
+                ApplyLocalizationFailedState();
+
+            localizationInitCoroutine = null;
+            yield break;
+        }
+
+        localizationReady = true;
+        localizationFailed = false;
+
+        Debug.Log(
+            $"[IntroSceneManager] Localization ready: " +
+            $"{LocalizationSettings.SelectedLocale?.Identifier.Code}"
+        );
+
+        if (textStarted)
+            ApplyReadyClickState();
+
+        localizationInitCoroutine = null;
+    }
+
+    private void StartLocalizationLoadingTyping()
+    {
+        canClick = false;
+        blinking = false;
+        StopBlinking();
+        UnregisterIntroHandCursor();
+
+        if (clickTextLocalizeEvent != null)
+            clickTextLocalizeEvent.enabled = false;
+
+        if (localizationTypingCoroutine != null)
+            StopCoroutine(localizationTypingCoroutine);
+
+        localizationTypingCoroutine =
+            StartCoroutine(LocalizationLoadingTypingLoop());
+    }
+
+    private IEnumerator LocalizationLoadingTypingLoop()
+    {
+        string message = string.IsNullOrEmpty(localizationLoadingText)
+            ? "초기화 중..."
+            : localizationLoadingText;
+
+        // "초기화 중" 부분은 고정하고, 뒤의 온점만 . -> .. -> ... 순서로 반복한다.
+        string baseMessage = message.TrimEnd('.');
+        if (string.IsNullOrEmpty(baseMessage))
+            baseMessage = "초기화 중";
+
+        float interval = Mathf.Max(0.02f, localizationTypingInterval);
+        float restartDelay = Mathf.Max(0f, localizationTypingRestartDelay);
+
+        while (!localizationReady && !localizationFailed)
+        {
+            for (int dotCount = 1; dotCount <= 3; dotCount++)
+            {
+                if (localizationReady || localizationFailed)
+                    break;
+
+                if (clickText != null)
+                    clickText.text = baseMessage + new string('.', dotCount);
+
+                yield return WaitRealtime(interval);
+            }
+
+            if (localizationReady || localizationFailed)
+                break;
+
+            // 세 개의 온점을 잠깐 유지한 뒤 다시 한 개부터 반복한다.
+            if (restartDelay > 0f)
+                yield return WaitRealtime(restartDelay);
+        }
+
+        localizationTypingCoroutine = null;
+    }
+
+    private void StopLocalizationLoadingTyping()
+    {
+        if (localizationTypingCoroutine == null)
+            return;
+
+        StopCoroutine(localizationTypingCoroutine);
+        localizationTypingCoroutine = null;
+    }
+
+    private void ApplyReadyClickState()
+    {
+        if (!localizationReady)
+            return;
+
+        StopLocalizationLoadingTyping();
+
+        if (clickTextLocalizeEvent != null)
+        {
+            clickTextLocalizeEvent.enabled = true;
+            clickTextLocalizeEvent.RefreshString();
+        }
+        else if (clickText != null)
+        {
+            clickText.text = originalClickText;
+        }
+
+        canClick = true;
+        RegisterIntroHandCursor();
+        TryStartBlinking();
+    }
+
+    private void ApplyLocalizationFailedState()
+    {
+        StopLocalizationLoadingTyping();
+        canClick = false;
+        blinking = false;
+        StopBlinking();
+        UnregisterIntroHandCursor();
+
+        if (clickTextLocalizeEvent != null)
+            clickTextLocalizeEvent.enabled = false;
+
+        if (clickText != null)
+            clickText.text = "초기화 실패";
+    }
+
+    private void TryStartBlinking()
+    {
+        if (!localizationReady || !clickTextFadeCompleted || clickText == null)
+            return;
+
+        if (blinkCoroutine != null)
+            return;
+
+        blinking = true;
+        blinkCoroutine = StartCoroutine(BlinkText());
+    }
+
+    private void StopBlinking()
+    {
+        blinking = false;
+
+        if (blinkCoroutine != null)
+        {
+            StopCoroutine(blinkCoroutine);
+            blinkCoroutine = null;
+        }
+
+        if (clickText != null)
+        {
+            Color color = clickText.color;
+            color.a = 1f;
+            clickText.color = color;
+        }
+    }
+
     IEnumerator BlinkText()
     {
         Text text = clickTextUI.GetComponent<Text>();
         Image img = clickTextUI.GetComponent<Image>();
+
         while (blinking && clickText != null)
         {
-            float alpha = (Mathf.Sin(Time.unscaledTime * blinkSpeed * Mathf.PI) + 1f) / 2f; // 0~1 반복
+            float alpha =
+                (Mathf.Sin(Time.unscaledTime * blinkSpeed * Mathf.PI) + 1f) / 2f;
+
             Color c = clickText.color;
             c.a = alpha;
             clickText.color = c;
             yield return null;
         }
+
+        blinkCoroutine = null;
     }
 
     private Sprite MakeVerticalGradientSprite(int width, int height, Color top, Color bottom)
@@ -1111,10 +1346,14 @@ public class IntroSceneManager : MonoBehaviour
     private void OnDisable()
     {
         UnregisterIntroHandCursor();
+        StopLocalizationLoadingTyping();
+        StopBlinking();
     }
 
     private void OnDestroy()
     {
         UnregisterIntroHandCursor();
+        StopLocalizationLoadingTyping();
+        StopBlinking();
     }
 }

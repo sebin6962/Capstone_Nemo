@@ -1525,43 +1525,31 @@ public class DoGamUIManager : MonoBehaviour
                 if (icon != null)
                     icon.enabled = false;
 
-                string videoName = !string.IsNullOrWhiteSpace(item.video)
-    ? item.video
-    : item.image;
+                string videoValue = !string.IsNullOrWhiteSpace(item.video)
+                    ? item.video
+                    : item.image;
 
-                videoName = Path.GetFileNameWithoutExtension(videoName);
+                string videoFileName = string.IsNullOrWhiteSpace(videoValue)
+                    ? string.Empty
+                    : Path.GetFileName(videoValue);
 
+                if (!string.IsNullOrWhiteSpace(videoFileName) &&
+                    string.IsNullOrEmpty(Path.GetExtension(videoFileName)))
+                {
+                    videoFileName += ".mp4";
+                }
 
-                // ===============================
-                // 영상
-                // Resources/Videos/Guide/
-                // ===============================
-                var clip = string.IsNullOrWhiteSpace(videoName)
-                    ? null
-                    : Resources.Load<UnityEngine.Video.VideoClip>(
-                        "Videos/Guide/" + videoName
-                    );
+                string videoName = string.IsNullOrWhiteSpace(videoFileName)
+                    ? string.Empty
+                    : Path.GetFileNameWithoutExtension(videoFileName);
 
-
-                // ===============================
-                // PNG 썸네일
-                // Resources/Sprites/GuideThumbnail/
-                // 영상과 동일한 파일명 사용
-                //
-                // 예:
-                // Move.mp4
-                // Move.png
-                // ===============================
+                // PNG thumbnail remains in Resources/Sprites/GuideThumbnail/.
                 var thumbnail = string.IsNullOrWhiteSpace(videoName)
                     ? null
                     : Resources.Load<Sprite>(
                         "Sprites/GuideThumbnail/" + videoName
                     );
 
-
-                // ===============================
-                // Hover Video Player
-                // ===============================
                 var hoverPlayer =
                     iconTransform.GetComponent<HowToHoverVideoPlayer>();
 
@@ -1572,30 +1560,41 @@ public class DoGamUIManager : MonoBehaviour
                             .AddComponent<HowToHoverVideoPlayer>();
                 }
 
-
-                // 영상 + 썸네일 전달
+                // Video is loaded by URL from StreamingAssets/Videos/Guide/.
                 hoverPlayer.Setup(
-                    clip,
+                    videoFileName,
                     thumbnail
                 );
 
-
-                // ===============================
-                // 오류 확인
-                // ===============================
-                if (clip == null)
+                if (string.IsNullOrWhiteSpace(videoFileName))
                 {
-                    Debug.LogWarning(
-                        $"[HowTo] 영상을 찾을 수 없음: " +
-                        $"Resources/Videos/Guide/{videoName}"
-                    );
+                    Debug.LogWarning("[HowTo] Video file name is empty.");
                 }
+
+#if UNITY_EDITOR
+                else
+                {
+                    string editorVideoPath = Path.Combine(
+                        Application.dataPath,
+                        "StreamingAssets",
+                        "Videos",
+                        "Guide",
+                        videoFileName
+                    );
+
+                    if (!File.Exists(editorVideoPath))
+                    {
+                        Debug.LogWarning(
+                            $"[HowTo] Video not found: Assets/StreamingAssets/Videos/Guide/{videoFileName}"
+                        );
+                    }
+                }
+#endif
 
                 if (thumbnail == null)
                 {
                     Debug.LogWarning(
-                        $"[HowTo] 썸네일을 찾을 수 없음: " +
-                        $"Resources/Sprites/GuideThumbnail/{videoName}"
+                        $"[HowTo] Thumbnail not found: Resources/Sprites/GuideThumbnail/{videoName}"
                     );
                 }
             }

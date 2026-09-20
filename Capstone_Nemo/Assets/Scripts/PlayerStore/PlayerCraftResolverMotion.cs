@@ -21,12 +21,13 @@ public class PlayerCraftResolverMotion : MonoBehaviour
     private PlayerManager playerManager;
     private Coroutine motionCoroutine;
 
-    private string previousCategory;
-    private string previousLabel;
-
     private bool isPlaying;
 
+    // 제작 시작 전 Animator 활성 상태
     private bool animatorWasEnabled;
+
+    // 이번 제작에서 바라보는 방향
+    private Vector2 craftFacingDirection = Vector2.down;
 
     private void Awake()
     {
@@ -52,11 +53,13 @@ public class PlayerCraftResolverMotion : MonoBehaviour
             return;
         }
 
-        // 이전 제작 모션이 아직 재생 중이면 정상 복구 후 다시 시작
+        // 이전 제작 모션이 아직 실행 중이라면
+        // 완전히 복구한 뒤 새 모션 시작
         if (motionCoroutine != null)
         {
             StopCoroutine(motionCoroutine);
             motionCoroutine = null;
+
             RestorePlayerState();
         }
 
@@ -67,26 +70,43 @@ public class PlayerCraftResolverMotion : MonoBehaviour
     {
         isPlaying = true;
 
-        previousCategory = spriteResolver.GetCategory();
-        previousLabel = spriteResolver.GetLabel();
-
         string direction = GetCraftDirection(maker);
+        craftFacingDirection = DirectionToVector(direction);
 
-        // 제작 모션에서 바라본 방향을
-        // 실제 플레이어의 마지막 방향으로도 저장
+        /*
+         * 중요:
+         * Animator를 끄기 전에 현재 활성 상태를 반드시 저장한다.
+         *
+         * 기존 코드에서는 animatorWasEnabled에 값을 넣지 않아
+         * 기본값 false 상태였고,
+         * 제작 종료 후 Animator가 계속 비활성화되는 문제가 있었다.
+         */
+        if (playerAnimator != null)
+            animatorWasEnabled = playerAnimator.enabled;
+
+        /*
+         * 제작 방향으로 플레이어 방향 변경.
+         *
+         * PlayerManager의 lastMoveDir도 이 방향으로 맞춰지기 때문에
+         * 제작 종료 후에도 동일한 방향으로 Idle 상태가 된다.
+         */
         if (playerManager != null)
         {
             playerManager.SetActionFacingDirection(
-                DirectionToVector(direction)
+                craftFacingDirection
             );
 
+            // 제작 중 이동 완전 잠금
             playerManager.SetActionLocked(true);
         }
 
         // 머리 위에 들고 있는 아이템 잠시 숨기기
         HeldItemManager.Instance?.SetHeldItemVisualVisible(false);
 
-        // 걷기 Animator가 제작 스프라이트를 덮어쓰지 않도록 정지
+        /*
+         * 일반 걷기 Animator가 제작 SpriteResolver를
+         * 덮어쓰지 못하도록 잠시 정지
+         */
         if (playerAnimator != null)
             playerAnimator.enabled = false;
 
@@ -105,6 +125,7 @@ public class PlayerCraftResolverMotion : MonoBehaviour
         }
 
         RestorePlayerState();
+
         motionCoroutine = null;
     }
 
@@ -148,22 +169,45 @@ public class PlayerCraftResolverMotion : MonoBehaviour
         if (!isPlaying)
             return;
 
-        if (!string.IsNullOrEmpty(previousCategory) &&
-            !string.IsNullOrEmpty(previousLabel))
-        {
-            spriteResolver.SetCategoryAndLabel(
-                previousCategory,
-                previousLabel
-            );
+        /*
+         * SpriteResolver의 제작 전 라벨을 직접 복구하지 않는다.
+         *
+         * 제작 전 라벨을 복구하면
+         * PlayerManager의 lastMoveDir(제작 방향)과
+         * SpriteResolver 방향이 서로 달라져
+         * 제작 종료 순간 방향이 바뀌어 보일 수 있다.
+         */
 
-            spriteResolver.ResolveSpriteToSpriteRenderer();
+        // Animator 원래 상태 복구
+        if (playerAnimator != null)
+        {
+            playerAnimator.enabled = animatorWasEnabled;
         }
 
-        if (playerAnimator != null)
-            playerAnimator.enabled = animatorWasEnabled;
+        /*
+         * Animator를 다시 켠 다음
+         * 제작했던 방향을 확실하게 적용한다.
+         */
+        if (playerManager != null)
+        {
+            playerManager.SetActionFacingDirection(
+                craftFacingDirection
+            );
+        }
+
+        /*
+         * Animator를 즉시 한 번 평가해서
+         * Crafting Sprite가 한 프레임 남아 있지 않게 한다.
+         */
+        if (playerAnimator != null &&
+            playerAnimator.enabled)
+        {
+            playerAnimator.Update(0f);
+        }
 
         HeldItemManager.Instance?.SetHeldItemVisualVisible(true);
 
+        // 모든 복구가 끝난 다음 이동 잠금 해제
         if (playerManager != null)
             playerManager.SetActionLocked(false);
 

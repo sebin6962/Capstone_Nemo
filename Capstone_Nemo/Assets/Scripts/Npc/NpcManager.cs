@@ -20,6 +20,7 @@ public class NpcManager : MonoBehaviour
     public NPCInteractable npcInteractable;
 
     private bool wasPlayerNear = false;
+    private bool isActionMenuActive = false;
 
     void Start()
     {
@@ -56,7 +57,11 @@ public class NpcManager : MonoBehaviour
 
         wasPlayerNear = isNear;
 
-        // 행동 선택 UI가 열려 있을 때만 입력 처리
+        // 메뉴의 논리 상태와 실제 화면 표시를 분리한다.
+        // 방앗간 튜토리얼 중에는 actionPanel만 숨기고 입력/액션은 그대로 유지한다.
+        RefreshActionPanelVisibility();
+
+        // actionPanel이 화면에 보이지 않아도 논리적으로 메뉴가 열려 있으면 입력 처리
         if (IsActionMenuOpen() && !IsShopOpen() && !IsDialogueOpen())
         {
             HandleMenuInput();
@@ -83,14 +88,36 @@ public class NpcManager : MonoBehaviour
 
     void OpenActionMenu()
     {
-        if (actionPanel == null) return;
-        actionPanel.SetActive(true);
+        isActionMenuActive = true;
+        RefreshActionPanelVisibility();
     }
 
     void CloseActionMenu()
     {
+        isActionMenuActive = false;
+
         if (actionPanel != null)
             actionPanel.SetActive(false);
+    }
+
+    void RefreshActionPanelVisibility()
+    {
+        if (actionPanel == null) return;
+
+        bool isMillTutorialRunning =
+            MillTutorialManager.Instance != null &&
+            MillTutorialManager.Instance.IsMillTutorialRunning;
+
+        bool shouldShow =
+            isActionMenuActive &&
+            !isMillTutorialRunning &&
+            trigger != null &&
+            trigger.isPlayerNearNpc &&
+            !IsShopOpen() &&
+            !IsDialogueOpen();
+
+        if (actionPanel.activeSelf != shouldShow)
+            actionPanel.SetActive(shouldShow);
     }
 
     void OpenShopByMenu()
@@ -144,6 +171,6 @@ public class NpcManager : MonoBehaviour
 
     public bool IsActionMenuOpen()
     {
-        return actionPanel != null && actionPanel.activeSelf;
+        return isActionMenuActive;
     }
 }
