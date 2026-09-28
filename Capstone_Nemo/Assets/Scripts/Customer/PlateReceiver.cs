@@ -62,15 +62,15 @@ public class PlateReceiver : MonoBehaviour
             GameObject uiItem = Instantiate(resultUIPrefab);
             uiItem.transform.localScale = Vector3.one * 0.02f;
 
-            if (plateAnchor != null)
+            if (worldCanvas != null)
             {
-                uiItem.transform.SetParent(plateAnchor, false);
-                uiItem.transform.localPosition = Vector3.zero;
-            }
-            else if (worldCanvas != null)
-            {
-                uiItem.transform.SetParent(worldCanvas, true);
-                uiItem.transform.position = transform.position;
+                uiItem.transform.SetParent(worldCanvas, false);
+
+                Vector3 basePos = plateAnchor != null
+                    ? plateAnchor.position
+                    : transform.position;
+
+                uiItem.transform.position = basePos + new Vector3(0f, 0.3f, 0.01f);
             }
 
             var uiComp = uiItem.GetComponent<ResultItemUI>();
