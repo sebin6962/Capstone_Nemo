@@ -199,7 +199,11 @@ public class StoreTutorialManager : MonoBehaviour
 
         NPCDialogueUIManager.Instance.OpenTutorialDialogue(
             lines,
-            () => onFinished?.Invoke());
+            () => onFinished?.Invoke(),
+            customerSpawner != null
+                ? customerSpawner.CurrentTutorialCustomer
+                : null
+        );
     }
 
     void ShowStepWithOptionalDialogue(StoreTutorialStep step)
@@ -240,7 +244,7 @@ public class StoreTutorialManager : MonoBehaviour
         }
 
         if (customerSpawner)
-            customerSpawner.SpawnSeatedTutorialCustomer("baekseolgi_finish", 1f);
+            customerSpawner.SpawnSeatedTutorialCustomer("baekseolgi_finish", 0f);
 
         PlayDialogueThen(() =>
         {

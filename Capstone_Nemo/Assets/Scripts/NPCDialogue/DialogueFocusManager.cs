@@ -210,6 +210,18 @@ public class DialogueFocusManager : MonoBehaviour
                 continue;
             }
 
+            if (renderer.gameObject.name == "Circle")
+            {
+                continue;
+            }
+
+            if (renderer.gameObject.name == "Shadow")
+            {
+                continue;
+            }
+
+
+
             rendererBackups.Add(new SpriteRendererBackup
             {
                 renderer = renderer,

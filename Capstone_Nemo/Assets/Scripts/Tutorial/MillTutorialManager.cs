@@ -132,7 +132,7 @@ public class MillTutorialManager : MonoBehaviour
 
             ShowStepPanel(currentStep);
 
-        }, millStartDialogues, "tutorial.mill.start");
+        }, millStartDialogues, "tutorial.mill.start", talkToNpcTarget);
     }
 
     void ShowStepPanel(MillTutorialStep step)
@@ -248,28 +248,28 @@ public class MillTutorialManager : MonoBehaviour
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterTalkToNpcDialogues, "tutorial.mill.after_talk");
+                }, afterTalkToNpcDialogues, "tutorial.mill.after_talk", talkToNpcTarget);
                 break;
 
             case MillTutorialStep.GrindQuit:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterGrindDialogues, "tutorial.mill.after_grind");
+                }, afterGrindDialogues, "tutorial.mill.after_grind", openStoreNpcTarget);
                 break;
 
             case MillTutorialStep.QuitStore:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterOpenStoreDialogues, "tutorial.mill.after_open_store");
+                }, afterOpenStoreDialogues, "tutorial.mill.after_open_store", openStoreNpcTarget);
                 break;
 
             case MillTutorialStep.Mill_Finish:
                 PlayDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterQuitStoreDialogues, "tutorial.mill.after_quit_store");
+                }, afterQuitStoreDialogues, "tutorial.mill.after_quit_store", openStoreNpcTarget);
                 break;
 
             default:
@@ -281,7 +281,8 @@ public class MillTutorialManager : MonoBehaviour
     void PlayDialogueThen(
         System.Action onFinished,
         List<TutorialDialogueLine> lines,
-        string dialogueKeyPrefix)
+        string dialogueKeyPrefix,
+        Transform focusNpc = null)
     {
         if (lines == null || lines.Count == 0)
         {
@@ -299,13 +300,15 @@ public class MillTutorialManager : MonoBehaviour
         StartCoroutine(PlayLocalizedDialogueThenRoutine(
             onFinished,
             lines,
-            dialogueKeyPrefix));
+            dialogueKeyPrefix,
+            focusNpc));
     }
 
     private IEnumerator PlayLocalizedDialogueThenRoutine(
         System.Action onFinished,
         List<TutorialDialogueLine> lines,
-        string dialogueKeyPrefix)
+        string dialogueKeyPrefix,
+        Transform focusNpc)
     {
         for (int i = 0; i < lines.Count; i++)
         {
@@ -344,7 +347,9 @@ public class MillTutorialManager : MonoBehaviour
 
         NPCDialogueUIManager.Instance.OpenTutorialDialogue(
             lines,
-            () => onFinished?.Invoke());
+            () => onFinished?.Invoke(),
+            focusNpc != null ? focusNpc.gameObject : null
+            );
     }
 
     private string GetSpeakerNameKey(string speakerName)

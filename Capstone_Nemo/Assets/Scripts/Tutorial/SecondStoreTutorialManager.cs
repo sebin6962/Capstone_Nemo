@@ -182,7 +182,11 @@ public class SecondStoreTutorialManager : MonoBehaviour
 
         NPCDialogueUIManager.Instance.OpenTutorialDialogue(
             lines,
-            () => onFinished?.Invoke());
+            () => onFinished?.Invoke(),
+            customerSpawner != null
+                ? customerSpawner.CurrentTutorialCustomer
+                : null
+        );
     }
 
     void ShowStepPanel(SecondStoreTutorialStep step)

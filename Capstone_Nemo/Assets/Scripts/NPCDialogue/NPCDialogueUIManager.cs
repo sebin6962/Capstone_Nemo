@@ -643,7 +643,8 @@ public partial class NPCDialogueUIManager : MonoBehaviour
 
     public void OpenTutorialDialogue(
         List<TutorialDialogueLine> lines,
-        System.Action onFinished = null
+        System.Action onFinished = null,
+        GameObject focusNpcObj = null
     )
     {
         if (lines == null ||
@@ -657,6 +658,18 @@ public partial class NPCDialogueUIManager : MonoBehaviour
         {
             Debug.LogWarning("Tutorial dialogue rejected: manager unavailable or dialogue already active.", this);
             return;
+        }
+
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+
+        if (DialogueFocusManager.Instance != null &&
+            playerObj != null &&
+            focusNpcObj != null)
+        {
+            DialogueFocusManager.Instance.BeginFocus(
+                playerObj,
+                focusNpcObj
+            );
         }
 
         isTutorialDialogueMode = true;
@@ -1141,6 +1154,11 @@ public partial class NPCDialogueUIManager : MonoBehaviour
             tutorialDialogueFinishedCallback;
 
         tutorialDialogueFinishedCallback = null;
+
+        if (DialogueFocusManager.Instance != null)
+        {
+            DialogueFocusManager.Instance.EndFocus();
+        }
 
         waitTypingDelayForNextLine = false;
         currentState = DialogueState.None;

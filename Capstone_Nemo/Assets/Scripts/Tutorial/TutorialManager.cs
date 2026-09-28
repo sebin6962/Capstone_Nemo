@@ -550,7 +550,7 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
-        bool useFocus =
+        /*bool useFocus =
             DialogueFocusManager.Instance != null &&
             player != null &&
             focusNpcObj != null;
@@ -558,18 +558,19 @@ public class TutorialManager : MonoBehaviour
         if (useFocus)
         {
             DialogueFocusManager.Instance.BeginFocus(player.gameObject, focusNpcObj);
-        }
+        }*/
 
         SetDialogueButtonsLocked(true);
 
-        NPCDialogueUIManager.Instance.OpenTutorialDialogue(lines, () =>
+        NPCDialogueUIManager.Instance.OpenTutorialDialogue(
+        lines,
+        () =>
         {
-            if (useFocus && DialogueFocusManager.Instance != null)
-                DialogueFocusManager.Instance.EndFocus();
-
             SetDialogueButtonsLocked(false);
             onFinished?.Invoke();
-        });
+        },
+        focusNpcObj
+    );
     }
 
     private void PlayLocalizedDialogueThen(
@@ -734,14 +735,14 @@ public class TutorialManager : MonoBehaviour
                 PlayLocalizedDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterGoToFieldDialogues, "tutorial.grandma.after_field");
+                }, afterGoToFieldDialogues, "tutorial.grandma.after_field", grandmaNpcObject);
                 break;
 
             case VillageSecondStep.GoToMill:
                 PlayLocalizedDialogueThen(() =>
                 {
                     ShowStepPanel(step);
-                }, afterHarvestDialogues, "tutorial.grandma.after_harvest");
+                }, afterHarvestDialogues, "tutorial.grandma.after_harvest", grandmaNpcObject);
                 break;
 
             default:

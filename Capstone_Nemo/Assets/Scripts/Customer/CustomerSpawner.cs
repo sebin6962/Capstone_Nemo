@@ -13,6 +13,8 @@ public class CustomerSpawner : MonoBehaviour
     private float timer;
     public float firstSpawnDelay;
 
+    public GameObject CurrentTutorialCustomer { get; private set; }
+
     [SerializeField] private float questCustomerChance = 0.2f;
     [SerializeField] private GameObject questCustomerPrefab;
 
@@ -152,6 +154,8 @@ public class CustomerSpawner : MonoBehaviour
             seatPos,
             Quaternion.identity
         );
+
+        CurrentTutorialCustomer = customer;
 
         Customer customerScript = customer.GetComponent<Customer>();
 
