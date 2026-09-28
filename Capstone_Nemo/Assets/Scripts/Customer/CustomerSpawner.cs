@@ -221,7 +221,20 @@ public class CustomerSpawner : MonoBehaviour
     public void EndTutorial()
     {
         tutorialMode = false;
+        allowNewCustomers = true;
         timer = 0f;
+
+        if (CurrentTutorialCustomer != null)
+        {
+            Customer customer = CurrentTutorialCustomer.GetComponent<Customer>();
+
+            if (customer != null)
+            {
+                customer.ForceLeaveFromSave();
+            }
+
+            CurrentTutorialCustomer = null;
+        }
     }
 
     public Customer SpawnFromSave(CustomerSave data)
