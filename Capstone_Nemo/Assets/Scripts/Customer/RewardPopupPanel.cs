@@ -10,6 +10,8 @@ public class RewardPopupPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI expText;
     [SerializeField] private TextMeshProUGUI starText;
     [SerializeField] private TextMeshProUGUI messageText;
+    [Header("판매 다과 이미지")]
+    [SerializeField] private Image dagwaImage;
     [SerializeField] private CanvasGroup canvasGroup;
 
     private RectTransform rect;
@@ -25,9 +27,21 @@ public class RewardPopupPanel : MonoBehaviour
 
     public void SetContent(int exp, int star, string dagwaKeyOrName)
     {
-        if (expText) expText.text = $"+{exp}";
-        if (starText) starText.text = $"+{star}";
-        if (messageText) messageText.text = $"{dagwaKeyOrName}을(를) 판매하였습니다.";
+        SetContent(exp, star, dagwaKeyOrName, null);
+    }
+
+    public void SetContent(int exp, int star, string dagwaKeyOrName, Sprite dagwaSprite)
+    {
+        if (expText) expText.text = $"{exp}";
+        if (starText) starText.text = $"{star}";
+        if (messageText) messageText.text = $"{dagwaKeyOrName} 판매";
+
+        if (dagwaImage != null)
+        {
+            dagwaImage.sprite = dagwaSprite;
+            dagwaImage.enabled = dagwaSprite != null;
+            dagwaImage.preserveAspect = true;
+        }
     }
 
     public void SetImmediatePos(Vector2 anchoredPos)

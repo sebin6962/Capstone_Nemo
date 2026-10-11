@@ -43399,7 +43399,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 42.599915}
+  m_AnchoredPosition: {x: 0, y: 42.599854}
   m_SizeDelta: {x: 0, y: 142.6}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1015535146
@@ -58508,7 +58508,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: -48.689514}
+  m_AnchoredPosition: {x: 0, y: -48.689453}
   m_SizeDelta: {x: 0, y: 148.69}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1346800213
@@ -76819,7 +76819,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -121.00397, y: -41.001038}
+  m_AnchoredPosition: {x: -121.00403, y: -41.000977}
   m_SizeDelta: {x: 918, y: 516}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1705025750
@@ -79187,7 +79187,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -671.9998, y: 326}
+  m_AnchoredPosition: {x: -671.99976, y: 326}
   m_SizeDelta: {x: -1423.4169, y: -719.6829}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1757436636
@@ -89400,7 +89400,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dc4701dfa3a5a941a2aaf2d33f8622a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  acquireNoticeUI: {fileID: 372922300}
+  acquireNoticeUI: {fileID: 0}
+  playerHarvestMotion: {fileID: 0}
   playerTransform: {fileID: 1577133727}
   treeTooltipRange: 1.6
   storageFullPanel: {fileID: 1916505432}
@@ -105846,10 +105847,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.0009031594
-    width: 1
-    height: 0.9981937
+    x: 0.00060606
+    y: 0
+    width: 0.9987879
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -105887,7 +105888,7 @@ Transform:
   m_GameObject: {fileID: 2130387756}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -12.0082035, y: 7.93175, z: -10}
+  m_LocalPosition: {x: -11.99275, y: 7.93176, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -112031,6 +112032,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8031702821992038735, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1577133728}
+    - targetCorrespondingSourceObject: {fileID: 8031702821992038735, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8625244720612140963}
   m_SourcePrefab: {fileID: 100100000, guid: 4fbaeb629cc788d41a47af7e5a01d4f6, type: 3}
 --- !u!114 &8625244720612140945 stripped
 MonoBehaviour:
@@ -112073,8 +112077,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   directionOriginOffset: {x: 0, y: 0.35}
   horizontalThreshold: 0.35
-  verticalThreshold: 0.35
-  diagonalBias: 1.25
   playerAnimator: {fileID: 8625244720612140946}
   spriteResolver: {fileID: 8625244720612140947}
   categoryName: Body
@@ -112098,6 +112100,25 @@ MonoBehaviour:
   categoryName: Body
   walkFrameCount: 6
   walkFrameInterval: 0.12
+--- !u!114 &8625244720612140963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577133722}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20c3d7efb60122f4faa3f38e4c7796e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerAnimator: {fileID: 8625244720612140946}
+  spriteResolver: {fileID: 8625244720612140947}
+  categoryName: Body
+  motionPrefix: Crafting
+  frameCount: 4
+  frameInterval: 0.1
+  horizontalThreshold: 0.5
 --- !u!4 &8700525042266721630
 Transform:
   m_ObjectHideFlags: 0

@@ -26,7 +26,8 @@ public class RewardPopupStacker : MonoBehaviour
     {
         public int exp, star;
         public string dagwa;
-        public PopupData(int e, int s, string d) { exp = e; star = s; dagwa = d; }
+        public Sprite sprite;
+        public PopupData(int e, int s, string d, Sprite sp) { exp = e; star = s; dagwa = d; sprite = sp; }
     }
 
     private readonly Queue<PopupData> pending = new Queue<PopupData>();
@@ -40,13 +41,18 @@ public class RewardPopupStacker : MonoBehaviour
 
     public void Show(int exp, int star, string dagwaKeyOrName)
     {
+        Show(exp, star, dagwaKeyOrName, null);
+    }
+
+    public void Show(int exp, int star, string dagwaKeyOrName, Sprite dagwaSprite)
+    {
         if (panelPrefab == null || container == null)
         {
             Debug.LogError("[RewardPopupStacker] panelPrefab 또는 container가 비었습니다.");
             return;
         }
 
-        pending.Enqueue(new PopupData(exp, star, dagwaKeyOrName));
+        pending.Enqueue(new PopupData(exp, star, dagwaKeyOrName, dagwaSprite));
 
         if (processCo == null)
             processCo = StartCoroutine(ProcessQueue());
@@ -57,12 +63,12 @@ public class RewardPopupStacker : MonoBehaviour
         while (pending.Count > 0)
         {
             var data = pending.Dequeue();
-            yield return StartCoroutine(ShowRoutine(data.exp, data.star, data.dagwa));
+            yield return StartCoroutine(ShowRoutine(data.exp, data.star, data.dagwa, data.sprite));
         }
         processCo = null;
     }
 
-    private IEnumerator ShowRoutine(int exp, int star, string dagwa)
+    private IEnumerator ShowRoutine(int exp, int star, string dagwa, Sprite sprite)
     {
         if (active.Count >= maxPanels)
         {
@@ -84,7 +90,7 @@ public class RewardPopupStacker : MonoBehaviour
 
         var panel = Instantiate(panelPrefab, container);
         panel.gameObject.SetActive(true);
-        panel.SetContent(exp, star, dagwa); // :contentReference[oaicite:4]{index=4}
+        panel.SetContent(exp, star, dagwa, sprite);
 
         active.Add(panel);
 

@@ -30,6 +30,14 @@ public class Customer : MonoBehaviour
     [SerializeField] private float orderTimeLimit;
     protected float remainingTime;
     private string orderedDagwa;
+    private Sprite pendingServedDagwaSprite;
+
+    // PlateReceiver에서 판매하는 실제 다과 이미지를 잠시 전달받음.
+    public void SetServedDagwaSprite(Sprite sprite)
+    {
+        pendingServedDagwaSprite = sprite;
+    }
+
     protected bool isTimerRunning = false;
     protected bool isServed = false;
     protected CustomerState state = CustomerState.Walking;
@@ -136,15 +144,15 @@ public class Customer : MonoBehaviour
             if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
             {
                 dir.y = 0f;
-                dir.x = Mathf.Sign(dir.x);  
+                dir.x = Mathf.Sign(dir.x);
             }
             else
             {
                 dir.x = 0f;
-                dir.y = Mathf.Sign(dir.y);  
+                dir.y = Mathf.Sign(dir.y);
             }
 
-            lastMoveDir = dir; 
+            lastMoveDir = dir;
         }
 
         animator.SetBool("IsMoving", hasMove);
@@ -155,7 +163,7 @@ public class Customer : MonoBehaviour
 
     void Sit()
     {
-        
+
         state = CustomerState.Sit;
 
         AssignPlate();
@@ -225,7 +233,7 @@ public class Customer : MonoBehaviour
         state = CustomerState.Ordering;
 
         //튜토리얼구분(다과 종류)
-        if(isTutorialCustomer && !string.IsNullOrEmpty(tutorialDagwaId))
+        if (isTutorialCustomer && !string.IsNullOrEmpty(tutorialDagwaId))
         {
             orderedDagwa = tutorialDagwaId;
         }
@@ -253,8 +261,8 @@ public class Customer : MonoBehaviour
             orderUI.ShowTimerUI(false);
         }
 
-       /* remainingTime = orderTimeLimit;
-        isTimerRunning = true;*/
+        /* remainingTime = orderTimeLimit;
+         isTimerRunning = true;*/
     }
 
 
@@ -263,7 +271,14 @@ public class Customer : MonoBehaviour
         // 다과 제공 효과음 재생!
         SFXManager.Instance.PlayPlateSoundSFX();
 
-        if (state != CustomerState.Ordering || isServed) return;
+        if (state != CustomerState.Ordering || isServed)
+        {
+            pendingServedDagwaSprite = null;
+            return;
+        }
+
+        Sprite servedDagwaSprite = pendingServedDagwaSprite;
+        pendingServedDagwaSprite = null;
 
         isTimerRunning = false;
         isServed = true;
@@ -316,8 +331,8 @@ public class Customer : MonoBehaviour
             string koName;
             if (!ItemTooltipDB.TooltipTexts.TryGetValue(givenDagwa, out koName))
                 koName = givenDagwa;
-            RewardPopupStacker.Instance?.Show(expAmount, starAmount, koName);
-            
+            RewardPopupStacker.Instance?.Show(expAmount, starAmount, koName, servedDagwaSprite);
+
             Invoke(nameof(RemoveDagwaOnPlate), 2f);
 
             // --- 정답 효과음 재생 추가 ---
@@ -440,7 +455,7 @@ public class Customer : MonoBehaviour
         CanvasGroup[] canvasGroups = GetComponentsInChildren<CanvasGroup>();
 
         //내려가는데걸리는시간
-        float duration = 2.5f;  
+        float duration = 2.5f;
         //언제부터페이드?
         float fadeDelay = 0.5f;
         float elapsed = 0f;
@@ -475,7 +490,7 @@ public class Customer : MonoBehaviour
                     cg.alpha = alpha;
                 }
             }
-            
+
             yield return null;
         }
 

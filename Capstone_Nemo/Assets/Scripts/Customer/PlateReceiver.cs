@@ -8,7 +8,7 @@ public class PlateReceiver : MonoBehaviour
 
     public GameObject resultUIPrefab;
 
-    public Transform worldCanvas;   
+    public Transform worldCanvas;
     public Transform plateAnchor;
 
     private bool playerInRange;
@@ -79,7 +79,7 @@ public class PlateReceiver : MonoBehaviour
             Destroy(uiItem, 2.0f);
         }
 
-        plateCheck.SendDagwaToCustomer(itemName);
+        plateCheck.SendDagwaToCustomer(itemName, sprite);
         HeldItemManager.Instance.HideHeldItem();
 
         Debug.Log($"{itemName} 제공 시도 완료");
@@ -137,37 +137,37 @@ public class PlateReceiver : MonoBehaviour
     //    }
     //}
 }
-        /* if (other.CompareTag("HeldDagwa"))
+/* if (other.CompareTag("HeldDagwa"))
+ {
+     // E 키를 누르고 있고 아직 실행 안 했으면 수행
+     if (Input.GetKey(KeyCode.E) && !hasPlacedThisPress )
+     {
+         Debug.Log("다과가 접시에 놓였습니다!");
+
+         HeldItemManager.Instance.HideHeldItem();
+
+         PlateCheck plate = GetComponent<PlateCheck>();
+         if (plate != null)
          {
-             // E 키를 누르고 있고 아직 실행 안 했으면 수행
-             if (Input.GetKey(KeyCode.E) && !hasPlacedThisPress )
+             other.transform.position = transform.position + new Vector3(0, 0.3f, 0);
+             other.transform.SetParent(plate.transform);
+             other.tag = "Dagwa";
+
+             DagwaItem dagwa = other.GetComponent<DagwaItem>();
+             if (dagwa != null)
              {
-                 Debug.Log("다과가 접시에 놓였습니다!");
-
-                 HeldItemManager.Instance.HideHeldItem();
-
-                 PlateCheck plate = GetComponent<PlateCheck>();
-                 if (plate != null)
-                 {
-                     other.transform.position = transform.position + new Vector3(0, 0.3f, 0);
-                     other.transform.SetParent(plate.transform);
-                     other.tag = "Dagwa";
-
-                     DagwaItem dagwa = other.GetComponent<DagwaItem>();
-                     if (dagwa != null)
-                     {
-                         plate.SendDagwaToCustomer(dagwa.dagwaName);
-                     }
-                 }
-
-                 hasPlacedThisPress = true; // 다시 누르지 않도록 설정
-             }
-
-             // E 키에서 손 뗐을 때 다시 허용
-             if (!Input.GetKey(KeyCode.E))
-             {
-                 hasPlacedThisPress = false;
+                 plate.SendDagwaToCustomer(dagwa.dagwaName);
              }
          }
-     }*/
-    
+
+         hasPlacedThisPress = true; // 다시 누르지 않도록 설정
+     }
+
+     // E 키에서 손 뗐을 때 다시 허용
+     if (!Input.GetKey(KeyCode.E))
+     {
+         hasPlacedThisPress = false;
+     }
+ }
+}*/
+

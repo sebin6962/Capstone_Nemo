@@ -76,6 +76,14 @@ public class PlateCheck : MonoBehaviour
         return closest;
     }
 
+    public void SendDagwaToCustomer(string dagwaName, Sprite dagwaSprite)
+    {
+        if (targetCustomer != null)
+            targetCustomer.SetServedDagwaSprite(dagwaSprite);
+
+        SendDagwaToCustomer(dagwaName);
+    }
+
     public void SendDagwaToCustomer(string dagwaName)
     {
         if (targetCustomer != null)
