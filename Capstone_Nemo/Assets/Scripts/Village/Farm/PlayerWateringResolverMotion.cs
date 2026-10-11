@@ -1,16 +1,16 @@
+
 using System.Collections;
 using UnityEngine;
 using UnityEngine.U2D.Animation;
 
 public class PlayerWateringResolverMotion : MonoBehaviour
 {
-    [Header("방향 감지 세부 설정")]
-    [SerializeField] private Vector2 directionOriginOffset = new Vector2(0f, 0.35f);
+    [Header("방향 판정")]
+    [SerializeField]
+    private Vector2 directionOriginOffset =
+        new Vector2(0f, 0.35f);
 
-    [SerializeField] private float horizontalThreshold = 0.35f;
-    [SerializeField] private float verticalThreshold = 0.35f;
-
-    [SerializeField] private float diagonalBias = 1.25f;
+    [SerializeField] private float horizontalThreshold = 0.5f;
 
     [Header("기존 플레이어 Animator")]
     [SerializeField] private Animator playerAnimator;
@@ -50,14 +50,18 @@ public class PlayerWateringResolverMotion : MonoBehaviour
     {
         if (spriteResolver == null)
         {
-            Debug.LogWarning("[WateringMotion] SpriteResolver가 없습니다.");
+            Debug.LogWarning(
+                "[WateringMotion] SpriteResolver가 없습니다."
+            );
             return;
         }
 
         if (motionCoroutine != null)
             StopCoroutine(motionCoroutine);
 
-        motionCoroutine = StartCoroutine(PlayRoutine(targetWorldPos));
+        motionCoroutine = StartCoroutine(
+            PlayRoutine(targetWorldPos)
+        );
     }
 
     private IEnumerator PlayRoutine(Vector3 targetWorldPos)
@@ -79,30 +83,43 @@ public class PlayerWateringResolverMotion : MonoBehaviour
         if (playerManager != null)
             playerManager.SetActionLocked(true);
 
-        // 머리 위 물뿌리개 UI 잠깐 숨김
+        // 물뿌리개 UI 숨김
         HeldItemManager.Instance?.SetHeldItemVisualVisible(false);
 
-        // 기존 걷기 Animator가 SpriteResolver를 덮어쓰지 못하게 잠깐 정지
+        // Animator 상태 저장 후 정지
         if (playerAnimator != null)
+        {
+            animatorWasEnabled = playerAnimator.enabled;
             playerAnimator.enabled = false;
+        }
 
         for (int i = 0; i < frameCount; i++)
         {
             string label = $"Watering_{direction}_{i}";
 
-            spriteResolver.SetCategoryAndLabel(categoryName, label);
+            spriteResolver.SetCategoryAndLabel(
+                categoryName,
+                label
+            );
+
             spriteResolver.ResolveSpriteToSpriteRenderer();
 
             yield return new WaitForSeconds(frameInterval);
         }
 
-        // 원래 라벨 복구
-        if (!string.IsNullOrEmpty(prevCategory) && !string.IsNullOrEmpty(prevLabel))
+        // 기존 SpriteResolver 라벨 복구
+        if (!string.IsNullOrEmpty(prevCategory) &&
+            !string.IsNullOrEmpty(prevLabel))
         {
-            spriteResolver.SetCategoryAndLabel(prevCategory, prevLabel);
+            spriteResolver.SetCategoryAndLabel(
+                prevCategory,
+                prevLabel
+            );
+
             spriteResolver.ResolveSpriteToSpriteRenderer();
         }
 
+        // Animator 상태 복구
         if (playerAnimator != null)
             playerAnimator.enabled = animatorWasEnabled;
 
@@ -134,53 +151,27 @@ public class PlayerWateringResolverMotion : MonoBehaviour
         return Vector2.down;
     }
 
+
     private string GetDirectionName(Vector3 targetWorldPos)
     {
-        Vector2 origin = (Vector2)transform.position + directionOriginOffset;
-        Vector2 target = targetWorldPos;
-        Vector2 diff = target - origin;
+        Vector2 origin =
+            (Vector2)transform.position + directionOriginOffset;
 
-        Debug.Log($"[WateringMotion/Direction] origin={origin}, target={target}, diff={diff}");
+        Vector2 diff = (Vector2)targetWorldPos - origin;
 
         float absX = Mathf.Abs(diff.x);
         float absY = Mathf.Abs(diff.y);
 
-        // 너무 가까운 클릭이면 현재 바라보는 방향 또는 아래 방향 사용
-        if (absX < horizontalThreshold && absY < verticalThreshold)
+        // 좌우 방향에 약간의 가중치를 적용
+        // 1.2 = 좌우 판정이 조금 더 쉽게 나오도록 설정
+        float horizontalBias = 1.2f;
+
+        if (absX * horizontalBias >= absY)
         {
-            Debug.Log("[WateringMotion/Direction] 클릭 위치가 기준점과 너무 가까워 Down 사용");
-            return "Down";
+            return diff.x >= 0f ? "Right" : "Left";
         }
 
-        // 좌우가 충분히 강할 때만 Left/Right
-        if (absX > absY * diagonalBias && absX >= horizontalThreshold)
-        {
-            string dir = diff.x >= 0f ? "Right" : "Left";
-            Debug.Log($"[WateringMotion/Direction] 좌우 방향 선택: {dir}");
-            return dir;
-        }
-
-        // 상하가 충분히 강할 때만 Up/Down
-        if (absY > absX * diagonalBias && absY >= verticalThreshold)
-        {
-            string dir = diff.y >= 0f ? "Up" : "Down";
-            Debug.Log($"[WateringMotion/Direction] 상하 방향 선택: {dir}");
-            return dir;
-        }
-
-        // 애매한 대각선 영역이면 y 우선
-        // 농사 게임에서는 보통 위/아래 밭 판정이 더 자연스러움
-        if (absY >= absX)
-        {
-            string dir = diff.y >= 0f ? "Up" : "Down";
-            Debug.Log($"[WateringMotion/Direction] 애매한 대각선 → 상하 우선: {dir}");
-            return dir;
-        }
-        else
-        {
-            string dir = diff.x >= 0f ? "Right" : "Left";
-            Debug.Log($"[WateringMotion/Direction] 애매한 대각선 → 좌우 우선: {dir}");
-            return dir;
-        }
+        return diff.y >= 0f ? "Up" : "Down";
     }
+
 }

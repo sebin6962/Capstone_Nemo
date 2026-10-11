@@ -1,3 +1,4 @@
+
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -10,9 +11,6 @@ public class ItemAcquireNoticeUI : MonoBehaviour
     public CanvasGroup canvasGroup;
     public TMP_Text messageText;
     public Image itemIcon;
-
-    [Header("문구")]
-    public string acquireFormat = "{0}을(를) 획득했다";
 
     [Header("연출 시간")]
     public float slideDuration = 0.5f;
@@ -55,38 +53,49 @@ public class ItemAcquireNoticeUI : MonoBehaviour
     }
 
     /// <summary>
-    /// 아이템 획득 알림. 아이콘과 함께 표시합니다.
+    /// 아이템 이름과 실제 획득 개수 표시
     /// </summary>
-    public void ShowAcquire(string itemName, Sprite sprite)
+    public void ShowAcquire(string itemName, Sprite sprite, int count)
     {
         ShowMessageInternal(
-            string.Format(acquireFormat, itemName),
+            $"{itemName} X{count}",
             sprite,
             sprite != null
         );
     }
 
-    /// <summary>
-    /// 기존 호출부 호환용. 아이콘 없이 획득 문구만 표시합니다.
-    /// </summary>
-    public void ShowAcquire(string itemName)
+    // 기존 호출부 호환용
+    public void ShowAcquire(string itemName, Sprite sprite)
+    {
+        ShowAcquire(itemName, sprite, 1);
+    }
+
+    public void ShowAcquire(string itemName, int count)
     {
         ShowMessageInternal(
-            string.Format(acquireFormat, itemName),
+            $"{itemName} X{count}",
             null,
             false
         );
     }
 
+    public void ShowAcquire(string itemName)
+    {
+        ShowAcquire(itemName, 1);
+    }
+
     /// <summary>
-    /// 일반 알림. 아이템 아이콘은 숨깁니다.
+    /// 일반 알림
     /// </summary>
     public void ShowMessage(string message)
     {
         ShowMessageInternal(message, null, false);
     }
 
-    private void ShowMessageInternal(string message, Sprite sprite, bool showIcon)
+    private void ShowMessageInternal(
+        string message,
+        Sprite sprite,
+        bool showIcon)
     {
         if (currentCo != null)
         {
@@ -95,10 +104,15 @@ public class ItemAcquireNoticeUI : MonoBehaviour
         }
 
         ResetPanelVisualState();
-        currentCo = StartCoroutine(ShowRoutine(message, sprite, showIcon));
+        currentCo = StartCoroutine(
+            ShowRoutine(message, sprite, showIcon)
+        );
     }
 
-    private IEnumerator ShowRoutine(string message, Sprite sprite, bool showIcon)
+    private IEnumerator ShowRoutine(
+        string message,
+        Sprite sprite,
+        bool showIcon)
     {
         if (panel == null || messageText == null)
             yield break;
@@ -120,7 +134,9 @@ public class ItemAcquireNoticeUI : MonoBehaviour
         if (itemIcon != null)
         {
             itemIcon.sprite = sprite;
-            itemIcon.gameObject.SetActive(showIcon && sprite != null);
+            itemIcon.gameObject.SetActive(
+                showIcon && sprite != null
+            );
         }
 
         if (canvasGroup != null)
@@ -150,7 +166,9 @@ public class ItemAcquireNoticeUI : MonoBehaviour
                 ? 1f
                 : Mathf.Clamp01(t / slideDuration);
 
-            progress = Mathf.SmoothStep(0f, 1f, progress);
+            progress = Mathf.SmoothStep(
+                0f, 1f, progress
+            );
 
             panelRect.anchoredPosition = Vector2.Lerp(
                 hiddenPosition,
@@ -163,8 +181,10 @@ public class ItemAcquireNoticeUI : MonoBehaviour
 
         panelRect.anchoredPosition = shownPosition;
 
-        // 마감 알림과 같은 좌우 흔들림
-        yield return StartCoroutine(ShakeAlertPanel(panelRect));
+        // 좌우 흔들림
+        yield return StartCoroutine(
+            ShakeAlertPanel(panelRect)
+        );
 
         // 유지
         yield return new WaitForSeconds(showDuration);
@@ -180,7 +200,9 @@ public class ItemAcquireNoticeUI : MonoBehaviour
                 ? 1f
                 : Mathf.Clamp01(t / slideDuration);
 
-            progress = Mathf.SmoothStep(0f, 1f, progress);
+            progress = Mathf.SmoothStep(
+                0f, 1f, progress
+            );
 
             panelRect.anchoredPosition = Vector2.Lerp(
                 shownPosition,

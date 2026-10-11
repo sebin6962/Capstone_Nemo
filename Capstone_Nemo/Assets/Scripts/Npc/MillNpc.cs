@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -35,6 +36,8 @@ public class MillNpc : MonoBehaviour
 
     private bool wasPlayerNear = false;
     private bool isActionMenuActive = false;
+    private bool waitingForOptionClose = false;
+    private bool optionPanelWasOpened = false;
     private bool wasThisNpcDialogueOpen = false;
     private bool animatorWasEnabledBeforeDialogue = false;
     private Vector3 originalSpriteLocalPosition;
@@ -95,18 +98,35 @@ public class MillNpc : MonoBehaviour
             OpenActionMenu();
         }
 
+        // 선택한 패널이 실제로 열렸다가 닫힌 경우에만 메뉴 복구
+        if (waitingForOptionClose)
+        {
+            if (IsMillOpen() || isAnyDialogueOpen)
+            {
+                optionPanelWasOpened = true;
+            }
+            else if (optionPanelWasOpened)
+            {
+                waitingForOptionClose = false;
+                optionPanelWasOpened = false;
+
+                if (isNear)
+                    OpenActionMenu();
+            }
+        }
+
         if (!isNear && wasPlayerNear)
         {
+            waitingForOptionClose = false;
+            optionPanelWasOpened = false;
             CloseActionMenu();
         }
 
         wasPlayerNear = isNear;
 
-        // 메뉴의 논리 상태와 실제 화면 표시를 분리한다.
-        // 방앗간 튜토리얼 중에는 actionPanel만 숨기고 입력/액션은 그대로 유지한다.
+        // 튜토리얼 중에는 패널만 숨기고 키 입력은 유지
         RefreshActionPanelVisibility(isAnyDialogueOpen);
 
-        // actionPanel이 화면에 보이지 않아도 논리적으로 메뉴가 열려 있으면 입력 처리
         if (IsActionMenuOpen() && !IsMillOpen() && !isAnyDialogueOpen)
         {
             HandleMenuInput();
@@ -175,7 +195,13 @@ public class MillNpc : MonoBehaviour
             return;
 
         CloseActionMenu();
+
+        waitingForOptionClose = true;
+        optionPanelWasOpened = false;
+
         OpenMill();
+
+        optionPanelWasOpened = IsMillOpen();
     }
 
     private void StartTalk()
@@ -190,7 +216,13 @@ public class MillNpc : MonoBehaviour
             return;
 
         CloseActionMenu();
+
+        waitingForOptionClose = true;
+        optionPanelWasOpened = false;
+
         npcInteractable.StartDialogueExternally();
+
+        optionPanelWasOpened = IsAnyDialogueOpen();
     }
 
     private void OnClickMill()

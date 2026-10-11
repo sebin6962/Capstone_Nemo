@@ -28,6 +28,14 @@ public class FarmSaveData
 
 public class FarmManager : MonoBehaviour
 {
+    [Header("아이템 획득 알림")]
+    public ItemAcquireNoticeUI acquireNoticeUI;
+
+
+    [Header("수확 모션")]
+    public PlayerHarvestResolverMotion playerHarvestMotion;
+
+
     public Transform playerTransform;      // 플레이어 Transform
     public float treeTooltipRange = 3f;    // 나무 툴팁이 뜨는 최대 거리
 
@@ -75,8 +83,10 @@ public class FarmManager : MonoBehaviour
 
     private TreeTooltip currentHoverTree;
 
+
     [Header("성장중 작물 툴팁")]
-    public float cropTooltipRange = 1.6f;
+    public float cropTooltipRange = 3.0f;
+
     public Vector3 cropTooltipOffset =
         new Vector3(0f, 0.9f, 0f);
 
@@ -1713,6 +1723,49 @@ public class FarmManager : MonoBehaviour
         StorageInventory.Instance
             .SaveStorage();
 
+
+        // 수확 성공 시 밭과 나무 공통으로 모션 재생
+        if (playerHarvestMotion == null)
+        {
+            Transform playerRoot =
+                player != null ? player : playerTransform;
+
+            if (playerRoot != null)
+            {
+                playerHarvestMotion =
+                    playerRoot.GetComponent<PlayerHarvestResolverMotion>();
+
+                if (playerHarvestMotion == null)
+                {
+                    playerHarvestMotion =
+                        playerRoot.GetComponentInChildren<
+                            PlayerHarvestResolverMotion>(true);
+                }
+
+                if (playerHarvestMotion == null)
+                {
+                    playerHarvestMotion =
+                        playerRoot.GetComponentInParent<
+                            PlayerHarvestResolverMotion>();
+                }
+            }
+        }
+
+        if (playerHarvestMotion != null)
+        {
+            Vector3 harvestWorldPosition =
+                fieldTilemap.GetCellCenterWorld(pos);
+
+            playerHarvestMotion.Play(harvestWorldPosition);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "[FarmHarvestMotion] PlayerHarvestResolverMotion이 연결되지 않았습니다."
+            );
+        }
+
+
         Debug.Log(
             "현재 나무 레벨: " +
             TreeLevelUnlocker.CurrentLevel
@@ -1728,6 +1781,17 @@ public class FarmManager : MonoBehaviour
                 "Sprites/Ingredients/" +
                 itemKey
             );
+
+        // 실제 수확에 성공한 경우에만 이름, 개수, 아이콘 표시
+        if (acquireNoticeUI != null)
+        {
+            string displayName = cropName;
+            string tooltipName;
+            if (ItemTooltipDB.TooltipTexts.TryGetValue(itemKey, out tooltipName))
+                displayName = tooltipName;
+
+            acquireNoticeUI.ShowAcquire(displayName, cropSprite, amount);
+        }
 
         Vector3 worldPos =
             fieldTilemap.CellToWorld(pos) +
@@ -2803,158 +2867,174 @@ public class FarmManager : MonoBehaviour
         }
     }
 
+
     private void HandleGrowingCropTooltip()
     {
-        if (
-            InventoryTooltipManager.Instance ==
-            null
-        )
+        var tooltipManager = InventoryTooltipManager.Instance;
+        if (tooltipManager == null)
+            return;
+
+        // 나무 툴팁이 열려 있다면 나무 툴팁 우선
+        if (currentHoverTree != null)
         {
+            currentNearbyCropPos = null;
             return;
         }
 
-        Transform target =
-            playerTransform != null
-            ? playerTransform
-            : player;
-
-        if (target == null)
-            return;
-
-        if (
-            currentHoverTree != null
-        )
+        Camera cam = Camera.main;
+        if (cam == null)
         {
+            ClearGrowingCropTooltip();
             return;
         }
 
-        CropTile nearestTile =
-            null;
+        Vector3 mouseScreen = Input.mousePosition;
+        mouseScreen.z = -cam.transform.position.z;
 
-        Vector3Int nearestPos =
-            default;
+        Vector2 mouseWorld = cam.ScreenToWorldPoint(mouseScreen);
 
-        float maxSqr =
-            cropTooltipRange *
-            cropTooltipRange;
+        CropTile selectedTile = null;
+        Vector3Int selectedPos = default;
+        SpriteRenderer selectedRenderer = null;
+        float selectedDistance = float.MaxValue;
 
-        float bestSqr =
-            maxSqr;
-
-        foreach (
-            var kv
-            in growingTiles
-        )
+        foreach (var kv in growingTiles)
         {
-            var pos =
-                kv.Key;
+            CropTile tile = kv.Value;
 
-            var tile =
-                kv.Value;
 
-            if (
-                tile == null ||
-                tile.cropData == null
-            )
+            // 플레이어가 작물에서 일정 거리 이상 떨어져 있으면 제외
+            Transform playerTarget =
+                player != null ? player : playerTransform;
+
+            if (playerTarget != null)
+            {
+                Vector3 cropWorldPosition =
+                    fieldTilemap.GetCellCenterWorld(kv.Key);
+
+                float sqrDistance =
+                    (playerTarget.position - cropWorldPosition).sqrMagnitude;
+
+                if (sqrDistance > cropTooltipRange * cropTooltipRange)
+                    continue;
+            }
+
+
+            // 성장 중이고 물을 준 밭 작물만 표시
+            if (tile == null ||
+                tile.cropData == null ||
+                tile.cropOverlayObject == null ||
+                tile.cropData.isTree ||
+                !tile.isWatered ||
+                tile.cropData.stages == null ||
+                tile.cropData.stages.Count == 0 ||
+                tile.currentStage >= tile.cropData.stages.Count - 1)
             {
                 continue;
             }
 
-            if (tile.cropData.isTree)
-                continue;
+            SpriteRenderer renderer =
+                tile.cropOverlayObject.GetComponent<SpriteRenderer>();
 
-            if (!tile.isWatered)
-                continue;
-
-            int finalStage =
-                tile.cropData.stages.Count - 1;
-
-            if (
-                tile.currentStage >=
-                finalStage
-            )
+            if (renderer == null ||
+                !renderer.enabled ||
+                renderer.sprite == null ||
+                !renderer.gameObject.activeInHierarchy)
             {
                 continue;
             }
 
-            Vector3 cropWorldPos =
-                tile.cropOverlayObject != null
-                ? tile.cropOverlayObject
-                    .transform.position
-                : overlayTilemap.CellToWorld(pos) +
-                  new Vector3(
-                      0.5f,
-                      0.5f,
-                      0f
-                  );
+            // 마우스가 작물 스프라이트 영역 안에 있는지 확인
+            Bounds bounds = renderer.bounds;
 
-            float sqr =
-                (
-                    target.position -
-                    cropWorldPos
-                ).sqrMagnitude;
-
-            if (sqr <= bestSqr)
+            if (!bounds.Contains(
+                new Vector3(
+                    mouseWorld.x,
+                    mouseWorld.y,
+                    bounds.center.z)))
             {
-                bestSqr =
-                    sqr;
-
-                nearestTile =
-                    tile;
-
-                nearestPos =
-                    pos;
+                continue;
             }
+
+            float distance =
+                ((Vector2)bounds.center - mouseWorld).sqrMagnitude;
+
+            // 겹친 작물은 앞쪽에 렌더링되는 작물 우선
+            if (selectedRenderer != null)
+            {
+                int layerCompare =
+                    renderer.sortingLayerID == selectedRenderer.sortingLayerID
+                        ? 0
+                        : SortingLayer.GetLayerValueFromID(renderer.sortingLayerID)
+                            .CompareTo(
+                                SortingLayer.GetLayerValueFromID(
+                                    selectedRenderer.sortingLayerID));
+
+                if (layerCompare < 0)
+                    continue;
+
+                if (layerCompare == 0)
+                {
+                    if (renderer.sortingOrder <
+                        selectedRenderer.sortingOrder)
+                    {
+                        continue;
+                    }
+
+                    if (renderer.sortingOrder ==
+                        selectedRenderer.sortingOrder)
+                    {
+                        // 동일 정렬 순서에서는 아래쪽 작물 우선
+                        if (renderer.transform.position.y >
+                            selectedRenderer.transform.position.y + 0.001f)
+                        {
+                            continue;
+                        }
+
+                        if (Mathf.Abs(
+                            renderer.transform.position.y -
+                            selectedRenderer.transform.position.y) <= 0.001f &&
+                            distance >= selectedDistance)
+                        {
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            selectedTile = tile;
+            selectedPos = kv.Key;
+            selectedRenderer = renderer;
+            selectedDistance = distance;
         }
 
-        if (nearestTile == null)
+        // 마우스가 작물에서 벗어나면 패널 숨김
+        if (selectedTile == null)
         {
-            if (
-                currentNearbyCropPos
-                    .HasValue
-            )
-            {
-                currentNearbyCropPos =
-                    null;
-
-                InventoryTooltipManager
-                    .Instance
-                    .HideWorld();
-            }
-
+            ClearGrowingCropTooltip();
             return;
         }
 
-        currentNearbyCropPos =
-            nearestPos;
+        currentNearbyCropPos = selectedPos;
 
-        string tooltip =
-            BuildGrowingCropTooltipText(
-                nearestTile
-            );
-
-        Vector3 tooltipWorldPos =
-            nearestTile.cropOverlayObject != null
-            ? nearestTile.cropOverlayObject
-                .transform.position +
-              cropTooltipOffset
-            : overlayTilemap.CellToWorld(
-                  nearestPos
-              ) +
-              new Vector3(
-                  0.5f,
-                  0.5f,
-                  0f
-              ) +
-              cropTooltipOffset;
-
-        InventoryTooltipManager
-            .Instance
-            .ShowWorld(
-                tooltip,
-                tooltipWorldPos
-            );
+        tooltipManager.ShowWorld(
+            BuildGrowingCropTooltipText(selectedTile),
+            selectedTile.cropOverlayObject.transform.position +
+            cropTooltipOffset
+        );
     }
+
+    // 호버 대상이 없어졌을 때 성장 패널 숨김
+    private void ClearGrowingCropTooltip()
+    {
+        if (!currentNearbyCropPos.HasValue)
+            return;
+
+        currentNearbyCropPos = null;
+
+        InventoryTooltipManager.Instance?.HideWorld();
+    }
+
 
     private string BuildGrowingCropTooltipText(
         CropTile tile

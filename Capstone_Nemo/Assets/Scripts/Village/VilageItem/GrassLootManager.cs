@@ -646,7 +646,7 @@ public class GrassLootManager : MonoBehaviour
 
         {
 
-            acquireNoticeUI.ShowAcquire(displayName, sprite);
+            acquireNoticeUI.ShowAcquire(displayName, sprite, amount);
 
         }
 

@@ -1,3 +1,4 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,6 +22,8 @@ public class NpcManager : MonoBehaviour
 
     private bool wasPlayerNear = false;
     private bool isActionMenuActive = false;
+    private bool waitingForOptionClose = false;
+    private bool optionPanelWasOpened = false;
 
     void Start()
     {
@@ -44,25 +47,45 @@ public class NpcManager : MonoBehaviour
         bool isNear = trigger.isPlayerNearNpc;
 
         // NPC 범위에 처음 들어왔을 때
-        if (isNear && !wasPlayerNear && !IsShopOpen() && !IsDialogueOpen())
+        if (isNear && !wasPlayerNear &&
+            !IsShopOpen() && !IsDialogueOpen())
         {
             OpenActionMenu();
+        }
+
+        // 선택한 상점/대화창이 열린 뒤 닫히면 메뉴 복구
+        if (waitingForOptionClose)
+        {
+            if (IsShopOpen() || IsDialogueOpen())
+            {
+                optionPanelWasOpened = true;
+            }
+            else if (optionPanelWasOpened)
+            {
+                waitingForOptionClose = false;
+                optionPanelWasOpened = false;
+
+                if (isNear)
+                    OpenActionMenu();
+            }
         }
 
         // NPC 범위에서 벗어났을 때
         if (!isNear && wasPlayerNear)
         {
+            waitingForOptionClose = false;
+            optionPanelWasOpened = false;
             CloseActionMenu();
         }
 
         wasPlayerNear = isNear;
 
-        // 메뉴의 논리 상태와 실제 화면 표시를 분리한다.
-        // 방앗간 튜토리얼 중에는 actionPanel만 숨기고 입력/액션은 그대로 유지한다.
+        // 튜토리얼 중에는 패널만 숨기고 입력 유지
         RefreshActionPanelVisibility();
 
-        // actionPanel이 화면에 보이지 않아도 논리적으로 메뉴가 열려 있으면 입력 처리
-        if (IsActionMenuOpen() && !IsShopOpen() && !IsDialogueOpen())
+        // 패널이 숨겨져 있어도 메뉴가 열려 있으면 입력 처리
+        if (IsActionMenuOpen() &&
+            !IsShopOpen() && !IsDialogueOpen())
         {
             HandleMenuInput();
         }
@@ -122,46 +145,74 @@ public class NpcManager : MonoBehaviour
 
     void OpenShopByMenu()
     {
-        if (trigger != null && !trigger.isPlayerNearNpc) return;
+        if (trigger != null && !trigger.isPlayerNearNpc)
+            return;
 
         CloseActionMenu();
+
+        waitingForOptionClose = true;
+        optionPanelWasOpened = false;
 
         if (shopManager != null)
         {
             shopManager.LoadShopData(dataPath);
             shopManager.OpenShop();
+
+            optionPanelWasOpened = IsShopOpen();
+        }
+        else
+        {
+            waitingForOptionClose = false;
         }
     }
 
     void StartTalk()
     {
-        if (trigger != null && !trigger.isPlayerNearNpc) return;
-        if (npcInteractable == null) return;
-        if (NPCDialogueUIManager.Instance == null) return;
+        if (trigger != null && !trigger.isPlayerNearNpc)
+            return;
+
+        if (npcInteractable == null)
+            return;
+
+        if (NPCDialogueUIManager.Instance == null)
+            return;
 
         CloseActionMenu();
+
+        waitingForOptionClose = true;
+        optionPanelWasOpened = false;
+
         npcInteractable.StartDialogueExternally();
+
+        optionPanelWasOpened = IsDialogueOpen();
     }
 
     void OnClickShop()
     {
-        if (trigger != null && !trigger.isPlayerNearNpc) return;
-        if (IsShopOpen()) return;
+        if (trigger != null && !trigger.isPlayerNearNpc)
+            return;
+
+        if (IsShopOpen())
+            return;
 
         OpenShopByMenu();
     }
 
     void OnClickTalk()
     {
-        if (trigger != null && !trigger.isPlayerNearNpc) return;
-        if (IsShopOpen()) return;
+        if (trigger != null && !trigger.isPlayerNearNpc)
+            return;
+
+        if (IsShopOpen())
+            return;
 
         StartTalk();
     }
 
     bool IsDialogueOpen()
     {
-        return NPCDialogueUIManager.Instance != null && NPCDialogueUIManager.Instance.IsOpen();
+        return NPCDialogueUIManager.Instance != null &&
+               NPCDialogueUIManager.Instance.IsOpen();
     }
 
     public bool IsShopOpen()
