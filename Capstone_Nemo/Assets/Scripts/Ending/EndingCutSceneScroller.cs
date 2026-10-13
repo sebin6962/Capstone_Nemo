@@ -146,6 +146,18 @@ public class EndingCutSceneScroller : MonoBehaviour
         );
     }
 
+    private void Awake()
+    {
+        // 엔딩씬에 진입하는 첫 프레임부터 검은 화면 적용
+        if (blackImage != null && fadeInFromBlackOnStart)
+        {
+            Color color = blackImage.color;
+            color.a = 1f;
+            blackImage.color = color;
+            blackImage.gameObject.SetActive(true);
+        }
+    }
+
     private void Start()
     {
         InitializeSecondCutscene();
@@ -209,9 +221,22 @@ public class EndingCutSceneScroller : MonoBehaviour
 
     private IEnumerator SceneStartSequenceRoutine()
     {
-        // 1. EndingScene 로딩 후 검은 화면에서 공개
-        if (fadeInFromBlackOnStart && blackImage != null)
+        bool hasOpeningPanel = openingCutscenePanel != null;
+        bool hasBlackCover =
+            fadeInFromBlackOnStart && blackImage != null;
+
+        // 검은 화면 뒤에서 첫 번째 컷신 준비
+        if (hasOpeningPanel && hasBlackCover)
         {
+            openingCutscenePanel.SetActive(true);
+
+            if (openingCutsceneCanvasGroup != null)
+                openingCutsceneCanvasGroup.alpha = 0f;
+        }
+
+        if (hasBlackCover)
+        {
+            // 기존 검은 화면 유지 시간
             if (startBlackStaySeconds > 0f)
             {
                 yield return new WaitForSecondsRealtime(
@@ -219,19 +244,41 @@ public class EndingCutSceneScroller : MonoBehaviour
                 );
             }
 
+            // 검은 화면을 유지한 채 첫 번째 컷신 표시 준비
+            if (hasOpeningPanel &&
+                openingCutsceneCanvasGroup != null)
+            {
+                yield return StartCoroutine(
+                    FadeCanvasGroup(
+                        openingCutsceneCanvasGroup,
+                        0f,
+                        1f,
+                        openingFadeInDuration
+                    )
+                );
+            }
+
+            // 첫 번째 컷신 준비 후 검은 화면 제거
             yield return StartCoroutine(
-                FadeBlackImage(1f, 0f, startBlackFadeSeconds)
+                FadeBlackImage(
+                    1f,
+                    0f,
+                    startBlackFadeSeconds
+                )
             );
 
             blackImage.gameObject.SetActive(false);
         }
 
-        // 2. 컷씬 패널 한 장 표시
-        if (openingCutscenePanel != null)
+        // 첫 번째 컷신 재생
+        if (hasOpeningPanel)
         {
-            openingCutscenePanel.SetActive(true);
+            if (!openingCutscenePanel.activeSelf)
+                openingCutscenePanel.SetActive(true);
 
-            if (openingCutsceneCanvasGroup != null)
+            // 시작 검은 화면을 사용하지 않는 경우
+            if (!hasBlackCover &&
+                openingCutsceneCanvasGroup != null)
             {
                 yield return StartCoroutine(
                     FadeCanvasGroup(
@@ -265,7 +312,7 @@ public class EndingCutSceneScroller : MonoBehaviour
             openingCutscenePanel.SetActive(false);
         }
 
-        // 3. 크레딧 시작
+        // 기존 크레딧 및 파티클 연출 유지
         if (creditsRoot != null)
             creditsRoot.SetActive(true);
 

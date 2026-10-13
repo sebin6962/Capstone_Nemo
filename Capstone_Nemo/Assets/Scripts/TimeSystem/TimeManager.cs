@@ -84,7 +84,7 @@ public class TimeManager : MonoBehaviour
             name == "SaveSelectScene" ||
             name == "StatementScene";
 
-        isTimeFlow = !shouldPause;
+        isTimeFlow = !shouldPause && name != "EndingScene";
 
         WireDayEndPanelInScene();
     }
@@ -693,7 +693,7 @@ public class TimeManager : MonoBehaviour
             name == "StatementScene";
 
         isTimeFlow =
-            !nonPlayScene;
+            !nonPlayScene && name != "EndingScene";
 
         if (nonPlayScene)
         {

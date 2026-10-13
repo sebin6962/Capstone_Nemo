@@ -130,6 +130,11 @@ public class TreeLevelUnlocker : MonoBehaviour
     [SerializeField] private GameObject finalUnlockSparkleRoot;
 
 
+    [Header("최종 해금 완료 알림")]
+    [SerializeField] private TreeEndingNoticeUI finalUnlockNotice;
+    [SerializeField, Min(0f)] private float finalUnlockNoticeDelay = 1.2f;
+    private Coroutine finalUnlockNoticeWait;
+
     [Header("엔딩 카메라 준비 및 대기")]
     [SerializeField, Min(0f)]
     private float endingCameraReadyDelay = 0.3f;
@@ -787,6 +792,7 @@ public class TreeLevelUnlocker : MonoBehaviour
     {
         if (isPlayingUnlockSequence) yield break;
         isPlayingUnlockSequence = true;
+        SetTreeSequenceTimePaused(true);
 
         StopAndClearTreeUnlockVFX();
 
@@ -794,6 +800,7 @@ public class TreeLevelUnlocker : MonoBehaviour
         {
             Debug.LogWarning("[TreeLevelUnlocker] Camera refs missing.");
             isPlayingUnlockSequence = false;
+            SetTreeSequenceTimePaused(false);
             yield break;
         }
 
@@ -870,6 +877,53 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         isPlayingUnlockSequence = false;
         RefreshFinalUnlockSparkles();
+        // 카메라·HUD가 돌아온 뒤에만 게임 시간을 다시 흐르게 한다.
+        SetTreeSequenceTimePaused(false);
+
+        // 기존과 같은 해금 연출 후, 마지막 해금에서만 알림 표시
+        bool isFinalLevel = levelButtons != null &&
+                            levelButtons.Length > 0 &&
+                            levelIdx == levelButtons.Length - 1 &&
+                            currentUnlockedLevel >= levelButtons.Length;
+        if (isFinalLevel && finalUnlockNotice != null)
+        {
+            if (finalUnlockNoticeWait != null)
+                StopCoroutine(finalUnlockNoticeWait);
+            finalUnlockNoticeWait = StartCoroutine(WaitForFinalUnlockPanelClose());
+        }
+    }
+
+    // 최종 해금 연출 복귀 이후 나무 해금 패널이 닫힐 때까지 대기.
+    // 연출 도중 패널을 잠시 숨기는 구간은 이미 지난 시점이므로 오작동하지 않는다.
+    private IEnumerator WaitForFinalUnlockPanelClose()
+    {
+        GameObject panel = unlockPanelRoot != null
+            ? unlockPanelRoot
+            : (unlockUIPanelGroup != null ? unlockUIPanelGroup.gameObject : null);
+
+        if (panel == null)
+        {
+            Debug.LogWarning("[TreeLevelUnlocker] 최종 해금 알림: Unlock Panel Root를 연결해야 닫힘을 감지할 수 있습니다.");
+            finalUnlockNoticeWait = null;
+            yield break;
+        }
+
+        // UI 버튼이 패널을 SetActive(false)로 닫으면 다음 프레임에 감지한다.
+        yield return new WaitUntil(() => panel == null || !panel.activeInHierarchy);
+        if (panel == null)
+        {
+            finalUnlockNoticeWait = null;
+            yield break;
+        }
+
+        yield return new WaitForSeconds(finalUnlockNoticeDelay);
+
+        // 대기 중 패널을 다시 열거나 엔딩이 시작되면 알림을 띄우지 않는다.
+        if (!panel.activeInHierarchy && !isStartingEnding && !isEndingSceneTransitioning
+            && finalUnlockNotice != null)
+            finalUnlockNotice.ShowNotice();
+
+        finalUnlockNoticeWait = null;
     }
 
     private IEnumerator PlayTreeAuroraSequence()
@@ -1023,6 +1077,10 @@ public class TreeLevelUnlocker : MonoBehaviour
     private void OnDisable()
     {
         StopAndClearTreeUnlockVFX();
+        // 해금 도중 오브젝트가 꺼진 경우에만 시간 복구.
+        // 엔딩 진입 중에는 엔딩 씬이 시간을 계속 정지시킨다.
+        if (isPlayingUnlockSequence && !isStartingEnding && !isEndingSceneTransitioning)
+            SetTreeSequenceTimePaused(false);
     }
 
     // 기존 PlayUnlockEffect를 "기다릴 수 있는" 루틴으로 감쌈
@@ -1220,9 +1278,17 @@ public class TreeLevelUnlocker : MonoBehaviour
     }
 
 
+    // Time.timeScale은 변경하지 않아 연출/파티클/카메라 코루틴에 영향이 없다.
+    private void SetTreeSequenceTimePaused(bool paused)
+    {
+        if (TimeManager.Instance != null)
+            TimeManager.Instance.SetTimeFlow(!paused);
+    }
+
     private IEnumerator EndingInteractionRoutine()
     {
         isStartingEnding = true;
+        SetTreeSequenceTimePaused(true);
         SetUnlockUIInteractable(false);
         SetUnlockUIVisible(false);
 

@@ -33,6 +33,9 @@ public class TreeInteract : MonoBehaviour
     [SerializeField, Min(1f)]
     private float shakeCycles = 4f;
 
+    [Header("첫 번째 Altar 흔들림 후 말풍선")]
+    [SerializeField] private AltarSpeechBubble firstShakeBubble;
+
     private int endingInteractionCount;
     private bool endingInteractionBusy;
     private bool endingInteractionCommitted;
@@ -47,6 +50,39 @@ public class TreeInteract : MonoBehaviour
             altarOriginalRotation = altarTransform.localRotation;
     }
 
+
+    public bool CanShowAltarOutline
+    {
+        get
+        {
+            if (!isActiveAndEnabled ||
+                endingInteractionBusy ||
+                endingInteractionCommitted)
+            {
+                return false;
+            }
+
+            TreeLevelUnlocker unlocker =
+                TreeLevelUnlocker.Instance;
+
+            if (unlocker != null &&
+                unlocker.IsPlayingUnlockSequence)
+            {
+                return false;
+            }
+
+            if (unlocker != null &&
+                unlocker.CanInteractForEnding)
+            {
+                return popupUI == null ||
+                       !popupUI.activeSelf;
+            }
+
+            return true;
+        }
+    }
+
+
     private void Update()
     {
         if (!isPlayerNear || !Input.GetKeyDown(KeyCode.E))
@@ -55,7 +91,8 @@ public class TreeInteract : MonoBehaviour
         if (endingInteractionBusy || endingInteractionCommitted)
             return;
 
-        TreeLevelUnlocker unlocker = TreeLevelUnlocker.Instance;
+        TreeLevelUnlocker unlocker =
+            TreeLevelUnlocker.Instance;
 
         if (unlocker != null && unlocker.IsPlayingUnlockSequence)
             return;
@@ -65,13 +102,8 @@ public class TreeInteract : MonoBehaviour
 
         if (canStartEnding)
         {
-            // After the final unlock, the unlock panel remains open.
-            // The first E should close that panel, not count as an altar interaction.
-            if (popupUI != null && popupUI.activeSelf)
-            {
-                ClosePopup();
-                return;
-            }
+            if (popupUI != null)
+                popupUI.SetActive(false);
 
             if (endingInteractionCount < 2)
             {
@@ -79,10 +111,11 @@ public class TreeInteract : MonoBehaviour
                     ? firstShakeAngle
                     : secondShakeAngle;
 
+                bool isFirstShake = endingInteractionCount == 0;
                 endingInteractionCount++;
 
                 shakeRoutine = StartCoroutine(
-                    ShakeAltarAndCooldown(angle)
+                    ShakeAltarAndCooldown(angle, isFirstShake)
                 );
             }
             else
@@ -97,13 +130,14 @@ public class TreeInteract : MonoBehaviour
         TogglePopup();
     }
 
-    private IEnumerator ShakeAltarAndCooldown(float angle)
+    private IEnumerator ShakeAltarAndCooldown(float angle, bool showFirstBubble)
     {
         endingInteractionBusy = true;
 
         if (altarTransform != null)
         {
-            Quaternion originalRotation = altarTransform.localRotation;
+            Quaternion originalRotation =
+                altarTransform.localRotation;
 
             float elapsed = 0f;
 
@@ -111,15 +145,20 @@ public class TreeInteract : MonoBehaviour
             {
                 elapsed += Time.deltaTime;
 
-                float t = Mathf.Clamp01(elapsed / shakeDuration);
+                float t = Mathf.Clamp01(
+                    elapsed / shakeDuration
+                );
+
                 float damp = 1f - t;
 
                 float offset =
-                    Mathf.Sin(t * shakeCycles * Mathf.PI * 2f)
-                    * angle * damp;
+                    Mathf.Sin(
+                        t * shakeCycles * Mathf.PI * 2f
+                    ) * angle * damp;
 
                 altarTransform.localRotation =
-                    originalRotation * Quaternion.Euler(0f, 0f, offset);
+                    originalRotation *
+                    Quaternion.Euler(0f, 0f, offset);
 
                 yield return null;
             }
@@ -133,9 +172,14 @@ public class TreeInteract : MonoBehaviour
                 this
             );
         }
+        // 첫 번째 흔들림에만 말풍선을 표시합니다. 완료까지 추가 E 입력 차단.
+        if (showFirstBubble && firstShakeBubble != null)
+            yield return firstShakeBubble.PlayRoutine();
 
         if (interactionCooldown > 0f)
-            yield return new WaitForSeconds(interactionCooldown);
+            yield return new WaitForSeconds(
+                interactionCooldown
+            );
 
         endingInteractionBusy = false;
         shakeRoutine = null;
@@ -183,7 +227,8 @@ public class TreeInteract : MonoBehaviour
         panelOpenEffectRoot.SetActive(true);
 
         ParticleSystem[] particles =
-            panelOpenEffectRoot.GetComponentsInChildren<ParticleSystem>(true);
+            panelOpenEffectRoot
+            .GetComponentsInChildren<ParticleSystem>(true);
 
         foreach (ParticleSystem particle in particles)
         {
