@@ -118,9 +118,98 @@ public class TreeLevelUnlocker : MonoBehaviour
 
     private bool isEndingSceneTransitioning;
 
+    [Header("최종 해금 후 엔딩 상호작용")]
+    [SerializeField] private CanvasGroup endingWhiteFadeGroup;
+    [SerializeField, Min(0f)] private float endingWhiteFadeInSeconds = 1f;
+    [SerializeField, Min(0f)] private float endingWhiteHoldSeconds = 0.15f;
+    [SerializeField, Min(0f)] private float endingWhiteFadeOutSeconds = 1f;
+    private bool isStartingEnding;
+
+    [Header("최종 해금 후 계수나무 빛 파티클")]
+    [Tooltip("최종 해금 후 계속 재생할 별도의 파티클 루트. 기존 Tree Unlock VFX Root와 다른 오브젝트를 지정하세요.")]
+    [SerializeField] private GameObject finalUnlockSparkleRoot;
+
+
+    [Header("엔딩 카메라 준비 및 대기")]
+    [SerializeField, Min(0f)]
+    private float endingCameraReadyDelay = 0.3f;
+
+    [SerializeField, Min(0f)]
+    private float endingBeforeTimelineDelay = 0.7f;
+
+    [Header("Ending VFX startup protection")]
+    [Tooltip("Assign ONLY ending Timeline particles here (including SpiralWrap emitter). Do not assign persistent final-unlock sparkles.")]
+    [SerializeField] private ParticleSystem[] endingTimelineParticles;
+    private bool[] endingEmissionWasEnabled;
+
+    private void StopEndingParticles(bool disableEmission)
+    {
+        if (endingTimelineParticles == null) return;
+        if (endingEmissionWasEnabled == null || endingEmissionWasEnabled.Length != endingTimelineParticles.Length)
+            endingEmissionWasEnabled = new bool[endingTimelineParticles.Length];
+        for (int i = 0; i < endingTimelineParticles.Length; i++)
+        {
+            ParticleSystem p = endingTimelineParticles[i];
+            if (p == null) continue;
+            if (disableEmission)
+            {
+                var emission = p.emission;
+                endingEmissionWasEnabled[i] = emission.enabled;
+                emission.enabled = false;
+            }
+            p.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+    }
+
+    private void RestoreEndingParticleEmission()
+    {
+        if (endingTimelineParticles == null || endingEmissionWasEnabled == null) return;
+        for (int i = 0; i < endingTimelineParticles.Length && i < endingEmissionWasEnabled.Length; i++)
+        {
+            ParticleSystem p = endingTimelineParticles[i];
+            if (p == null) continue;
+            var emission = p.emission;
+            emission.enabled = endingEmissionWasEnabled[i];
+        }
+    }
+
+    [Header("Cinemachine ending starting shot")]
+    [Tooltip("Optional: set a camera-shot pose marker matching the first CM_Ending_Rise shot. Timeline time 0 is still evaluated under white.")]
+    [SerializeField] private Transform endingRiseStartPose;
+
+    private void RefreshFinalUnlockSparkles()
+    {
+        if (finalUnlockSparkleRoot == null) return;
+
+        bool shouldPlay = levelButtons != null && levelButtons.Length > 0 &&
+                          currentUnlockedLevel >= levelButtons.Length;
+
+        if (finalUnlockSparkleRoot.activeSelf != shouldPlay)
+            finalUnlockSparkleRoot.SetActive(shouldPlay);
+
+        var particles = finalUnlockSparkleRoot.GetComponentsInChildren<ParticleSystem>(true);
+        foreach (var ps in particles)
+        {
+            if (ps == null) continue;
+            if (shouldPlay && ps.gameObject.activeInHierarchy && !ps.isPlaying)
+                ps.Play(true);
+            else if (!shouldPlay && ps.isPlaying)
+                ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+    }
+
+
+
+    public bool CanInteractForEnding =>
+        !isPlayingUnlockSequence && !isStartingEnding && !isEndingSceneTransitioning &&
+        levelButtons != null && levelButtons.Length > 0 &&
+        currentUnlockedLevel >= levelButtons.Length;
+
+
     void Awake()
     {
         Instance = this;
+        StopEndingParticles(true);
 
         // 서버 선택값으로 경로 보장
         var serverName = PlayerPrefs.GetString("SelectedSave", string.Empty);
@@ -197,6 +286,14 @@ public class TreeLevelUnlocker : MonoBehaviour
     {
         // 컷신 시작 전에는 이전 재생 흔적이 남지 않도록 완전히 정지한다.
         StopAndClearTreeUnlockVFX();
+        StopEndingParticles(false);
+        if (endingWhiteFadeGroup != null)
+        {
+            endingWhiteFadeGroup.alpha = 0f;
+            endingWhiteFadeGroup.blocksRaycasts = false;
+            endingWhiteFadeGroup.interactable = false;
+            endingWhiteFadeGroup.gameObject.SetActive(false);
+        }
 
         // 카메라 원위치 저장
         if (targetCamera != null)
@@ -218,6 +315,7 @@ public class TreeLevelUnlocker : MonoBehaviour
         ApplyPanelSprite();
         // 맵 스프라이트 동기화
         ApplyMapSprite();
+        RefreshFinalUnlockSparkles();
 
         // 4) 버튼들에 툴팁 트리거 연결
         if (levelButtons != null)
@@ -653,6 +751,7 @@ public class TreeLevelUnlocker : MonoBehaviour
         SaveUnlockData();
         UpdateLevelButtons();
         ApplyPanelSprite();
+        RefreshFinalUnlockSparkles();
         //ApplyMapSprite();
     }
 
@@ -704,6 +803,9 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         // 0) UI 클릭 막기
         SetUnlockUIInteractable(false);
+        NPCDialogueUIManager hudManager = NPCDialogueUIManager.Instance;
+        if (hudManager != null && hudManager.isActiveAndEnabled)
+            yield return hudManager.HideHudForTreeUnlock();
 
         // 1) 해금 이펙트 재생 & 끝날 때까지 대기
         yield return PlayUnlockEffectRoutine(levelIdx);
@@ -741,22 +843,7 @@ public class TreeLevelUnlocker : MonoBehaviour
         // 기존 해금 파티클 잔상 정리
         StopAndClearTreeUnlockVFX();
 
-        bool isFinalLevel = levelIdx == levelButtons.Length - 1;
-
-        if (isFinalLevel)
-        {
-            // 꺼두었던 기존 Virtual Camera와 Cinemachine Brain 활성화
-            SetCameraControllersEnabled(true);
-
-            // CameraPanTo(clickCamPos)는 실행하지 않음
-            PlayEndingTreeTimeline();
-
-            isPlayingUnlockSequence = false;
-            yield break;
-        }
-
-        // 아래부터는 마지막 단계가 아닐 때만 실행된다.
-
+        // 마지막 해금도 일반 해금처럼 카메라를 복귀시킨다.
         // 8) 카메라 end → 해금 버튼을 눌렀던 기존 위치로 복귀
         yield return CameraPanTo(clickCamPos, cameraReturnDuration);
 
@@ -776,8 +863,13 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         // 13) UI 클릭 다시 허용
         SetUnlockUIInteractable(true);
+        if (hudManager != null && hudManager.isActiveAndEnabled)
+            yield return hudManager.RestoreHudAfterTreeUnlock();
+
+        // Keep the unlock panel open after the final level too.
 
         isPlayingUnlockSequence = false;
+        RefreshFinalUnlockSparkles();
     }
 
     private IEnumerator PlayTreeAuroraSequence()
@@ -1115,6 +1207,116 @@ public class TreeLevelUnlocker : MonoBehaviour
         }
     }
 
+    /// <summary>최종 해금 후 나무 앞에서 E키로 엔딩 시작.</summary>
+    public void StartEndingByInteraction()
+    {
+        if (!CanInteractForEnding) return;
+        if (endingTreeTimeline == null)
+        {
+            Debug.LogError("[TreeLevelUnlocker] 엔딩 Timeline이 연결되지 않았습니다.");
+            return;
+        }
+        StartCoroutine(EndingInteractionRoutine());
+    }
+
+
+    private IEnumerator EndingInteractionRoutine()
+    {
+        isStartingEnding = true;
+        SetUnlockUIInteractable(false);
+        SetUnlockUIVisible(false);
+
+        // Hide scene HUD using the same slide animation as NPC dialogue.
+        // Do not restore it during the ending; scene unload resets this state.
+        NPCDialogueUIManager endingHudManager = NPCDialogueUIManager.Instance;
+        if (endingHudManager != null && endingHudManager.isActiveAndEnabled)
+            yield return endingHudManager.HideHudForTreeUnlock();
+
+        // 1. 흰색 페이드 인
+        if (endingWhiteFadeGroup != null)
+        {
+            endingWhiteFadeGroup.gameObject.SetActive(true);
+            endingWhiteFadeGroup.blocksRaycasts = true;
+
+            yield return FadeEndingWhite(
+                0f, 1f, endingWhiteFadeInSeconds
+            );
+
+            if (endingWhiteHoldSeconds > 0f)
+                yield return new WaitForSecondsRealtime(
+                    endingWhiteHoldSeconds
+                );
+        }
+
+        // 2. 흰 화면에서 Timeline 첫 프레임만 평가
+        // 실제 Timeline 시간은 진행시키지 않음
+        if (endingTreeTimeline != null)
+        {
+            endingTreeTimeline.timeUpdateMode =
+                DirectorUpdateMode.UnscaledGameTime;
+
+            endingTreeTimeline.time = 0;
+            endingTreeTimeline.Evaluate();
+            endingTreeTimeline.Pause();
+            if (targetCamera != null && endingRiseStartPose != null)
+            {
+                targetCamera.transform.SetPositionAndRotation(
+                    endingRiseStartPose.position, endingRiseStartPose.rotation);
+            }
+            // Evaluating time zero can activate Control Tracks. Keep particles silent
+            // until the actual Timeline playback begins.
+            StopEndingParticles(false);
+        }
+
+        // 3. 카메라가 첫 구도로 전환될 시간 확보
+        yield return null;
+
+        if (endingCameraReadyDelay > 0f)
+            yield return new WaitForSecondsRealtime(
+                endingCameraReadyDelay
+            );
+
+        // 4. 흰 화면 페이드 아웃
+        if (endingWhiteFadeGroup != null)
+        {
+            yield return FadeEndingWhite(
+                1f, 0f, endingWhiteFadeOutSeconds
+            );
+
+            endingWhiteFadeGroup.blocksRaycasts = false;
+            endingWhiteFadeGroup.gameObject.SetActive(false);
+        }
+
+        // 5. 첫 구도를 보여주며 잠시 대기
+        if (endingBeforeTimelineDelay > 0f)
+            yield return new WaitForSecondsRealtime(
+                endingBeforeTimelineDelay
+            );
+
+        // 6. 실제 엔딩 Timeline 재생
+        PlayEndingTreeTimeline();
+    }
+
+
+    private IEnumerator FadeEndingWhite(float from, float to, float seconds)
+    {
+        if (endingWhiteFadeGroup == null) yield break;
+        endingWhiteFadeGroup.alpha = from;
+        if (seconds <= 0f)
+        {
+            endingWhiteFadeGroup.alpha = to;
+            yield break;
+        }
+        float elapsed = 0f;
+        while (elapsed < seconds)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            endingWhiteFadeGroup.alpha = Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / seconds));
+            yield return null;
+        }
+        endingWhiteFadeGroup.alpha = to;
+    }
+
     private void PlayEndingTreeTimeline()
     {
         if (endingTimelinePlayed)
@@ -1130,6 +1332,7 @@ public class TreeLevelUnlocker : MonoBehaviour
 
         endingTreeTimeline.time = 0;
         endingTreeTimeline.Evaluate();
+        RestoreEndingParticleEmission();
         endingTreeTimeline.Play();
     }
 

@@ -47,6 +47,28 @@ public partial class NPCDialogueUIManager
     public bool IsDialogueTransitioning =>
         dialogueTransitionOpening || dialogueTransitionClosing;
 
+    // Reuse the existing dialogue HUD positions/slide timing for tree unlocks.
+    // Call these on the persistent manager; the scene binder supplies the targets.
+    private bool treeUnlockHudHidden;
+
+    public IEnumerator HideHudForTreeUnlock()
+    {
+        if (treeUnlockHudHidden || dialogueSessionActive || IsDialogueTransitioning)
+            yield break;
+        CaptureDialogueHud();
+        treeUnlockHudHidden = true;
+        yield return SlideDialogueHud(true);
+    }
+
+    public IEnumerator RestoreHudAfterTreeUnlock()
+    {
+        if (!treeUnlockHudHidden)
+            yield break;
+        yield return SlideDialogueHud(false);
+        RestoreDialogueHud();
+        treeUnlockHudHidden = false;
+    }
+
     private void BeginDialogueWithHud(Action onPortraitFinished)
     {
         dialogueSessionActive = true;
@@ -231,6 +253,12 @@ public partial class NPCDialogueUIManager
         hudSnapshots.RemoveAll(
             s => s == null || s.root == null
         );
+
+        // TreeScene has unloaded: forget the hidden HUD session so that a
+        // newly loaded scene (including IntroScene or a fresh TreeScene)
+        // starts with normal HUD behavior. Do not slide the old scene HUD in.
+        if (treeUnlockHudHidden && hudSnapshots.Count == 0)
+            treeUnlockHudHidden = false;
     }
 
     private Vector2 GetDialogueHudHiddenPosition(HudSnapshot s)
@@ -410,6 +438,7 @@ public partial class NPCDialogueUIManager
         isTutorialDialogueMode = false;
         CloseDialogueCore();
         RestoreDialogueHud();
+        treeUnlockHudHidden = false;
         dialogueSessionActive = false;
         dialogueTransitionOpening = false;
         dialogueTransitionClosing = false;
