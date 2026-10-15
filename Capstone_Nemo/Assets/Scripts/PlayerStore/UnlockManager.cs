@@ -349,9 +349,22 @@ public class UnlockManager : MonoBehaviour
 
         foreach (int lv in save.pendingLevels.ToList())
         {
+            if (lv == 4 || lv == 7)
+            {
+                string key = PPK($"FeaturePopup_Pending_{lv}");
+
+                if (PlayerPrefs.GetInt(
+                    PPK($"FeaturePopup_Shown_{lv}"), 0) == 0)
+                {
+                    PlayerPrefs.SetInt(key, 1);
+                }
+            }
+
             save.appliedLevels.Add(lv);
             save.pendingLevels.Remove(lv);
         }
+
+        PlayerPrefs.Save();
         RebuildUnlockedFromApplied();           // 항상 한 번에 재계산
         RefreshMakerActivationInScene();
         //SaveState();
@@ -488,6 +501,39 @@ public class UnlockManager : MonoBehaviour
         var pers = string.Join(",", LoadRevealLevels());
         var shown = PlayerPrefs.GetInt(PPK(PP_RevealShown), 0);
         return $"pending=[{pend}] lastApplied=[{last}] persisted=[{pers}] shownToday={_revealShownToday} PP_Shown={shown}";
+    }
+
+    public bool HasPendingFeaturePopup(int level)
+    {
+        if (level != 4 && level != 7)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_serverName))
+            return false;
+
+        string pendingKey = PPK($"FeaturePopup_Pending_{level}");
+        string shownKey = PPK($"FeaturePopup_Shown_{level}");
+
+        return PlayerPrefs.GetInt(pendingKey, 0) == 1
+            && PlayerPrefs.GetInt(shownKey, 0) == 0
+            && save.appliedLevels.Contains(level);
+    }
+
+    public void MarkFeaturePopupShown(int level)
+    {
+        if (level != 4 && level != 7)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_serverName))
+            return;
+
+        PlayerPrefs.SetInt(
+            PPK($"FeaturePopup_Shown_{level}"), 1);
+
+        PlayerPrefs.DeleteKey(
+            PPK($"FeaturePopup_Pending_{level}"));
+
+        PlayerPrefs.Save();
     }
 }
 

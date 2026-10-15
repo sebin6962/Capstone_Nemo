@@ -146,6 +146,8 @@ public class DoGamUIManager : MonoBehaviour
         public string title;          // 스프레드(두 페이지) 주제(예: 기본조작)
         public string titleKey;
         public List<HowToItemData> items; // 반드시 4개(왼쪽 2 + 오른쪽 2) 권장
+
+        public int unlockLevel = 1;
     }
 
     [System.Serializable]
@@ -807,6 +809,12 @@ public class DoGamUIManager : MonoBehaviour
             howToSpreadIndex = PlayerPrefs.GetInt(GetDoGamStateKey("DoGam_LastHowToSpread"), 0);
             howToSpreadIndex = Mathf.Clamp(howToSpreadIndex, 0,
                 (howToPages != null && howToPages.Count > 0) ? howToPages.Count - 1 : 0);
+
+            if (howToPages != null && howToPages.Count > 0 &&
+                !IsHowToPageUnlocked(howToPages[howToSpreadIndex]))
+            {
+                howToSpreadIndex = 0;
+            }
 
             RenderHowToSpread();
         }
@@ -1481,11 +1489,53 @@ public class DoGamUIManager : MonoBehaviour
         if (lockCoverPanel) lockCoverPanel.SetActive(false);
     }
 
+    private bool IsHowToPageUnlocked(HowToPageData page)
+    {
+        if (page == null)
+            return false;
+
+        int requiredLevel = page.unlockLevel <= 0 ? 1 : page.unlockLevel;
+
+        if (requiredLevel <= 1)
+            return true;
+
+        var unlockData = SaveService.CurrentData?.unlockProgressData;
+
+        if (unlockData == null || unlockData.appliedLevels == null)
+            return false;
+
+        return unlockData.appliedLevels.Contains(requiredLevel);
+    }
+
+    private int GetLastUnlockedHowToIndex()
+    {
+        if (howToPages == null || howToPages.Count == 0)
+            return 0;
+
+        int lastIndex = 0;
+
+        for (int i = 0; i < howToPages.Count; i++)
+        {
+            if (IsHowToPageUnlocked(howToPages[i]))
+                lastIndex = i;
+        }
+
+        return lastIndex;
+    }
+
     private void ChangeHowToSpread(int delta)
     {
-        if (howToPages == null || howToPages.Count == 0) return;
-        howToSpreadIndex += delta;
-        howToSpreadIndex = Mathf.Clamp(howToSpreadIndex, 0, howToPages.Count - 1);
+        if (howToPages == null || howToPages.Count == 0)
+            return;
+
+        int maxIndex = GetLastUnlockedHowToIndex();
+
+        howToSpreadIndex = Mathf.Clamp(
+            howToSpreadIndex + delta,
+            0,
+            maxIndex
+        );
+
         RenderHowToSpread();
     }
 
@@ -1520,82 +1570,108 @@ public class DoGamUIManager : MonoBehaviour
 
             if (iconTransform != null)
             {
-                // 기존 Icon 오브젝트를 영상 영역으로 사용한다.
-                // 기존 Image는 숨기고, 실제 영상은 RawImage 자식에 표시된다.
-                if (icon != null)
-                    icon.enabled = false;
-
-                string videoValue = !string.IsNullOrWhiteSpace(item.video)
-                    ? item.video
-                    : item.image;
-
-                string videoFileName = string.IsNullOrWhiteSpace(videoValue)
-                    ? string.Empty
-                    : Path.GetFileName(videoValue);
-
-                if (!string.IsNullOrWhiteSpace(videoFileName) &&
-                    string.IsNullOrEmpty(Path.GetExtension(videoFileName)))
+                // 4레벨, 7레벨 페이지: 이미지만 표시
+                if (page.unlockLevel == 4 || page.unlockLevel == 7)
                 {
-                    videoFileName += ".mp4";
-                }
-
-                string videoName = string.IsNullOrWhiteSpace(videoFileName)
-                    ? string.Empty
-                    : Path.GetFileNameWithoutExtension(videoFileName);
-
-                // PNG thumbnail remains in Resources/Sprites/GuideThumbnail/.
-                var thumbnail = string.IsNullOrWhiteSpace(videoName)
-                    ? null
-                    : Resources.Load<Sprite>(
-                        "Sprites/GuideThumbnail/" + videoName
+                    Sprite sprite = Resources.Load<Sprite>(
+                        "Sprites/GuideThumbnail/" + item.image
                     );
 
-                var hoverPlayer =
-                    iconTransform.GetComponent<HowToHoverVideoPlayer>();
+                    if (icon != null)
+                    {
+                        icon.sprite = sprite;
+                        icon.enabled = sprite != null;
+                        icon.preserveAspect = true;
+                    }
 
-                if (hoverPlayer == null)
-                {
-                    hoverPlayer =
-                        iconTransform.gameObject
-                            .AddComponent<HowToHoverVideoPlayer>();
-                }
+                    // 영상용 RawImage는 숨김
+                    var rawImages = iconTransform.GetComponentsInChildren<RawImage>(true);
 
-                // Video is loaded by URL from StreamingAssets/Videos/Guide/.
-                hoverPlayer.Setup(
-                    videoFileName,
-                    thumbnail
-                );
+                    foreach (var rawImage in rawImages)
+                    {
+                        rawImage.gameObject.SetActive(false);
+                    }
 
-                if (string.IsNullOrWhiteSpace(videoFileName))
-                {
-                    Debug.LogWarning("[HowTo] Video file name is empty.");
-                }
-
-#if UNITY_EDITOR
-                else
-                {
-                    string editorVideoPath = Path.Combine(
-                        Application.dataPath,
-                        "StreamingAssets",
-                        "Videos",
-                        "Guide",
-                        videoFileName
-                    );
-
-                    if (!File.Exists(editorVideoPath))
+                    if (sprite == null)
                     {
                         Debug.LogWarning(
-                            $"[HowTo] Video not found: Assets/StreamingAssets/Videos/Guide/{videoFileName}"
+                            $"[HowTo] Image not found: {item.image}"
                         );
                     }
                 }
+                else
+                {
+                    // 기존 3페이지: 영상 기능 유지
+                    if (icon != null)
+                        icon.enabled = false;
+
+                    string videoValue = !string.IsNullOrWhiteSpace(item.video)
+                        ? item.video
+                        : item.image;
+
+                    string videoFileName = string.IsNullOrWhiteSpace(videoValue)
+                        ? string.Empty
+                        : Path.GetFileName(videoValue);
+
+                    if (!string.IsNullOrWhiteSpace(videoFileName) &&
+                        string.IsNullOrEmpty(Path.GetExtension(videoFileName)))
+                    {
+                        videoFileName += ".mp4";
+                    }
+
+                    string videoName = string.IsNullOrWhiteSpace(videoFileName)
+                        ? string.Empty
+                        : Path.GetFileNameWithoutExtension(videoFileName);
+
+                    var thumbnail = string.IsNullOrWhiteSpace(videoName)
+                        ? null
+                        : Resources.Load<Sprite>(
+                            "Sprites/GuideThumbnail/" + videoName
+                        );
+
+                    var hoverPlayer =
+                        iconTransform.GetComponent<HowToHoverVideoPlayer>();
+
+                    if (hoverPlayer == null)
+                    {
+                        hoverPlayer =
+                            iconTransform.gameObject
+                                .AddComponent<HowToHoverVideoPlayer>();
+                    }
+
+                    hoverPlayer.Setup(videoFileName, thumbnail);
+
+                    if (string.IsNullOrWhiteSpace(videoFileName))
+                    {
+                        Debug.LogWarning("[HowTo] Video file name is empty.");
+                    }
+
+#if UNITY_EDITOR
+                    else
+                    {
+                        string editorVideoPath = Path.Combine(
+                            Application.dataPath,
+                            "StreamingAssets",
+                            "Videos",
+                            "Guide",
+                            videoFileName
+                        );
+
+                        if (!File.Exists(editorVideoPath))
+                        {
+                            Debug.LogWarning(
+                                $"[HowTo] Video not found: Assets/StreamingAssets/Videos/Guide/{videoFileName}"
+                            );
+                        }
+                    }
 #endif
 
-                if (thumbnail == null)
-                {
-                    Debug.LogWarning(
-                        $"[HowTo] Thumbnail not found: Resources/Sprites/GuideThumbnail/{videoName}"
-                    );
+                    if (thumbnail == null)
+                    {
+                        Debug.LogWarning(
+                            $"[HowTo] Thumbnail not found: Resources/Sprites/GuideThumbnail/{videoName}"
+                        );
+                    }
                 }
             }
         }
