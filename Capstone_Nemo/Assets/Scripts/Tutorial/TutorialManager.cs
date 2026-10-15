@@ -281,7 +281,7 @@ public class TutorialManager : MonoBehaviour
 
     private void LateUpdate()
     {
-        UpdateGrandmaInteractKeyPosition();
+        //UpdateGrandmaInteractKeyPosition();
 
         if (!holdPlayerAtVillageEntry)
             return;
@@ -1325,7 +1325,6 @@ public class TutorialManager : MonoBehaviour
             return;
 
         grandmaInteractKeyObject.SetActive(visible);
-        UpdateGrandmaInteractKeyPosition();
     }
 
     private void UpdateGrandmaInteractKeyPosition()
