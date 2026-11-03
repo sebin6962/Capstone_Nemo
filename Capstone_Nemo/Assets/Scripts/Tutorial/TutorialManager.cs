@@ -75,6 +75,10 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private List<TutorialDialogueLine> afterGoToFieldDialogues;
     [SerializeField] private List<TutorialDialogueLine> afterHarvestDialogues;
 
+    [Header("Harvest Tutorial Dialogue Timing")]
+    [SerializeField, Min(0f)] private float harvestStorageFlyWait = 1.0f;
+    private Coroutine harvestDialogueRoutine;
+
     private string server;
     private TutorialStateData state;
 
@@ -82,11 +86,107 @@ public class TutorialManager : MonoBehaviour
 
     private Coroutine showStepPanelRoutine;
 
+    // Hide key guides immediately after completing a step while retaining the text panel.
+    // Restore previously visible guides when their panel is shown again.
+    private readonly HashSet<GameObject> temporarilyHiddenGuides = new HashSet<GameObject>();
+
+    // Keep tutorial hints hidden immediately after a step completes,
+    // including hints re-enabled by other scripts before the next panel appears.
+    private bool suppressCompletedStepGuides;
+
+    private void HideActiveStepGuides()
+    {
+        suppressCompletedStepGuides = true;
+        SuppressVisibleTutorialGuides();
+    }
+
+    private void LateUpdateTutorialGuides()
+    {
+        if (suppressCompletedStepGuides)
+            SuppressVisibleTutorialGuides();
+    }
+
+    private void SuppressVisibleTutorialGuides()
+    {
+        // Do not rely on stepPanels entries being the exact active UI root.
+        // Some prefabs place the visible guide under a nested step object.
+        foreach (Transform item in FindObjectsOfType<Transform>(true))
+        {
+            string n = item.name;
+            if (n != "InterectGuide" && !n.StartsWith("InterectGuide ("))
+                continue;
+
+            GameObject guide = item.gameObject;
+            if (!guide.activeInHierarchy || !guide.activeSelf)
+                continue;
+
+            // Restrict to tutorial hierarchy to avoid hiding normal E-key prompts.
+            bool isTutorialUI = false;
+            for (Transform parent = item.parent; parent != null; parent = parent.parent)
+            {
+                if (parent.name.IndexOf("Tutorial", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    isTutorialUI = true;
+                    break;
+                }
+            }
+            if (!isTutorialUI) continue;
+
+            temporarilyHiddenGuides.Add(guide);
+            guide.SetActive(false);
+        }
+    }
+
+    private void RestoreGuidesForPanel(GameObject panel)
+    {
+        if (panel == null || temporarilyHiddenGuides.Count == 0) return;
+        foreach (Transform child in panel.GetComponentsInChildren<Transform>(true))
+        {
+            if (temporarilyHiddenGuides.Remove(child.gameObject))
+                child.gameObject.SetActive(true);
+        }
+    }
+
+    private void RestoreAllTemporarilyHiddenGuides()
+    {
+        foreach (GameObject guide in temporarilyHiddenGuides)
+            if (guide != null) guide.SetActive(true);
+        temporarilyHiddenGuides.Clear();
+    }
+
+
     [Header("인트로 자동 시퀀스")]
     [SerializeField] private Transform villageEntryPoint;
     [SerializeField] private Transform grandmaNoticePoint;
     [SerializeField] private Transform grandmaTalkPoint;
     [SerializeField] private GameObject grandmaNpcObject;
+
+    [Header("Village second tutorial - Grandma at the field")]
+    [SerializeField] private Transform grandmaFieldStandingPoint;
+    private Vector3 grandmaOriginalPosition;
+    private bool grandmaPositionCached;
+    private bool waitingForSeedBoxToClose;
+
+    private void MoveGrandmaToTutorialField()
+    {
+        if (grandmaNpcObject == null) return;
+        if (!grandmaPositionCached)
+        {
+            grandmaOriginalPosition = grandmaNpcObject.transform.position;
+            grandmaPositionCached = true;
+        }
+        if (grandmaFieldStandingPoint != null)
+            grandmaNpcObject.transform.position = grandmaFieldStandingPoint.position;
+        SetGrandmaVisible(true);
+    }
+
+    private void RestoreGrandmaPositionAfterField()
+    {
+        if (grandmaNpcObject != null && grandmaPositionCached)
+            grandmaNpcObject.transform.position = grandmaOriginalPosition;
+        grandmaPositionCached = false;
+    }
+
     [SerializeField] private Animator playerAnimator;
     [SerializeField] private float autoMoveSpeed = 2.2f;
     [SerializeField] private float reactionBubbleDuration = 0.8f;
@@ -281,6 +381,20 @@ public class TutorialManager : MonoBehaviour
 
     private void LateUpdate()
     {
+        // Returning the seed packet and closing its box are one tutorial sequence.
+        // Do not show the watering-can step until the box actually closes.
+        if (waitingForSeedBoxToClose && IsCurrentStep(VillageSecondStep.RestoreSeed))
+        {
+            var box = BoxInventoryManager.Instance;
+            if (box != null && !box.IsInventoryOpen())
+            {
+                waitingForSeedBoxToClose = false;
+                villageSecondStep = VillageSecondStep.PickUp_WateringCan;
+                ShowVillageSecondStepWithDialogue(villageSecondStep);
+                UpdateTriggerAreas();
+            }
+        }
+        LateUpdateTutorialGuides();
         //UpdateGrandmaInteractKeyPosition();
 
         if (!holdPlayerAtVillageEntry)
@@ -739,16 +853,41 @@ public class TutorialManager : MonoBehaviour
                 break;
 
             case VillageSecondStep.GoToMill:
-                PlayLocalizedDialogueThen(() =>
+                // The harvest action has completed. Hide its tutorial UI immediately,
+                // but allow the harvested item to finish flying into storage first.
+                if (showStepPanelRoutine != null)
                 {
-                    ShowStepPanel(step);
-                }, afterHarvestDialogues, "tutorial.grandma.after_harvest", grandmaNpcObject);
+                    StopCoroutine(showStepPanelRoutine);
+                    showStepPanelRoutine = null;
+                }
+                HideAllPanels();
+
+                if (harvestDialogueRoutine != null)
+                    StopCoroutine(harvestDialogueRoutine);
+                harvestDialogueRoutine = StartCoroutine(ShowAfterHarvestDialogue(step));
                 break;
 
             default:
                 ShowStepPanel(step);
                 break;
         }
+    }
+
+    private IEnumerator ShowAfterHarvestDialogue(VillageSecondStep step)
+    {
+        // Tutorial time can be paused, so use realtime for this visual delay.
+        if (harvestStorageFlyWait > 0f)
+            yield return new WaitForSecondsRealtime(harvestStorageFlyWait);
+
+        harvestDialogueRoutine = null;
+        if (!IsVillageSecondTutorialRunning || villageSecondStep != step)
+            yield break;
+
+        PlayLocalizedDialogueThen(() =>
+        {
+            if (IsVillageSecondTutorialRunning && villageSecondStep == step)
+                ShowStepPanel(step);
+        }, afterHarvestDialogues, "tutorial.grandma.after_harvest", grandmaNpcObject);
     }
 
     private void SetTutorialNpcState(bool tutorialRunning)
@@ -915,17 +1054,19 @@ public class TutorialManager : MonoBehaviour
             secondTutorialBlocker.SetActive(false);*/
 
         IsVillageSecondTutorialRunning = true;
+        waitingForSeedBoxToClose = false;
+        MoveGrandmaToTutorialField();
         villageSecondStep = VillageSecondStep.GoToField;
         ShowStepPanel(villageSecondStep);
     }
 
     public void GoToNextVillageSecondStep()
     {
+        HideActiveStepGuides();
         switch (villageSecondStep)
         {
             //TutorialTriggerArea.cs
             case VillageSecondStep.GoToField:
-                HideAllPanels();
                 //secondTutorialBlocker.gameObject.SetActive(true);
                 villageSecondStep = VillageSecondStep.OpenStorage;
                 break;
@@ -950,10 +1091,22 @@ public class TutorialManager : MonoBehaviour
                 break;
             //HeldItemManager.cs
             case VillageSecondStep.RestoreSeed:
-                Debug.Log("씨앗잠금해제");
                 ClearSeedLock();
-                villageSecondStep = VillageSecondStep.PickUp_WateringCan;
-                break;
+                // Hide only the completed seed-return step panel immediately.
+                // Keep this step active until the box is closed.
+                if (showStepPanelRoutine != null)
+                {
+                    StopCoroutine(showStepPanelRoutine);
+                    showStepPanelRoutine = null;
+                }
+                if (stepPanels != null &&
+                    (int)VillageSecondStep.RestoreSeed < stepPanels.Length &&
+                    stepPanels[(int)VillageSecondStep.RestoreSeed] != null)
+                {
+                    stepPanels[(int)VillageSecondStep.RestoreSeed].SetActive(false);
+                }
+                waitingForSeedBoxToClose = true;
+                return;
             //WateringCanAnchor.cs
             case VillageSecondStep.PickUp_WateringCan:
                 villageSecondStep = VillageSecondStep.Water;
@@ -974,7 +1127,6 @@ public class TutorialManager : MonoBehaviour
             case VillageSecondStep.HarvestCrop:
                 if (TutorialFlowManager.Instance != null)
                     TutorialFlowManager.Instance.UnlockScenePortal();
-                HideAllPanels();
                 villageSecondStep = VillageSecondStep.GoToMill;
                 break;
             case VillageSecondStep.GoToMill:
@@ -1011,6 +1163,8 @@ public class TutorialManager : MonoBehaviour
             return;
 
         IsVillageSecondTutorialRunning = false;
+        waitingForSeedBoxToClose = false;
+        RestoreGrandmaPositionAfterField();
         {
             HideAllPanels();
         }
@@ -1030,7 +1184,7 @@ public class TutorialManager : MonoBehaviour
         if (showStepPanelRoutine != null)
             StopCoroutine(showStepPanelRoutine);
 
-        float delay = 0f;
+        float delay = 0.4f;
 
         if (step == VillageSecondStep.GoToMill)
             delay = 3.5f;
@@ -1043,7 +1197,6 @@ public class TutorialManager : MonoBehaviour
         yield return new WaitForSeconds(delay);
 
         SFXManager.Instance.PlayTutorialSFX();
-        HideAllPanels();
 
         int index = (int)step;
         if (stepPanels == null || index < 0 || index >= stepPanels.Length)
@@ -1051,18 +1204,53 @@ public class TutorialManager : MonoBehaviour
 
         if (stepPanels[index])
         {
-            stepPanels[index].SetActive(true);
+            SwitchStepPanels(index);
         }
 
-        if (fixedStepPanels != null && index >= 0 && index < fixedStepPanels.Length && fixedStepPanels[index])
-            fixedStepPanels[index].SetActive(true);
 
         // 코루틴 끝남
         showStepPanelRoutine = null;
     }
 
+    // 기존 안내를 지연 시간 동안 유지한 뒤 같은 프레임에서 패널 교체
+    private void SwitchStepPanels(int index)
+    {
+        suppressCompletedStepGuides = false;
+        if (stepPanels != null && index >= 0 && index < stepPanels.Length && stepPanels[index])
+        {
+            RestoreGuidesForPanel(stepPanels[index]);
+            // CloseStorage is an E-key action: its mouse-step panel should not appear.
+            stepPanels[index].SetActive(index != (int)VillageSecondStep.CloseStorage);
+        }
+
+        if (fixedStepPanels != null && index >= 0 && index < fixedStepPanels.Length && fixedStepPanels[index])
+        {
+            RestoreGuidesForPanel(fixedStepPanels[index]);
+            fixedStepPanels[index].SetActive(true);
+        }
+
+        if (stepPanels != null)
+            for (int i = 0; i < stepPanels.Length; i++)
+                if (i != index && stepPanels[i])
+                {
+                    stepPanels[i].SetActive(false);
+                    RestoreGuidesForPanel(stepPanels[i]);
+                }
+
+        if (fixedStepPanels != null)
+            for (int i = 0; i < fixedStepPanels.Length; i++)
+                if (i != index && fixedStepPanels[i])
+                {
+                    fixedStepPanels[i].SetActive(false);
+                    RestoreGuidesForPanel(fixedStepPanels[i]);
+                }
+        RestoreAllTemporarilyHiddenGuides();
+    }
+
     void HideAllPanels()
     {
+        suppressCompletedStepGuides = false;
+        RestoreAllTemporarilyHiddenGuides();
         if (stepPanels == null) return;
         foreach (var panel in stepPanels)
         {

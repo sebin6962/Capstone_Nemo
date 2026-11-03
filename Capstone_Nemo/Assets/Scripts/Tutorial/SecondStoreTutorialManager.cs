@@ -42,6 +42,80 @@ public class SecondStoreTutorialManager : MonoBehaviour
 
     private Coroutine showStepPanelRoutine;
 
+    // Hide key guides immediately after completing a step while retaining the text panel.
+    // Restore previously visible guides when their panel is shown again.
+    private readonly HashSet<GameObject> temporarilyHiddenGuides = new HashSet<GameObject>();
+
+    // Keep tutorial hints hidden immediately after a step completes,
+    // including hints re-enabled by other scripts before the next panel appears.
+    private bool suppressCompletedStepGuides;
+
+    private void HideActiveStepGuides()
+    {
+        suppressCompletedStepGuides = true;
+        SuppressVisibleTutorialGuides();
+    }
+
+    private void LateUpdateTutorialGuides()
+    {
+        if (suppressCompletedStepGuides)
+            SuppressVisibleTutorialGuides();
+    }
+
+    private void SuppressVisibleTutorialGuides()
+    {
+        // Do not rely on stepPanels entries being the exact active UI root.
+        // Some prefabs place the visible guide under a nested step object.
+        foreach (Transform item in FindObjectsOfType<Transform>(true))
+        {
+            string n = item.name;
+            if (n != "InterectGuide" && !n.StartsWith("InterectGuide ("))
+                continue;
+
+            GameObject guide = item.gameObject;
+            if (!guide.activeInHierarchy || !guide.activeSelf)
+                continue;
+
+            // Restrict to tutorial hierarchy to avoid hiding normal E-key prompts.
+            bool isTutorialUI = false;
+            for (Transform parent = item.parent; parent != null; parent = parent.parent)
+            {
+                if (parent.name.IndexOf("Tutorial", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    isTutorialUI = true;
+                    break;
+                }
+            }
+            if (!isTutorialUI) continue;
+
+            temporarilyHiddenGuides.Add(guide);
+            guide.SetActive(false);
+        }
+    }
+
+    private void LateUpdate()
+    {
+        LateUpdateTutorialGuides();
+    }
+
+    private void RestoreGuidesForPanel(GameObject panel)
+    {
+        if (panel == null || temporarilyHiddenGuides.Count == 0) return;
+        foreach (Transform child in panel.GetComponentsInChildren<Transform>(true))
+        {
+            if (temporarilyHiddenGuides.Remove(child.gameObject))
+                child.gameObject.SetActive(true);
+        }
+    }
+
+    private void RestoreAllTemporarilyHiddenGuides()
+    {
+        foreach (GameObject guide in temporarilyHiddenGuides)
+            if (guide != null) guide.SetActive(true);
+        temporarilyHiddenGuides.Clear();
+    }
+
+
     public bool IsStoreTutorialRunning;
 
     void Awake()
@@ -208,7 +282,6 @@ public class SecondStoreTutorialManager : MonoBehaviour
         if (SFXManager.Instance != null)
             SFXManager.Instance.PlayTutorialSFX();
 
-        HideAllPanels();
 
         int index = (int)step;
 
@@ -226,13 +299,33 @@ public class SecondStoreTutorialManager : MonoBehaviour
         }
 
         if (stepPanels[index] != null)
-            stepPanels[index].SetActive(true);
+            SwitchStepPanel(index);
 
         showStepPanelRoutine = null;
     }
 
+    // 이전 패널을 유지하다가 새 패널이 준비되면 같은 프레임에 교체
+    private void SwitchStepPanel(int index)
+    {
+        suppressCompletedStepGuides = false;
+        if (stepPanels == null || index < 0 || index >= stepPanels.Length || stepPanels[index] == null)
+            return;
+
+        RestoreGuidesForPanel(stepPanels[index]);
+        stepPanels[index].SetActive(true);
+        for (int i = 0; i < stepPanels.Length; i++)
+        {
+            if (i == index || !stepPanels[i]) continue;
+            stepPanels[i].SetActive(false);
+            RestoreGuidesForPanel(stepPanels[i]);
+        }
+        RestoreAllTemporarilyHiddenGuides();
+    }
+
     void HideAllPanels()
     {
+        suppressCompletedStepGuides = false;
+        RestoreAllTemporarilyHiddenGuides();
         if (stepPanels == null) return;
 
         foreach (var panel in stepPanels)
@@ -279,8 +372,7 @@ public class SecondStoreTutorialManager : MonoBehaviour
         if (!IsStoreTutorialRunning)
             return;
 
-        // 현재 켜져 있는 패널을 먼저 끄고
-        HideAllPanels();
+        // 현재 패널을 유지한 채 다음 표시를 예약
 
         // 0.3초 후 현재 단계 패널을 다시 표시
         ShowStepPanel(currentStep);
@@ -288,6 +380,7 @@ public class SecondStoreTutorialManager : MonoBehaviour
 
     public void GoToNextStep()
     {
+        HideActiveStepGuides();
         switch (currentStep)
         {
             //HeldItemManager.cs

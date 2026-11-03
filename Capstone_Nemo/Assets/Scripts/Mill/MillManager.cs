@@ -45,8 +45,12 @@ public class MillManager : MonoBehaviour
     private Sprite cachedResultSprite;
 
     [Header("재고 추가 효과")]
-    [SerializeField] private Transform flyStartWorld; 
+    [SerializeField] private Transform flyStartWorld;
     [SerializeField] private Camera sourceUICamera;
+
+    [Header("Tutorial timing")]
+    [Tooltip("Wait after the storage fly effect starts, before showing the next tutorial dialogue. Match the fly animation duration.")]
+    [SerializeField, Min(0f)] private float tutorialStorageFlyWait = 0.8f;
 
     private void Awake()
     {
@@ -149,6 +153,12 @@ public class MillManager : MonoBehaviour
         RebuildInventoryGrid();
 
         inventoryPanel.SetActive(true);
+
+        // The first slot click opens inventory; do not leave its mouse hint visible
+        // while the player chooses an item inside that inventory.
+        if (MillTutorialManager.Instance != null &&
+            MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.SelectCrop))
+            MillTutorialManager.Instance.HideSelectCropMouseGuide();
 
         Debug.Log(
             $"[MillManager] inventoryPanel activeSelf={inventoryPanel.activeSelf}, " +
@@ -256,22 +266,22 @@ public class MillManager : MonoBehaviour
 
         if (selectedItem != null && selectedItem.itemName == item.itemName)
         {
-            ReturnQueuedToInventory(); 
-            ClearSelectionUI();         
+            ReturnQueuedToInventory();
+            ClearSelectionUI();
             return;
         }
 
         if (selectedItem != null)
         {
             ReturnQueuedToInventory();
-            ClearSelectionUI(); 
+            ClearSelectionUI();
         }
 
         if (item.itemQuantity <= 0) return;
 
         selectedItem = item;
-        queuedCount = item.itemQuantity;   
-        item.itemQuantity = 0;            
+        queuedCount = item.itemQuantity;
+        item.itemQuantity = 0;
 
         selectedSlot.Set(item, queuedCount);
         UpdateInventoryUI();
@@ -280,7 +290,7 @@ public class MillManager : MonoBehaviour
 
     private void ReturnQueuedToInventory()
     {
-        if(selectedItem != null && queuedCount > 0)
+        if (selectedItem != null && queuedCount > 0)
         {
             selectedItem.itemQuantity += queuedCount;
         }
@@ -479,6 +489,12 @@ public class MillManager : MonoBehaviour
         Debug.Log($"{cachedSourceName} → {cachedResultName} 변환 완료(애니 종료 후)");
 
         //==결과 이펙트 끝나고 재고 추가 효과 시작하도록 코루틴으로 분리했어요!!==
+        // Conversion is complete: close the Grind instruction immediately.
+        // Dialogue starts only after the result and storage-fly presentation.
+        if (MillTutorialManager.Instance != null &&
+            MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.Grind))
+            MillTutorialManager.Instance.HideGrindPanelImmediately();
+
         StartCoroutine(PlayResultThenFlyAndAlert());
 
         //// 결과 이펙트
@@ -561,6 +577,12 @@ public class MillManager : MonoBehaviour
 
             var cam = sourceUICamera != null ? sourceUICamera : Camera.main;
             StorageIconFlyEffect.Instance.Play(cachedResultSprite, startPos, cam);
+
+            // Play() starts the effect but does not wait for its completion.
+            // Keep the tutorial dialogue closed until the expected flight ends.
+            if (MillTutorialManager.Instance != null &&
+                MillTutorialManager.Instance.IsCurrentStep(MillTutorialStep.Grind))
+                yield return new WaitForSecondsRealtime(tutorialStorageFlyWait);
         }
 
         // 창고 NEW 알림

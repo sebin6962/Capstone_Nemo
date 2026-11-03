@@ -22,6 +22,15 @@ public partial class NPCDialogueUIManager
     [SerializeField, Min(0f)] private float hudOutsidePadding = 24f;
     [SerializeField] private bool animateTutorialHud = true;
 
+    [Header("Tutorial Dialogue UI Dimmer")]
+    [SerializeField] private GameObject tutorialDialogueUiDimmer;
+
+    private void SetTutorialDialogueUiDimmer(bool visible)
+    {
+        if (tutorialDialogueUiDimmer != null)
+            tutorialDialogueUiDimmer.SetActive(visible);
+    }
+
     private sealed class HudSnapshot
     {
         public RectTransform root;
@@ -73,6 +82,7 @@ public partial class NPCDialogueUIManager
     {
         dialogueSessionActive = true;
         dialogueTransitionOpening = true;
+        SetTutorialDialogueUiDimmer(isTutorialDialogueMode);
         SetEKeyGuideVisible(false);
         bool animateHud = !isTutorialDialogueMode || animateTutorialHud;
         if (animateHud)
@@ -363,6 +373,7 @@ public partial class NPCDialogueUIManager
         dialogueTransitionClosing = true;
         dialogueTransitionOpening = false;
         npcAwaitingHudReturn = currentNpc;
+        SetTutorialDialogueUiDimmer(false);
         CloseDialogueCore(); // Stops typing/portrait, hides panel, clears data.
         StartDialogueHudReturn();
     }
@@ -374,6 +385,7 @@ public partial class NPCDialogueUIManager
         CancelHudCoroutine();
         dialogueTransitionClosing = true;
         dialogueTransitionOpening = false;
+        SetTutorialDialogueUiDimmer(false);
         tutorialAwaitingHudReturn = CloseTutorialDialogueCore();
         StartDialogueHudReturn();
     }
@@ -409,6 +421,7 @@ public partial class NPCDialogueUIManager
 
     private void FinishDialogueHudReturn()
     {
+        SetTutorialDialogueUiDimmer(false);
         RestoreDialogueHud();
         hudTransitionCoroutine = null;
         dialogueSessionActive = false;
@@ -428,6 +441,7 @@ public partial class NPCDialogueUIManager
     {
         if (Instance != this)
             return;
+        SetTutorialDialogueUiDimmer(false);
         CancelHudCoroutine();
         NPCInteractable npc = npcAwaitingHudReturn != null ? npcAwaitingHudReturn : currentNpc;
         npcAwaitingHudReturn = null;

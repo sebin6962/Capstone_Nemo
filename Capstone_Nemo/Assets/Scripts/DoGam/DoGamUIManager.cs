@@ -852,10 +852,6 @@ public class DoGamUIManager : MonoBehaviour
     public void CloseDoGam()
     {
         //튜토리얼 진행 트리거 8
-        if (StoreTutorialManager.Instance && StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.DogamClose))
-        {
-            StoreTutorialManager.Instance.GoToNextStep();
-        }
 
         // 현재 보고 있던 페이지 상태 저장
         SaveLastDoGamState();
@@ -880,6 +876,10 @@ public class DoGamUIManager : MonoBehaviour
         {
             EventSystem.current.SetSelectedGameObject(null);
         }
+        // Only after the dogam is actually closed, finish its tutorial step.
+        if (StoreTutorialManager.Instance != null &&
+            StoreTutorialManager.Instance.IsCurrentStep(StoreTutorialStep.DogamClose))
+            StoreTutorialManager.Instance.OnTutorialDogamClosed();
     }
 
     private void SaveLastDoGamState()
