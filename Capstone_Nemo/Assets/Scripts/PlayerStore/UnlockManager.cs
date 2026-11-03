@@ -31,6 +31,46 @@ public class UnlockManager : MonoBehaviour
     const string PP_RevealLevels = "Unlock_RevealLevels_Today";
     const string PP_RevealShown = "Unlock_RevealShown_Today";
 
+    private const string PP_FeaturePopupPending = "FeaturePopup_Pending_";
+    private const string PP_FeaturePopupShown = "FeaturePopup_Shown_";
+
+    private bool IsFeaturePopupLevel(int level)
+    {
+        return level == 4 || level == 7;
+    }
+
+    public bool HasPendingFeaturePopup(int level)
+    {
+        if (!IsFeaturePopupLevel(level)) return false;
+
+        return PlayerPrefs.GetInt(
+            PPK(PP_FeaturePopupPending + level), 0) == 1
+            && PlayerPrefs.GetInt(
+            PPK(PP_FeaturePopupShown + level), 0) == 0
+            && save.appliedLevels != null
+            && save.appliedLevels.Contains(level);
+    }
+
+    public void MarkFeaturePopupShown(int level)
+    {
+        if (!IsFeaturePopupLevel(level)) return;
+
+        PlayerPrefs.SetInt(PPK(PP_FeaturePopupShown + level), 1);
+        PlayerPrefs.DeleteKey(PPK(PP_FeaturePopupPending + level));
+        PlayerPrefs.Save();
+    }
+
+    private void ScheduleFeaturePopup(int level)
+    {
+        if (!IsFeaturePopupLevel(level)) return;
+
+        if (PlayerPrefs.GetInt(
+            PPK(PP_FeaturePopupShown + level), 0) == 1)
+            return;
+
+        PlayerPrefs.SetInt(PPK(PP_FeaturePopupPending + level), 1);
+        PlayerPrefs.Save();
+    }
 
     public bool IsMakerUnlocked(string makerId)
     {
@@ -350,6 +390,10 @@ public class UnlockManager : MonoBehaviour
         foreach (int lv in save.pendingLevels.ToList())
         {
             save.appliedLevels.Add(lv);
+
+            //4레벨, 7레벨 신규 기능 팝업 예약
+            ScheduleFeaturePopup(lv);
+
             save.pendingLevels.Remove(lv);
         }
         RebuildUnlockedFromApplied();           // 항상 한 번에 재계산
