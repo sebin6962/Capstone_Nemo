@@ -29,6 +29,24 @@ public class MillTutorialManager : MonoBehaviour
     [SerializeField] private List<TutorialDialogueLine> afterOpenStoreDialogues;
     [SerializeField] private List<TutorialDialogueLine> afterQuitStoreDialogues;
 
+    [Header("Mill tutorial - Grandma standing position")]
+    [SerializeField] private GameObject grandmaNpcObject;
+    [SerializeField] private Transform grandmaMillStandingPoint;
+
+    private void PositionGrandmaForMillTutorial()
+    {
+        if (grandmaNpcObject == null) return;
+
+        if (grandmaMillStandingPoint != null)
+        {
+            Vector3 position = grandmaMillStandingPoint.position;
+            position.z = grandmaNpcObject.transform.position.z;
+            grandmaNpcObject.transform.position = position;
+        }
+
+        grandmaNpcObject.SetActive(true);
+    }
+
     [SerializeField] private GameObject millTutorialPanel;
     /*    [SerializeField] private CustomerSpawner customerSpawner;
         [SerializeField] private SeatManager seatManager;*/
@@ -189,6 +207,7 @@ public class MillTutorialManager : MonoBehaviour
     {
         IsMillTutorialRunning = true;
         currentStep = MillTutorialStep.TalkToNpc;
+        PositionGrandmaForMillTutorial();
 
         // 시간 정지
         if (TutorialFlowManager.Instance != null)

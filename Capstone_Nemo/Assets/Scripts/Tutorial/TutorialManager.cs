@@ -1186,8 +1186,8 @@ public class TutorialManager : MonoBehaviour
 
         float delay = 0.4f;
 
-        if (step == VillageSecondStep.GoToMill)
-            delay = 3.5f;
+        // Use the normal panel delay after the harvest dialogue.
+        // The storage fly wait is handled separately in ShowAfterHarvestDialogue().
 
         showStepPanelRoutine = StartCoroutine(ShowStepPanelAfterDelay(step, delay));
     }
