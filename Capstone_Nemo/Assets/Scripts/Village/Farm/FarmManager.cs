@@ -1193,6 +1193,44 @@ public class FarmManager : MonoBehaviour
         );
     }
 
+
+    public bool CanWaterAt(Vector3 worldPos)
+    {
+        if (fieldTilemap == null || overlayTilemap == null)
+            return false;
+
+        Vector3Int cellPos =
+            fieldTilemap.WorldToCell(worldPos);
+
+        // 이미 작물이 심어진 밭 또는 나무
+        if (growingTiles.TryGetValue(cellPos, out var crop))
+        {
+            if (crop == null || crop.cropData == null)
+                return false;
+
+            // 레벨 제한 나무 제외
+            if (IsTreeLocked(crop.cropData))
+                return false;
+
+            // 이미 물 준 작물 제외
+            if (crop.isWatered && wateredTiles.Contains(cellPos))
+                return false;
+
+            return true;
+        }
+
+        // 빈 농사 타일이 아닌 경우
+        if (!farmPositions.Contains(cellPos))
+            return false;
+
+        // 이미 물 준 빈 밭 제외
+        if (wateredTiles.Contains(cellPos) &&
+            overlayTilemap.GetTile(cellPos) == wetSoilTile)
+            return false;
+
+        return true;
+    }
+
     public void WaterSoil(
         Vector3 worldPos
     )
@@ -1723,6 +1761,11 @@ public class FarmManager : MonoBehaviour
         StorageInventory.Instance
             .SaveStorage();
 
+        // Hide harvest bubble after the existing storage-full check succeeds.
+        FarmBubbleUIManager bubbleUI = FindObjectOfType<FarmBubbleUIManager>();
+        if (bubbleUI != null)
+            bubbleUI.NotifyHarvestSucceeded(pos);
+
 
         // 수확 성공 시 밭과 나무 공통으로 모션 재생
         if (playerHarvestMotion == null)
@@ -1912,6 +1955,18 @@ public class FarmManager : MonoBehaviour
         }
 
         SaveFarmState();
+    }
+
+    // Read-only access for the independent world-space farm bubble UI.
+    // The farming, saving, planting and harvesting behavior is unchanged.
+    public IEnumerable<KeyValuePair<Vector3Int, CropTile>> GetFarmCropsForBubbles()
+    {
+        return growingTiles;
+    }
+
+    public bool IsEmptyFarmCellForBubbles(Vector3Int cell)
+    {
+        return farmPositions.Contains(cell) && !growingTiles.ContainsKey(cell);
     }
 
     private readonly HashSet<Transform>
