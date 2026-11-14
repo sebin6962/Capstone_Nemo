@@ -514,7 +514,7 @@ public class PlayerManager : MonoBehaviour
         switch (facing)
         {
             case InitialFacing.Up: stateName = "Idle_Back"; break;
-            case InitialFacing.Down: stateName = "Idle_Front"; break;
+            case InitialFacing.Down: stateName = "Idle"; break;
             case InitialFacing.Left: stateName = "Idle_Left"; break;
             case InitialFacing.Right: stateName = "Idle_Right"; break;
         }

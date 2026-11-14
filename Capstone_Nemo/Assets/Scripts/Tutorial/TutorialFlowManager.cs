@@ -78,6 +78,9 @@ public class TutorialFlowManager : MonoBehaviour
         server = PlayerPrefs.GetString("SelectedSave", "default");
         state = TutorialState.Load(server);
 
+        // Clear the previous save slot's portal lock before loading the selected save.
+        IsScenePortalLocked = false;
+
         timePauseRequestCount = 0;
         VillageIntroAutoSequencePlayed = false;
         UpdateTimeFlow();

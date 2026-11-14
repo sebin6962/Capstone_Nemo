@@ -130,8 +130,12 @@ public class PlayerHoldingResolverMotion : MonoBehaviour
             playerAnimator.enabled = false;
     }
 
+
     private void StopHoldingMotion()
     {
+        // 마지막으로 화면에 표시한 Holding 방향을 먼저 보관
+        string holdingDirection = previousDirection;
+
         isControlling = false;
 
         previousDirection = "";
@@ -142,33 +146,46 @@ public class PlayerHoldingResolverMotion : MonoBehaviour
         if (playerAnimator == null || playerManager == null)
             return;
 
-        // 현재 플레이어가 실제로 바라보던 방향을 그대로 사용
         Vector2 direction = playerManager.LastMoveDirection;
+
+        // 실제로 보이던 Holding 스프라이트 방향을 우선 사용
+        switch (holdingDirection)
+        {
+            case "Front":
+                direction = Vector2.down;
+                break;
+            case "Back":
+                direction = Vector2.up;
+                break;
+            case "Left":
+                direction = Vector2.left;
+                break;
+            case "Right":
+                direction = Vector2.right;
+                break;
+        }
+
+        // PlayerManager 내부 방향과 화면 방향을 일치시킴
+        playerManager.SetActionFacingDirection(direction);
+
         bool isMoving = playerManager.IsMoving;
 
-        // Animator 다시 활성화
+        // 일반 Animator 복구
         playerAnimator.enabled = true;
 
-        // 현재 방향을 Animator 파라미터에 정확하게 반영
         playerAnimator.SetFloat("MoveX", direction.x);
         playerAnimator.SetFloat("MoveY", direction.y);
         playerAnimator.SetBool("IsWalking", isMoving);
 
-        /*
-         * 아이템을 내려놓은 순간 정지 상태라면
-         * 이전 Animator State가 남아있지 않도록
-         * 현재 방향의 Idle State를 직접 재생한다.
-         *
-         * PlayerManager에서 사용하는 Idle State 이름과 동일.
-         */
         if (!isMoving)
         {
             string idleStateName = GetIdleStateName(direction);
 
             if (!string.IsNullOrEmpty(idleStateName))
             {
-                int stateHash =
-                    Animator.StringToHash("Base Layer." + idleStateName);
+                int stateHash = Animator.StringToHash(
+                    "Base Layer." + idleStateName
+                );
 
                 if (playerAnimator.HasState(0, stateHash))
                 {
@@ -181,14 +198,15 @@ public class PlayerHoldingResolverMotion : MonoBehaviour
             }
         }
 
-        // 즉시 반영
         playerAnimator.Update(0f);
     }
+
+
 
     private string GetIdleStateName(Vector2 direction)
     {
         if (direction.sqrMagnitude <= 0.001f)
-            return "Idle_Front";
+            return "Idle";
 
         if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
         {
@@ -199,7 +217,7 @@ public class PlayerHoldingResolverMotion : MonoBehaviour
 
         return direction.y >= 0f
             ? "Idle_Back"
-            : "Idle_Front";
+            : "Idle";
     }
 
     private void UpdateWalkAnimation(string direction)
