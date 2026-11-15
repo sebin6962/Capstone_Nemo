@@ -2,10 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.IO;
+using UnityEngine.AddressableAssets;
+using UnityEngine.Localization.Settings;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class EndingCutSceneScroller : MonoBehaviour
 {
@@ -28,38 +30,6 @@ public class EndingCutSceneScroller : MonoBehaviour
     public float blackFadeSeconds = 1.5f;
 
     private bool isEnding = false;
-
-    [Header("자막 시퀀스")]
-    public bool useSubtitles = true;
-
-    [Tooltip("검은 화면이 다 찬 후 첫 자막이 뜨기까지 대기 시간")]
-    public float delayBeforeFirstSubtitle = 2f;
-
-    [System.Serializable]
-    public class SubtitleEntry
-    {
-        public GameObject subtitleObject;
-
-        [Tooltip("이전 자막이 켜지고 나서 이 자막이 켜지기까지 대기 시간")]
-        public float delayFromPrevious = 1f;
-
-        [Tooltip("이 자막이 서서히 나타나는 시간")]
-        public float fadeInDuration = 1f;
-    }
-
-    [Tooltip("자막 목록")]
-    public SubtitleEntry[] subtitles;
-
-    [Tooltip("마지막 자막이 켜진 후, 모든 자막을 비활성화하기까지 대기 시간")]
-    public float delayBeforeHideAllSubtitles = 2f;
-
-    [Header("다음 컷씬")]
-    [Tooltip("모든 자막이 꺼진 후, 다음 컷씬 페이드까지 대기 시간")]
-    public float delayBeforeNextCutsceneFade = 0f;
-
-    [Tooltip("다음 컷씬 페이드(또는 씬 전환)를 여기 이벤트에 연결")]
-    public UnityEvent onNextCutsceneFade;
-
 
     [Header("씬 시작 연출")]
     [Tooltip("엔딩씬이 로드되면 검은 화면에서 서서히 밝아지게 할지 여부")]
@@ -94,6 +64,27 @@ public class EndingCutSceneScroller : MonoBehaviour
     [Header("크레딧 콘텐츠")]
     [Tooltip("크레딧 그림과 텍스트만 포함합니다. 카메라와 이 스크립트 오브젝트는 넣지 마세요.")]
     [SerializeField] private GameObject creditsRoot;
+
+    [Header("첫 번째 컷신 자막 (아래 공용 UI 사용)")]
+    public bool useFirstCutsceneSubtitles = true;
+    [TextArea(3, 12)] public string firstSubtitleContent;
+    [Tooltip("Cutscene 문자열 테이블의 키. 비우면 Content 원문 사용")]
+    public string firstSubtitleLocalizationKey = "cutscene.ending.01";
+    [Tooltip("첫 번째 컷신 자막이 표시되기 전 추가 대기 시간(초). 두 번째 컷신에는 적용되지 않습니다.")]
+    [Min(0f)] public float firstCutsceneSubtitleStartDelay = 2f;
+
+    [Header("우주선 상호작용 크레딧 (선택)")]
+    [SerializeField] private EndingCreditsController endingCredits;
+    [Min(0f)][SerializeField] private float creditsRevealFadeSeconds = 2f;
+    [Tooltip("두 번째 컷신에서 크레딧으로 전환할 때 검은 화면을 잠깐 유지하는 시간")]
+    [Min(0f)][SerializeField] private float creditsBlackHoldSeconds = 0.35f;
+    [Tooltip("우주 배경이 완전히 나타난 후 크레딧 텍스트가 내려오기 전 대기 시간")]
+    [Min(0f)][SerializeField] private float creditsScrollStartDelay = 1.5f;
+
+    private readonly List<TextMeshProUGUI> firstLines = new List<TextMeshProUGUI>();
+    private bool firstSubtitleStarted;
+    private bool firstSubtitleFinished = true;
+    private int firstLastClickFrame = -1;
 
     public void LoadNextScene()
     {
@@ -148,6 +139,10 @@ public class EndingCutSceneScroller : MonoBehaviour
 
     private void Awake()
     {
+        // 씬 전환 페이드 뒤에서 실제 스크롤 컷신을 먼저 준비합니다.
+        if (creditsRoot != null)
+            creditsRoot.SetActive(true);
+
         // 엔딩씬에 진입하는 첫 프레임부터 검은 화면 적용
         if (blackImage != null && fadeInFromBlackOnStart)
         {
@@ -167,8 +162,9 @@ public class EndingCutSceneScroller : MonoBehaviour
         canStartScroll = false;
         isEnding = false;
 
+        // 페이드 도중에도 컷신 내용이 렌더링되도록 유지합니다.
         if (creditsRoot != null)
-            creditsRoot.SetActive(false);
+            creditsRoot.SetActive(true);
 
         if (openingCutscenePanel != null)
         {
@@ -191,6 +187,7 @@ public class EndingCutSceneScroller : MonoBehaviour
             blackImage.color = color;
             blackImage.gameObject.SetActive(fadeInFromBlackOnStart);
         }
+
 
         StartCoroutine(SceneStartSequenceRoutine());
     }
@@ -319,6 +316,12 @@ public class EndingCutSceneScroller : MonoBehaviour
         PlayCutsceneParticles();
 
         canStartScroll = true;
+        if (useFirstCutsceneSubtitles && secondSubtitleContainer != null && secondSubtitleLinePrefab != null)
+        {
+            firstSubtitleFinished = false;
+            firstSubtitleStarted = true;
+            StartCoroutine(FirstCutsceneSubtitleRoutine());
+        }
     }
 
     void Update()
@@ -356,23 +359,246 @@ public class EndingCutSceneScroller : MonoBehaviour
         if (beforeFadeBlackDelay > 0f)
             yield return new WaitForSeconds(beforeFadeBlackDelay);
 
+        // 첫 컷신 자막이 아직 진행 중이면 끝날 때까지 마지막 화면 유지
+        if (firstSubtitleStarted)
+            yield return new WaitUntil(() => firstSubtitleFinished);
+
+        // 인트로 컷신과 동일: 먼저 1.5초 동안 검은 화면으로 전환한 뒤 다음 컷 공개
+        bool secondAvailable = useSecondCutscene && secondCutscenePanel != null;
+        if (secondAvailable && blackImage != null)
+        {
+            blackImage.gameObject.SetActive(true);
+            yield return StartCoroutine(FadeBlackImage(0f, 1f, blackFadeSeconds));
+        }
+
         StopCutsceneParticles();
 
         yield return SecondCutsceneRoutine();
 
-        // 검은 이미지 페이드
-        if (blackImage != null)
-        {
-            if (!blackImage.gameObject.activeSelf)
-                blackImage.gameObject.SetActive(true);
+        // 크레딧 전환 전용 Screen Space - Overlay 검은 커버를 사용합니다.
+        // 기존 EndingBlackImage의 Canvas 정렬 순서에 관계없이 두 번째 컷신과
+        // 우주 크레딧을 모두 덮도록 하여 화면이 갑자기 바뀌는 현상을 방지합니다.
+        EnsureCreditsTransitionCover();
+        yield return StartCoroutine(FadeCreditsCover(0f, 1f, blackFadeSeconds));
 
-            yield return StartCoroutine(FadeBlackImage(0f, 1f, blackFadeSeconds));
+        // 완전히 검은 뒤에 두 번째 컷신을 정리합니다.
+        HideSecondCutscene();
+
+        // 기존 EndingBlackImage는 이제 필요 없으므로 가린 상태에서 숨깁니다.
+        // 우주 크레딧과 중복된 검은 화면이 페이드에 영향을 주지 않게 합니다.
+        if (blackImage != null)
+            blackImage.gameObject.SetActive(false);
+
+        if (endingCredits != null && endingCredits.BeginCredits())
+        {
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            if (creditsBlackHoldSeconds > 0f)
+                yield return new WaitForSecondsRealtime(creditsBlackHoldSeconds);
+
+            yield return StartCoroutine(FadeCreditsCover(1f, 0f, creditsRevealFadeSeconds));
+
+            if (creditsScrollStartDelay > 0f)
+                yield return new WaitForSecondsRealtime(creditsScrollStartDelay);
+
+            endingCredits.StartScrolling();
+            yield return new WaitUntil(() => endingCredits == null || endingCredits.IsFinished);
+
+            // 크레딧 종료도 동일한 커버로 마무리합니다.
+            yield return StartCoroutine(FadeCreditsCover(0f, 1f, blackFadeSeconds));
+            if (endingCredits != null) endingCredits.HideCredits();
+        }
+        else
+        {
+            Debug.LogWarning("[EndingCutSceneScroller] 우주 크레딧을 시작하지 못했습니다. 마지막 자막 없이 씬으로 복귀합니다.", this);
         }
 
+        // 엔딩 완료 기록과 기존 TreeScene 복귀 로직은 보존합니다.
+        LoadNextScene();
+    }
 
+    private IEnumerator LoadEndingLocalizedText(string key, string fallback,
+        System.Action<string> onComplete)
+    {
+        string result = fallback ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            var handle = LocalizationSettings.StringDatabase.GetLocalizedStringAsync("Cutscene", key);
+            yield return handle;
+            if (handle.Status == AsyncOperationStatus.Succeeded &&
+                !string.IsNullOrWhiteSpace(handle.Result))
+                result = handle.Result;
+            else
+                Debug.LogWarning("[EndingCutSceneScroller] 번역 키를 찾지 못해 원문 사용: " + key);
+            Addressables.Release(handle);
+        }
+        onComplete?.Invoke(result);
+    }
 
-        HideSecondCutscene();
-        yield return StartCoroutine(SubtitleSequenceRoutine());
+    private IEnumerator FirstCutsceneSubtitleRoutine()
+    {
+        firstLastClickFrame = Time.frameCount;
+        string raw = firstSubtitleContent ?? string.Empty;
+        yield return LoadEndingLocalizedText(firstSubtitleLocalizationKey, raw,
+            result => raw = result);
+
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            Debug.LogWarning("[EndingCutSceneScroller] 첫 컷신 자막이 비었습니다. First Subtitle Content 또는 cutscene.ending.01 번역을 확인하세요.", this);
+            firstSubtitleFinished = true;
+            yield break;
+        }
+
+        // 첫 번째 컷신 전용 추가 대기. 자막과 그라데이션이 나타나기 전에 적용합니다.
+        // 공용 첫 줄 딜레이는 기존대로 이후에 적용됩니다.
+        if (firstCutsceneSubtitleStartDelay > 0f)
+            yield return FirstSubtitleDelay(firstCutsceneSubtitleStartDelay, false);
+
+        ClearFirstSubtitleLines();
+        string delimiter = string.IsNullOrEmpty(sharedSegmentDelimiter) ? "||" : sharedSegmentDelimiter;
+        string[] segments = raw.Split(new[] { delimiter }, System.StringSplitOptions.None);
+        foreach (string segment in segments)
+        {
+            var line = Instantiate(secondSubtitleLinePrefab, secondSubtitleContainer);
+            line.gameObject.SetActive(true);
+            line.alignment = sharedForceTopLeftAlign ? TextAlignmentOptions.TopLeft : TextAlignmentOptions.Top;
+            line.enableWordWrapping = true;
+            line.enableAutoSizing = false;
+            line.richText = true;
+            line.lineSpacing = sharedTextLineSpacing;
+            line.raycastTarget = false;
+            line.text = segment.Replace("\\n", "\n").TrimEnd('\r', '\n', ' ');
+            var lineGroup = line.GetComponent<CanvasGroup>();
+            if (lineGroup == null) lineGroup = line.gameObject.AddComponent<CanvasGroup>();
+            lineGroup.alpha = 1f;
+            line.maxVisibleCharacters = 0;
+            var le = line.GetComponent<LayoutElement>();
+            if (le != null) { le.minHeight = 0f; le.preferredHeight = -1f; le.flexibleHeight = 0f; }
+            firstLines.Add(line);
+        }
+        LayoutRebuilder.ForceRebuildLayoutImmediate(secondSubtitleContainer);
+        if (secondSubtitleGroup != null) secondSubtitleGroup.alpha = 1f;
+        if (secondGradientGroup != null)
+            StartCoroutine(FadeCanvasGroup(secondGradientGroup, 0f, 1f, sharedGradientFadeSeconds));
+        yield return FirstSubtitleDelay(sharedFirstLineDelay, false);
+        for (int i = 0; i < firstLines.Count; i++)
+        {
+            yield return TypeFirstLine(firstLines[i]);
+            if (i < firstLines.Count - 1)
+                yield return FirstSubtitleDelay(sharedBetweenLinesDelay, sharedClickCompletesCurrentLine);
+        }
+        yield return FirstSubtitleDelay(sharedAfterAllLinesHoldSeconds, sharedClickToSkipAfterAllLines);
+
+        Coroutine textFade = null;
+        Coroutine gradientFade = null;
+        if (secondSubtitleGroup != null)
+            textFade = StartCoroutine(FadeCanvasGroup(secondSubtitleGroup, secondSubtitleGroup.alpha, 0f, sharedOverlayFadeOutSeconds));
+        if (secondGradientGroup != null)
+            gradientFade = StartCoroutine(FadeCanvasGroup(secondGradientGroup, secondGradientGroup.alpha, 0f, sharedOverlayFadeOutSeconds));
+        if (textFade != null) yield return textFade;
+        if (gradientFade != null) yield return gradientFade;
+        ClearFirstSubtitleLines();
+        firstSubtitleFinished = true;
+    }
+
+    private bool ConsumeFirstClick()
+    {
+        if (firstLastClickFrame == Time.frameCount || !Input.GetMouseButtonDown(0)) return false;
+        firstLastClickFrame = Time.frameCount;
+        return true;
+    }
+
+    private IEnumerator FirstSubtitleDelay(float seconds, bool allowClick)
+    {
+        float elapsed = 0f;
+        while (elapsed < seconds)
+        {
+            if (allowClick && ConsumeFirstClick()) yield break;
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+    }
+
+    private IEnumerator TypeFirstLine(TextMeshProUGUI line)
+    {
+        line.ForceMeshUpdate();
+        int count = line.textInfo.characterCount;
+        float shown = 0f;
+        while (shown < count)
+        {
+            if (sharedClickCompletesCurrentLine && ConsumeFirstClick()) break;
+            shown += Mathf.Max(1f, sharedCharsPerSecond) * Time.unscaledDeltaTime;
+            line.maxVisibleCharacters = Mathf.Min(count, Mathf.FloorToInt(shown));
+            yield return null;
+        }
+        line.maxVisibleCharacters = count;
+    }
+
+    private void ClearFirstSubtitleLines()
+    {
+        foreach (var line in firstLines)
+            if (line != null) { line.gameObject.SetActive(false); Destroy(line.gameObject); }
+        firstLines.Clear();
+    }
+
+    // 우주 크레딧 전용 커버입니다. 전역 FadeManager와 기존 컷신 Canvas는 건드리지 않습니다.
+    // SubtitleCanvas(100)와 CreditsCanvas(90)보다 앞에 렌더링됩니다.
+    private Image creditsTransitionCover;
+
+    private void EnsureCreditsTransitionCover()
+    {
+        if (creditsTransitionCover != null) return;
+
+        GameObject canvasObject = new GameObject(
+            "EndingCreditsTransitionCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+        Canvas coverCanvas = canvasObject.GetComponent<Canvas>();
+        coverCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        coverCanvas.overrideSorting = true;
+        coverCanvas.sortingOrder = 200; // FadeManager(32767)보다 낮음
+
+        CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f;
+
+        GameObject imageObject = new GameObject(
+            "BlackCover", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        imageObject.transform.SetParent(canvasObject.transform, false);
+        creditsTransitionCover = imageObject.GetComponent<Image>();
+        creditsTransitionCover.color = new Color(0f, 0f, 0f, 0f);
+        creditsTransitionCover.raycastTarget = false;
+        RectTransform rect = creditsTransitionCover.rectTransform;
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+    }
+
+    // 두 번째 컷신 → 검은 화면 → 우주 크레딧 페이드 전용.
+    private IEnumerator FadeCreditsCover(float from, float to, float duration)
+    {
+        EnsureCreditsTransitionCover();
+        Color color = creditsTransitionCover.color;
+        if (duration <= 0f)
+        {
+            color.a = to;
+            creditsTransitionCover.color = color;
+            yield break;
+        }
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+            color.a = Mathf.Lerp(from, to, t);
+            creditsTransitionCover.color = color;
+            yield return null;
+        }
+        color.a = to;
+        creditsTransitionCover.color = color;
     }
 
     private IEnumerator FadeBlackImage(float from, float to, float duration)
@@ -384,7 +610,7 @@ public class EndingCutSceneScroller : MonoBehaviour
 
         while (t < duration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             float a = Mathf.Lerp(from, to, t / duration);
             color.a = a;
             blackImage.color = color;
@@ -429,107 +655,13 @@ public class EndingCutSceneScroller : MonoBehaviour
         canvasGroup.alpha = to;
     }
 
-    private IEnumerator SubtitleSequenceRoutine()
-    {
-        // 자막을 안 쓰는 경우-> 바로 다음 컷씬 이벤트만 처리
-        if (!useSubtitles || subtitles == null || subtitles.Length == 0)
-        {
-            if (delayBeforeNextCutsceneFade > 0f)
-                yield return new WaitForSeconds(delayBeforeNextCutsceneFade);
-
-            if (onNextCutsceneFade != null)
-                onNextCutsceneFade.Invoke();
-
-            yield break;
-        }
-
-        // 시작 시 모든 자막 비활성화 + 알파 0으로 초기화
-        foreach (var s in subtitles)
-        {
-            if (s.subtitleObject != null)
-            {
-                s.subtitleObject.SetActive(false);
-
-                CanvasGroup cg = s.subtitleObject.GetComponent<CanvasGroup>();
-                if (cg == null)
-                    cg = s.subtitleObject.AddComponent<CanvasGroup>();
-
-                cg.alpha = 0f;
-            }
-        }
-
-        // 검은 화면이 다 찬 뒤 첫 자막까지 대기
-        if (delayBeforeFirstSubtitle > 0f)
-            yield return new WaitForSeconds(delayBeforeFirstSubtitle);
-
-        // 자막들 순서대로 켜기
-        for (int i = 0; i < subtitles.Length; i++)
-        {
-            var entry = subtitles[i];
-
-            if (i > 0 && entry.delayFromPrevious > 0f)
-                yield return new WaitForSeconds(entry.delayFromPrevious);
-
-            if (entry.subtitleObject != null)
-            {
-                float fadeDuration = Mathf.Max(0.01f, entry.fadeInDuration);
-                // 이전 자막의 페이드가 끝날 때까지 기다리도록 순차 실행
-                yield return StartCoroutine(FadeInSubtitle(entry.subtitleObject, fadeDuration));
-            }
-        }
-
-        // 마지막 자막이 켜진 후 잠시 대기
-        if (delayBeforeHideAllSubtitles > 0f)
-            yield return new WaitForSeconds(delayBeforeHideAllSubtitles);
-
-        // 모든 자막 비활성화
-        foreach (var s in subtitles)
-        {
-            if (s.subtitleObject != null)
-                s.subtitleObject.SetActive(false);
-        }
-
-        // 다음 컷씬 페이드 전 대기
-        if (delayBeforeNextCutsceneFade > 0f)
-            yield return new WaitForSeconds(delayBeforeNextCutsceneFade);
-
-        // 다음 컷씬 페이드 또는 씬 전환 호출(현재 TreeScene으로 씬 전환 필요)
-        if (onNextCutsceneFade != null)
-            onNextCutsceneFade.Invoke();
-    }
-
-    private IEnumerator FadeInSubtitle(GameObject obj, float duration)
-    {
-        if (obj == null)
-            yield break;
-
-        obj.SetActive(true);
-
-        CanvasGroup cg = obj.GetComponent<CanvasGroup>();
-        if (cg == null)
-            cg = obj.AddComponent<CanvasGroup>();
-
-        cg.alpha = 0f;
-
-        float t = 0f;
-        while (t < duration)
-        {
-            t += Time.deltaTime;
-            float a = Mathf.Clamp01(t / duration);
-            cg.alpha = a;
-            yield return null;
-        }
-
-        cg.alpha = 1f;
-    }
-
     [Header("두 번째 컷신")]
     public bool useSecondCutscene = true;
     [Tooltip("이 컴포넌트가 붙은 오브젝트와 별도의 전체 화면 UI 패널")]
     public GameObject secondCutscenePanel;
     public CanvasGroup secondCutsceneGroup;
-    [Min(0f)] public float secondFadeInSeconds = 0.8f;
-    [Min(0f)] public float secondPanelHoldSeconds = 3f;
+    [Min(0f)] public float secondFadeInSeconds = 1.5f;
+    [Min(0f)] public float secondPanelHoldSeconds = 4f;
 
     [Header("두 번째 컷신 이미지 Pan / Zoom")]
     public RectTransform secondTargetImage;
@@ -541,32 +673,44 @@ public class EndingCutSceneScroller : MonoBehaviour
     public Vector3 secondEndScale = Vector3.one;
     [Min(0f)] public float secondMoveDuration = 3f;
 
-    [Header("두 번째 컷신 TMP 누적 자막")]
+    [Header("두 번째 컷신 자막 내용")]
     [TextArea(3, 12)] public string secondSubtitleContent;
-    public string secondSegmentDelimiter = "||";
-    public RectTransform secondSubtitleContainer;
-    public TextMeshProUGUI secondSubtitleLinePrefab;
-    public CanvasGroup secondSubtitleGroup;
-    public float secondLineSpacingPx = 6f;
-    public float secondTextLineSpacing = 1f;
-    [Min(0f)] public float secondFirstLineDelay = 0.5f;
-    [Min(0f)] public float secondBetweenLinesDelay = 0.8f;
-    [Min(0f)] public float secondAfterAllLinesHoldSeconds = 0.8f;
-    [Min(1f)] public float secondCharsPerSecond = 28f;
-    public bool secondClickCompletesCurrentLine = true;
-    public bool secondClickToSkipAfterAllLines = true;
+    [Tooltip("Cutscene 문자열 테이블의 키. 비우면 Content 원문 사용")]
+    public string secondSubtitleLocalizationKey = "cutscene.ending.02";
 
-    [Header("두 번째 컷신 하단 그라데이션")]
+    [Header("공용 자막 UI (1·2컷 모두 재사용)")]
+    [InspectorName("Subtitle Container (공용)")]
+    public RectTransform secondSubtitleContainer;
+    [InspectorName("Subtitle Line Prefab (공용)")]
+    public TextMeshProUGUI secondSubtitleLinePrefab;
+    [InspectorName("Subtitle Group (공용)")]
+    public CanvasGroup secondSubtitleGroup;
+
+    [Header("인트로와 동일한 공용 자막 타이밍")]
+    [Min(0f)] public float sharedFirstLineDelay = 1f;
+    [Min(0f)] public float sharedBetweenLinesDelay = 4f;
+    [Min(0f)] public float sharedLineFadeSeconds = 0.5f; // 인트로 타자기 모드에서는 사용하지 않음
+    [Min(0f)] public float sharedAfterAllLinesHoldSeconds = 9f;
+    [Min(1f)] public float sharedCharsPerSecond = 28f;
+    public string sharedSegmentDelimiter = "||";
+    public bool sharedClickCompletesCurrentLine = true;
+    public bool sharedClickToSkipAfterAllLines = true;
+    [Min(0f)] public float sharedLineSpacingPx = 50f;
+    public float sharedTextLineSpacing = 8f;
+    public bool sharedForceTopLeftAlign = false;
+
+    [Header("공용 자막 그라데이션")]
+    [InspectorName("Gradient Overlay (공용)")]
     public Image secondGradientOverlay;
-    [Tooltip("켜면 기존 Source Image 대신 아래/위 알파로 그라데이션을 생성합니다.")]
-    public bool secondGenerateGradient = true;
-    [Tooltip("켜면 부모 하단에 자동 배치합니다. 끄면 인스펙터 RectTransform 설정을 유지합니다.")]
+    [Tooltip("인트로처럼 그라데이션 이미지가 이미 지정돼 있다면 끄기")]
+    public bool secondGenerateGradient = false;
+    [Tooltip("기존 RectTransform 배치 유지 권장")]
     public bool secondAutoLayoutGradient = false;
-    [Min(1f)] public float secondGradientHeight = 320f;
-    [Range(0f, 1f)] public float secondBottomAlpha = 0.65f;
-    [Range(0f, 1f)] public float secondTopAlpha;
-    [Min(0f)] public float secondGradientFadeSeconds = 0.3f;
-    [Min(0f)] public float secondOverlayFadeOutSeconds = 0.35f;
+    [Min(1f)] public float secondGradientHeight = 800f;
+    [Range(0f, 1f)] public float secondBottomAlpha = 0.915f;
+    [Range(0f, 1f)] public float secondTopAlpha = 0f;
+    [Min(0f)] public float sharedGradientFadeSeconds = 0.8f;
+    [Min(0f)] public float sharedOverlayFadeOutSeconds = 0.7f;
 
     private CanvasGroup secondGradientGroup;
     private Sprite secondGeneratedGradientSprite;
@@ -574,6 +718,89 @@ public class EndingCutSceneScroller : MonoBehaviour
     private Coroutine secondPanCoroutine;
     private readonly List<TextMeshProUGUI> secondLines = new List<TextMeshProUGUI>();
     private int secondLastClickFrame = -1;
+
+    // 공용 UI는 월드 스크롤과 무관한 화면 좌표계에서만 표시합니다.
+    // FadeManager의 최상위 Canvas(32767)는 변경하지 않습니다.
+    private Canvas runtimeSubtitleCanvas;
+
+    private void EnsureSharedSubtitleScreenCanvas()
+    {
+        if (secondSubtitleContainer == null || secondGradientOverlay == null)
+        {
+            Debug.LogWarning("[EndingCutSceneScroller] 공용 SubtitleContainer / Gradient Overlay 연결을 확인하세요.", this);
+            return;
+        }
+
+        // 기존 UI가 월드 Canvas에 있거나 서로 다른 Canvas에 있더라도
+        // 하나의 전용 화면 Canvas로 모아 카메라 이동 중 위치가 고정되게 합니다.
+        Canvas containerCanvas = secondSubtitleContainer.GetComponentInParent<Canvas>();
+        Canvas gradientCanvas = secondGradientOverlay.GetComponentInParent<Canvas>();
+        // 이미 Inspector에서 만든 화면 고정 Canvas를 사용 중이라면
+        // 위치·앵커·크기를 절대 덮어쓰지 않습니다.
+        // Canvas 이름과 무관하게 기존 Screen Space - Overlay Canvas를 재사용합니다.
+        if (containerCanvas != null && containerCanvas == gradientCanvas &&
+            containerCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
+        {
+            runtimeSubtitleCanvas = containerCanvas;
+        }
+        else
+        {
+            GameObject go = new GameObject("EndingSharedSubtitleCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+            runtimeSubtitleCanvas = go.GetComponent<Canvas>();
+            runtimeSubtitleCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            CanvasScaler scaler = go.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
+
+            RectTransform gradientRt = secondGradientOverlay.rectTransform;
+            RectTransform subtitleRt = secondSubtitleContainer;
+            gradientRt.SetParent(go.transform, false);
+            subtitleRt.SetParent(go.transform, false);
+
+            // 월드 좌표를 남기지 않고 화면 하단에 다시 배치합니다.
+            gradientRt.anchorMin = new Vector2(0f, 0f);
+            gradientRt.anchorMax = new Vector2(1f, 0f);
+            gradientRt.pivot = new Vector2(0.5f, 0f);
+            gradientRt.anchoredPosition = Vector2.zero;
+            gradientRt.sizeDelta = new Vector2(0f, secondGradientHeight);
+            gradientRt.localScale = Vector3.one;
+            gradientRt.localRotation = Quaternion.identity;
+
+            subtitleRt.anchorMin = new Vector2(0.08f, 0f);
+            subtitleRt.anchorMax = new Vector2(0.92f, 0f);
+            subtitleRt.pivot = new Vector2(0.5f, 0f);
+            subtitleRt.anchoredPosition = new Vector2(0f, 85f);
+            subtitleRt.sizeDelta = new Vector2(0f, 430f);
+            subtitleRt.localScale = Vector3.one;
+            subtitleRt.localRotation = Quaternion.identity;
+        }
+
+        runtimeSubtitleCanvas.overrideSorting = true;
+        runtimeSubtitleCanvas.sortingOrder = 100;
+        runtimeSubtitleCanvas.enabled = true;
+        runtimeSubtitleCanvas.gameObject.SetActive(true);
+        secondGradientOverlay.gameObject.SetActive(true);
+        secondSubtitleContainer.gameObject.SetActive(true);
+        secondGradientOverlay.transform.SetAsFirstSibling();
+        secondSubtitleContainer.SetAsLastSibling();
+
+        // 해당 씬의 검은 페이드 이미지는 자막보다 앞에 있어야 컷 전환이 자연스럽습니다.
+        // 전역 FadeManager가 소유한 Canvas는 건드리지 않습니다.
+        if (blackImage != null)
+        {
+            Canvas blackCanvas = blackImage.GetComponentInParent<Canvas>();
+            if (blackCanvas != null && blackCanvas != runtimeSubtitleCanvas &&
+                blackCanvas.renderMode == RenderMode.ScreenSpaceOverlay &&
+                (FadeManager.Instance == null || blackCanvas.gameObject != FadeManager.Instance.gameObject &&
+                 !blackCanvas.transform.IsChildOf(FadeManager.Instance.transform)))
+            {
+                blackCanvas.overrideSorting = true;
+                blackCanvas.sortingOrder = 101;
+            }
+        }
+    }
 
     private CanvasGroup GetOrAddSecondGroup(GameObject obj)
     {
@@ -583,6 +810,7 @@ public class EndingCutSceneScroller : MonoBehaviour
 
     private void InitializeSecondCutscene()
     {
+        EnsureSharedSubtitleScreenCanvas();
         if (secondCutscenePanel == null) return;
         if (secondCutscenePanel == gameObject || transform.IsChildOf(secondCutscenePanel.transform))
         {
@@ -599,6 +827,9 @@ public class EndingCutSceneScroller : MonoBehaviour
 
         if (secondSubtitleContainer != null)
         {
+            if (secondCutscenePanel != null &&
+                secondSubtitleContainer.IsChildOf(secondCutscenePanel.transform))
+                Debug.LogWarning("[EndingCutSceneScroller] 공용 SubtitleContainer를 CutScene02 밖(Canvas 아래)으로 옮겨주세요.", this);
             if (secondSubtitleGroup == null)
                 secondSubtitleGroup = GetOrAddSecondGroup(secondSubtitleContainer.gameObject);
             secondSubtitleGroup.alpha = 0f;
@@ -610,12 +841,14 @@ public class EndingCutSceneScroller : MonoBehaviour
                 layout.childForceExpandWidth = true;
                 layout.childControlHeight = true;
                 layout.childForceExpandHeight = false;
-                layout.spacing = secondLineSpacingPx;
+                layout.spacing = sharedLineSpacingPx;
             }
         }
         if (secondGradientOverlay != null)
         {
             var rt = secondGradientOverlay.rectTransform;
+            // 인트로 CutSceneManager처럼 높이는 Inspector 수치를 반영하고 기존 앵커는 유지
+            rt.sizeDelta = new Vector2(rt.sizeDelta.x, secondGradientHeight);
             if (secondAutoLayoutGradient)
             {
                 rt.anchorMin = new Vector2(0f, 0f);
@@ -626,6 +859,9 @@ public class EndingCutSceneScroller : MonoBehaviour
                 rt.localRotation = Quaternion.identity;
                 rt.localScale = Vector3.one;
             }
+            if (secondCutscenePanel != null &&
+                secondGradientOverlay.transform.IsChildOf(secondCutscenePanel.transform))
+                Debug.LogWarning("[EndingCutSceneScroller] 공용 GradientOverlay를 CutScene02 밖(Canvas 아래)으로 옮겨주세요.", this);
             secondGradientGroup = GetOrAddSecondGroup(secondGradientOverlay.gameObject);
             secondGradientGroup.alpha = 0f;
             secondGradientOverlay.raycastTarget = false;
@@ -666,16 +902,30 @@ public class EndingCutSceneScroller : MonoBehaviour
         ApplySecondImageMotion(0f);
         secondCutscenePanel.SetActive(true);
         secondPanCoroutine = StartCoroutine(AnimateSecondImage());
-        yield return FadeCanvasGroup(secondCutsceneGroup, 0f, 1f, secondFadeInSeconds);
+        if (blackImage != null && blackImage.gameObject.activeSelf)
+        {
+            // 검은 화면 아래에서 두 번째 컷을 완성한 후 1.5초 동안 밝히기
+            secondCutsceneGroup.alpha = 1f;
+            yield return FadeBlackImage(1f, 0f, secondFadeInSeconds);
+            blackImage.gameObject.SetActive(false);
+        }
+        else
+        {
+            // 개별 씬에서 검은 커버가 없다면 기존의 컷 이미지 페이드 사용
+            yield return FadeCanvasGroup(secondCutsceneGroup, 0f, 1f, secondFadeInSeconds);
+        }
 
-        bool hasSubtitles = !string.IsNullOrWhiteSpace(secondSubtitleContent);
+        string secondLocalizedText = secondSubtitleContent ?? string.Empty;
+        yield return LoadEndingLocalizedText(secondSubtitleLocalizationKey, secondLocalizedText,
+            result => secondLocalizedText = result);
+        bool hasSubtitles = !string.IsNullOrWhiteSpace(secondLocalizedText);
         if (hasSubtitles && secondSubtitleContainer != null && secondSubtitleLinePrefab != null)
         {
             // Fade in the gradient concurrently with subtitle timing, and join it before fading out.
             Coroutine gradientFade = null;
             if (secondGradientGroup != null)
-                gradientFade = StartCoroutine(FadeCanvasGroup(secondGradientGroup, 0f, 1f, secondGradientFadeSeconds));
-            yield return ShowSecondSubtitles();
+                gradientFade = StartCoroutine(FadeCanvasGroup(secondGradientGroup, 0f, 1f, sharedGradientFadeSeconds));
+            yield return ShowSecondSubtitles(secondLocalizedText);
             if (gradientFade != null) yield return gradientFade;
         }
         else
@@ -688,9 +938,9 @@ public class EndingCutSceneScroller : MonoBehaviour
         Coroutine subtitleFade = null;
         Coroutine overlayFade = null;
         if (secondSubtitleGroup != null)
-            subtitleFade = StartCoroutine(FadeCanvasGroup(secondSubtitleGroup, secondSubtitleGroup.alpha, 0f, secondOverlayFadeOutSeconds));
+            subtitleFade = StartCoroutine(FadeCanvasGroup(secondSubtitleGroup, secondSubtitleGroup.alpha, 0f, sharedOverlayFadeOutSeconds));
         if (secondGradientGroup != null)
-            overlayFade = StartCoroutine(FadeCanvasGroup(secondGradientGroup, secondGradientGroup.alpha, 0f, secondOverlayFadeOutSeconds));
+            overlayFade = StartCoroutine(FadeCanvasGroup(secondGradientGroup, secondGradientGroup.alpha, 0f, sharedOverlayFadeOutSeconds));
         if (subtitleFade != null) yield return subtitleFade;
         if (overlayFade != null) yield return overlayFade;
         // Keep the image visible until FadeToBlackRoutine has fully covered it.
@@ -718,21 +968,21 @@ public class EndingCutSceneScroller : MonoBehaviour
         ApplySecondImageMotion(1f);
     }
 
-    private IEnumerator ShowSecondSubtitles()
+    private IEnumerator ShowSecondSubtitles(string subtitleText)
     {
         ClearSecondLines();
-        string delimiter = string.IsNullOrEmpty(secondSegmentDelimiter) ? "||" : secondSegmentDelimiter;
-        string[] segments = secondSubtitleContent.Split(new[] { delimiter }, System.StringSplitOptions.None);
+        string delimiter = string.IsNullOrEmpty(sharedSegmentDelimiter) ? "||" : sharedSegmentDelimiter;
+        string[] segments = subtitleText.Split(new[] { delimiter }, System.StringSplitOptions.None);
         foreach (string segment in segments)
         {
             var line = Instantiate(secondSubtitleLinePrefab, secondSubtitleContainer);
             line.gameObject.SetActive(true);
-            line.alignment = TextAlignmentOptions.Top;
+            line.alignment = sharedForceTopLeftAlign ? TextAlignmentOptions.TopLeft : TextAlignmentOptions.Top;
             line.enableWordWrapping = true;
             line.enableAutoSizing = false;
             line.richText = true;
             line.raycastTarget = false;
-            line.lineSpacing = secondTextLineSpacing;
+            line.lineSpacing = sharedTextLineSpacing;
             GetOrAddSecondGroup(line.gameObject).alpha = 1f;
             line.text = segment.Replace("\\n", "\n").TrimEnd('\r', '\n', ' ');
             line.maxVisibleCharacters = 0;
@@ -741,14 +991,14 @@ public class EndingCutSceneScroller : MonoBehaviour
             secondLines.Add(line);
         }
         LayoutRebuilder.ForceRebuildLayoutImmediate(secondSubtitleContainer);
-        yield return SecondDelay(secondFirstLineDelay, false);
+        yield return SecondDelay(sharedFirstLineDelay, false);
         for (int i = 0; i < secondLines.Count; i++)
         {
             yield return TypeSecondLine(secondLines[i]);
             if (i < secondLines.Count - 1)
-                yield return SecondDelay(secondBetweenLinesDelay, secondClickCompletesCurrentLine);
+                yield return SecondDelay(sharedBetweenLinesDelay, sharedClickCompletesCurrentLine);
         }
-        yield return SecondDelay(secondAfterAllLinesHoldSeconds, secondClickToSkipAfterAllLines);
+        yield return SecondDelay(sharedAfterAllLinesHoldSeconds, sharedClickToSkipAfterAllLines);
     }
 
     private bool ConsumeSecondClick()
@@ -776,8 +1026,8 @@ public class EndingCutSceneScroller : MonoBehaviour
         float shown = 0f;
         while (shown < count)
         {
-            if (secondClickCompletesCurrentLine && ConsumeSecondClick()) break;
-            shown += Mathf.Max(1f, secondCharsPerSecond) * Time.unscaledDeltaTime;
+            if (sharedClickCompletesCurrentLine && ConsumeSecondClick()) break;
+            shown += Mathf.Max(1f, sharedCharsPerSecond) * Time.unscaledDeltaTime;
             line.maxVisibleCharacters = Mathf.Min(count, Mathf.FloorToInt(shown));
             yield return null;
         }

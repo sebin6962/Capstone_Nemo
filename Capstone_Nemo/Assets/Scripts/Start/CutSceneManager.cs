@@ -23,6 +23,12 @@ public class CutSceneManager : MonoBehaviour
     public float panelHoldSeconds = 3f;
     [Tooltip("검은 화면 페이드 시간(초)")]
     public float fadeSeconds = 1.5f;
+    [Header("첫 컷 전용 페이드")]
+    [Tooltip("첫 번째 컷이 검은 화면에서 나타나는 시간(초)")]
+    public float firstCutFadeSeconds = 3f;
+
+    [Tooltip("첫 컷이 나타나기 전 검은 화면 유지 시간")]
+    public float firstCutBlackHoldSeconds = 1.5f;
 
     [Tooltip("원본 호환용 변수(표시/참조용)")]
     public float cutSceneDuration = 3f;
@@ -299,8 +305,18 @@ public class CutSceneManager : MonoBehaviour
             // 이미지 이동 시작
             StartCutImagePan(i);
 
-            // [검은 화면] 1 -> 0 (컷 보이기)
-            yield return Fade(1f, 0f, fadeSeconds);
+            // 첫 번째 컷에서만 검은 화면 추가 유지
+            if (i == 0 && firstCutBlackHoldSeconds > 0f)
+            {
+                yield return new WaitForSeconds(firstCutBlackHoldSeconds);
+            }
+
+            // 첫 번째 컷만 느리게 페이드 인
+            float currentFadeSeconds = (i == 0)
+                ? firstCutFadeSeconds
+                : fadeSeconds;
+
+            yield return Fade(1f, 0f, currentFadeSeconds);
 
             // 이 컷 자막 실행(스택 append)
             bool hasLines = HasSubtitle(i);

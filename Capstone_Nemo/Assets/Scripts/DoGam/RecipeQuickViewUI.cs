@@ -28,6 +28,18 @@ public class RecipeQuickViewUI : MonoBehaviour
     public Button tteokTabButton;
     public Button drinkTabButton;
 
+    [Header("탭 버튼 이동 효과")]
+    [Min(0f)] public float tabRaiseDistance = 12f;
+    [Min(0f)] public float tabMoveSpeed = 90f;
+
+    private RectTransform _tteokTabRect;
+    private RectTransform _drinkTabRect;
+    private Vector2 _tteokTabBasePosition;
+    private Vector2 _drinkTabBasePosition;
+    private bool _tteokHovered;
+    private bool _drinkHovered;
+    private bool _tabPositionsReady;
+
     public Image topItemImage;
     public TextMeshProUGUI topItemName;
 
@@ -180,10 +192,9 @@ public class RecipeQuickViewUI : MonoBehaviour
 
     private void Start()
     {
-        _currentCategory =
-            string.IsNullOrEmpty(defaultCategory)
-                ? "떡"
-                : defaultCategory;
+        // 패널 최초 표시 시 떡 탭 선택.
+        _currentCategory = "떡";
+        SetupCategoryTabMotion();
 
         if (tteokTabButton != null)
         {
@@ -267,6 +278,61 @@ public class RecipeQuickViewUI : MonoBehaviour
             miniRoot.SetActive(startVisible);
 
         UpdateMiniToggleVisual();
+    }
+
+    private void SetupCategoryTabMotion()
+    {
+        _tteokTabRect = tteokTabButton != null
+            ? tteokTabButton.GetComponent<RectTransform>() : null;
+        _drinkTabRect = drinkTabButton != null
+            ? drinkTabButton.GetComponent<RectTransform>() : null;
+
+        if (_tteokTabRect != null)
+        {
+            _tteokTabBasePosition = _tteokTabRect.anchoredPosition;
+            RecipeTabHoverRelay relay = tteokTabButton.gameObject.GetComponent<RecipeTabHoverRelay>();
+            if (relay == null) relay = tteokTabButton.gameObject.AddComponent<RecipeTabHoverRelay>();
+            relay.SetHoverCallback(hovered => _tteokHovered = hovered);
+        }
+
+        if (_drinkTabRect != null)
+        {
+            _drinkTabBasePosition = _drinkTabRect.anchoredPosition;
+            RecipeTabHoverRelay relay = drinkTabButton.gameObject.GetComponent<RecipeTabHoverRelay>();
+            if (relay == null) relay = drinkTabButton.gameObject.AddComponent<RecipeTabHoverRelay>();
+            relay.SetHoverCallback(hovered => _drinkHovered = hovered);
+        }
+
+        _tabPositionsReady = true;
+        SetCategoryTabPositionsImmediately();
+    }
+
+    private void Update()
+    {
+        if (!_tabPositionsReady) return;
+        MoveCategoryTab(_tteokTabRect, _tteokTabBasePosition,
+            _currentCategory == "떡" || _tteokHovered);
+        MoveCategoryTab(_drinkTabRect, _drinkTabBasePosition,
+            _currentCategory == "음료" || _drinkHovered);
+    }
+
+    private void MoveCategoryTab(RectTransform rect, Vector2 basePosition, bool raised)
+    {
+        if (rect == null) return;
+        Vector2 target = basePosition + Vector2.up * (raised ? tabRaiseDistance : 0f);
+        rect.anchoredPosition = Vector2.MoveTowards(
+            rect.anchoredPosition, target, tabMoveSpeed * Time.unscaledDeltaTime);
+    }
+
+    private void SetCategoryTabPositionsImmediately()
+    {
+        if (!_tabPositionsReady) return;
+        if (_tteokTabRect != null)
+            _tteokTabRect.anchoredPosition = _tteokTabBasePosition +
+                Vector2.up * (_currentCategory == "떡" ? tabRaiseDistance : 0f);
+        if (_drinkTabRect != null)
+            _drinkTabRect.anchoredPosition = _drinkTabBasePosition +
+                Vector2.up * (_currentCategory == "음료" ? tabRaiseDistance : 0f);
     }
 
     public void ForceCloseMiniPanel()
@@ -609,8 +675,14 @@ public class RecipeQuickViewUI : MonoBehaviour
 
         if (newActive)
         {
+            // 패널을 다시 열 때에도 떡 탭부터 표시한다.
+            _currentCategory = "떡";
+            _index = 0;
+            _tteokHovered = false;
+            _drinkHovered = false;
             ReloadList();
             UpdateCategoryTabVisual();
+            SetCategoryTabPositionsImmediately();
         }
 
         UpdateMiniToggleVisual();
@@ -917,5 +989,31 @@ public class RecipeQuickViewUI : MonoBehaviour
                 showNext
             );
         }
+    }
+}
+
+// 버튼의 Pointer Enter/Exit만 전달하며 기존 Button 클릭 기능은 유지한다.
+public class RecipeTabHoverRelay : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+{
+    private System.Action<bool> _onHoverChanged;
+
+    public void SetHoverCallback(System.Action<bool> callback)
+    {
+        _onHoverChanged = callback;
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        _onHoverChanged?.Invoke(true);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        _onHoverChanged?.Invoke(false);
+    }
+
+    private void OnDisable()
+    {
+        _onHoverChanged?.Invoke(false);
     }
 }

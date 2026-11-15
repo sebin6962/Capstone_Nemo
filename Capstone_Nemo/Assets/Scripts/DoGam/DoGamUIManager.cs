@@ -52,6 +52,15 @@ public class DoGamUIManager : MonoBehaviour
 
     private Button _activeTabButton = null; // 현재 선택된 탭
 
+    [Header("Tab Hover Move (탭 버튼 이동)")]
+    [SerializeField, Min(0f)] private float tabRaiseDistance = 12f;
+    [SerializeField, Min(0f)] private float tabMoveSpeed = 90f;
+
+    // 실제 탭 버튼의 초기 anchoredPosition을 저장하여 기존 레이아웃을 유지한다.
+    private readonly Dictionary<Button, RectTransform> _tabRects = new();
+    private readonly Dictionary<Button, Vector2> _tabBasePositions = new();
+    private readonly HashSet<Button> _hoveredTabs = new();
+
     //마지막으로 본 카테고리 기억용
     private string currentRecipeCategory = "떡";
 
@@ -333,6 +342,7 @@ public class DoGamUIManager : MonoBehaviour
 
         InitSeenRecipeState();
         RegisterAllButtonHoverMaterials();
+        RegisterTabMoveEvents();
     }
 
     private void OnEnable()
@@ -542,8 +552,65 @@ public class DoGamUIManager : MonoBehaviour
             targetGraphic.material = null;
     }
 
+    // 기존 머티리얼 호버 이벤트와 별도로 탭 5개에만 이동 효과를 연결한다.
+    private void RegisterTabMoveEvents()
+    {
+        RegisterTabMove(tteokButton);
+        RegisterTabMove(drinkButton);
+        RegisterTabMove(howToButton);
+        RegisterTabMove(recordButton);
+        RegisterTabMove(makerButton);
+    }
+
+    private void RegisterTabMove(Button button)
+    {
+        if (button == null || _tabRects.ContainsKey(button)) return;
+
+        RectTransform rect = button.GetComponent<RectTransform>();
+        if (rect == null) return;
+
+        _tabRects.Add(button, rect);
+        _tabBasePositions.Add(button, rect.anchoredPosition);
+
+        EventTrigger trigger = button.GetComponent<EventTrigger>();
+        if (trigger == null)
+            trigger = button.gameObject.AddComponent<EventTrigger>();
+
+        AddEventTrigger(trigger, EventTriggerType.PointerEnter, data =>
+        {
+            if (IsOpen() && button.interactable)
+                _hoveredTabs.Add(button);
+        });
+        AddEventTrigger(trigger, EventTriggerType.PointerExit, data =>
+        {
+            _hoveredTabs.Remove(button);
+        });
+    }
+
+    private void UpdateTabPositions()
+    {
+        if (_tabRects.Count == 0) return;
+
+        bool panelOpen = IsOpen();
+        float step = tabMoveSpeed * Time.unscaledDeltaTime;
+        foreach (var pair in _tabRects)
+        {
+            Button button = pair.Key;
+            RectTransform rect = pair.Value;
+            if (button == null || rect == null) continue;
+
+            Vector2 basePosition = _tabBasePositions[button];
+            bool raised = panelOpen &&
+                (button == _activeTabButton ||
+                 (button.interactable && _hoveredTabs.Contains(button)));
+            Vector2 target = basePosition + (raised ? Vector2.up * tabRaiseDistance : Vector2.zero);
+            rect.anchoredPosition = Vector2.MoveTowards(rect.anchoredPosition, target, step);
+        }
+    }
+
     private void Update()
     {
+        UpdateTabPositions();
         if (IsOpen())
         {
             if (Input.GetKeyDown(KeyCode.A))
@@ -860,6 +927,7 @@ public class DoGamUIManager : MonoBehaviour
         SFXManager.Instance.PlayBbyongSFX();
         panel.SetActive(false);
         SubTitle.SetActive(false);
+        _hoveredTabs.Clear();
 
         SetRecipeNavVisible(false);
         SetHowToNavVisible(false);
