@@ -506,6 +506,8 @@ MonoBehaviour:
   tabPressedSprite: {fileID: 2142220538, guid: a2013f53fdc2ab540a211b6f076ce9bb, type: 3}
   recordButton: {fileID: 73810402}
   recordTabController: {fileID: 1956978269}
+  tabRaiseDistance: 12
+  tabMoveSpeed: 90
   dogamAlertIcon: {fileID: 1639131817}
   recipeAlertIcon: {fileID: 1266029160}
   recipeRoot: {fileID: 1839917419}
@@ -85537,7 +85539,7 @@ MonoBehaviour:
   m_LightType: 4
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 0.9198113, g: 0.9198113, b: 1, a: 1}
+  m_Color: {r: 0.50787646, g: 0.50787646, b: 0.9528302, a: 1}
   m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeIntensityEnabled: 0
@@ -109691,10 +109693,10 @@ MonoBehaviour:
   lampFadeStart: 0.35
   lampFadeEnd: 0.55
   instantOn: 0
-  dayLightColor: {r: 0.85882354, g: 0.8862745, b: 1, a: 1}
-  nightLightColor: {r: 0.12908898, g: 0.17336005, b: 0.38364768, a: 1}
+  dayLightColor: {r: 0.50980395, g: 0.50980395, b: 0.9529412, a: 1}
+  nightLightColor: {r: 0.0627451, g: 0.0627451, b: 0.38039216, a: 1}
   starRainDayLightColor: {r: 0.40392157, g: 0.40392157, b: 0.75686276, a: 1}
-  starRainNightLightColor: {r: 0.1754183, g: 0.1754183, b: 0.509434, a: 1}
+  starRainNightLightColor: {r: 0.102127105, g: 0.102127105, b: 0.4811321, a: 1}
   windowSkyRenderers: []
   windowSkyTopRatio: 0.7
   daySkyTopColor: {r: 0.40784314, g: 0.78431374, b: 1, a: 1}
@@ -133735,9 +133737,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.00016885996
+    x: 0.0005134642
     y: 0
-    width: 0.9996623
+    width: 0.9989731
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
